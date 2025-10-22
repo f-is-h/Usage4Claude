@@ -1,0 +1,135 @@
+/* 
+  Localizable.strings (English)
+  Usage4Claude
+ 
+  Created by f-is-h on 2025-10-15.
+  Copyright © 2025 f-is-h. All rights reserved.
+*/
+
+// MARK: - Menu Items
+"menu.general_settings" = "General Settings";
+"menu.auth_settings" = "Authentication Settings";
+"menu.check_updates" = "Check for Updates";
+"menu.about" = "About";
+"menu.web_usage" = "View Claude Usage";
+"menu.coffee" = "Buy Me A Coffee";
+"menu.quit" = "Quit Usage4Claude";
+
+// MARK: - Usage Detail View
+"usage.title" = "Claude Usage";
+"usage.not_started" = "Display after usage starts";
+"usage.reset_in" = "Resets in";
+"usage.remaining" = "Remaining";
+"usage.loading" = "Loading...";
+"usage.not_configured" = "Authentication not configured";
+"usage.go_to_settings" = "Go to Settings";
+"usage.reset_time" = "Reset Time";
+"usage.used" = "Used";
+"usage.five_hour_limit" = "5-Hour Limit";
+
+// MARK: - Settings - Tabs
+"settings.tab.general" = "General";
+"settings.tab.auth" = "Authentication Settings";
+"settings.tab.about" = "About";
+
+// MARK: - Settings - General
+"settings.general.display_section" = "Display Settings";
+"settings.general.menubar_icon" = "Menu Bar Icon";
+"settings.general.menubar_hint" = "Choose what to display in the menu bar";
+"settings.general.refresh_section" = "Refresh Settings";
+"settings.general.refresh_interval" = "Refresh Interval";
+"settings.general.refresh_hint" = "Set the time interval for automatic data refresh";
+"settings.general.language_section" = "Language Settings";
+"settings.general.interface_language" = "Interface Language";
+"settings.general.language_hint" = "Change the interface display language (requires app restart)";
+"settings.general.reset_button" = "Reset to Defaults";
+
+// MARK: - Settings - Authentication
+"settings.auth.how_to_title" = "How to Get Authentication Info";
+"settings.auth.step1" = "1. Visit claude.ai in your browser and log in";
+"settings.auth.step2" = "2. Open browser developer tools (F12 or Cmd+Option+I)";
+"settings.auth.step3" = "3. Switch to the Network tab";
+"settings.auth.step4" = "4. Refresh the page and find any request";
+"settings.auth.step5" = "5. Find in Headers:";
+"settings.auth.step6" = "   • sessionKey in Cookie";
+"settings.auth.step7" = "   • Organization ID in URL";
+"settings.auth.open_browser" = "Open Claude Usage Page in Browser";
+"settings.auth.org_id_label" = "Organization ID";
+"settings.auth.org_id_placeholder" = "Paste Organization ID";
+"settings.auth.org_id_hint" = "Usually a UUID-like string, e.g.: 12345678-abcd-ef90-1234-567890abcdef";
+"settings.auth.session_key_label" = "Session Key";
+"settings.auth.session_key_placeholder" = "Paste Session Key";
+"settings.auth.session_key_hint" = "Long string starting with sk-ant-sid01-";
+"settings.auth.configured" = "Authentication configured";
+"settings.auth.not_configured" = "Please fill in complete authentication information";
+
+// MARK: - Settings - About
+"settings.about.version" = "Version %@";
+"settings.about.description" = "Monitor Claude AI 5-hour usage limit";
+"settings.about.developer" = "Developer";
+"settings.about.license" = "License";
+"settings.about.license_value" = "MIT License";
+"settings.about.github" = "Visit GitHub Repository";
+"settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.copyright" = "© 2025 All Rights Reserved";
+
+// MARK: - Welcome View
+"welcome.title" = "Welcome to Usage4Claude";
+"welcome.subtitle" = "Please configure your authentication information before getting started";
+"welcome.setup_button" = "Configure Authentication";
+"welcome.later_button" = "Set Up Later";
+
+// MARK: - Update Checker
+"update.new_version_title" = "New Version Available";
+"update.latest_version" = "Latest version";
+"update.current_version" = "Current version";
+"update.view_details_hint" = "Click [View Details] to see complete update content";
+"update.view_release_page" = "View complete update content on Release page";
+"update.download_button" = "Download Update";
+"update.remind_later_button" = "Remind Later";
+"update.view_details_button" = "View Details";
+"update.up_to_date_title" = "Up to Date";
+"update.up_to_date_message" = "Current version %@ is up to date.";
+"update.ok_button" = "OK";
+"update.check_failed_title" = "Update Check Failed";
+"update.confirm_button" = "Confirm";
+"update.error.invalid_url" = "Invalid URL";
+"update.error.network" = "Network error. Please check your internet connection.";
+"update.error.no_data" = "Unable to fetch data";
+"update.error.parse_failed" = "Failed to parse update information.";
+
+// MARK: - Icon Display Mode
+"display.percentage_only" = "Percentage Only";
+"display.icon_only" = "Icon Only";
+"display.both" = "Icon and Percentage";
+
+// MARK: - Refresh Interval
+"refresh.30_seconds" = "30 seconds";
+"refresh.1_minute" = "1 minute";
+"refresh.5_minutes" = "5 minutes";
+
+// MARK: - Language Names
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "中文（简体）";
+"language.chinese_traditional" = "中文（繁體）";
+
+// MARK: - Window Titles
+"window.settings_title" = "Usage4Claude Settings";
+"window.welcome_title" = "Welcome";
+
+// MARK: - Usage Data Formatting
+"usage_data.not_started_reset" = "Reset time shown after usage begins";
+"usage_data.resetting_soon" = "Resetting soon";
+"usage_data.resets_in_hours" = "About %dh %dm left";
+"usage_data.resets_in_minutes" = "About %dm left";
+"usage_data.unknown" = "Unknown";
+"usage_data.today" = "Today";
+"usage_data.tomorrow" = "Tomorrow";
+
+// MARK: - Error Messages
+"error.invalid_url" = "Invalid URL";
+"error.no_data" = "No data received";
+"error.session_expired" = "Session expired, please reconfigure in settings";
+"error.cloudflare_blocked" = "Request blocked by security system. Please visit claude.ai in browser to confirm you're not a robot, then try again.";
+"error.no_credentials" = "Please configure authentication information in settings first";

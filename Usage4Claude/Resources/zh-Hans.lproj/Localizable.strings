@@ -1,0 +1,135 @@
+/* 
+  Localizable.strings (Simplified Chinese)
+  Usage4Claude
+ 
+  Created by f-is-h on 2025-10-15.
+  Copyright © 2025 f-is-h. All rights reserved.
+*/
+
+// MARK: - Menu Items
+"menu.general_settings" = "通用设置";
+"menu.auth_settings" = "认证信息";
+"menu.check_updates" = "检查更新";
+"menu.about" = "关于";
+"menu.web_usage" = "访问 Claude 用量";
+"menu.coffee" = "Buy Me A Coffee";
+"menu.quit" = "退出 Usage4Claude";
+
+// MARK: - Usage Detail View
+"usage.title" = "Claude 使用情况";
+"usage.not_started" = "开始使用后显示";
+"usage.reset_in" = "距离重置还剩";
+"usage.remaining" = "剩余时间";
+"usage.loading" = "加载中...";
+"usage.not_configured" = "未配置认证信息";
+"usage.go_to_settings" = "去设置认证信息";
+"usage.reset_time" = "重置时间";
+"usage.used" = "已使用";
+"usage.five_hour_limit" = "5小时限制";
+
+// MARK: - Settings - Tabs
+"settings.tab.general" = "通用";
+"settings.tab.auth" = "认证";
+"settings.tab.about" = "关于";
+
+// MARK: - Settings - General
+"settings.general.display_section" = "显示设置";
+"settings.general.menubar_icon" = "菜单栏图标";
+"settings.general.menubar_hint" = "选择菜单栏中显示的内容";
+"settings.general.refresh_section" = "刷新设置";
+"settings.general.refresh_interval" = "刷新频率";
+"settings.general.refresh_hint" = "设置数据自动刷新的时间间隔";
+"settings.general.language_section" = "语言设置";
+"settings.general.interface_language" = "界面语言";
+"settings.general.language_hint" = "更改界面显示语言（需要重启应用）";
+"settings.general.reset_button" = "恢复默认设置";
+
+// MARK: - Settings - Authentication
+"settings.auth.how_to_title" = "如何获取认证信息";
+"settings.auth.step1" = "1. 在浏览器中访问 claude.ai 并登录";
+"settings.auth.step2" = "2. 打开浏览器开发者工具（F12 或 Cmd+Option+I）";
+"settings.auth.step3" = "3. 切换到 Network（网络）标签";
+"settings.auth.step4" = "4. 刷新页面，找到任意一个请求";
+"settings.auth.step5" = "5. 在 Headers 中找到：";
+"settings.auth.step6" = "   • Cookie 中的 sessionKey";
+"settings.auth.step7" = "   • URL 中的 Organization ID";
+"settings.auth.open_browser" = "在浏览器中打开 Claude 用量页面";
+"settings.auth.org_id_label" = "Organization ID";
+"settings.auth.org_id_placeholder" = "粘贴 Organization ID";
+"settings.auth.org_id_hint" = "通常是一个类似 UUID 的字符串，例如：12345678-abcd-ef90-1234-567890abcdef";
+"settings.auth.session_key_label" = "Session Key";
+"settings.auth.session_key_placeholder" = "粘贴 Session Key";
+"settings.auth.session_key_hint" = "以 sk-ant-sid01- 开头的长字符串";
+"settings.auth.configured" = "认证信息已配置";
+"settings.auth.not_configured" = "请填写完整的认证信息";
+
+// MARK: - Settings - About
+"settings.about.version" = "版本 %@";
+"settings.about.description" = "监控 Claude AI 的5小时使用限制";
+"settings.about.developer" = "开发者";
+"settings.about.license" = "许可证";
+"settings.about.license_value" = "MIT License";
+"settings.about.github" = "访问 GitHub 仓库";
+"settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.copyright" = "© 2025 All Rights Reserved";
+
+// MARK: - Welcome View
+"welcome.title" = "欢迎使用 Usage4Claude";
+"welcome.subtitle" = "开始之前，请先配置您的认证信息";
+"welcome.setup_button" = "去设置认证信息";
+"welcome.later_button" = "稍后设置";
+
+// MARK: - Update Checker
+"update.new_version_title" = "发现新版本";
+"update.latest_version" = "最新版本";
+"update.current_version" = "当前版本";
+"update.view_details_hint" = "点击【查看详情】查看完整更新内容";
+"update.view_release_page" = "查看完整更新内容请访问Release页面";
+"update.download_button" = "下载更新";
+"update.remind_later_button" = "稍后提醒";
+"update.view_details_button" = "查看详情";
+"update.up_to_date_title" = "已是最新版本";
+"update.up_to_date_message" = "当前版本 %@ 已是最新版本。";
+"update.ok_button" = "好的";
+"update.check_failed_title" = "检查更新失败";
+"update.confirm_button" = "确定";
+"update.error.invalid_url" = "无效的URL";
+"update.error.network" = "网络错误，请检查网络连接";
+"update.error.no_data" = "无法获取数据";
+"update.error.parse_failed" = "解析更新信息失败";
+
+// MARK: - Icon Display Mode
+"display.percentage_only" = "仅显示百分比";
+"display.icon_only" = "仅显示图标";
+"display.both" = "图标和百分比";
+
+// MARK: - Refresh Interval
+"refresh.30_seconds" = "30秒";
+"refresh.1_minute" = "1分钟";
+"refresh.5_minutes" = "5分钟";
+
+// MARK: - Language Names
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "中文（简体）";
+"language.chinese_traditional" = "中文（繁体）";
+
+// MARK: - Window Titles
+"window.settings_title" = "Usage4Claude 设置";
+"window.welcome_title" = "欢迎";
+
+// MARK: - Usage Data Formatting
+"usage_data.not_started_reset" = "使用后显示重置时间";
+"usage_data.resetting_soon" = "即将重置";
+"usage_data.resets_in_hours" = "剩余约%d小时%d分";
+"usage_data.resets_in_minutes" = "剩余约%d分";
+"usage_data.unknown" = "未知";
+"usage_data.today" = "今天";
+"usage_data.tomorrow" = "明天";
+
+// MARK: - Error Messages
+"error.invalid_url" = "无效的 URL";
+"error.no_data" = "未收到数据";
+"error.session_expired" = "会话已过期，请在设置中重新配置";
+"error.cloudflare_blocked" = "请求被安全系统拦截。请在浏览器中访问 claude.ai 确认你不是机器人，然后重试。";
+"error.no_credentials" = "请先在设置中配置认证信息";

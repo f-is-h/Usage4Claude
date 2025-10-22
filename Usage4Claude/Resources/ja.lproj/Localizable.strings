@@ -1,0 +1,135 @@
+/* 
+  Localizable.strings (Japanese)
+  Usage4Claude
+ 
+  Created by f-is-h on 2025-10-15.
+  Copyright © 2025 f-is-h. All rights reserved.
+*/
+
+// MARK: - Menu Items
+"menu.general_settings" = "一般設定";
+"menu.auth_settings" = "認証情報";
+"menu.check_updates" = "アップデートを確認";
+"menu.about" = "このアプリについて";
+"menu.web_usage" = "Claude使用状況を表示";
+"menu.coffee" = "Buy Me A Coffee";
+"menu.quit" = "Usage4Claudeを終了";
+
+// MARK: - Usage Detail View
+"usage.title" = "Claude使用状況";
+"usage.not_started" = "使用開始後に表示";
+"usage.reset_in" = "リセットまで";
+"usage.remaining" = "残り時間";
+"usage.loading" = "読み込み中...";
+"usage.not_configured" = "認証情報が未設定";
+"usage.go_to_settings" = "設定へ";
+"usage.reset_time" = "リセット時刻";
+"usage.used" = "使用済";
+"usage.five_hour_limit" = "5時間制限";
+
+// MARK: - Settings - Tabs
+"settings.tab.general" = "一般";
+"settings.tab.auth" = "認証";
+"settings.tab.about" = "情報";
+
+// MARK: - Settings - General
+"settings.general.display_section" = "表示設定";
+"settings.general.menubar_icon" = "メニューバーアイコン";
+"settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
+"settings.general.refresh_section" = "更新設定";
+"settings.general.refresh_interval" = "更新間隔";
+"settings.general.refresh_hint" = "データの自動更新間隔を設定";
+"settings.general.language_section" = "言語設定";
+"settings.general.interface_language" = "インターフェース言語";
+"settings.general.language_hint" = "表示言語を変更（アプリの再起動が必要）";
+"settings.general.reset_button" = "デフォルトに戻す";
+
+// MARK: - Settings - Authentication
+"settings.auth.how_to_title" = "認証情報の取得方法";
+"settings.auth.step1" = "1. ブラウザでclaude.aiにアクセスしてログイン";
+"settings.auth.step2" = "2. ブラウザの開発者ツールを開く（F12またはCmd+Option+I）";
+"settings.auth.step3" = "3. Networkタブに切り替え";
+"settings.auth.step4" = "4. ページを更新して任意のリクエストを見つける";
+"settings.auth.step5" = "5. Headersで以下を見つける：";
+"settings.auth.step6" = "   • CookieのsessionKey";
+"settings.auth.step7" = "   • URLのOrganization ID";
+"settings.auth.open_browser" = "ブラウザでClaude使用状況ページを開く";
+"settings.auth.org_id_label" = "Organization ID";
+"settings.auth.org_id_placeholder" = "Organization IDを貼り付け";
+"settings.auth.org_id_hint" = "通常はUUIDのような文字列、例：12345678-abcd-ef90-1234-567890abcdef";
+"settings.auth.session_key_label" = "Session Key";
+"settings.auth.session_key_placeholder" = "Session Keyを貼り付け";
+"settings.auth.session_key_hint" = "sk-ant-sid01-で始まる長い文字列";
+"settings.auth.configured" = "認証情報が設定済み";
+"settings.auth.not_configured" = "認証情報を入力してください";
+
+// MARK: - Settings - About
+"settings.about.version" = "バージョン %@";
+"settings.about.description" = "Claude AI の5時間使用制限を監視";
+"settings.about.developer" = "開発者";
+"settings.about.license" = "ライセンス";
+"settings.about.license_value" = "MIT License";
+"settings.about.github" = "GitHubリポジトリを表示";
+"settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.copyright" = "© 2025 All Rights Reserved";
+
+// MARK: - Welcome View
+"welcome.title" = "Usage4Claudeへようこそ";
+"welcome.subtitle" = "使い始める前に認証情報を設定してください";
+"welcome.setup_button" = "認証情報を設定";
+"welcome.later_button" = "後で設定";
+
+// MARK: - Update Checker
+"update.new_version_title" = "新しいバージョンがあります";
+"update.latest_version" = "最新バージョン";
+"update.current_version" = "現在のバージョン";
+"update.view_details_hint" = "【詳細を表示】をクリックして完全な更新内容を確認";
+"update.view_release_page" = "完全な更新内容はReleaseページをご覧ください";
+"update.download_button" = "アップデートをダウンロード";
+"update.remind_later_button" = "後で通知";
+"update.view_details_button" = "詳細を表示";
+"update.up_to_date_title" = "最新版です";
+"update.up_to_date_message" = "現在のバージョン %@ は最新です。";
+"update.ok_button" = "OK";
+"update.check_failed_title" = "アップデート確認に失敗";
+"update.confirm_button" = "確認";
+"update.error.invalid_url" = "無効なURL";
+"update.error.network" = "ネットワークエラー。インターネット接続を確認してください。";
+"update.error.no_data" = "データを取得できません";
+"update.error.parse_failed" = "更新情報の解析に失敗しました。";
+
+// MARK: - Icon Display Mode
+"display.percentage_only" = "パーセンテージのみ";
+"display.icon_only" = "アイコンのみ";
+"display.both" = "アイコンとパーセンテージ";
+
+// MARK: - Refresh Interval
+"refresh.30_seconds" = "30秒";
+"refresh.1_minute" = "1分";
+"refresh.5_minutes" = "5分";
+
+// MARK: - Language Names
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "中文（簡体字）";
+"language.chinese_traditional" = "中文（繁體字）";
+
+// MARK: - Window Titles
+"window.settings_title" = "Usage4Claude 設定";
+"window.welcome_title" = "ようこそ";
+
+// MARK: - Usage Data Formatting
+"usage_data.not_started_reset" = "使用開始後にリセット時刻を表示";
+"usage_data.resetting_soon" = "まもなくリセット";
+"usage_data.resets_in_hours" = "残り約%d時間%d分";
+"usage_data.resets_in_minutes" = "残り約%d分";
+"usage_data.unknown" = "不明";
+"usage_data.today" = "今日";
+"usage_data.tomorrow" = "明日";
+
+// MARK: - Error Messages
+"error.invalid_url" = "無効なURL";
+"error.no_data" = "データを受信できません";
+"error.session_expired" = "セッションが期限切れです。設定で再設定してください";
+"error.cloudflare_blocked" = "リクエストがセキュリティシステムによってブロックされました。ブラウザでclaude.aiにアクセスしてロボットではないことを確認し、再試行してください。";
+"error.no_credentials" = "まず設定で認証情報を設定してください";

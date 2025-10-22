@@ -1,0 +1,135 @@
+/* 
+  Localizable.strings (Traditional Chinese)
+  Usage4Claude
+ 
+  Created by f-is-h on 2025-10-15.
+  Copyright © 2025 f-is-h. All rights reserved.
+*/
+
+// MARK: - Menu Items
+"menu.general_settings" = "一般設定";
+"menu.auth_settings" = "認證資訊";
+"menu.check_updates" = "檢查更新";
+"menu.about" = "關於";
+"menu.web_usage" = "檢視 Claude 用量";
+"menu.coffee" = "Buy Me A Coffee";
+"menu.quit" = "結束 Usage4Claude";
+
+// MARK: - Usage Detail View
+"usage.title" = "Claude 使用狀況";
+"usage.not_started" = "開始使用後顯示";
+"usage.reset_in" = "距離重設還剩";
+"usage.remaining" = "剩餘時間";
+"usage.loading" = "載入中...";
+"usage.not_configured" = "未設定認證資訊";
+"usage.go_to_settings" = "前往設定認證資訊";
+"usage.reset_time" = "重設時間";
+"usage.used" = "已使用";
+"usage.five_hour_limit" = "5小時限制";
+
+// MARK: - Settings - Tabs
+"settings.tab.general" = "一般";
+"settings.tab.auth" = "認證";
+"settings.tab.about" = "關於";
+
+// MARK: - Settings - General
+"settings.general.display_section" = "顯示設定";
+"settings.general.menubar_icon" = "選單列圖示";
+"settings.general.menubar_hint" = "選擇選單列中顯示的內容";
+"settings.general.refresh_section" = "重新整理設定";
+"settings.general.refresh_interval" = "重新整理頻率";
+"settings.general.refresh_hint" = "設定資料自動重新整理的時間間隔";
+"settings.general.language_section" = "語言設定";
+"settings.general.interface_language" = "介面語言";
+"settings.general.language_hint" = "變更介面顯示語言（需要重新啟動應用程式）";
+"settings.general.reset_button" = "恢復預設設定";
+
+// MARK: - Settings - Authentication
+"settings.auth.how_to_title" = "如何取得認證資訊";
+"settings.auth.step1" = "1. 在瀏覽器中造訪 claude.ai 並登入";
+"settings.auth.step2" = "2. 開啟瀏覽器開發者工具（F12 或 Cmd+Option+I）";
+"settings.auth.step3" = "3. 切換到 Network（網路）標籤";
+"settings.auth.step4" = "4. 重新整理頁面，找到任意一個請求";
+"settings.auth.step5" = "5. 在 Headers 中找到：";
+"settings.auth.step6" = "   • Cookie 中的 sessionKey";
+"settings.auth.step7" = "   • URL 中的 Organization ID";
+"settings.auth.open_browser" = "在瀏覽器中開啟 Claude 用量頁面";
+"settings.auth.org_id_label" = "Organization ID";
+"settings.auth.org_id_placeholder" = "貼上 Organization ID";
+"settings.auth.org_id_hint" = "通常是一個類似 UUID 的字串，例如：12345678-abcd-ef90-1234-567890abcdef";
+"settings.auth.session_key_label" = "Session Key";
+"settings.auth.session_key_placeholder" = "貼上 Session Key";
+"settings.auth.session_key_hint" = "以 sk-ant-sid01- 開頭的長字串";
+"settings.auth.configured" = "認證資訊已設定";
+"settings.auth.not_configured" = "請填寫完整的認證資訊";
+
+// MARK: - Settings - About
+"settings.about.version" = "版本 %@";
+"settings.about.description" = "監控 Claude AI 的5小時使用限制";
+"settings.about.developer" = "開發者";
+"settings.about.license" = "授權條款";
+"settings.about.license_value" = "MIT License";
+"settings.about.github" = "造訪 GitHub 儲存庫";
+"settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.copyright" = "© 2025 All Rights Reserved";
+
+// MARK: - Welcome View
+"welcome.title" = "歡迎使用 Usage4Claude";
+"welcome.subtitle" = "開始之前，請先設定您的認證資訊";
+"welcome.setup_button" = "前往設定認證資訊";
+"welcome.later_button" = "稍後設定";
+
+// MARK: - Update Checker
+"update.new_version_title" = "發現新版本";
+"update.latest_version" = "最新版本";
+"update.current_version" = "目前版本";
+"update.view_details_hint" = "點選【檢視詳情】查看完整更新內容";
+"update.view_release_page" = "查看完整更新內容請造訪Release頁面";
+"update.download_button" = "下載更新";
+"update.remind_later_button" = "稍後提醒";
+"update.view_details_button" = "檢視詳情";
+"update.up_to_date_title" = "已是最新版本";
+"update.up_to_date_message" = "目前版本 %@ 已是最新版本。";
+"update.ok_button" = "好的";
+"update.check_failed_title" = "檢查更新失敗";
+"update.confirm_button" = "確定";
+"update.error.invalid_url" = "無效的URL";
+"update.error.network" = "網路錯誤，請檢查網路連線";
+"update.error.no_data" = "無法取得資料";
+"update.error.parse_failed" = "解析更新資訊失敗";
+
+// MARK: - Icon Display Mode
+"display.percentage_only" = "僅顯示百分比";
+"display.icon_only" = "僅顯示圖示";
+"display.both" = "圖示和百分比";
+
+// MARK: - Refresh Interval
+"refresh.30_seconds" = "30秒";
+"refresh.1_minute" = "1分鐘";
+"refresh.5_minutes" = "5分鐘";
+
+// MARK: - Language Names
+"language.chinese" = "中文（简体）";
+"language.chinese_traditional" = "中文（繁體）";
+"language.english" = "English";
+"language.japanese" = "日本語";
+
+// MARK: - Window Titles
+"window.settings_title" = "Usage4Claude 設定";
+"window.welcome_title" = "歡迎";
+
+// MARK: - Usage Data Formatting
+"usage_data.not_started_reset" = "使用後顯示重設時間";
+"usage_data.resetting_soon" = "即將重設";
+"usage_data.resets_in_hours" = "剩餘約%d小時%d分";
+"usage_data.resets_in_minutes" = "剩餘約%d分";
+"usage_data.unknown" = "未知";
+"usage_data.today" = "今天";
+"usage_data.tomorrow" = "明天";
+
+// MARK: - Error Messages
+"error.invalid_url" = "無效的 URL";
+"error.no_data" = "未收到資料";
+"error.session_expired" = "工作階段已過期，請在設定中重新設定";
+"error.cloudflare_blocked" = "請求被安全系統攔截。請在瀏覽器中造訪 claude.ai 確認你不是機器人，然後重試。";
+"error.no_credentials" = "請先在設定中設定認證資訊";
