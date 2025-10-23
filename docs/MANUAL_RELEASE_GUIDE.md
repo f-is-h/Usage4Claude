@@ -89,9 +89,9 @@ open Usage4Claude.app
 
 ---
 
-## 步骤2：安装 create-dmg 工具
+## 步骤2：安装工具
 
-### 2.1 通过 Homebrew 安装
+### 2.1 安装 create-dmg
 
 打开终端，执行：
 
@@ -101,13 +101,31 @@ brew install create-dmg
 
 等待安装完成（通常30秒-1分钟）。
 
-### 2.2 验证安装
+验证安装：
 
 ```bash
 create-dmg --version
 ```
 
 应该能看到版本信息，如：`create-dmg 1.2.1`
+
+### 2.2 安装 fileicon
+
+打开终端，执行：
+
+```bash
+brew install fileicon
+```
+
+等待安装完成（通常30秒-1分钟）。
+
+验证安装：
+
+```bash
+fileicon --version
+```
+
+应该能看到版本信息，如：`fileicon v0.3.4`
 
 ---
 
@@ -126,7 +144,7 @@ cd <项目根目录>/build/Usage4Claude-Export
 ```bash
 create-dmg \
   --volname "Usage4Claude" \
-  --volicon "../../docs/images/icon@2x.png" \
+  --volicon "../../docs/images/DmgIcon.icns" \
   --window-pos 200 120 \
   --window-size 600 500 \
   --icon-size 128 \
@@ -147,20 +165,19 @@ create-dmg \
 - `--app-drop-link`: 创建Applications文件夹的快捷方式，并设置位置
 - 输出文件名: `Usage4Claude-v1.0.0.dmg`（根据版本号修改）
 
-### 3.4 简化版命令（快速创建）
+完成后，会在当前目录看到 `Usage4Claude-v1.0.0.dmg` 文件。
 
-如果不需要复杂的自定义，可以用最简单的命令：
+### 3.3 设置 DMG 文件图标
+
+※图标设置存储在扩展属性中，上传到 GitHub 时会被清除，下载后不会显示
+
+使用 fileicon 设置 DMG 安装包文件图标：
 
 ```bash
-create-dmg \
-  --volname "Usage4Claude" \
-  --window-size 600 500 \
-  --app-drop-link 425 190 \
-  "Usage4Claude-v1.0.0.dmg" \
-  "Usage4Claude.app"
+fileicon set "Usage4Claude-v1.0.0.dmg" "../../docs/images/DmgIcon.icns"
 ```
 
-完成后，会在当前目录看到 `Usage4Claude-v1.0.0.dmg` 文件。
+完成后，会在看到 `Usage4Claude-v1.0.0.dmg` 文件图标正确显示。
 
 ---
 
