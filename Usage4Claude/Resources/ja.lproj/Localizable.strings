@@ -104,8 +104,8 @@
 "display.both" = "アイコンとパーセンテージ";
 
 // MARK: - Refresh Interval
-"refresh.30_seconds" = "30秒";
 "refresh.1_minute" = "1分";
+"refresh.3_minutes" = "3分";
 "refresh.5_minutes" = "5分";
 
 // MARK: - Language Names

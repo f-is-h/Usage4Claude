@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-10-24
+
+### Fixed
+- Fixed potential "Request Exceeded" errors by optimizing refresh intervals
+- Adjusted default refresh interval from 1 minute to 3 minutes for better API rate limit compliance
+- Modified available refresh options to more conservative values (1min, 3min, 5min)
+- Updated all localization files for adjusted refresh interval options
+
 ## [1.0.0] - 2025-10-22
 
 ### Added

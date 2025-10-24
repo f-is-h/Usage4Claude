@@ -104,8 +104,8 @@
 "display.both" = "圖示和百分比";
 
 // MARK: - Refresh Interval
-"refresh.30_seconds" = "30秒";
 "refresh.1_minute" = "1分鐘";
+"refresh.3_minutes" = "3分鐘";
 "refresh.5_minutes" = "5分鐘";
 
 // MARK: - Language Names

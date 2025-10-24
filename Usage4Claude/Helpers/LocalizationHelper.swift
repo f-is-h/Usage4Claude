@@ -137,8 +137,8 @@ enum L {
     
     // MARK: - Refresh Interval
     enum Refresh {
-        static let thirtySeconds = localized("refresh.30_seconds")
         static let oneMinute = localized("refresh.1_minute")
+        static let threeMinutes = localized("refresh.3_minutes")
         static let fiveMinutes = localized("refresh.5_minutes")
     }
     

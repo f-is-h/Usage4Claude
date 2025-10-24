@@ -104,8 +104,8 @@
 "display.both" = "Icon and Percentage";
 
 // MARK: - Refresh Interval
-"refresh.30_seconds" = "30 seconds";
 "refresh.1_minute" = "1 minute";
+"refresh.3_minutes" = "3 minutes";
 "refresh.5_minutes" = "5 minutes";
 
 // MARK: - Language Names

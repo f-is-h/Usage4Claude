@@ -35,19 +35,19 @@ enum IconDisplayMode: String, CaseIterable, Codable {
 
 /// 数据刷新频率
 enum RefreshInterval: Int, CaseIterable, Codable {
-    /// 30秒刷新一次
-    case thirtySeconds = 30
     /// 1分钟刷新一次
     case oneMinute = 60
+    /// 3分钟刷新一次
+    case threeMinutes = 180
     /// 5分钟刷新一次
     case fiveMinutes = 300
     
     var localizedName: String {
         switch self {
-        case .thirtySeconds:
-            return L.Refresh.thirtySeconds
         case .oneMinute:
             return L.Refresh.oneMinute
+        case .threeMinutes:
+            return L.Refresh.threeMinutes
         case .fiveMinutes:
             return L.Refresh.fiveMinutes
         }
@@ -170,7 +170,7 @@ class UserSettings: ObservableObject {
         }
         
         let savedRefreshInterval = defaults.integer(forKey: "refreshInterval")
-        self.refreshInterval = savedRefreshInterval > 0 ? savedRefreshInterval : 60 // 默认1分钟
+        self.refreshInterval = savedRefreshInterval > 0 ? savedRefreshInterval : 180 // 默认3分钟
         
         if let langString = defaults.string(forKey: "language"),
            let lang = AppLanguage(rawValue: langString) {
