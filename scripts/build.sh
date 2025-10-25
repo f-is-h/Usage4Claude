@@ -131,7 +131,7 @@ print_success "项目文件存在"
 print_header "读取版本号"
 
 VERSION=$(xcodebuild -project "$XCODEPROJ" -showBuildSettings | grep MARKETING_VERSION | head -1 | awk '{print $3}')
-VERSION="9.9.9"
+
 if [ -z "$VERSION" ]; then
     print_error "无法从 Xcode 项目读取版本号"
     exit 1
