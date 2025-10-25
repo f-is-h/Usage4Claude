@@ -233,7 +233,7 @@ git show v1.0.1
 git push origin main
 
 # 推送标签
-git push origin v1.1.0
+git push origin v1.0.1
 ```
 
 **预期输出：**
@@ -695,6 +695,7 @@ git push origin v1.0.1
 - [ ] 修复紧急问题（如有）
 
 **本周：**
+
 - [ ] 收集用户反馈
 - [ ] 规划下个版本
 - [ ] 更新路线图
