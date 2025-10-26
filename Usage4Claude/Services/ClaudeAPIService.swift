@@ -20,6 +20,23 @@ class ClaudeAPIService {
     /// 用户设置实例，用于获取认证信息
     private let settings = UserSettings.shared
     
+    /// 共享的 URLSession 实例
+    private let session: URLSession
+    
+    // MARK: - Initialization
+    
+    init() {
+        // 配置 URLSession
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30  // 请求超时：30秒
+        configuration.timeoutIntervalForResource = 60 // 资源超时：60秒
+        configuration.httpCookieAcceptPolicy = .always
+        configuration.httpShouldSetCookies = true
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData  // 不使用缓存
+        
+        self.session = URLSession(configuration: configuration)
+    }
+    
     // MARK: - Public Methods
     
     /// 获取用户的 Claude 使用情况
@@ -60,12 +77,6 @@ class ClaudeAPIService {
         // 设置 Cookie
         let cookieString = "sessionKey=\(settings.sessionKey)"
         request.setValue(cookieString, forHTTPHeaderField: "Cookie")
-        
-        // 配置URLSession以支持自动重定向和Cookie
-        let configuration = URLSessionConfiguration.default
-        configuration.httpCookieAcceptPolicy = .always
-        configuration.httpShouldSetCookies = true
-        let session = URLSession(configuration: configuration)
         
         session.dataTask(with: request) { data, response, error in
             if let error = error {

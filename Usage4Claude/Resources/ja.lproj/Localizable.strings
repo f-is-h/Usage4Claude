@@ -37,8 +37,10 @@
 "settings.general.menubar_icon" = "メニューバーアイコン";
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
 "settings.general.refresh_section" = "更新設定";
-"settings.general.refresh_interval" = "更新間隔";
-"settings.general.refresh_hint" = "データの自動更新間隔を設定";
+"settings.general.refresh_mode" = "更新モード";
+"settings.general.refresh_interval" = "固定更新間隔";
+"settings.general.refresh_hint_smart" = "使用状況に応じて更新頻度を自動調整（アクティブ時1分、アイドル時最大10分）";
+"settings.general.refresh_hint_fixed" = "固定の時間間隔でデータを更新";
 "settings.general.language_section" = "言語設定";
 "settings.general.interface_language" = "インターフェース言語";
 "settings.general.language_hint" = "表示言語を変更（アプリの再起動が必要）";
@@ -104,9 +106,12 @@
 "display.both" = "アイコンとパーセンテージ";
 
 // MARK: - Refresh Interval
+"refresh.smart_mode" = "スマート頻度";
+"refresh.fixed_mode" = "固定頻度";
 "refresh.1_minute" = "1分";
 "refresh.3_minutes" = "3分";
 "refresh.5_minutes" = "5分";
+"refresh.10_minutes" = "10分";
 
 // MARK: - Language Names
 "language.english" = "English";

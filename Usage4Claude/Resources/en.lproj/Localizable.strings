@@ -37,8 +37,10 @@
 "settings.general.menubar_icon" = "Menu Bar Icon";
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
 "settings.general.refresh_section" = "Refresh Settings";
-"settings.general.refresh_interval" = "Refresh Interval";
-"settings.general.refresh_hint" = "Set the time interval for automatic data refresh";
+"settings.general.refresh_mode" = "Refresh Mode";
+"settings.general.refresh_interval" = "Fixed Refresh Interval";
+"settings.general.refresh_hint_smart" = "Automatically adjust refresh frequency based on usage (1 min when active, up to 10 min when idle)";
+"settings.general.refresh_hint_fixed" = "Refresh data at fixed time intervals";
 "settings.general.language_section" = "Language Settings";
 "settings.general.interface_language" = "Interface Language";
 "settings.general.language_hint" = "Change the interface display language (requires app restart)";
@@ -104,9 +106,12 @@
 "display.both" = "Icon and Percentage";
 
 // MARK: - Refresh Interval
+"refresh.smart_mode" = "Smart Frequency";
+"refresh.fixed_mode" = "Fixed Frequency";
 "refresh.1_minute" = "1 minute";
 "refresh.3_minutes" = "3 minutes";
 "refresh.5_minutes" = "5 minutes";
+"refresh.10_minutes" = "10 minutes";
 
 // MARK: - Language Names
 "language.english" = "English";

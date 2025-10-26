@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-10-26
+
+### Added
+- **Smart Refresh Frequency**: Intelligent 4-level progressive refresh rate adjustment
+  - Active mode (1 min): When usage is detected
+  - Short-term idle (3 min): After 3 consecutive no-change detections
+  - Medium-term idle (5 min): After 6 consecutive no-change detections
+  - Long-term idle (10 min): After 12 consecutive no-change detections
+- User-selectable refresh modes: Smart Frequency or Fixed Frequency
+- Fixed refresh frequency options expanded to 4 levels (1/3/5/10 minutes)
+- Automatic frequency recovery to active mode when usage changes are detected
+
+### Changed
+- Default refresh mode changed from fixed to smart frequency
+- Refresh settings UI redesigned with mode selection and conditional fixed interval picker
+- All localization files updated for smart refresh frequency feature (English, Japanese, Simplified Chinese, Traditional Chinese)
+
+### Improved
+- Significantly reduced API calls during idle periods (up to 10x reduction)
+- Better responsiveness during active usage with 1-minute refresh
+- Smoother transition between different monitoring modes
+- Enhanced user experience with intelligent resource management
+
 ## [1.0.1] - 2025-10-24
 
 ### Fixed
@@ -67,5 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.1.0
+[1.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.0.1
 [1.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.0.0
-[Unreleased]: https://github.com/f-is-h/Usage4Claude/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/f-is-h/Usage4Claude/compare/v1.1.0...HEAD

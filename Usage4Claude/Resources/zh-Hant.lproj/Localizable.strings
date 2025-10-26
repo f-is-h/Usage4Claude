@@ -37,8 +37,10 @@
 "settings.general.menubar_icon" = "選單列圖示";
 "settings.general.menubar_hint" = "選擇選單列中顯示的內容";
 "settings.general.refresh_section" = "重新整理設定";
-"settings.general.refresh_interval" = "重新整理頻率";
-"settings.general.refresh_hint" = "設定資料自動重新整理的時間間隔";
+"settings.general.refresh_mode" = "重新整理模式";
+"settings.general.refresh_interval" = "固定重新整理頻率";
+"settings.general.refresh_hint_smart" = "根據使用狀況自動調整重新整理頻率（活躍時1分鐘，閒置時最长10分鐘）";
+"settings.general.refresh_hint_fixed" = "按照設定的固定時間間隔重新整理資料";
 "settings.general.language_section" = "語言設定";
 "settings.general.interface_language" = "介面語言";
 "settings.general.language_hint" = "變更介面顯示語言（需要重新啟動應用程式）";
@@ -104,9 +106,12 @@
 "display.both" = "圖示和百分比";
 
 // MARK: - Refresh Interval
+"refresh.smart_mode" = "智慧頻率";
+"refresh.fixed_mode" = "固定頻率";
 "refresh.1_minute" = "1分鐘";
 "refresh.3_minutes" = "3分鐘";
 "refresh.5_minutes" = "5分鐘";
+"refresh.10_minutes" = "10分鐘";
 
 // MARK: - Language Names
 "language.chinese" = "中文（简体）";

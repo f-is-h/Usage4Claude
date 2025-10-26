@@ -400,12 +400,18 @@ class MenuBarManager: ObservableObject {
     
     /// 重启刷新定时器
     /// 根据用户设置的刷新频率重新创建定时器
+    /// 智能模式下会根据监控模式动态调整间隔
     private func restartTimer() {
         timer?.invalidate()
-        let interval = TimeInterval(settings.refreshInterval)
+        let interval = TimeInterval(settings.effectiveRefreshInterval)
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.fetchUsage()
         }
+        
+        #if DEBUG
+        let minutes = interval / 60
+        print("⏱️ 定时器已重启，刷新间隔: \(minutes) 分钟")
+        #endif
     }
     
     // MARK: - Settings Window
@@ -497,6 +503,9 @@ class MenuBarManager: ObservableObject {
                     self?.usageData = data
                     self?.updateStatusBarIcon(percentage: data.percentage)
                     self?.errorMessage = nil
+                    
+                    // 智能模式：根据百分比变化调整刷新频率
+                    self?.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
                     
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription

@@ -37,8 +37,10 @@
 "settings.general.menubar_icon" = "菜单栏图标";
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
 "settings.general.refresh_section" = "刷新设置";
-"settings.general.refresh_interval" = "刷新频率";
-"settings.general.refresh_hint" = "设置数据自动刷新的时间间隔";
+"settings.general.refresh_mode" = "刷新模式";
+"settings.general.refresh_interval" = "固定刷新频率";
+"settings.general.refresh_hint_smart" = "根据使用情况自动调整刷新频率（活跃时1分钟，静默时最长10分钟）";
+"settings.general.refresh_hint_fixed" = "按照设定的固定时间间隔刷新数据";
 "settings.general.language_section" = "语言设置";
 "settings.general.interface_language" = "界面语言";
 "settings.general.language_hint" = "更改界面显示语言（需要重启应用）";
@@ -104,9 +106,12 @@
 "display.both" = "图标和百分比";
 
 // MARK: - Refresh Interval
+"refresh.smart_mode" = "智能频率";
+"refresh.fixed_mode" = "固定频率";
 "refresh.1_minute" = "1分钟";
 "refresh.3_minutes" = "3分钟";
 "refresh.5_minutes" = "5分钟";
+"refresh.10_minutes" = "10分钟";
 
 // MARK: - Language Names
 "language.english" = "English";

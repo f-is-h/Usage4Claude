@@ -27,7 +27,7 @@
 - **📊 Real-time Monitoring** - Display Claude subscription's 5-hour usage quota in menu bar
 - **🎨 Smart Colors** - Automatic color changes based on usage (green/orange/red)
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
-- **🔄 Auto Refresh** - Configurable refresh intervals (30s/1min/5min)
+- **🔄 Smart/Fixed Refresh** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
 - **💻 Native Experience** - Pure native macOS app, lightweight and elegant
 
 ### 🎨 Personalization
@@ -158,11 +158,20 @@ open Usage4Claude.xcodeproj
 - **Check Updates** - Menu → Check for Updates
 - **Quit App** - Menu → Quit
 
-### Refresh Frequency Recommendations
+### Refresh Mode
 
-- **30 seconds** - When closely monitoring usage
-- **1 minute** - Recommended for daily use (default)
-- **5 minutes** - Low frequency usage, save resources
+**Smart Frequency (Recommended)**
+- Automatically adjusts refresh rate based on usage patterns
+- Active mode (1 min) - Fast refresh when actively using Claude
+- Idle modes (3/5/10 min) - Progressively slower refresh when idle
+- Significantly reduces API calls during idle periods (up to 10x)
+- Instantly returns to 1-minute refresh when usage detected
+
+**Fixed Frequency**
+- **1 minute** - Recommended for consistent monitoring
+- **3 minutes** - Balanced monitoring
+- **5 minutes** - Low frequency monitoring
+- **10 minutes** - Minimal API calls
 
 ---
 

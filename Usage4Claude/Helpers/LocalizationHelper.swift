@@ -51,8 +51,10 @@ enum L {
         static let menubarIcon = localized("settings.general.menubar_icon")
         static let menubarHint = localized("settings.general.menubar_hint")
         static let refreshSection = localized("settings.general.refresh_section")
+        static let refreshMode = localized("settings.general.refresh_mode")
         static let refreshInterval = localized("settings.general.refresh_interval")
-        static let refreshHint = localized("settings.general.refresh_hint")
+        static let refreshHintSmart = localized("settings.general.refresh_hint_smart")
+        static let refreshHintFixed = localized("settings.general.refresh_hint_fixed")
         static let languageSection = localized("settings.general.language_section")
         static let interfaceLanguage = localized("settings.general.interface_language")
         static let languageHint = localized("settings.general.language_hint")
@@ -137,9 +139,12 @@ enum L {
     
     // MARK: - Refresh Interval
     enum Refresh {
+        static let smartMode = localized("refresh.smart_mode")
+        static let fixedMode = localized("refresh.fixed_mode")
         static let oneMinute = localized("refresh.1_minute")
         static let threeMinutes = localized("refresh.3_minutes")
         static let fiveMinutes = localized("refresh.5_minutes")
+        static let tenMinutes = localized("refresh.10_minutes")
     }
     
     // MARK: - Language Names

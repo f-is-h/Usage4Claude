@@ -75,14 +75,26 @@ struct GeneralSettingsView: View {
             }
             
             Section(header: Text(L.SettingsGeneral.refreshSection).font(.headline)) {
-                Picker(L.SettingsGeneral.refreshInterval, selection: $settings.refreshInterval) {
-                    ForEach(RefreshInterval.allCases, id: \.rawValue) { interval in
-                        Text(interval.localizedName).tag(interval.rawValue)
+                // 刷新模式选择
+                Picker(L.SettingsGeneral.refreshMode, selection: $settings.refreshMode) {
+                    ForEach(RefreshMode.allCases, id: \.self) { mode in
+                        Text(mode.localizedName).tag(mode)
                     }
                 }
                 .pickerStyle(.radioGroup)
                 
-                Text(L.SettingsGeneral.refreshHint)
+                // 固定频率选择（仅在选择固定模式时显示）
+                if settings.refreshMode == .fixed {
+                    Picker(L.SettingsGeneral.refreshInterval, selection: $settings.refreshInterval) {
+                        ForEach(RefreshInterval.allCases, id: \.rawValue) { interval in
+                            Text(interval.localizedName).tag(interval.rawValue)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .padding(.leading, 20)
+                }
+                
+                Text(settings.refreshMode == .smart ? L.SettingsGeneral.refreshHintSmart : L.SettingsGeneral.refreshHintFixed)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
