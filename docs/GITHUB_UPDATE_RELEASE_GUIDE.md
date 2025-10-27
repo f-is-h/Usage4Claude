@@ -213,13 +213,13 @@ git log --oneline -3
 
 ```bash
 # 创建带注释的标签
-git tag -a v1.0.1 -m "Release v1.0.1
+git tag -a v1.0.1 -m "fix: resolve Request Exceeded errors with optimized refresh intervals
 
-Fix Request Exceeded errors:
-- Changed default to 3 minutes
-- Added 3-minute option
-- Removed 30-second option
-- Better API rate limit compliance"
+- Remove 30-second refresh option (too aggressive)
+- Add 3-minute refresh option (better balance)
+- Change default from 1 minute to 3 minutes
+- Update all localization files (EN/JA/ZH-Hans/ZH-Hant)
+- Reduce risk of hitting API rate limits"
 
 # 验证标签
 git tag -l
