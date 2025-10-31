@@ -14,6 +14,8 @@
 
 **一個優雅的 macOS 選單列應用程式，即時監控您的 Claude AI 使用情況。**
 
+✨ **支持監控所有Claude平台: Web • Claude Code • Desktop • Mobile App** ✨
+
 [功能特性](#-功能特性) • [下載安裝](#-下載安裝) • [使用指南](#-使用指南) • [常見問題](#-常見問題) • [支持專案](#-支持專案)
 
 </div>
@@ -29,6 +31,16 @@
 - **⏰ 精確計時** - 精確到分鐘的配額重置時間顯示
 - **🔄 智慧/固定刷新** - 智惠4級自適應刷新或固定間隔（1/3/5/10分鐘）
 - **💻 原生體驗** - 純原生 macOS 應用程式，輕量且優雅
+
+### 🌐 跨平台支持
+
+無縫支持所有Claude產品:
+- 🌐 **Claude.ai** (Web界面)
+- 💻 **Claude Code** (開發者CLI工具)
+- 🖥️ **Desktop App** (macOS/Windows)
+- 📱 **Mobile App** (iOS/Android)
+
+所有平台共享同一使用配額，在一個地方監控！
 
 ### 🎨 個人化
 
@@ -252,6 +264,23 @@ A:
 - 最小化權限（僅網路 + Keychain）
 
 您可以透過 GitHub 查看原始程式碼來驗證這一切！
+
+</details>
+
+<details>
+<summary><b>Q: 是否支持 Claude Code / Desktop App / Mobile App?</b></summary>
+
+A: **是的，支持所有Claude平台！** 
+
+由於所有Claude產品 (Web, Claude Code, Desktop App, Mobile App) 共享同一個5小時使用配額，Usage4Claude會監控您在所有平台上的總使用量。
+
+無論您是:
+- 在終端使用 `claude code` 編程
+- 在 claude.ai 聊天
+- 使用桌面應用程式
+- 使用手機應用程式
+
+您都能在選單列中看到即時的總使用量。無需特定平台的配置！
 
 </details>
 

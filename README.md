@@ -14,6 +14,8 @@
 
 **An elegant macOS menu bar app for real-time monitoring of your Claude AI usage.**
 
+✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App** ✨
+
 [Features](#-features) • [Installation](#-installation) • [User Guide](#-user-guide) • [FAQ](#-faq) • [Support](#-support)
 
 </div>
@@ -29,6 +31,16 @@
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
 - **🔄 Smart/Fixed Refresh** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
 - **💻 Native Experience** - Pure native macOS app, lightweight and elegant
+
+### 🌐 Cross-Platform Support
+
+Works seamlessly with all Claude products:
+- 🌐 **Claude.ai** (Web interface)
+- 💻 **Claude Code** (CLI tool for developers)
+- 🖥️ **Desktop App** (macOS/Windows)
+- 📱 **Mobile App** (iOS/Android)
+
+All platforms share the same usage quota, monitored in one place!
 
 ### 🎨 Personalization
 
@@ -252,6 +264,23 @@ A:
 - Minimal permissions (only network + Keychain)
 
 You can verify all of this by reviewing the source code on GitHub!
+
+</details>
+
+<details>
+<summary><b>Q: Does it work with Claude Code / Desktop App / Mobile App?</b></summary>
+
+A: **Yes, it works with all Claude platforms!** 
+
+Since all Claude products (Web, Claude Code, Desktop App, Mobile App) share the same 5-hour usage quota, Usage4Claude monitors your combined usage across all platforms.
+
+Whether you're:
+- Coding in terminal with `claude code`
+- Chatting on claude.ai
+- Using the desktop app
+- Using mobile apps
+
+You'll see your real-time total usage in the menu bar. No platform-specific configuration needed!
 
 </details>
 
