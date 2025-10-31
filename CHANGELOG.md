@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-10-31
+
+### Improved
+- **Smart Reset Time Verification**: Intelligent verification system for quota reset detection
+  - Automatic verification at 1/10/30 second after reset time
+- **Intelligent Verification Cancellation**: Automatically cancels remaining verifications when reset is detected
+  - Detects reset completion by monitoring reset time changes
+  - Avoids unnecessary API calls when reset is confirmed
+
 ## [1.1.0] - 2025-10-26
 
 ### Added
@@ -90,7 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.1.1
 [1.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.1.0
 [1.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.0.1
 [1.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.0.0
-[Unreleased]: https://github.com/f-is-h/Usage4Claude/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/f-is-h/Usage4Claude/compare/v1.1.1...HEAD

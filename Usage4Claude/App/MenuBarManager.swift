@@ -25,6 +25,12 @@ class MenuBarManager: ObservableObject {
     private var timer: Timer?
     /// 弹出窗口实时刷新定时器（1秒间隔）
     private var popoverRefreshTimer: Timer?
+    /// 重置验证定时器 - 重置后1秒
+    private var resetVerifyTimer1: Timer?
+    /// 重置验证定时器 - 重置后10秒
+    private var resetVerifyTimer2: Timer?
+    /// 重置验证定时器 - 重置后30秒
+    private var resetVerifyTimer3: Timer?
     /// Claude API 服务实例
     private let apiService = ClaudeAPIService()
     /// 更新检查器实例
@@ -42,6 +48,8 @@ class MenuBarManager: ObservableObject {
     @Published var isLoading = false
     /// 错误消息
     @Published var errorMessage: String?
+    /// 上次的重置时间（用于检测重置是否完成）
+    private var lastResetsAt: Date?
     
     // MARK: - Initialization
     
@@ -507,11 +515,132 @@ class MenuBarManager: ObservableObject {
                     // 智能模式：根据百分比变化调整刷新频率
                     self?.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
                     
+                    // 检测重置时间是否发生变化
+                    if let self = self {
+                        let newResetsAt = data.resetsAt
+                        let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
+                        
+                        if hasResetChanged {
+                            // 重置时间发生变化，取消所有待执行的验证
+                            #if DEBUG
+                            print("✅ 检测到重置时间变化，取消剩余验证")
+                            #endif
+                            self.cancelResetVerification()
+                        } else {
+                            // 重置时间未变化，安排验证
+                            if let resetsAt = newResetsAt {
+                                self.scheduleResetVerification(resetsAt: resetsAt)
+                            }
+                        }
+                        
+                        // 更新上次的重置时间
+                        self.lastResetsAt = newResetsAt
+                    }
+                    
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                     print("Error fetching usage: \(error)")
                 }
             }
+        }
+    }
+    
+    // MARK: - Reset Verification
+    
+    /// 检测重置时间是否发生变化
+    /// - Parameters:
+    ///   - oldTime: 上次的重置时间
+    ///   - newTime: 新的重置时间
+    /// - Returns: 如果重置时间发生了变化则返回 true
+    private func hasResetTimeChanged(from oldTime: Date?, to newTime: Date?) -> Bool {
+        // 如果两者都为 nil，没有变化
+        if oldTime == nil && newTime == nil {
+            return false
+        }
+        
+        // 如果一个为 nil 另一个不为 nil，有变化
+        if (oldTime == nil) != (newTime == nil) {
+            return true
+        }
+        
+        // 如果两者都不为 nil，比较时间值（允许1秒误差）
+        if let old = oldTime, let new = newTime {
+            return abs(old.timeIntervalSince(new)) > 1.0
+        }
+        
+        return false
+    }
+    
+    /// 取消所有重置验证定时器
+    private func cancelResetVerification() {
+        resetVerifyTimer1?.invalidate()
+        resetVerifyTimer2?.invalidate()
+        resetVerifyTimer3?.invalidate()
+        resetVerifyTimer1 = nil
+        resetVerifyTimer2 = nil
+        resetVerifyTimer3 = nil
+    }
+    
+    /// 安排重置时间验证
+    /// 在重置时间过后的1秒、10秒、30秒分别触发一次刷新
+    /// 如果检测到重置时间变化，会自动取消后续验证
+    /// - Parameter resetsAt: 用量重置时间
+    private func scheduleResetVerification(resetsAt: Date) {
+        // 清除旧的验证定时器
+        cancelResetVerification()
+        
+        // 计算距离重置时间的间隔
+        let timeUntilReset = resetsAt.timeIntervalSinceNow
+        
+        // 只有重置时间在未来才安排验证
+        guard timeUntilReset > 0 else {
+            #if DEBUG
+            print("⏰ 重置时间已过，跳过验证安排")
+            #endif
+            return
+        }
+        
+        #if DEBUG
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = TimeZone.current
+        print("⏰ 安排重置验证 - 重置时间: \(formatter.string(from: resetsAt))")
+        #endif
+        
+        // 重置后1秒验证
+        resetVerifyTimer1 = Timer.scheduledTimer(
+            withTimeInterval: timeUntilReset + 1,
+            repeats: false
+        ) { [weak self] _ in
+            #if DEBUG
+            print("✅ 重置验证 +1秒 - 开始刷新")
+            #endif
+            self?.fetchUsage()
+            self?.resetVerifyTimer1 = nil
+        }
+        
+        // 重置后10秒验证
+        resetVerifyTimer2 = Timer.scheduledTimer(
+            withTimeInterval: timeUntilReset + 10,
+            repeats: false
+        ) { [weak self] _ in
+            #if DEBUG
+            print("✅ 重置验证 +10秒 - 开始刷新")
+            #endif
+            self?.fetchUsage()
+            self?.resetVerifyTimer2 = nil
+        }
+        
+        // 重置后30秒验证
+        resetVerifyTimer3 = Timer.scheduledTimer(
+            withTimeInterval: timeUntilReset + 30,
+            repeats: false
+        ) { [weak self] _ in
+            #if DEBUG
+            print("✅ 重置验证 +30秒 - 开始刷新")
+            #endif
+            self?.fetchUsage()
+            self?.resetVerifyTimer3 = nil
         }
     }
     
@@ -727,6 +856,12 @@ class MenuBarManager: ObservableObject {
         timer = nil
         popoverRefreshTimer?.invalidate()
         popoverRefreshTimer = nil
+        resetVerifyTimer1?.invalidate()
+        resetVerifyTimer1 = nil
+        resetVerifyTimer2?.invalidate()
+        resetVerifyTimer2 = nil
+        resetVerifyTimer3?.invalidate()
+        resetVerifyTimer3 = nil
         
         // 移除所有事件监听器
         removePopoverCloseObserver()

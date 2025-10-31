@@ -364,6 +364,22 @@ func updateSmartMonitoringMode(currentUtilization: Double) {
 - ✅ 4级平滑过渡，避免突变
 - ✅ 用户可选智能/固定模式
 
+**重置时间智能验证**（2025-10-31 新增）：
+在有明确重置时间时，额外安排验证刷新以确保及时捕捉重置：
+- 重置后 +1秒 → 第一次验证
+- 重置后 +10秒 → 第二次验证
+- 重置后 +30秒 → 第三次验证
+- **检测到重置时间变化时自动取消后续验证**（避免不必要的API调用）
+
+**实现**：
+```swift
+// 每次获取数据后检测重置时间是否变化
+let hasResetChanged = hasResetTimeChanged(from: lastResetsAt, to: newResetsAt)
+if hasResetChanged {
+    cancelResetVerification()  // 重置已完成，取消剩余验证
+}
+```
+
 ---
 
 ### 问题9：URLSession 网络超时优化
@@ -486,7 +502,7 @@ class MenuBarManager {
 | 文件 | 行数 | 说明 |
 |------|------|------|
 | ClaudeUsageMonitorApp.swift | ~80 | 应用入口 + 生命周期 |
-| MenuBarManager.swift | ~450 | 核心逻辑 |
+| MenuBarManager.swift | ~500 | 核心逻辑 + 智能刷新 |
 | ClaudeAPIService.swift | ~200 | 网络服务 |
 | UsageDetailView.swift | ~180 | UI视图 |
 | SettingsView.swift | ~350 | 设置界面 |
