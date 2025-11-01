@@ -66,14 +66,6 @@ git status
 git diff
 ```
 
-**本次改动文件：**
-- `Usage4Claude/Models/UserSettings.swift`
-- `Usage4Claude/Helpers/LocalizationHelper.swift`
-- `Usage4Claude/Resources/en.lproj/Localizable.strings`
-- `Usage4Claude/Resources/ja.lproj/Localizable.strings`
-- `Usage4Claude/Resources/zh-Hans.lproj/Localizable.strings`
-- `Usage4Claude/Resources/zh-Hant.lproj/Localizable.strings`
-
 ### 步骤 2：最终测试
 
 1. **在 Xcode 中编译**
@@ -82,14 +74,8 @@ git diff
    Cmd + R (运行)
    ```
 
-2. **测试所有改动点**
-   - ✅ 打开设置，检查刷新频率选项（1分钟、3分钟、5分钟）
-   - ✅ 验证默认值为3分钟
-   - ✅ 切换每个选项，确认生效
-   - ✅ 测试所有多语言（英语、日语、简体中文、繁体中文）
-   - ✅ 重启应用，确认设置保持
-
-3. **功能完整性测试**
+2. **功能完整性测试**
+   
    - ✅ 数据刷新正常
    - ✅ 菜单栏图标正常
    - ✅ 弹出窗口显示正常
