@@ -138,3 +138,5 @@
 "error.session_expired" = "工作階段已過期，請在設定中重新設定";
 "error.cloudflare_blocked" = "請求被安全系統攔截。請在瀏覽器中造訪 claude.ai 確認你不是機器人，然後重試。";
 "error.no_credentials" = "請先在設定中設定認證資訊";
+"error.network_failed" = "網路請求失敗，請檢查網路連線";
+"error.decoding_failed" = "解析回應資料失敗，請檢查認證資訊是否正確";

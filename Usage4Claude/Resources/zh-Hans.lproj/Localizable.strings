@@ -138,3 +138,5 @@
 "error.session_expired" = "会话已过期，请在设置中重新配置";
 "error.cloudflare_blocked" = "请求被安全系统拦截。请在浏览器中访问 claude.ai 确认你不是机器人，然后重试。";
 "error.no_credentials" = "请先在设置中配置认证信息";
+"error.network_failed" = "网络请求失败，请检查网络连接";
+"error.decoding_failed" = "解析响应数据失败，请检查认证信息是否正确";

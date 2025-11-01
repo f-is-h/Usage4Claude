@@ -183,6 +183,8 @@ enum L {
         static let sessionExpired = localized("error.session_expired")
         static let cloudflareBlocked = localized("error.cloudflare_blocked")
         static let noCredentials = localized("error.no_credentials")
+        static let networkFailed = localized("error.network_failed")
+        static let decodingFailed = localized("error.decoding_failed")
     }
     
     // MARK: - Helper Methods

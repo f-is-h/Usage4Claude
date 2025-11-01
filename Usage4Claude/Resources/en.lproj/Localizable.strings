@@ -138,3 +138,5 @@
 "error.session_expired" = "Session expired, please reconfigure in settings";
 "error.cloudflare_blocked" = "Request blocked by security system. Please visit claude.ai in browser to confirm you're not a robot, then try again.";
 "error.no_credentials" = "Please configure authentication information in settings first";
+"error.network_failed" = "Network request failed. Please check your internet connection.";
+"error.decoding_failed" = "Failed to parse response data. Please check if your credentials are correct.";

@@ -80,8 +80,11 @@ class ClaudeAPIService {
         
         session.dataTask(with: request) { data, response, error in
             if let error = error {
+                #if DEBUG
+                print("Network error: \(error)")
+                #endif
                 DispatchQueue.main.async {
-                    completion(.failure(error))
+                    completion(.failure(UsageError.networkError))
                 }
                 return
             }
@@ -151,7 +154,7 @@ class ClaudeAPIService {
                 #endif
                 
                 DispatchQueue.main.async {
-                    completion(.failure(error))
+                    completion(.failure(UsageError.decodingError))
                 }
             }
         }.resume()
@@ -314,6 +317,8 @@ enum UsageError: LocalizedError {
     case sessionExpired
     case cloudflareBlocked
     case noCredentials
+    case networkError
+    case decodingError
     
     var errorDescription: String? {
         switch self {
@@ -327,6 +332,10 @@ enum UsageError: LocalizedError {
             return L.Error.cloudflareBlocked
         case .noCredentials:
             return L.Error.noCredentials
+        case .networkError:
+            return L.Error.networkFailed
+        case .decodingError:
+            return L.Error.decodingFailed
         }
     }
 }
