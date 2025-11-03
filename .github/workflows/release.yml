@@ -14,7 +14,7 @@ on:
       dry_run:
         description: 'Dry run mode (test without actual release)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 # Only allow one release workflow to run at a time
@@ -88,7 +88,6 @@ jobs:
         id: version
         if: steps.check.outputs.should_release == 'true'
         run: |
-          chmod +x .github/scripts/verify_version.sh
           VERSION=$(.github/scripts/verify_version.sh extract-changelog CHANGELOG.md)
           
           if [ -z "$VERSION" ]; then
@@ -135,9 +134,7 @@ jobs:
           xcode-version: latest-stable
       
       - name: Verify version consistency
-        run: |
-          chmod +x .github/scripts/verify_version.sh
-          
+        run: |          
           echo "Verifying CHANGELOG version matches Xcode version..."
           if ! .github/scripts/verify_version.sh verify CHANGELOG.md ${{ env.XCODE_PROJECT }}; then
             echo ""
@@ -188,7 +185,6 @@ jobs:
       - name: Build application
         run: |
           echo "Building Usage4Claude..."
-          chmod +x scripts/build.sh
           ./scripts/build.sh --config ${{ env.BUILD_CONFIG }}
       
       - name: Generate SHA256 checksum
@@ -275,8 +271,7 @@ jobs:
       - name: Generate release notes
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          
-          chmod +x .github/scripts/generate_release_notes.sh
+
           .github/scripts/generate_release_notes.sh \
             .github/RELEASE_TEMPLATE.md \
             "$VERSION" \
@@ -328,7 +323,6 @@ jobs:
           
           echo "⚠️  Build or release failed, cleaning up..."
           
-          chmod +x .github/scripts/cleanup_failed_release.sh
           .github/scripts/cleanup_failed_release.sh "$VERSION" || true
           
           echo "✅ Cleanup completed"
