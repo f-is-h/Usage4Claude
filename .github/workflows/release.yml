@@ -17,6 +17,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write
+
 # Only allow one release workflow to run at a time
 concurrency:
   group: release-${{ github.ref }}
