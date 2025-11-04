@@ -61,12 +61,15 @@ jobs:
           echo "Branch: $BRANCH"
           echo "Dry run: $IS_DRY_RUN"
           
-          # Check for [release] or [RELEASE] keyword
-          if [[ "$COMMIT_MSG" =~ \[release\] ]] || [[ "$COMMIT_MSG" =~ \[RELEASE\] ]]; then
-            echo "✅ Release keyword found"
+          # Check trigger type: manual (workflow_dispatch) or push with keyword
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "✅ Manual trigger detected"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          elif [[ "$COMMIT_MSG" =~ \[release\] ]] || [[ "$COMMIT_MSG" =~ \[RELEASE\] ]]; then
+            echo "✅ Release keyword found in commit message"
             echo "should_release=true" >> $GITHUB_OUTPUT
           else
-            echo "⏭️  No release keyword found, skipping"
+            echo "⏭️  No release trigger found, skipping"
             echo "should_release=false" >> $GITHUB_OUTPUT
             exit 0
           fi
