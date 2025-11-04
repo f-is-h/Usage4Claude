@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-11-04
+
+### Changed
+- **Settings UI Redesign**: Modern card-based layout for better visual hierarchy
+  - Card-style design for each settings section
+  - Toolbar-style navigation with icon and text labels
+  - Elegant gradient dividers between navigation tabs
+
+### Improved
+- **Window Management**: Settings and Welcome windows now appear as independent apps in Dock
+  - Windows display in Dock when opened for easy Cmd+Tab switching
+  - Automatically hide from Dock when windows are closed
+  - Popover remains as lightweight menu bar element
+
 ## [1.1.2] - 2025-11-01
 
 ### Fixed
@@ -116,4 +130,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.1.0
 [1.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.0.1
 [1.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.0.0
-[Unreleased]: https://github.com/f-is-h/Usage4Claude/compare/v1.1.2...HEAD
+[1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0

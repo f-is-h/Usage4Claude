@@ -9,7 +9,7 @@
 import SwiftUI
 
 /// 设置视图
-/// 包含通用设置、认证信息和关于三个标签页
+/// 使用 Toolbar 风格布局，包含通用设置、认证信息和关于三个标签页
 struct SettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var selectedTab: Int
@@ -21,112 +21,287 @@ struct SettingsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 添加顶部间距
-            Spacer()
-                .frame(height: 20)
+            // Toolbar 风格的标签导航
+            HStack(spacing: 0) {
+                // 通用设置按钮
+                ToolbarButton(
+                    icon: "gearshape",
+                    title: L.SettingsTab.general,
+                    isSelected: selectedTab == 0
+                ) {
+                    selectedTab = 0
+                }
+                
+                // 分隔符
+                TabDivider()
+                
+                // 认证设置按钮
+                ToolbarButton(
+                    icon: "key.horizontal",
+                    title: L.SettingsTab.auth,
+                    isSelected: selectedTab == 1
+                ) {
+                    selectedTab = 1
+                }
+                
+                // 分隔符
+                TabDivider()
+                
+                // 关于按钮
+                ToolbarButton(
+                    icon: "info.circle",
+                    title: L.SettingsTab.about,
+                    isSelected: selectedTab == 2
+                ) {
+                    selectedTab = 2
+                }
+            }
+            .padding(.horizontal)
+            .padding(.top, 20)
+            .padding(.bottom, 10)
+            .background(Color(NSColor.windowBackgroundColor))
             
-            TabView(selection: $selectedTab) {
-                // 通用设置
-                GeneralSettingsView()
-                    .tabItem {
-                        Label(L.SettingsTab.general, systemImage: "gearshape")
-                    }
-                    .tag(0)
-                
-                // 认证设置
-                AuthSettingsView()
-                    .tabItem {
-                        Label(L.SettingsTab.auth, systemImage: "key.fill")
-                    }
-                    .tag(1)
-                
-                // 关于
-                AboutView()
-                    .tabItem {
-                        Label(L.SettingsTab.about, systemImage: "info.circle")
-                    }
-                    .tag(2)
+            Divider()
+            
+            // 内容区域
+            Group {
+                switch selectedTab {
+                case 0:
+                    GeneralSettingsView()
+                case 1:
+                    AuthSettingsView()
+                case 2:
+                    AboutView()
+                default:
+                    GeneralSettingsView()
+                }
             }
         }
-        .frame(width: 500, height: 500)
+        .frame(width: 500, height: 550)
+    }
+}
+
+// MARK: - Toolbar Button Component
+
+/// Toolbar 风格的按钮组件
+struct ToolbarButton: View {
+    let icon: String
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(isSelected ? .accentColor : .secondary)
+                
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(isSelected ? .primary : .secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(isSelected ? Color.secondary.opacity(0.1) : Color.clear)
+            .cornerRadius(8)
+            .contentShape(Rectangle())  // 扩大点击区域到整个背景
+        }
+        .buttonStyle(.plain)
+        .focusable(false)  // 移除Focus效果
+    }
+}
+
+/// 标签页分隔符
+/// 优雅的渐变短竖线，两头透明渐变
+struct TabDivider: View {
+    var body: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color.secondary.opacity(0.0),
+                Color.secondary.opacity(0.3),
+                Color.secondary.opacity(0.3),
+                Color.secondary.opacity(0.0)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(width: 1, height: 35)
+        .padding(.horizontal, 8)
+    }
+}
+
+// MARK: - Reusable Setting Card Component
+
+/// 可复用的设置卡片组件
+/// 提供统一的卡片式布局，包含图标、标题、内容和提示信息
+struct SettingCard<Content: View>: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let hint: String
+    @ViewBuilder let content: Content
+    
+    init(
+        icon: String,
+        iconColor: Color = .blue,
+        title: String,
+        hint: String = "",
+        @ViewBuilder content: () -> Content
+    ) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.hint = hint
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // 标题行：图标 + 标题
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundColor(iconColor)
+                    .frame(width: 24)
+                
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+            }
+            
+            Divider()
+            
+            // 内容区域
+            VStack(alignment: .leading, spacing: 8) {
+                content
+            }
+            .padding(.leading, 32)
+            
+            // 提示信息
+            if !hint.isEmpty {
+                HStack(alignment: .top, spacing: 4) {
+                    Image(systemName: "lightbulb.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text(hint)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.leading, 32)
+                .padding(.top, 4)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(NSColor.controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.black.opacity(0.03))
+                )
+        )
+        .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
     }
 }
 
 // MARK: - Settings Tabs
 
 /// 通用设置页面
-/// 包含图标显示模式、刷新频率和语言设置
+/// 使用卡片式布局，包含显示设置、刷新设置和语言设置
 struct GeneralSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     
     var body: some View {
-        Form {
-            Section(header: Text(L.SettingsGeneral.displaySection).font(.headline)) {
-                Picker(L.SettingsGeneral.menubarIcon, selection: $settings.iconDisplayMode) {
-                    ForEach(IconDisplayMode.allCases, id: \.self) { mode in
-                        Text(mode.localizedName).tag(mode)
-                    }
-                }
-                .pickerStyle(.radioGroup)
-                
-                Text(L.SettingsGeneral.menubarHint)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Section(header: Text(L.SettingsGeneral.refreshSection).font(.headline)) {
-                // 刷新模式选择
-                Picker(L.SettingsGeneral.refreshMode, selection: $settings.refreshMode) {
-                    ForEach(RefreshMode.allCases, id: \.self) { mode in
-                        Text(mode.localizedName).tag(mode)
-                    }
-                }
-                .pickerStyle(.radioGroup)
-                
-                // 固定频率选择（仅在选择固定模式时显示）
-                if settings.refreshMode == .fixed {
-                    Picker(L.SettingsGeneral.refreshInterval, selection: $settings.refreshInterval) {
-                        ForEach(RefreshInterval.allCases, id: \.rawValue) { interval in
-                            Text(interval.localizedName).tag(interval.rawValue)
+        ScrollView {
+            VStack(spacing: 16) {
+                // 显示设置卡片
+                SettingCard(
+                    icon: "gauge.with.dots.needle.0percent",
+                    iconColor: .blue,
+                    title: L.SettingsGeneral.displaySection,
+                    hint: L.SettingsGeneral.menubarHint
+                ) {
+                    Picker("", selection: $settings.iconDisplayMode) {
+                        ForEach(IconDisplayMode.allCases, id: \.self) { mode in
+                            Text(mode.localizedName).tag(mode)
                         }
                     }
-                    .pickerStyle(.menu)
-                    .padding(.leading, 20)
+                    .pickerStyle(.radioGroup)
+                    .labelsHidden()
                 }
                 
-                Text(settings.refreshMode == .smart ? L.SettingsGeneral.refreshHintSmart : L.SettingsGeneral.refreshHintFixed)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Section(header: Text(L.SettingsGeneral.languageSection).font(.headline)) {
-                Picker(L.SettingsGeneral.interfaceLanguage, selection: $settings.language) {
-                    ForEach(AppLanguage.allCases, id: \.self) { lang in
-                        Text(lang.localizedName).tag(lang)
+                // 刷新设置卡片
+                SettingCard(
+                    icon: "clock.arrow.trianglehead.2.counterclockwise.rotate.90",
+                    iconColor: .green,
+                    title: L.SettingsGeneral.refreshSection,
+                    hint: settings.refreshMode == .smart ? L.SettingsGeneral.refreshHintSmart : L.SettingsGeneral.refreshHintFixed
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // 刷新模式选择
+                        Picker("", selection: $settings.refreshMode) {
+                            ForEach(RefreshMode.allCases, id: \.self) { mode in
+                                Text(mode.localizedName).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                        .labelsHidden()
+                        
+                        // 固定频率选择（仅在选择固定模式时显示）
+                        if settings.refreshMode == .fixed {
+                            HStack {
+                                Text(L.SettingsGeneral.refreshInterval)
+                                    .foregroundColor(.secondary)
+                                
+                                Picker("", selection: $settings.refreshInterval) {
+                                    ForEach(RefreshInterval.allCases, id: \.rawValue) { interval in
+                                        Text(interval.localizedName).tag(interval.rawValue)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .frame(width: 120)
+                            }
+                            .padding(.leading, 20)
+                        }
                     }
                 }
-                .pickerStyle(.radioGroup)
                 
-                Text(L.SettingsGeneral.languageHint)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            HStack {
-                Spacer()
-                Button(L.SettingsGeneral.resetButton) {
-                    settings.resetToDefaults()
+                // 语言设置卡片
+                SettingCard(
+                    icon: "globe",
+                    iconColor: .orange,
+                    title: L.SettingsGeneral.languageSection,
+                    hint: L.SettingsGeneral.languageHint
+                ) {
+                    Picker("", selection: $settings.language) {
+                        ForEach(AppLanguage.allCases, id: \.self) { lang in
+                            Text(lang.localizedName).tag(lang)
+                        }
+                    }
+                    .pickerStyle(.radioGroup)
+                    .labelsHidden()
                 }
+                
+                // 重置按钮
+                HStack {
+                    Spacer()
+                    Button(L.SettingsGeneral.resetButton) {
+                        settings.resetToDefaults()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.top, 8)
             }
+            .padding()
         }
-        .padding()
     }
 }
 
 /// 认证设置页面
-/// 用于配置 Organization ID 和 Session Key
+/// 使用卡片式布局，用于配置 Organization ID 和 Session Key
 struct AuthSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var showCopiedAlert = false
@@ -134,101 +309,152 @@ struct AuthSettingsView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // 说明文字
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
-                        Text(L.SettingsAuth.howToTitle)
-                            .font(.headline)
-                    }
-                    
-                    Text(L.SettingsAuth.step1)
-                    Text(L.SettingsAuth.step2)
-                    Text(L.SettingsAuth.step3)
-                    Text(L.SettingsAuth.step4)
-                    Text(L.SettingsAuth.step5)
-                    Text(L.SettingsAuth.step6)
-                    Text(L.SettingsAuth.step7)
-                    
-                    Button(action: {
-                        if let url = URL(string: "https://claude.ai/settings/usage") {
-                            NSWorkspace.shared.open(url)
+            VStack(spacing: 16) {
+                // 认证信息卡片（合并 Org ID + Session Key + 状态）
+                SettingCard(
+                    icon: "lock.shield",
+                    iconColor: .blue,
+                    title: L.SettingsAuth.credentialsTitle,
+                    hint: ""
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Organization ID 区域
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "building.2.fill")
+                                    .foregroundColor(.purple)
+                                    .font(.subheadline)
+                                Text(L.SettingsAuth.orgIdLabel)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                            
+                            TextField(L.SettingsAuth.orgIdPlaceholder, text: $settings.organizationId)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(.body, design: .monospaced))
+                            
+                            HStack(spacing: 4) {
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(L.SettingsAuth.orgIdHint)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
-                    }) {
-                        HStack {
-                            Image(systemName: "safari")
-                            Text(L.SettingsAuth.openBrowser)
-                        }
-                    }
-                }
-                .padding()
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(8)
-                
-                Divider()
-                
-                // Organization ID
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(L.SettingsAuth.orgIdLabel)
-                        .font(.headline)
-                    
-                    TextField(L.SettingsAuth.orgIdPlaceholder, text: $settings.organizationId)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-                    
-                    Text(L.SettingsAuth.orgIdHint)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                // Session Key
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(L.SettingsAuth.sessionKeyLabel)
-                            .font(.headline)
                         
-                        Spacer()
+                        Divider()
+                        
+                        // Session Key 区域
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "key.fill")
+                                    .foregroundColor(.red)
+                                    .font(.subheadline)
+                                Text(L.SettingsAuth.sessionKeyLabel)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                            
+                            HStack {
+                                if isShowingPassword {
+                                    TextField(L.SettingsAuth.sessionKeyPlaceholder, text: $settings.sessionKey)
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.system(.body, design: .monospaced))
+                                } else {
+                                    SecureField(L.SettingsAuth.sessionKeyPlaceholder, text: $settings.sessionKey)
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.system(.body, design: .monospaced))
+                                }
+                                
+                                Button(action: {
+                                    isShowingPassword.toggle()
+                                }) {
+                                    Image(systemName: isShowingPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .help(isShowingPassword ? L.SettingsAuth.hidePassword : L.SettingsAuth.showPassword)
+                            }
+                            
+                            HStack(spacing: 4) {
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(L.SettingsAuth.sessionKeyHint)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        // 配置状态区域
+                        HStack(spacing: 12) {
+                            Image(systemName: settings.hasValidCredentials ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                .font(.title2)
+                                .foregroundColor(settings.hasValidCredentials ? .green : .orange)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(settings.hasValidCredentials ? L.SettingsAuth.configured : L.SettingsAuth.notConfigured)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(settings.hasValidCredentials ? .green : .orange)
+                                
+                                if settings.hasValidCredentials {
+                                    Text(L.SettingsAuth.readyToUse)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text(L.SettingsAuth.needCredentials)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                
+                // 说明卡片
+                SettingCard(
+                    icon: "book.fill",
+                    iconColor: .blue,
+                    title: L.SettingsAuth.howToTitle,
+                    hint: ""
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L.SettingsAuth.step1)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.step2)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.step3)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.step4)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.step5)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.step6)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.step7)
+                            .font(.subheadline)
                         
                         Button(action: {
-                            isShowingPassword.toggle()
+                            if let url = URL(string: "https://claude.ai/settings/usage") {
+                                NSWorkspace.shared.open(url)
+                            }
                         }) {
-                            Image(systemName: isShowingPassword ? "eye.slash" : "eye")
-                                .foregroundColor(.secondary)
+                            HStack {
+                                Image(systemName: "safari")
+                                Text(L.SettingsAuth.openBrowser)
+                            }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 8)
                     }
-                    
-                    if isShowingPassword {
-                        TextField(L.SettingsAuth.sessionKeyPlaceholder, text: $settings.sessionKey)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.system(.body, design: .monospaced))
-                    } else {
-                        SecureField(L.SettingsAuth.sessionKeyPlaceholder, text: $settings.sessionKey)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.system(.body, design: .monospaced))
-                    }
-                    
-                    Text(L.SettingsAuth.sessionKeyHint)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
-                
-                // 验证状态
-                HStack {
-                    Image(systemName: settings.hasValidCredentials ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .foregroundColor(settings.hasValidCredentials ? .green : .orange)
-                    
-                    Text(settings.hasValidCredentials ? L.SettingsAuth.configured : L.SettingsAuth.notConfigured)
-                        .font(.subheadline)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(settings.hasValidCredentials ? Color.green.opacity(0.1) : Color.orange.opacity(0.1))
-                .cornerRadius(8)
-                
-                Spacer()
             }
             .padding()
         }

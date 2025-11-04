@@ -64,6 +64,11 @@
 "settings.auth.session_key_hint" = "sk-ant-sid01-で始まる長い文字列";
 "settings.auth.configured" = "認証情報が設定済み";
 "settings.auth.not_configured" = "認証情報を入力してください";
+"settings.auth.credentials_title" = "認証情報";
+"settings.auth.ready_to_use" = "アプリを使用できます";
+"settings.auth.need_credentials" = "上記のOrganization IDとSession Keyを入力してください";
+"settings.auth.show_password" = "表示";
+"settings.auth.hide_password" = "非表示";
 
 // MARK: - Settings - About
 "settings.about.version" = "バージョン %@";

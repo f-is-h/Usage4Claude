@@ -64,6 +64,11 @@
 "settings.auth.session_key_hint" = "Long string starting with sk-ant-sid01-";
 "settings.auth.configured" = "Authentication configured";
 "settings.auth.not_configured" = "Please fill in complete authentication information";
+"settings.auth.credentials_title" = "Authentication Credentials";
+"settings.auth.ready_to_use" = "Ready to use the app";
+"settings.auth.need_credentials" = "Please enter Organization ID and Session Key above";
+"settings.auth.show_password" = "Show";
+"settings.auth.hide_password" = "Hide";
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";

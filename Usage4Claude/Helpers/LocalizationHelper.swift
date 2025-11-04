@@ -80,6 +80,11 @@ enum L {
         static let sessionKeyHint = localized("settings.auth.session_key_hint")
         static let configured = localized("settings.auth.configured")
         static let notConfigured = localized("settings.auth.not_configured")
+        static let credentialsTitle = localized("settings.auth.credentials_title")
+        static let readyToUse = localized("settings.auth.ready_to_use")
+        static let needCredentials = localized("settings.auth.need_credentials")
+        static let showPassword = localized("settings.auth.show_password")
+        static let hidePassword = localized("settings.auth.hide_password")
     }
     
     // MARK: - Settings About

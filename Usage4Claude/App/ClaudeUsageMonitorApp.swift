@@ -75,6 +75,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// 显示欢迎窗口
     /// 在首次启动或未配置认证信息时调用
     private func showWelcomeWindow() {
+        // 切换为 regular 模式，使应用显示在 Dock 中
+        NSApp.setActivationPolicy(.regular)
+        
         let welcomeView = WelcomeView()
         let hostingController = NSHostingController(rootView: welcomeView)
         
@@ -94,6 +97,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             welcomeWindow?.setFrameOrigin(NSPoint(x: x, y: y))
         }
         
+        // 监听窗口关闭事件
+        let observer = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: welcomeWindow,
+            queue: .main
+        ) { _ in
+            // 窗口关闭时切换回 accessory 模式（不显示在 Dock）
+            NSApp.setActivationPolicy(.accessory)
+        }
+        notificationObservers.append(observer)
+        
         welcomeWindow?.makeKeyAndOrderFront(nil)
         
         NSApp.activate(ignoringOtherApps: true)
@@ -102,7 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// 处理打开设置的通知
     /// 关闭欢迎窗口并根据认证配置状态启动刷新
     private func openSettingsFromNotification(_ notification: Notification) {
-        // 关闭欢迎窗口
+        // 关闭欢迎窗口（会自动触发切换回 accessory 模式）
         welcomeWindow?.close()
         welcomeWindow = nil
         

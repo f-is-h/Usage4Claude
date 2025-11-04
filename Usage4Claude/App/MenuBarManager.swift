@@ -454,6 +454,9 @@ class MenuBarManager: ObservableObject {
     /// - Parameter tab: 要显示的标签页索引 (0: 通用, 1: 认证, 2: 关于)
     private func openSettingsWindow(tab: Int) {
         if settingsWindow == nil {
+            // 切换为 regular 模式，使应用显示在 Dock 中
+            NSApp.setActivationPolicy(.regular)
+            
             let settingsView = SettingsView(initialTab: tab)
             let hostingController = NSHostingController(rootView: settingsView)
             
@@ -475,6 +478,9 @@ class MenuBarManager: ObservableObject {
                 object: settingsWindow,
                 queue: .main
             ) { [weak self] _ in
+                // 窗口关闭时切换回 accessory 模式（不显示在 Dock）
+                NSApp.setActivationPolicy(.accessory)
+                
                 self?.settingsWindow = nil
                 if self?.settings.hasValidCredentials == true && self?.usageData == nil {
                     self?.startRefreshing()

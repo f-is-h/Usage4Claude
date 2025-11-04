@@ -64,6 +64,11 @@
 "settings.auth.session_key_hint" = "以 sk-ant-sid01- 开头的长字符串";
 "settings.auth.configured" = "认证信息已配置";
 "settings.auth.not_configured" = "请填写完整的认证信息";
+"settings.auth.credentials_title" = "认证信息";
+"settings.auth.ready_to_use" = "可以开始使用应用了";
+"settings.auth.need_credentials" = "需要填写上方的 Organization ID 和 Session Key";
+"settings.auth.show_password" = "显示";
+"settings.auth.hide_password" = "隐藏";
 
 // MARK: - Settings - About
 "settings.about.version" = "版本 %@";
