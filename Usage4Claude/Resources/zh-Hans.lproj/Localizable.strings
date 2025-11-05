@@ -43,7 +43,7 @@
 "settings.general.refresh_hint_fixed" = "按照设定的固定时间间隔刷新数据";
 "settings.general.language_section" = "语言设置";
 "settings.general.interface_language" = "界面语言";
-"settings.general.language_hint" = "更改界面显示语言（需要重启应用）";
+"settings.general.language_hint" = "更改界面显示语言（立即生效）";
 "settings.general.reset_button" = "恢复默认设置";
 
 // MARK: - Settings - Authentication

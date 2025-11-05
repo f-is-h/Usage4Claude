@@ -43,7 +43,7 @@
 "settings.general.refresh_hint_fixed" = "按照設定的固定時間間隔重新整理資料";
 "settings.general.language_section" = "語言設定";
 "settings.general.interface_language" = "介面語言";
-"settings.general.language_hint" = "變更介面顯示語言（需要重新啟動應用程式）";
+"settings.general.language_hint" = "變更介面顯示語言（立即生效）";
 "settings.general.reset_button" = "恢復預設設定";
 
 // MARK: - Settings - Authentication

@@ -371,22 +371,9 @@ class MenuBarManager: ObservableObject {
     /// 更新弹出窗口内容
     /// 用于实时刷新倒计时显示
     private func updatePopoverContent() {
-        // 不要每次都重新创建controller，而是更新现有的rootView
-        if let hostingController = popover.contentViewController as? NSHostingController<UsageDetailView> {
-            hostingController.rootView = UsageDetailView(
-                usageData: Binding(
-                    get: { self.usageData },
-                    set: { self.usageData = $0 }
-                ),
-                errorMessage: Binding(
-                    get: { self.errorMessage },
-                    set: { self.errorMessage = $0 }
-                ),
-                onMenuAction: { [weak self] action in
-                    self?.handleMenuAction(action)
-                }
-            )
-        }
+        // 语言变化时视图会因为 .id() 自动重新创建，无需手动处理
+        // 这里只需要触发 usageData 的更新，视图会自动响应
+        objectWillChange.send()
     }
     
     /// 启动弹出窗口刷新定时器

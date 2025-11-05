@@ -219,6 +219,23 @@ class UserSettings: ObservableObject {
     
     // MARK: - Initialization
     
+    /// 检测系统语言并映射到应用支持的语言
+    /// - Returns: 与系统语言最匹配的 AppLanguage
+    private static func detectSystemLanguage() -> AppLanguage {
+        let systemLanguage = Locale.preferredLanguages.first ?? "en"
+        
+        // 根据系统语言前缀匹配应用支持的语言
+        if systemLanguage.hasPrefix("zh-Hans") {
+            return .chinese
+        } else if systemLanguage.hasPrefix("zh-Hant") || systemLanguage.hasPrefix("zh-HK") || systemLanguage.hasPrefix("zh-TW") {
+            return .chineseTraditional
+        } else if systemLanguage.hasPrefix("ja") {
+            return .japanese
+        } else {
+            return .english  // 默认英语
+        }
+    }
+    
     /// 私有初始化方法（单例模式）
     /// 从 Keychain 加载敏感信息，从 UserDefaults 加载其他设置
     private init() {
@@ -252,7 +269,8 @@ class UserSettings: ObservableObject {
            let lang = AppLanguage(rawValue: langString) {
             self.language = lang
         } else {
-            self.language = .chinese
+            // 首次启动时使用系统语言
+            self.language = Self.detectSystemLanguage()
         }
         
         // 检查是否首次启动（如果没有保存过认证信息，就是首次启动）

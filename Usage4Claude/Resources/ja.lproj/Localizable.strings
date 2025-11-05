@@ -43,7 +43,7 @@
 "settings.general.refresh_hint_fixed" = "固定の時間間隔でデータを更新";
 "settings.general.language_section" = "言語設定";
 "settings.general.interface_language" = "インターフェース言語";
-"settings.general.language_hint" = "表示言語を変更（アプリの再起動が必要）";
+"settings.general.language_hint" = "表示言語を変更（即座に反映）";
 "settings.general.reset_button" = "デフォルトに戻す";
 
 // MARK: - Settings - Authentication

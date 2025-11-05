@@ -15,6 +15,7 @@ struct UsageDetailView: View {
     @Binding var errorMessage: String?
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
+    @StateObject private var localization = LocalizationManager.shared
     
     /// 菜单操作类型
     enum MenuAction {
@@ -175,6 +176,7 @@ struct UsageDetailView: View {
             Spacer()
         }
         .frame(width: 280, height: 240)
+        .id(localization.updateTrigger)  // 语言变化时重新创建视图
     }
     
     // MARK: - Helper Methods

@@ -14,6 +14,7 @@ struct SettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var selectedTab: Int
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var localization = LocalizationManager.shared
     
     init(initialTab: Int = 0) {
         _selectedTab = State(initialValue: initialTab)
@@ -78,6 +79,7 @@ struct SettingsView: View {
             }
         }
         .frame(width: 500, height: 550)
+        .id(localization.updateTrigger)  // 语言变化时重新创建视图
     }
 }
 
@@ -584,6 +586,7 @@ struct AboutInfoRow: View {
 struct WelcomeView: View {
     @ObservedObject private var settings = UserSettings.shared
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var localization = LocalizationManager.shared
     
     var body: some View {
         VStack(spacing: 24) {
@@ -643,6 +646,7 @@ struct WelcomeView: View {
         }
         .frame(width: 400, height: 500)
         .padding()
+        .id(localization.updateTrigger)  // 语言变化时重新创建视图
     }
     
     /// 创建应用图标（非模板模式）

@@ -43,7 +43,7 @@
 "settings.general.refresh_hint_fixed" = "Refresh data at fixed time intervals";
 "settings.general.language_section" = "Language Settings";
 "settings.general.interface_language" = "Interface Language";
-"settings.general.language_hint" = "Change the interface display language (requires app restart)";
+"settings.general.language_hint" = "Change the interface display language (takes effect immediately)";
 "settings.general.reset_button" = "Reset to Defaults";
 
 // MARK: - Settings - Authentication
