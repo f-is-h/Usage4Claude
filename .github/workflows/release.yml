@@ -7,8 +7,6 @@ on:
       - test-release
     paths:
       - 'CHANGELOG.md'
-      - '.github/workflows/release.yml'
-      - '.github/scripts/**'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -53,7 +51,11 @@ jobs:
       - name: Check commit message for release trigger
         id: check
         run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          # Use heredoc to handle multi-line commit messages
+          read -r -d '' COMMIT_MSG << 'EOF' || true
+          ${{ github.event.head_commit.message }}
+          EOF
+          
           BRANCH="${{ github.ref_name }}"
           IS_DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
           
@@ -140,7 +142,7 @@ jobs:
           xcode-version: latest-stable
       
       - name: Verify version consistency
-        run: |          
+        run: |
           echo "Verifying CHANGELOG version matches Xcode version..."
           if ! .github/scripts/verify_version.sh verify CHANGELOG.md ${{ env.XCODE_PROJECT }}; then
             echo ""
@@ -277,7 +279,6 @@ jobs:
       - name: Generate release notes
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-
           .github/scripts/generate_release_notes.sh \
             .github/RELEASE_TEMPLATE.md \
             "$VERSION" \
@@ -328,7 +329,6 @@ jobs:
           fi
           
           echo "⚠️  Build or release failed, cleaning up..."
-          
           .github/scripts/cleanup_failed_release.sh "$VERSION" || true
           
           echo "✅ Cleanup completed"
