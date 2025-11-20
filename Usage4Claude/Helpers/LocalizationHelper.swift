@@ -36,6 +36,9 @@ enum L {
         static var resetTime: String { localized("usage.reset_time") }
         static var used: String { localized("usage.used") }
         static var fiveHourLimit: String { localized("usage.five_hour_limit") }
+        static var refresh: String { localized("usage.refresh") }
+        static var refreshCooldown: String { localized("usage.refresh_cooldown") }
+        static var runDiagnostic: String { localized("usage.run_diagnostic") }
     }
     
     // MARK: - Settings Tabs
@@ -47,6 +50,9 @@ enum L {
     
     // MARK: - Settings General
     enum SettingsGeneral {
+        static var launchSection: String { localized("settings.general.launch_section") }
+        static var launchAtLogin: String { localized("settings.general.launch_at_login") }
+        static var launchHint: String { localized("settings.general.launch_hint") }
         static var displaySection: String { localized("settings.general.display_section") }
         static var menubarIcon: String { localized("settings.general.menubar_icon") }
         static var menubarHint: String { localized("settings.general.menubar_hint") }
@@ -133,6 +139,13 @@ enum L {
             static var noData: String { localized("update.error.no_data") }
             static var parseFailed: String { localized("update.error.parse_failed") }
         }
+        
+        // 🆕 Update Notification
+        enum Notification {
+            static var available: String { localized("update.notification.available") }
+            static var badgeMenu: String { localized("update.notification.badge_menu") }
+            static var badgeShort: String { localized("update.notification.badge_short") }
+        }
     }
     
     // MARK: - Icon Display Mode
@@ -190,6 +203,73 @@ enum L {
         static var noCredentials: String { localized("error.no_credentials") }
         static var networkFailed: String { localized("error.network_failed") }
         static var decodingFailed: String { localized("error.decoding_failed") }
+    }
+
+    // MARK: - Diagnostics
+    enum Diagnostic {
+        static var sectionTitle: String { localized("diagnostic.section_title") }
+        static var sectionDescription: String { localized("diagnostic.section_description") }
+        static var testButton: String { localized("diagnostic.test_button") }
+        static var viewDetailsButton: String { localized("diagnostic.view_details_button") }
+        static var exportButton: String { localized("diagnostic.export_button") }
+        static var testingConnection: String { localized("diagnostic.testing_connection") }
+        static var testCompleted: String { localized("diagnostic.test_completed") }
+        static var testSuccess: String { localized("diagnostic.test_success") }
+        static var testFailed: String { localized("diagnostic.test_failed") }
+        static var resultSuccess: String { localized("diagnostic.result_success") }
+        static var resultFailed: String { localized("diagnostic.result_failed") }
+        static var httpStatus: String { localized("diagnostic.http_status") }
+        static var responseTime: String { localized("diagnostic.response_time") }
+        static var responseType: String { localized("diagnostic.response_type") }
+        static var cloudflareDetected: String { localized("diagnostic.cloudflare_detected") }
+        static var diagnosis: String { localized("diagnostic.diagnosis") }
+        static var suggestions: String { localized("diagnostic.suggestions") }
+        static var privacyNotice: String { localized("diagnostic.privacy_notice") }
+        static var detailedReportTitle: String { localized("diagnostic.detailed_report_title") }
+        static var noReportAvailable: String { localized("diagnostic.no_report_available") }
+        static var copyToClipboard: String { localized("diagnostic.copy_to_clipboard") }
+        static var exportTitle: String { localized("diagnostic.export_title") }
+        static var exportMessage: String { localized("diagnostic.export_message") }
+        static var exportSuccessTitle: String { localized("diagnostic.export_success_title") }
+        static var exportSuccessMessage: String { localized("diagnostic.export_success_message") }
+        static var exportErrorTitle: String { localized("diagnostic.export_error_title") }
+
+        // Diagnosis messages
+        static var diagnosisSuccess: String { localized("diagnostic.diagnosis_success") }
+        static var diagnosisCloudflare: String { localized("diagnostic.diagnosis_cloudflare") }
+        static var diagnosisDecoding: String { localized("diagnostic.diagnosis_decoding") }
+        static var diagnosisNetwork: String { localized("diagnostic.diagnosis_network") }
+        static var diagnosisNoCredentials: String { localized("diagnostic.diagnosis_no_credentials") }
+        static var diagnosisInvalidUrl: String { localized("diagnostic.diagnosis_invalid_url") }
+        static var diagnosisUnknown: String { localized("diagnostic.diagnosis_unknown") }
+
+        // Suggestion messages
+        static var suggestionSuccess: String { localized("diagnostic.suggestion_success") }
+        static var suggestionVisitBrowser: String { localized("diagnostic.suggestion_visit_browser") }
+        static var suggestionWaitAndRetry: String { localized("diagnostic.suggestion_wait_and_retry") }
+        static var suggestionCheckVPN: String { localized("diagnostic.suggestion_check_vpn") }
+        static var suggestionUseSmartMode: String { localized("diagnostic.suggestion_use_smart_mode") }
+        static var suggestionVerifyCredentials: String { localized("diagnostic.suggestion_verify_credentials") }
+        static var suggestionUpdateSessionKey: String { localized("diagnostic.suggestion_update_session_key") }
+        static var suggestionCheckBrowser: String { localized("diagnostic.suggestion_check_browser") }
+        static var suggestionCheckInternet: String { localized("diagnostic.suggestion_check_internet") }
+        static var suggestionCheckFirewall: String { localized("diagnostic.suggestion_check_firewall") }
+        static var suggestionRetryLater: String { localized("diagnostic.suggestion_retry_later") }
+        static var suggestionConfigureAuth: String { localized("diagnostic.suggestion_configure_auth") }
+        static var suggestionCheckOrgId: String { localized("diagnostic.suggestion_check_org_id") }
+        static var suggestionExportAndShare: String { localized("diagnostic.suggestion_export_and_share") }
+        static var suggestionContactSupport: String { localized("diagnostic.suggestion_contact_support") }
+    }
+
+    // MARK: - Launch at Login
+    enum LaunchAtLogin {
+        static var statusEnabled: String { localized("launch.status.enabled") }
+        static var statusDisabled: String { localized("launch.status.disabled") }
+        static var statusRequiresApproval: String { localized("launch.status.requires_approval") }
+        static var statusNotFound: String { localized("launch.status.not_found") }
+        static var errorTitle: String { localized("launch.error.title") }
+        static var errorEnable: String { localized("launch.error.enable") }
+        static var errorDisable: String { localized("launch.error.disable") }
     }
     
     // MARK: - Helper Methods

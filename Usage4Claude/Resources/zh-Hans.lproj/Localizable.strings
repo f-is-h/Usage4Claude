@@ -26,6 +26,9 @@
 "usage.reset_time" = "重置时间";
 "usage.used" = "已使用";
 "usage.five_hour_limit" = "5小时限制";
+"usage.refresh" = "刷新";
+"usage.refresh_cooldown" = "请稍后再试";
+"usage.run_diagnostic" = "运行诊断";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "通用";
@@ -33,6 +36,9 @@
 "settings.tab.about" = "关于";
 
 // MARK: - Settings - General
+"settings.general.launch_section" = "开机启动";
+"settings.general.launch_at_login" = "登录时自动启动";
+"settings.general.launch_hint" = "启用后，应用将在系统登录时自动运行";
 "settings.general.display_section" = "显示设置";
 "settings.general.menubar_icon" = "菜单栏图标";
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
@@ -105,6 +111,11 @@
 "update.error.no_data" = "无法获取数据";
 "update.error.parse_failed" = "解析更新信息失败";
 
+// MARK: - Update Notification
+"update.notification.available" = "有新版本可用！";
+"update.notification.badge_menu" = "🎉 有新版本可用！";
+"update.notification.badge_short" = "🎉 新!";
+
 // MARK: - Icon Display Mode
 "display.percentage_only" = "仅显示百分比";
 "display.icon_only" = "仅显示图标";
@@ -145,3 +156,66 @@
 "error.no_credentials" = "请先在设置中配置认证信息";
 "error.network_failed" = "网络请求失败，请检查网络连接";
 "error.decoding_failed" = "解析响应数据失败，请检查认证信息是否正确";
+
+// MARK: - Launch at Login
+"launch.status.enabled" = "已启用";
+"launch.status.disabled" = "未启用";
+"launch.status.requires_approval" = "等待授权";
+"launch.status.not_found" = "未找到";
+"launch.error.title" = "开机启动错误";
+"launch.error.enable" = "启用开机启动失败";
+"launch.error.disable" = "禁用开机启动失败";
+
+// MARK: - Diagnostics
+"diagnostic.section_title" = "连接诊断";
+"diagnostic.section_description" = "测试与 Claude API 的连接并诊断问题。报告中的所有敏感信息都会自动脱敏处理。";
+"diagnostic.test_button" = "测试连接";
+"diagnostic.view_details_button" = "查看详情";
+"diagnostic.export_button" = "导出报告";
+"diagnostic.testing_connection" = "正在测试连接...";
+"diagnostic.test_completed" = "测试完成";
+"diagnostic.test_success" = "连接测试成功";
+"diagnostic.test_failed" = "连接测试失败";
+"diagnostic.result_success" = "连接成功";
+"diagnostic.result_failed" = "连接失败";
+"diagnostic.http_status" = "HTTP 状态";
+"diagnostic.response_time" = "响应时间";
+"diagnostic.response_type" = "响应类型";
+"diagnostic.cloudflare_detected" = "检测到 Cloudflare 挑战";
+"diagnostic.diagnosis" = "诊断结果";
+"diagnostic.suggestions" = "建议操作";
+"diagnostic.privacy_notice" = "所有敏感数据都已自动脱敏，可安全分享";
+"diagnostic.detailed_report_title" = "详细诊断报告";
+"diagnostic.no_report_available" = "暂无报告。请先运行测试。";
+"diagnostic.copy_to_clipboard" = "复制到剪贴板";
+"diagnostic.export_title" = "导出诊断报告";
+"diagnostic.export_message" = "此报告不包含任何敏感信息，可安全分享。";
+"diagnostic.export_success_title" = "导出成功";
+"diagnostic.export_success_message" = "诊断报告已保存至:";
+"diagnostic.export_error_title" = "导出失败";
+
+// Diagnosis messages
+"diagnostic.diagnosis_success" = "连接正常工作。API 返回了有效的使用数据。";
+"diagnostic.diagnosis_cloudflare" = "请求被 Cloudflare 安全系统拦截。这可能是由于 IP 信誉或网络配置导致的。";
+"diagnostic.diagnosis_decoding" = "服务器返回了数据但无法解析。这通常意味着认证信息不正确或不匹配。";
+"diagnostic.diagnosis_network" = "网络连接失败。请检查您的互联网连接。";
+"diagnostic.diagnosis_no_credentials" = "未配置认证信息。";
+"diagnostic.diagnosis_invalid_url" = "组织 ID 格式无效。";
+"diagnostic.diagnosis_unknown" = "发生未知错误。请导出此报告并分享给开发者。";
+
+// Suggestion messages
+"diagnostic.suggestion_success" = "一切正常运行。无需任何操作。";
+"diagnostic.suggestion_visit_browser" = "在浏览器中访问 claude.ai 并完成任何安全验证";
+"diagnostic.suggestion_wait_and_retry" = "等待 5-10 分钟后重试";
+"diagnostic.suggestion_check_vpn" = "检查 VPN 或代理是否影响连接";
+"diagnostic.suggestion_use_smart_mode" = "使用智能刷新模式以降低请求频率";
+"diagnostic.suggestion_verify_credentials" = "验证组织 ID 和会话密钥是否正确";
+"diagnostic.suggestion_update_session_key" = "您的会话密钥可能已过期。请从浏览器更新它";
+"diagnostic.suggestion_check_browser" = "验证您可以在浏览器中访问 claude.ai/settings/usage";
+"diagnostic.suggestion_check_internet" = "检查您的互联网连接";
+"diagnostic.suggestion_check_firewall" = "检查防火墙或杀毒软件设置";
+"diagnostic.suggestion_retry_later" = "稍后重试";
+"diagnostic.suggestion_configure_auth" = "请在上方字段中配置组织 ID 和会话密钥";
+"diagnostic.suggestion_check_org_id" = "检查组织 ID 格式是否正确(应该是 UUID 格式)";
+"diagnostic.suggestion_export_and_share" = "导出此诊断报告并在 GitHub Issues 上分享";
+"diagnostic.suggestion_contact_support" = "在 github.com/f-is-h/Usage4Claude/issues 联系开发者寻求帮助";

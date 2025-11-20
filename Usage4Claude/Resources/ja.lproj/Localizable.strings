@@ -26,6 +26,9 @@
 "usage.reset_time" = "リセット時刻";
 "usage.used" = "使用済";
 "usage.five_hour_limit" = "5時間制限";
+"usage.refresh" = "更新";
+"usage.refresh_cooldown" = "少々お待ちください";
+"usage.run_diagnostic" = "診断を実行";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "一般";
@@ -33,6 +36,9 @@
 "settings.tab.about" = "情報";
 
 // MARK: - Settings - General
+"settings.general.launch_section" = "ログイン時に起動";
+"settings.general.launch_at_login" = "ログイン時に自動起動";
+"settings.general.launch_hint" = "有効にすると、システムログイン時にアプリが自動的に起動されます";
 "settings.general.display_section" = "表示設定";
 "settings.general.menubar_icon" = "メニューバーアイコン";
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
@@ -105,6 +111,11 @@
 "update.error.no_data" = "データを取得できません";
 "update.error.parse_failed" = "更新情報の解析に失敗しました。";
 
+// MARK: - Update Notification
+"update.notification.available" = "新しいバージョンがあります！";
+"update.notification.badge_menu" = "🎉 新しいバージョンがあります！";
+"update.notification.badge_short" = "🎉 新!";
+
 // MARK: - Icon Display Mode
 "display.percentage_only" = "パーセンテージのみ";
 "display.icon_only" = "アイコンのみ";
@@ -145,3 +156,66 @@
 "error.no_credentials" = "まず設定で認証情報を設定してください";
 "error.network_failed" = "ネットワークリクエストが失敗しました。インターネット接続を確認してください。";
 "error.decoding_failed" = "レスポンスデータの解析に失敗しました。認証情報が正しいか確認してください。";
+
+// MARK: - Launch at Login
+"launch.status.enabled" = "有効";
+"launch.status.disabled" = "無効";
+"launch.status.requires_approval" = "認可待ち";
+"launch.status.not_found" = "見つかりません";
+"launch.error.title" = "起動設定エラー";
+"launch.error.enable" = "自動起動の有効化に失敗しました";
+"launch.error.disable" = "自動起動の無効化に失敗しました";
+
+// MARK: - Diagnostics
+"diagnostic.section_title" = "接続診断";
+"diagnostic.section_description" = "Claude APIへの接続をテストし、問題を診断します。レポート内の機密情報はすべて自動的に編集されます。";
+"diagnostic.test_button" = "接続テスト";
+"diagnostic.view_details_button" = "詳細を表示";
+"diagnostic.export_button" = "レポートをエクスポート";
+"diagnostic.testing_connection" = "接続をテスト中...";
+"diagnostic.test_completed" = "テスト完了";
+"diagnostic.test_success" = "接続テスト成功";
+"diagnostic.test_failed" = "接続テスト失敗";
+"diagnostic.result_success" = "接続成功";
+"diagnostic.result_failed" = "接続失敗";
+"diagnostic.http_status" = "HTTPステータス";
+"diagnostic.response_time" = "応答時間";
+"diagnostic.response_type" = "応答タイプ";
+"diagnostic.cloudflare_detected" = "Cloudflareチャレンジを検出";
+"diagnostic.diagnosis" = "診断結果";
+"diagnostic.suggestions" = "推奨事項";
+"diagnostic.privacy_notice" = "すべての機密データは自動的に編集されます";
+"diagnostic.detailed_report_title" = "詳細診断レポート";
+"diagnostic.no_report_available" = "レポートがありません。まずテストを実行してください。";
+"diagnostic.copy_to_clipboard" = "クリップボードにコピー";
+"diagnostic.export_title" = "診断レポートのエクスポート";
+"diagnostic.export_message" = "このレポートには機密情報は含まれておらず、安全に共有できます。";
+"diagnostic.export_success_title" = "エクスポート成功";
+"diagnostic.export_success_message" = "診断レポートが保存されました:";
+"diagnostic.export_error_title" = "エクスポート失敗";
+
+// Diagnosis messages
+"diagnostic.diagnosis_success" = "接続は正常に動作しています。APIから有効な使用状況データが返されました。";
+"diagnostic.diagnosis_cloudflare" = "Cloudflareセキュリティシステムによってリクエストがブロックされました。IPレピュテーションまたはネットワーク設定が原因の可能性があります。";
+"diagnostic.diagnosis_decoding" = "サーバーからデータが返されましたが、解析できませんでした。通常、認証情報が間違っているか一致していないことを意味します。";
+"diagnostic.diagnosis_network" = "ネットワーク接続に失敗しました。インターネット接続を確認してください。";
+"diagnostic.diagnosis_no_credentials" = "認証情報が設定されていません。";
+"diagnostic.diagnosis_invalid_url" = "組織IDの形式が無効です。";
+"diagnostic.diagnosis_unknown" = "不明なエラーが発生しました。このレポートをエクスポートして開発者に共有してください。";
+
+// Suggestion messages
+"diagnostic.suggestion_success" = "すべて正常に動作しています。操作は不要です。";
+"diagnostic.suggestion_visit_browser" = "ブラウザでclaude.aiにアクセスし、セキュリティチャレンジを完了してください";
+"diagnostic.suggestion_wait_and_retry" = "5〜10分待ってから再試行してください";
+"diagnostic.suggestion_check_vpn" = "VPNまたはプロキシが接続に影響していないか確認してください";
+"diagnostic.suggestion_use_smart_mode" = "スマート更新モードを使用してリクエスト頻度を減らしてください";
+"diagnostic.suggestion_verify_credentials" = "組織IDとセッションキーが正しいことを確認してください";
+"diagnostic.suggestion_update_session_key" = "セッションキーが期限切れの可能性があります。ブラウザから更新してください";
+"diagnostic.suggestion_check_browser" = "ブラウザでclaude.ai/settings/usageにアクセスできることを確認してください";
+"diagnostic.suggestion_check_internet" = "インターネット接続を確認してください";
+"diagnostic.suggestion_check_firewall" = "ファイアウォールまたはアンチウイルス設定を確認してください";
+"diagnostic.suggestion_retry_later" = "後でもう一度お試しください";
+"diagnostic.suggestion_configure_auth" = "上記のフィールドに組織IDとセッションキーを設定してください";
+"diagnostic.suggestion_check_org_id" = "組織IDの形式が正しいか確認してください(UUID形式である必要があります)";
+"diagnostic.suggestion_export_and_share" = "この診断レポートをエクスポートしてGitHub Issuesで共有してください";
+"diagnostic.suggestion_contact_support" = "github.com/f-is-h/Usage4Claude/issuesで開発者にお問い合わせください";

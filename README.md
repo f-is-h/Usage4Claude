@@ -11,6 +11,7 @@
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
 **An elegant macOS menu bar app for real-time monitoring of your Claude AI usage.**
 
@@ -29,7 +30,8 @@
 - **📊 Real-time Monitoring** - Display Claude subscription's 5-hour usage quota in menu bar
 - **🎨 Smart Colors** - Automatic color changes based on usage (green/orange/red)
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
-- **🔄 Smart/Fixed Refresh** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
+- **🔄 Smart Refresh System** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
+- **⚡ Manual Refresh** - Click refresh button to update data instantly (10-second debounce protection)
 - **💻 Native Experience** - Pure native macOS app, lightweight and elegant
 
 ### 🌐 Cross-Platform Support
@@ -59,7 +61,9 @@ All platforms share the same usage quota, monitored in one place!
 ### 🔧 Convenient Features
 
 - **⚙️ Visual Settings** - No code modification needed, GUI configuration for all options
-- **🆕 Auto Update Check** - Stay up-to-date with latest versions and features
+- **🆕 Smart Update Alerts** - Menu bar badge and rainbow animation notify new versions
+- **🚀 Launch at Login** - Optional automatic startup when system boots
+- **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R, ⌘,, ⌘Q)
 - **👋 Friendly Onboarding** - Detailed setup wizard on first launch
 - **… Menu Display** - Multiple menu access methods, detail view and right-click
 
@@ -94,7 +98,7 @@ All platforms share the same usage quota, monitored in one place!
 
 ### Settings
 
-**General** - Customize display, refresh, and language options  
+**General** - Launch at login, customize display, refresh, and language options  
 **Authentication** - Configure Claude account authentication  
 **About** - Version info and related links
 
@@ -166,9 +170,15 @@ open Usage4Claude.xcodeproj
 
 - **Default Display** - Menu bar shows usage percentage
 - **View Details** - Click menu bar icon or percentage
+- **Manual Refresh** - Click refresh button in detail window or use shortcut ⌘R
 - **Show Menu** - Click "…" icon in detail window or right-click menu bar icon
+- **Keyboard Shortcuts**
+  - ⌘R - Manual refresh data
+  - ⌘, - Open General Settings
+  - ⌘⇧A - Open Authentication Settings
+  - ⌘Q - Quit app
+- **Update Alerts** - When new version available, menu bar icon shows badge and menu items display rainbow text
 - **Check Updates** - Menu → Check for Updates
-- **Quit App** - Menu → Quit
 
 ### Refresh Mode
 
@@ -202,7 +212,13 @@ A: Session Keys expire periodically (usually weeks to months), need to re-obtain
 <details>
 <summary><b>Q: How to enable auto-launch on startup?</b></summary>
 
-A: 
+A: Two methods:
+
+**Method 1: Using built-in option (Recommended)**
+1. Open Settings → General
+2. Check "Launch at Login" option
+
+**Method 2: Via System Settings**
 1. Open System Settings → General → Login Items
 2. Click "+" to add Usage4Claude
 
@@ -312,22 +328,25 @@ Built with modern macOS native technologies:
 - [x] Visual settings interface
 - [x] Multilingual support
 - [x] First-launch onboarding
-- [x] Update checking
+- [x] Update checking with visual alerts
 - [x] Keychain authentication storage
+- [x] Shell auto-package DMG
+- [x] GitHub Actions auto-release
+- [x] Settings interface display optimization
+- [x] Launch at login option
+- [x] Keyboard shortcuts support
+- [x] Manual refresh feature
+- [x] Three-dot menu dark mode adaptation
 
 ### Short-term Plans
-1. **Feature Enhancement**
-    - 🚧 Auto-launch on startup setting
-    - 🚧 Keyboard shortcuts
+1. **Developer Experience**
+    - 🚧 GitHub Actions check online version
 
-2. **Developer**
-    - 🚧 Shell auto-package DMG
-    - 🚧 GitHub Actions auto-release
+2. **Display Optimization**
+    - 🚧 Settings interface dark mode adaptation
 
 ### Mid-term Plans
 3. **Display Optimization**
-    - Settings interface
-    - Dark mode
     - Detail window Focus state
 
 5. **Feature Addition**

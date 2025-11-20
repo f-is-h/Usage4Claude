@@ -8,6 +8,7 @@
 
 import Foundation
 import Combine
+import OSLog
 
 /// 本地化管理器
 /// 负责监听语言变化并触发视图更新，实现即时语言切换
@@ -28,7 +29,7 @@ class LocalizationManager: ObservableObject {
             .sink { [weak self] _ in
                 // 语言变化时递增触发器，所有使用 .id(updateTrigger) 的视图会重新创建
                 self?.updateTrigger += 1
-                print("🌐 语言已切换，触发视图更新")
+                Logger.localization.debug("语言已切换，触发视图更新")
             }
     }
     

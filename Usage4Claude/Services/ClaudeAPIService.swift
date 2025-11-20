@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 /// Claude API 服务类
 /// 负责与 Claude.ai API 通信，获取用户的使用情况数据
@@ -22,7 +23,10 @@ class ClaudeAPIService {
     
     /// 共享的 URLSession 实例
     private let session: URLSession
-    
+
+    /// 当前正在执行的网络请求任务
+    private var currentTask: URLSessionDataTask?
+
     // MARK: - Initialization
     
     init() {
@@ -44,6 +48,9 @@ class ClaudeAPIService {
     /// - Note: 请求会自动添加必要的 Headers 以绕过 Cloudflare 防护
     /// - Important: 调用前确保用户已配置有效的认证信息
     func fetchUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
+        // 取消之前的请求（如果存在）
+        currentTask?.cancel()
+
         // 检查认证信息
         guard settings.hasValidCredentials else {
             completion(.failure(UsageError.noCredentials))
@@ -77,12 +84,11 @@ class ClaudeAPIService {
         // 设置 Cookie
         let cookieString = "sessionKey=\(settings.sessionKey)"
         request.setValue(cookieString, forHTTPHeaderField: "Cookie")
-        
-        session.dataTask(with: request) { data, response, error in
+
+        // 创建并保存任务引用
+        currentTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                #if DEBUG
-                print("Network error: \(error)")
-                #endif
+                Logger.api.debug("Network error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     completion(.failure(UsageError.networkError))
                 }
@@ -98,32 +104,51 @@ class ClaudeAPIService {
             
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                #if DEBUG
-                print("API Response: \(jsonString)")
-                #endif
-                
+                Logger.api.debug("API Response: \(jsonString)")
+
                 // 检查是否是HTML响应（Cloudflare拦截）
                 if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
-                    #if DEBUG
-                    print("⚠️ Received HTML response, possibly intercepted by Cloudflare.")
-                    #endif
-                    
+                    Logger.api.debug("⚠️ Received HTML response, possibly intercepted by Cloudflare.")
+
                     DispatchQueue.main.async {
                         completion(.failure(UsageError.cloudflareBlocked))
                     }
                     return
                 }
             }
-            
+
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                #if DEBUG
-                print("HTTP Status Code: \(httpResponse.statusCode)")
-                #endif
-                
-                if httpResponse.statusCode == 403 {
+                Logger.api.debug("HTTP Status Code: \(httpResponse.statusCode)")
+
+                // 处理各种 HTTP 错误状态码
+                switch httpResponse.statusCode {
+                case 200...299:
+                    // 成功响应，继续处理
+                    break
+                case 401:
+                    // 未授权，通常是认证信息无效
+                    DispatchQueue.main.async {
+                        completion(.failure(UsageError.unauthorized))
+                    }
+                    return
+                case 403:
+                    // 禁止访问，可能是 Cloudflare 拦截
                     DispatchQueue.main.async {
                         completion(.failure(UsageError.cloudflareBlocked))
+                    }
+                    return
+                case 429:
+                    // 请求频率过高
+                    DispatchQueue.main.async {
+                        completion(.failure(UsageError.rateLimited))
+                    }
+                    return
+                default:
+                    // 其他 HTTP 错误
+                    Logger.api.error("HTTP error: \(httpResponse.statusCode)")
+                    DispatchQueue.main.async {
+                        completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     }
                     return
                 }
@@ -149,15 +174,24 @@ class ClaudeAPIService {
                     completion(.success(usageData))
                 }
             } catch {
-                #if DEBUG
-                print("Decoding error: \(error)")
-                #endif
-                
+                Logger.api.debug("Decoding error: \(error.localizedDescription)")
+
                 DispatchQueue.main.async {
                     completion(.failure(UsageError.decodingError))
                 }
             }
-        }.resume()
+        }
+
+        // 启动任务并在完成后清理引用
+        currentTask?.resume()
+    }
+
+    /// 取消所有正在进行的网络请求
+    /// 在应用退出或需要中断请求时调用
+    func cancelAllRequests() {
+        currentTask?.cancel()
+        currentTask = nil
+        Logger.api.debug("已取消所有网络请求")
     }
 }
 
@@ -319,7 +353,10 @@ enum UsageError: LocalizedError {
     case noCredentials
     case networkError
     case decodingError
-    
+    case unauthorized              // 401 未授权
+    case rateLimited               // 429 请求频率过高
+    case httpError(statusCode: Int)  // 其他 HTTP 错误
+
     var errorDescription: String? {
         switch self {
         case .invalidURL:
@@ -336,6 +373,12 @@ enum UsageError: LocalizedError {
             return L.Error.networkFailed
         case .decodingError:
             return L.Error.decodingFailed
+        case .unauthorized:
+            return "认证失败，请检查您的凭据"
+        case .rateLimited:
+            return "请求过于频繁，请稍后再试"
+        case .httpError(let statusCode):
+            return "HTTP 错误: \(statusCode)"
         }
     }
 }

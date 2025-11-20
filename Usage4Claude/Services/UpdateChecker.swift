@@ -66,6 +66,53 @@ class UpdateChecker {
     
     // MARK: - Public Methods
     
+    /// 🆕 后台静默检查更新（无UI提示）
+    /// - Parameter completion: 完成回调，返回是否有更新和最新版本号
+    func checkForUpdatesInBackground(completion: @escaping (Bool, String?) -> Void) {
+        let urlString = "https://api.github.com/repos/\(repoOwner)/\(repoName)/releases/latest"
+        
+        guard let url = URL(string: urlString) else {
+            completion(false, nil)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        request.setValue("Usage4Claude/\(currentVersion)", forHTTPHeaderField: "User-Agent")
+        
+        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self else {
+                completion(false, nil)
+                return
+            }
+            
+            DispatchQueue.main.async {
+                if error != nil {
+                    completion(false, nil)
+                    return
+                }
+                
+                guard let data = data else {
+                    completion(false, nil)
+                    return
+                }
+                
+                do {
+                    let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
+                    let latestVersion = self.parseVersion(from: release.tagName)
+                    let currentVersion = self.parseVersion(from: self.currentVersion)
+                    
+                    let hasUpdate = self.isNewerVersion(latest: latestVersion, current: currentVersion)
+                    completion(hasUpdate, hasUpdate ? latestVersion : nil)
+                } catch {
+                    completion(false, nil)
+                }
+            }
+        }
+        
+        task.resume()
+    }
+    
     /// 检查应用更新
     /// - Parameter manually: 是否为手动检查。手动检查会显示所有结果（包括无更新和错误），自动检查只在有更新时提示
     func checkForUpdates(manually: Bool = false) {

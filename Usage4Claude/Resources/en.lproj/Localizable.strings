@@ -26,6 +26,9 @@
 "usage.reset_time" = "Reset Time";
 "usage.used" = "Used";
 "usage.five_hour_limit" = "5-Hour Limit";
+"usage.refresh" = "Refresh";
+"usage.refresh_cooldown" = "Please wait a moment";
+"usage.run_diagnostic" = "Run Diagnostic";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "General";
@@ -33,6 +36,9 @@
 "settings.tab.about" = "About";
 
 // MARK: - Settings - General
+"settings.general.launch_section" = "Launch at Login";
+"settings.general.launch_at_login" = "Start automatically at login";
+"settings.general.launch_hint" = "When enabled, the app will launch automatically when you log in to your system";
 "settings.general.display_section" = "Display Settings";
 "settings.general.menubar_icon" = "Menu Bar Icon";
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
@@ -105,6 +111,11 @@
 "update.error.no_data" = "Unable to fetch data";
 "update.error.parse_failed" = "Failed to parse update information.";
 
+// MARK: - Update Notification
+"update.notification.available" = "New Version Available!";
+"update.notification.badge_menu" = "🎉 New Version Available!";
+"update.notification.badge_short" = "🎉 New!";
+
 // MARK: - Icon Display Mode
 "display.percentage_only" = "Percentage Only";
 "display.icon_only" = "Icon Only";
@@ -145,3 +156,66 @@
 "error.no_credentials" = "Please configure authentication information in settings first";
 "error.network_failed" = "Network request failed. Please check your internet connection.";
 "error.decoding_failed" = "Failed to parse response data. Please check if your credentials are correct.";
+
+// MARK: - Launch at Login
+"launch.status.enabled" = "Enabled";
+"launch.status.disabled" = "Disabled";
+"launch.status.requires_approval" = "Awaiting Authorization";
+"launch.status.not_found" = "Not Found";
+"launch.error.title" = "Launch at Login Error";
+"launch.error.enable" = "Failed to enable launch at login";
+"launch.error.disable" = "Failed to disable launch at login";
+
+// MARK: - Diagnostics
+"diagnostic.section_title" = "Connection Diagnostics";
+"diagnostic.section_description" = "Test your connection to Claude API and diagnose issues. All sensitive information is automatically redacted in reports.";
+"diagnostic.test_button" = "Test Connection";
+"diagnostic.view_details_button" = "View Details";
+"diagnostic.export_button" = "Export Report";
+"diagnostic.testing_connection" = "Testing connection...";
+"diagnostic.test_completed" = "Test completed";
+"diagnostic.test_success" = "Connection test successful";
+"diagnostic.test_failed" = "Connection test failed";
+"diagnostic.result_success" = "Connection Successful";
+"diagnostic.result_failed" = "Connection Failed";
+"diagnostic.http_status" = "HTTP Status";
+"diagnostic.response_time" = "Response Time";
+"diagnostic.response_type" = "Response Type";
+"diagnostic.cloudflare_detected" = "Cloudflare challenge detected";
+"diagnostic.diagnosis" = "Diagnosis";
+"diagnostic.suggestions" = "Suggestions";
+"diagnostic.privacy_notice" = "All sensitive data is automatically redacted for privacy";
+"diagnostic.detailed_report_title" = "Detailed Diagnostic Report";
+"diagnostic.no_report_available" = "No report available. Please run a test first.";
+"diagnostic.copy_to_clipboard" = "Copy to Clipboard";
+"diagnostic.export_title" = "Export Diagnostic Report";
+"diagnostic.export_message" = "This report contains no sensitive information and is safe to share.";
+"diagnostic.export_success_title" = "Export Successful";
+"diagnostic.export_success_message" = "Diagnostic report has been saved to:";
+"diagnostic.export_error_title" = "Export Failed";
+
+// Diagnosis messages
+"diagnostic.diagnosis_success" = "Connection is working properly. API returned valid usage data.";
+"diagnostic.diagnosis_cloudflare" = "Request was blocked by Cloudflare security system. This may be due to IP reputation or network configuration.";
+"diagnostic.diagnosis_decoding" = "Server returned data but it couldn't be parsed. This usually means credentials are incorrect or don't match.";
+"diagnostic.diagnosis_network" = "Network connection failed. Please check your internet connection.";
+"diagnostic.diagnosis_no_credentials" = "Authentication credentials are not configured.";
+"diagnostic.diagnosis_invalid_url" = "Invalid Organization ID format.";
+"diagnostic.diagnosis_unknown" = "Unknown error occurred. Please export and share this report with developers.";
+
+// Suggestion messages
+"diagnostic.suggestion_success" = "Everything is working correctly. No action needed.";
+"diagnostic.suggestion_visit_browser" = "Visit claude.ai in your browser and complete any security challenges";
+"diagnostic.suggestion_wait_and_retry" = "Wait 5-10 minutes and try again";
+"diagnostic.suggestion_check_vpn" = "Check if VPN or proxy is affecting the connection";
+"diagnostic.suggestion_use_smart_mode" = "Use Smart Refresh mode to reduce request frequency";
+"diagnostic.suggestion_verify_credentials" = "Verify that Organization ID and Session Key are correct";
+"diagnostic.suggestion_update_session_key" = "Your Session Key may have expired. Please update it from browser";
+"diagnostic.suggestion_check_browser" = "Verify you can access claude.ai/settings/usage in browser";
+"diagnostic.suggestion_check_internet" = "Check your internet connection";
+"diagnostic.suggestion_check_firewall" = "Check firewall or antivirus settings";
+"diagnostic.suggestion_retry_later" = "Try again later";
+"diagnostic.suggestion_configure_auth" = "Please configure Organization ID and Session Key in the fields above";
+"diagnostic.suggestion_check_org_id" = "Check if Organization ID format is correct (should be a UUID)";
+"diagnostic.suggestion_export_and_share" = "Export this diagnostic report and share it on GitHub Issues";
+"diagnostic.suggestion_contact_support" = "Contact developer for help at github.com/f-is-h/Usage4Claude/issues";

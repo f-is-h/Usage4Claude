@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ServiceManagement
 
 /// 设置视图
 /// 使用 Toolbar 风格布局，包含通用设置、认证信息和关于三个标签页
@@ -58,8 +59,8 @@ struct SettingsView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.top, 20)
-            .padding(.bottom, 10)
+            .padding(.top, 7)
+            .padding(.bottom, 7)
             .background(Color(NSColor.windowBackgroundColor))
             
             Divider()
@@ -212,13 +213,47 @@ struct SettingCard<Content: View>: View {
 // MARK: - Settings Tabs
 
 /// 通用设置页面
-/// 使用卡片式布局，包含显示设置、刷新设置和语言设置
+/// 使用卡片式布局，包含开机启动、显示设置、刷新设置和语言设置
 struct GeneralSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
     
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                // 开机启动设置卡片
+                SettingCard(
+                    icon: "power",
+                    iconColor: .orange,
+                    title: L.SettingsGeneral.launchSection,
+                    hint: L.SettingsGeneral.launchHint
+                ) {
+                    HStack {
+                        // 开关在左侧
+                        Toggle("", isOn: $settings.launchAtLogin)
+                            .toggleStyle(.switch)
+                            .controlSize(.mini)   // 使用最小尺寸
+                            .focusable(false)     // 移除默认 Focus
+                            .labelsHidden()       // 隐藏默认标签
+                        
+                        // 文字标签
+                        Text(L.SettingsGeneral.launchAtLogin)
+                        
+                        Spacer()
+                        
+                        // 状态指示器
+                        HStack(spacing: 4) {
+                            Image(systemName: statusIcon)
+                                .foregroundColor(statusColor)
+                                .font(.caption)
+                            Text(statusText)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                
                 // 显示设置卡片
                 SettingCard(
                     icon: "gauge.with.dots.needle.0percent",
@@ -299,6 +334,94 @@ struct GeneralSettingsView: View {
             }
             .padding()
         }
+        .onAppear {
+            // 设置页面打开时同步状态
+            settings.syncLaunchAtLoginStatus()
+            
+            // 监听错误通知
+            NotificationCenter.default.addObserver(
+                forName: .launchAtLoginError,
+                object: nil,
+                queue: .main
+            ) { notification in
+                handleLaunchError(notification)
+            }
+        }
+        .alert(isPresented: $showErrorAlert) {
+            Alert(
+                title: Text(L.LaunchAtLogin.errorTitle),
+                message: Text(errorMessage),
+                dismissButton: .default(Text(L.Update.okButton))
+            )
+        }
+    }
+    
+    // MARK: - Computed Properties
+    
+    /// 状态图标
+    private var statusIcon: String {
+        switch settings.launchAtLoginStatus {
+        case .enabled:
+            return "checkmark.circle.fill"
+        case .requiresApproval:
+            return "exclamationmark.circle.fill"
+        case .notRegistered:
+            return "circle"
+        case .notFound:
+            return "xmark.circle.fill"
+        @unknown default:
+            // 未知状态按未启用处理，会在 onAppear 时同步真实状态
+            return "circle"
+        }
+    }
+    
+    /// 状态颜色
+    private var statusColor: Color {
+        switch settings.launchAtLoginStatus {
+        case .enabled:
+            return .green
+        case .requiresApproval:
+            return .orange
+        case .notRegistered:
+            return .secondary
+        case .notFound:
+            return .red
+        @unknown default:
+            // 未知状态按未启用处理
+            return .secondary
+        }
+    }
+    
+    /// 状态文本
+    private var statusText: String {
+        switch settings.launchAtLoginStatus {
+        case .enabled:
+            return L.LaunchAtLogin.statusEnabled
+        case .requiresApproval:
+            return L.LaunchAtLogin.statusRequiresApproval
+        case .notRegistered:
+            return L.LaunchAtLogin.statusDisabled
+        case .notFound:
+            return L.LaunchAtLogin.statusNotFound
+        @unknown default:
+            // 未知状态按未启用处理
+            return L.LaunchAtLogin.statusDisabled
+        }
+    }
+    
+    // MARK: - Error Handling
+    
+    /// 处理开机启动错误
+    private func handleLaunchError(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let error = userInfo["error"] as? Error,
+              let operation = userInfo["operation"] as? String else {
+            return
+        }
+        
+        let operationType = operation == "enable" ? L.LaunchAtLogin.errorEnable : L.LaunchAtLogin.errorDisable
+        errorMessage = "\(operationType)\n\n\(error.localizedDescription)"
+        showErrorAlert = true
     }
 }
 
@@ -334,7 +457,30 @@ struct AuthSettingsView: View {
                             TextField(L.SettingsAuth.orgIdPlaceholder, text: $settings.organizationId)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.system(.body, design: .monospaced))
-                            
+
+                            // 验证状态提示
+                            if !settings.organizationId.isEmpty {
+                                if settings.isValidOrganizationId(settings.organizationId) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.caption2)
+                                            .foregroundColor(.green)
+                                        Text("格式正确")
+                                            .font(.caption)
+                                            .foregroundColor(.green)
+                                    }
+                                } else {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .font(.caption2)
+                                            .foregroundColor(.orange)
+                                        Text("Organization ID 应为 UUID 格式")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+                            }
+
                             HStack(spacing: 4) {
                                 Image(systemName: "lightbulb.fill")
                                     .font(.caption2)
@@ -378,7 +524,30 @@ struct AuthSettingsView: View {
                                 .buttonStyle(.plain)
                                 .help(isShowingPassword ? L.SettingsAuth.hidePassword : L.SettingsAuth.showPassword)
                             }
-                            
+
+                            // 验证状态提示
+                            if !settings.sessionKey.isEmpty {
+                                if settings.isValidSessionKey(settings.sessionKey) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.caption2)
+                                            .foregroundColor(.green)
+                                        Text("格式正确")
+                                            .font(.caption)
+                                            .foregroundColor(.green)
+                                    }
+                                } else {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .font(.caption2)
+                                            .foregroundColor(.orange)
+                                        Text("Session Key 长度应在 20-500 字符之间")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+                            }
+
                             HStack(spacing: 4) {
                                 Image(systemName: "lightbulb.fill")
                                     .font(.caption2)
@@ -457,6 +626,25 @@ struct AuthSettingsView: View {
                         .padding(.top, 8)
                     }
                 }
+
+                // 诊断卡片
+                SettingCard(
+                    icon: "stethoscope",
+                    iconColor: .blue,
+                    title: L.Diagnostic.sectionTitle,
+                    hint: ""
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L.Diagnostic.sectionDescription)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        // 诊断组件
+                        DiagnosticsView()
+                            .padding(.top, 4)
+                    }
+                }
             }
             .padding()
         }
@@ -474,7 +662,7 @@ struct AboutView: View {
     var body: some View {
         VStack(spacing: 20) {
             // 应用图标（不使用template模式）
-            if let icon = createAppIcon(size: 100) {
+            if let icon = ImageHelper.createAppIcon(size: 100) {
                 Image(nsImage: icon)
                     .resizable()
                     .frame(width: 100, height: 100)
@@ -545,15 +733,6 @@ struct AboutView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
-    /// 创建应用图标（非模板模式）
-    private func createAppIcon(size: CGFloat) -> NSImage? {
-        guard let appIcon = NSImage(named: "AppIcon") else { return nil }
-        let iconCopy = appIcon.copy() as! NSImage
-        iconCopy.isTemplate = false
-        iconCopy.size = NSSize(width: size, height: size)
-        return iconCopy
-    }
 }
 
 // MARK: - Supporting Views
@@ -593,7 +772,7 @@ struct WelcomeView: View {
             Spacer()
             
             // 欢迎图标（不使用template模式）
-            if let icon = createAppIcon(size: 120) {
+            if let icon = ImageHelper.createAppIcon(size: 120) {
                 Image(nsImage: icon)
                     .resizable()
                     .frame(width: 120, height: 120)
@@ -647,15 +826,6 @@ struct WelcomeView: View {
         .frame(width: 400, height: 500)
         .padding()
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
-    }
-    
-    /// 创建应用图标（非模板模式）
-    private func createAppIcon(size: CGFloat) -> NSImage? {
-        guard let appIcon = NSImage(named: "AppIcon") else { return nil }
-        let iconCopy = appIcon.copy() as! NSImage
-        iconCopy.isTemplate = false
-        iconCopy.size = NSSize(width: size, height: size)
-        return iconCopy
     }
 }
 

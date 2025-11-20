@@ -9,6 +9,26 @@
 import SwiftUI
 import AppKit
 import Combine
+import OSLog
+
+/// 刷新状态管理器
+/// 用于在视图间同步刷新状态，支持响应式更新
+class RefreshState: ObservableObject {
+    /// 是否正在刷新
+    @Published var isRefreshing = false
+    /// 是否可以刷新（防抖控制）
+    @Published var canRefresh = true
+    /// 通知消息
+    @Published var notificationMessage: String?
+    /// 通知类型
+    @Published var notificationType: NotificationType = .loading
+    
+    /// 通知类型
+    enum NotificationType {
+        case loading          // 彩虹加载动画
+        case updateAvailable  // 彩虹文字通知
+    }
+}
 
 /// 菜单栏管理器
 /// 负责管理菜单栏图标、弹出窗口、设置窗口和数据刷新
@@ -50,6 +70,38 @@ class MenuBarManager: ObservableObject {
     @Published var errorMessage: String?
     /// 上次的重置时间（用于检测重置是否完成）
     private var lastResetsAt: Date?
+    /// 刷新状态管理器
+    let refreshState = RefreshState()
+    /// 上次手动刷新时间
+    private var lastManualRefreshTime: Date?
+    /// 上次API请求时间
+    private var lastAPIFetchTime: Date?
+    /// 刷新动画开始时间（用于确保动画最小显示时长）
+    private var refreshAnimationStartTime: Date?
+    /// 动画最小显示时长（秒）
+    private let minimumAnimationDuration: TimeInterval = 1.0
+    /// 是否有可用更新
+    @Published var hasAvailableUpdate = false
+    /// 最新版本号
+    @Published var latestVersion: String?
+    /// 用户已确认的版本号（点击检查更新后记录）
+    private var acknowledgedVersion: String?
+    /// 上次检查更新时间
+    private var lastUpdateCheckTime: Date?
+    /// 每日更新检查定时器
+    private var dailyUpdateTimer: Timer?
+
+    /// 图标缓存：键为 "mode_percentage"，值为缓存的图标
+    private var iconCache: [String: NSImage] = [:]
+    /// 缓存的最大条目数
+    private let maxCacheSize = 50
+
+    /// 是否应该显示徽章和通知（用户未确认时才显示）
+    var shouldShowUpdateBadge: Bool {
+        guard hasAvailableUpdate, let latest = latestVersion else { return false }
+        // 如果用户已经确认过这个版本，则不显示徽章
+        return acknowledgedVersion != latest
+    }
     
     // MARK: - Initialization
     
@@ -57,6 +109,7 @@ class MenuBarManager: ObservableObject {
         setupStatusItem()
         setupPopover()
         setupSettingsObservers()
+        scheduleDailyUpdateCheck()
     }
     
     /// 初始化菜单栏状态项
@@ -91,6 +144,19 @@ class MenuBarManager: ObservableObject {
         statusItem.menu = nil
     }
     
+    /// 为菜单项设置图标
+    /// 统一设置图标尺寸和样式
+    /// - Parameters:
+    ///   - item: 菜单项
+    ///   - systemName: SF Symbol 图标名称
+    private func setMenuItemIcon(_ item: NSMenuItem, systemName: String) {
+        if let image = NSImage(systemSymbolName: systemName, accessibilityDescription: nil) {
+            image.size = NSSize(width: 16, height: 16)
+            image.isTemplate = true
+            item.image = image
+        }
+    }
+    
     /// 创建标准菜单
     /// 用于右键菜单和弹出窗口中的三点菜单，确保菜单内容一致
     /// - Returns: 配置好的 NSMenu 实例
@@ -101,27 +167,62 @@ class MenuBarManager: ObservableObject {
         let generalItem = NSMenuItem(
             title: L.Menu.generalSettings,
             action: #selector(openGeneralSettings),
-            keyEquivalent: ""
+            keyEquivalent: ","
         )
         generalItem.target = self
+        setMenuItemIcon(generalItem, systemName: "gearshape")
         menu.addItem(generalItem)
         
         // 认证信息
         let authItem = NSMenuItem(
             title: L.Menu.authSettings,
             action: #selector(openAuthSettings),
-            keyEquivalent: ""
+            keyEquivalent: "a"
         )
         authItem.target = self
+        authItem.keyEquivalentModifierMask = [.command, .shift]
+        setMenuItemIcon(authItem, systemName: "key.horizontal")
         menu.addItem(authItem)
         
         // 检查更新
         let updateItem = NSMenuItem(
-            title: L.Menu.checkUpdates,
+            title: "",
             action: #selector(checkForUpdates),
-            keyEquivalent: ""
+            keyEquivalent: "u"
         )
         updateItem.target = self
+        
+        // 根据是否有更新设置不同的样式
+        if hasAvailableUpdate {
+            // 有更新：显示彩虹文字（即使用户已确认也保留）
+            let baseText = L.Menu.checkUpdates
+            let highlightText = L.Update.Notification.badgeMenu
+            // 使用制表符来实现右对齐效果
+            let title = "\(baseText)\t\(highlightText)"
+
+            // 使用UTF-16长度正确计算range（支持emoji）
+            let highlightLocation = baseText.utf16.count + 1  // 基础文本 + 1个制表符
+            let highlightLength = highlightText.utf16.count
+            let highlightRange = NSRange(location: highlightLocation, length: highlightLength)
+
+            let attributedTitle = createRainbowText(title, highlightRange: highlightRange)
+            updateItem.attributedTitle = attributedTitle
+
+            // 徽章图标：仅在用户未确认时显示
+            if shouldShowUpdateBadge {
+                if let badgeImage = createBadgeIcon() {
+                    updateItem.image = badgeImage
+                }
+            } else {
+                // 用户已确认，不显示徽章，使用普通图标
+                setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
+            }
+        } else {
+            // 无更新：普通样式
+            updateItem.title = L.Menu.checkUpdates
+            setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
+        }
+        
         menu.addItem(updateItem)
         
         // 关于
@@ -131,6 +232,7 @@ class MenuBarManager: ObservableObject {
             keyEquivalent: ""
         )
         aboutItem.target = self
+        setMenuItemIcon(aboutItem, systemName: "info.circle")
         menu.addItem(aboutItem)
         
         menu.addItem(NSMenuItem.separator())
@@ -139,9 +241,11 @@ class MenuBarManager: ObservableObject {
         let webItem = NSMenuItem(
             title: L.Menu.webUsage,
             action: #selector(openWebUsage),
-            keyEquivalent: ""
+            keyEquivalent: "w"
         )
         webItem.target = self
+        webItem.keyEquivalentModifierMask = [.command, .shift]
+        setMenuItemIcon(webItem, systemName: "safari")
         menu.addItem(webItem)
         
         // Buy Me A Coffee
@@ -151,6 +255,7 @@ class MenuBarManager: ObservableObject {
             keyEquivalent: ""
         )
         coffeeItem.target = self
+        setMenuItemIcon(coffeeItem, systemName: "cup.and.saucer")
         menu.addItem(coffeeItem)
         
         menu.addItem(NSMenuItem.separator())
@@ -162,6 +267,7 @@ class MenuBarManager: ObservableObject {
             keyEquivalent: "q"
         )
         quitItem.target = self
+        setMenuItemIcon(quitItem, systemName: "power")
         menu.addItem(quitItem)
         
         return menu
@@ -182,23 +288,27 @@ class MenuBarManager: ObservableObject {
     /// 处理菜单操作
     /// 关闭弹出窗口并执行相应的操作
     private func handleMenuAction(_ action: UsageDetailView.MenuAction) {
-        // 关闭 popover
-        if popover.isShown {
-            closePopover()
-        }
-        
         switch action {
+        case .refresh:
+            // 处理手动刷新
+            handleManualRefresh()
         case .generalSettings:
+            closePopover()
             openSettingsWindow(tab: 0)
         case .authSettings:
+            closePopover()
             openSettingsWindow(tab: 1)
         case .checkForUpdates:
+            closePopover()
             checkForUpdates()
         case .about:
+            closePopover()
             openSettingsWindow(tab: 2)
         case .webUsage:
+            closePopover()
             openWebUsage()
         case .coffee:
+            closePopover()
             if let url = URL(string: "https://ko-fi.com/1atte") {
                 NSWorkspace.shared.open(url)
             }
@@ -212,6 +322,8 @@ class MenuBarManager: ObservableObject {
     private func setupSettingsObservers() {
         NotificationCenter.default.publisher(for: .settingsChanged)
             .sink { [weak self] _ in
+                // 设置改变时清除图标缓存（显示模式可能改变）
+                self?.iconCache.removeAll()
                 self?.updateMenuBarIcon(percentage: self?.usageData?.percentage ?? 0)
             }
             .store(in: &cancellables)
@@ -249,72 +361,99 @@ class MenuBarManager: ObservableObject {
                     get: { self.errorMessage },
                     set: { self.errorMessage = $0 }
                 ),
+                refreshState: self.refreshState,
                 onMenuAction: { [weak self] action in
                     self?.handleMenuAction(action)
-                }
+                },
+                hasAvailableUpdate: self.hasAvailableUpdate,  // 传入更新状态（菜单文字）
+                shouldShowUpdateBadge: self.shouldShowUpdateBadge  // 传入徽章显示状态（用户未确认时才显示）
             )
         )
         popover.contentViewController = hostingController
-        
-        // 设置窗口appearance为统一样式，避免Focus导致的颜色变化
-        if #available(macOS 10.14, *) {
-            hostingController.view.appearance = NSAppearance(named: .aqua)
-        }
+
+        // 让 SwiftUI 自动处理 appearance，跟随系统 Light/Dark 模式
     }
     
     /// 切换弹出窗口显示状态
     /// 打开时会重新创建内容视图并启动实时刷新定时器
     @objc func togglePopover() {
-        if let button = statusItem.button {
-            if popover.isShown {
-                closePopover()
-            } else {
-                // 每次打开时重新创建 contentViewController，确保显示最新数据
-                let hostingController = NSHostingController(
-                    rootView: UsageDetailView(
-                        usageData: Binding(
-                            get: { self.usageData },
-                            set: { self.usageData = $0 }
-                        ),
-                        errorMessage: Binding(
-                            get: { self.errorMessage },
-                            set: { self.errorMessage = $0 }
-                        ),
-                        onMenuAction: { [weak self] action in
-                            self?.handleMenuAction(action)
-                        }
-                    )
-                )
-                
-                // 设置窗口appearance为统一样式
-                if #available(macOS 10.14, *) {
-                    hostingController.view.appearance = NSAppearance(named: .aqua)
-                }
-                
-                popover.contentViewController = hostingController
-                
-                // 显示popover - 不要调用激活应用，让它保持非激活状态
-                popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-                
-                // 重要：不调用 becomeKey()，保持窗口在非Focus状态，避免颜色闪烁
-                // 这样窗口会保持一致的外观，不会有Focus/非Focus的明显差异
-                
-                // 配置窗口属性
-                if let popoverWindow = popover.contentViewController?.view.window {
-                    // 设置窗口level，确保显示在其他窗口之上
-                    popoverWindow.level = .popUpMenu
-                    
-                    // 禁止窗口成为key window，避免Focus外观变化
-                    popoverWindow.styleMask.remove(.titled)
-                }
-                
-                // 开始刷新定时器
-                startPopoverRefreshTimer()
-                
-                // 监听应用失去焦点事件，自动关闭popover
-                setupPopoverCloseObserver()
-            }
+        guard let button = statusItem.button else { return }
+
+        if popover.isShown {
+            closePopover()
+        } else {
+            openPopover(relativeTo: button)
         }
+    }
+
+    /// 打开弹出窗口
+    /// - Parameter button: 菜单栏按钮
+    private func openPopover(relativeTo button: NSStatusBarButton) {
+        // 智能刷新数据
+        refreshOnPopoverOpen()
+
+        // 显示更新通知（如果有）
+        showUpdateNotificationIfNeeded()
+
+        // 创建并设置内容视图控制器
+        popover.contentViewController = createPopoverContentViewController()
+
+        // 显示 popover
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        // 配置 popover 窗口
+        configurePopoverWindow()
+
+        // 启动定时器和监听器
+        startPopoverRefreshTimer()
+        setupPopoverCloseObserver()
+    }
+
+    /// 显示更新通知（如果需要）
+    private func showUpdateNotificationIfNeeded() {
+        guard shouldShowUpdateBadge else { return }
+
+        refreshState.notificationMessage = L.Update.Notification.available
+        refreshState.notificationType = .updateAvailable
+
+        // 3秒后恢复正常显示
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            self?.refreshState.notificationMessage = nil
+        }
+    }
+
+    /// 创建 popover 内容视图控制器
+    /// - Returns: 配置好的 NSHostingController
+    private func createPopoverContentViewController() -> NSHostingController<UsageDetailView> {
+        return NSHostingController(
+            rootView: UsageDetailView(
+                usageData: Binding(
+                    get: { self.usageData },
+                    set: { self.usageData = $0 }
+                ),
+                errorMessage: Binding(
+                    get: { self.errorMessage },
+                    set: { self.errorMessage = $0 }
+                ),
+                refreshState: self.refreshState,
+                onMenuAction: { [weak self] action in
+                    self?.handleMenuAction(action)
+                },
+                hasAvailableUpdate: self.hasAvailableUpdate,
+                shouldShowUpdateBadge: self.shouldShowUpdateBadge
+            )
+        )
+    }
+
+    /// 配置 popover 窗口属性
+    private func configurePopoverWindow() {
+        guard let popoverWindow = popover.contentViewController?.view.window else { return }
+
+        // 设置窗口level，确保显示在其他窗口之上
+        popoverWindow.level = .popUpMenu
+
+        // 禁止窗口成为key window，避免Focus外观变化
+        popoverWindow.styleMask.remove(.titled)
     }
     
     /// 关闭弹出窗口
@@ -339,6 +478,9 @@ class MenuBarManager: ObservableObject {
     /// 设置弹出窗口外部点击监听
     /// 点击 popover 外部时自动关闭
     private func setupPopoverCloseObserver() {
+        // 先移除旧的观察者，防止累积
+        removePopoverCloseObserver()
+
         // 监听鼠标点击事件，点击popover外部时关闭
         popoverCloseObserver = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self = self, self.popover.isShown else { return event }
@@ -391,6 +533,15 @@ class MenuBarManager: ObservableObject {
     func startRefreshing() {
         fetchUsage()
         restartTimer()
+        
+        #if DEBUG
+        // 🧪 测试：确保图标显示徽章
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            if let percentage = self?.usageData?.percentage {
+                self?.updateMenuBarIcon(percentage: percentage)
+            }
+        }
+        #endif
     }
     
     /// 重启刷新定时器
@@ -402,11 +553,6 @@ class MenuBarManager: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.fetchUsage()
         }
-        
-        #if DEBUG
-        let minutes = interval / 60
-        print("⏱️ 定时器已重启，刷新间隔: \(minutes) 分钟")
-        #endif
     }
     
     // MARK: - Settings Window
@@ -434,6 +580,18 @@ class MenuBarManager: ObservableObject {
     }
     
     @objc private func checkForUpdates() {
+        // 记录用户已确认当前版本的更新
+        if let version = latestVersion {
+            acknowledgedVersion = version
+            // 触发UI更新（隐藏徽章和通知）
+            objectWillChange.send()
+            // 更新菜单栏图标
+            if let percentage = usageData?.percentage {
+                updateMenuBarIcon(percentage: percentage)
+            }
+        }
+
+        // 手动检查更新（会弹出对话框）
         updateChecker.checkForUpdates(manually: true)
     }
     
@@ -495,49 +653,137 @@ class MenuBarManager: ObservableObject {
         isLoading = true
         errorMessage = nil
         
+        // 记录本次API请求时间
+        lastAPIFetchTime = Date()
+        
         apiService.fetchUsage { [weak self] result in
             DispatchQueue.main.async {
-                self?.isLoading = false
-                
+                guard let self = self else { return }
+                self.isLoading = false
+
+                // 确保动画至少显示最小时长
+                self.endRefreshAnimationWithMinimumDuration {
+                }
+
                 switch result {
                 case .success(let data):
-                    self?.usageData = data
-                    self?.updateStatusBarIcon(percentage: data.percentage)
-                    self?.errorMessage = nil
-                    
+                    self.usageData = data
+                    self.updateStatusBarIcon(percentage: data.percentage)
+                    self.errorMessage = nil
+
                     // 智能模式：根据百分比变化调整刷新频率
-                    self?.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
-                    
+                    self.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
+
                     // 检测重置时间是否发生变化
-                    if let self = self {
-                        let newResetsAt = data.resetsAt
-                        let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
-                        
-                        if hasResetChanged {
-                            // 重置时间发生变化，取消所有待执行的验证
-                            #if DEBUG
-                            print("✅ 检测到重置时间变化，取消剩余验证")
-                            #endif
-                            self.cancelResetVerification()
-                        } else {
-                            // 重置时间未变化，安排验证
-                            if let resetsAt = newResetsAt {
-                                self.scheduleResetVerification(resetsAt: resetsAt)
-                            }
+                    let newResetsAt = data.resetsAt
+                    let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
+
+                    if hasResetChanged {
+                        // 重置时间发生变化，取消所有待执行的验证
+                        self.cancelResetVerification()
+                    } else {
+                        // 重置时间未变化，安排验证
+                        if let resetsAt = newResetsAt {
+                            self.scheduleResetVerification(resetsAt: resetsAt)
                         }
-                        
-                        // 更新上次的重置时间
-                        self.lastResetsAt = newResetsAt
                     }
-                    
+
+                    // 更新上次的重置时间
+                    self.lastResetsAt = newResetsAt
+
                 case .failure(let error):
-                    self?.errorMessage = error.localizedDescription
-                    print("Error fetching usage: \(error)")
+                    self.errorMessage = error.localizedDescription
+                    Logger.menuBar.error("API 请求失败: \(error.localizedDescription)")
                 }
             }
         }
     }
     
+    // MARK: - Refresh Methods
+    
+    /// 打开Popover时的智能刷新
+    /// 如果距离上次刷新 > 30秒，则立即刷新数据
+    private func refreshOnPopoverOpen() {
+        let now = Date()
+
+        // 用户打开详细界面，强制切换到活跃模式（1分钟刷新）
+        if settings.refreshMode == .smart {
+            settings.currentMonitoringMode = .active
+            settings.unchangedCount = 0
+            Logger.menuBar.debug("用户打开界面，切换到活跃模式")
+        }
+
+        // 如果距离上次刷新 < 30秒，跳过
+        if let lastFetch = lastAPIFetchTime,
+           now.timeIntervalSince(lastFetch) < 30 {
+            return
+        }
+
+        fetchUsage()
+    }
+    
+    /// 处理手动刷新
+    /// 防抖机制：10秒内只能刷新一次
+    private func handleManualRefresh() {
+        let now = Date()
+        
+        // 防抖检查：10秒内只能刷新一次
+        if let lastManual = lastManualRefreshTime,
+           now.timeIntervalSince(lastManual) < 10 {
+            return
+        }
+
+        // 用户主动刷新，强制切换到活跃模式（1分钟刷新）
+        if settings.refreshMode == .smart {
+            settings.currentMonitoringMode = .active
+            settings.unchangedCount = 0
+            Logger.menuBar.debug("用户主动刷新，切换到活跃模式")
+        }
+
+        // 更新状态
+        lastManualRefreshTime = now
+        refreshAnimationStartTime = now  // 记录动画开始时间
+        refreshState.isRefreshing = true
+        refreshState.canRefresh = false
+
+        // 10秒后解除防抖
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            self?.refreshState.canRefresh = true
+        }
+        
+        // 触发刷新
+        fetchUsage()
+    }
+
+    /// 结束刷新动画，确保至少显示最小时长
+    /// - Parameter completion: 动画结束后的回调
+    private func endRefreshAnimationWithMinimumDuration(completion: @escaping () -> Void) {
+        guard let startTime = refreshAnimationStartTime else {
+            // 没有记录开始时间，直接结束
+            refreshState.isRefreshing = false
+            completion()
+            return
+        }
+
+        let elapsed = Date().timeIntervalSince(startTime)
+        let remaining = minimumAnimationDuration - elapsed
+
+        if remaining > 0 {
+            // 动画时间不足，延迟剩余时间后再结束
+            DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
+                self?.refreshState.isRefreshing = false
+                completion()
+            }
+        } else {
+            // 动画时间已足够，直接结束
+            refreshState.isRefreshing = false
+            completion()
+        }
+
+        // 清除开始时间记录
+        refreshAnimationStartTime = nil
+    }
+
     // MARK: - Reset Verification
     
     /// 检测重置时间是否发生变化
@@ -587,51 +833,41 @@ class MenuBarManager: ObservableObject {
         
         // 只有重置时间在未来才安排验证
         guard timeUntilReset > 0 else {
-            #if DEBUG
-            print("⏰ 重置时间已过，跳过验证安排")
-            #endif
+            Logger.menuBar.debug("重置时间已过，跳过验证安排")
             return
         }
-        
-        #if DEBUG
+
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         formatter.timeZone = TimeZone.current
-        print("⏰ 安排重置验证 - 重置时间: \(formatter.string(from: resetsAt))")
-        #endif
+        Logger.menuBar.debug("安排重置验证 - 重置时间: \(formatter.string(from: resetsAt))")
         
         // 重置后1秒验证
         resetVerifyTimer1 = Timer.scheduledTimer(
             withTimeInterval: timeUntilReset + 1,
             repeats: false
         ) { [weak self] _ in
-            #if DEBUG
-            print("✅ 重置验证 +1秒 - 开始刷新")
-            #endif
+            Logger.menuBar.debug("重置验证 +1秒 - 开始刷新")
             self?.fetchUsage()
             self?.resetVerifyTimer1 = nil
         }
-        
+
         // 重置后10秒验证
         resetVerifyTimer2 = Timer.scheduledTimer(
             withTimeInterval: timeUntilReset + 10,
             repeats: false
         ) { [weak self] _ in
-            #if DEBUG
-            print("✅ 重置验证 +10秒 - 开始刷新")
-            #endif
+            Logger.menuBar.debug("重置验证 +10秒 - 开始刷新")
             self?.fetchUsage()
             self?.resetVerifyTimer2 = nil
         }
-        
+
         // 重置后30秒验证
         resetVerifyTimer3 = Timer.scheduledTimer(
             withTimeInterval: timeUntilReset + 30,
             repeats: false
         ) { [weak self] _ in
-            #if DEBUG
-            print("✅ 重置验证 +30秒 - 开始刷新")
-            #endif
+            Logger.menuBar.debug("重置验证 +30秒 - 开始刷新")
             self?.fetchUsage()
             self?.resetVerifyTimer3 = nil
         }
@@ -650,22 +886,90 @@ class MenuBarManager: ObservableObject {
     /// - Parameter percentage: 当前使用百分比
     private func updateMenuBarIcon(percentage: Double) {
         guard let button = statusItem.button else { return }
-        
-        switch settings.iconDisplayMode {
-        case .percentageOnly:
-            button.image = createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18))
-        case .iconOnly:
-            if let appIcon = NSImage(named: "AppIcon") {
-                let iconCopy = appIcon.copy() as! NSImage
-                iconCopy.size = NSSize(width: 18, height: 18)
-                iconCopy.isTemplate = false
-                button.image = iconCopy
-            } else {
-                button.image = createSimpleCircleIcon()
+
+        // 生成缓存键
+        let cacheKey = "\(settings.iconDisplayMode.rawValue)_\(Int(percentage))"
+
+        var baseImage: NSImage?
+
+        // 尝试从缓存获取
+        if let cachedImage = iconCache[cacheKey] {
+            baseImage = cachedImage
+        } else {
+            // 缓存未命中，创建新图标
+            switch settings.iconDisplayMode {
+            case .percentageOnly:
+                baseImage = createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18))
+            case .iconOnly:
+                if let appIcon = NSImage(named: "AppIcon") {
+                    let iconCopy = appIcon.copy() as! NSImage
+                    iconCopy.size = NSSize(width: 18, height: 18)
+                    iconCopy.isTemplate = false
+                    baseImage = iconCopy
+                } else {
+                    baseImage = createSimpleCircleIcon()
+                }
+            case .both:
+                baseImage = createCombinedImage(percentage: percentage)
             }
-        case .both:
-            button.image = createCombinedImage(percentage: percentage)
+
+            // 存入缓存
+            if let image = baseImage {
+                // 如果缓存已满，移除最旧的条目
+                if iconCache.count >= maxCacheSize {
+                    iconCache.removeValue(forKey: iconCache.keys.first!)
+                }
+                iconCache[cacheKey] = image
+            }
         }
+
+        // 如果有更新且用户未确认，添加徽章
+        if shouldShowUpdateBadge, let base = baseImage {
+            button.image = addBadgeToImage(base)
+        } else {
+            button.image = baseImage
+        }
+    }
+    
+    /// 在图标上添加徽章（小红点）
+    /// - Parameter baseImage: 基础图标
+    /// - Returns: 带徽章的图标
+    private func addBadgeToImage(_ baseImage: NSImage) -> NSImage {
+        let size = baseImage.size
+        // 适度扩大画布以容纳徽章
+        let expandedSize = NSSize(width: size.width + 3, height: size.height + 3)
+        let badgedImage = NSImage(size: expandedSize)
+
+        badgedImage.lockFocus()
+
+        // 绘制原图标（居左下）
+        baseImage.draw(in: NSRect(origin: .zero, size: size))
+
+        // 右上角添加完美圆形红点（适中位置）
+        let badgeRadius: CGFloat = 3  // 徽章半径
+        let badgeDiameter = badgeRadius * 2
+
+        // 确保是正方形区域以绘制完美圆形，位置适中
+        let badgeX = expandedSize.width - badgeDiameter - 0.5  // 距离右边缘0.5px
+        let badgeY = expandedSize.height - badgeDiameter - 0.5  // 距离上边缘0.5px
+        let badgeRect = NSRect(
+            x: badgeX,
+            y: badgeY,
+            width: badgeDiameter,
+            height: badgeDiameter
+        )
+
+        // 使用圆形路径绘制徽章
+        NSGraphicsContext.saveGraphicsState()
+        NSColor.systemRed.setFill()
+        let circlePath = NSBezierPath(ovalIn: badgeRect)
+        circlePath.fill()
+        NSGraphicsContext.restoreGraphicsState()
+
+        badgedImage.unlockFocus()
+        badgedImage.isTemplate = baseImage.isTemplate
+
+        return badgedImage
     }
     
     /// 创建组合图标（应用图标 + 百分比圆环）
@@ -839,6 +1143,136 @@ class MenuBarManager: ObservableObject {
         return image
     }
     
+    // MARK: - Update Check Methods
+    
+    /// 安排每日更新检查
+    private func scheduleDailyUpdateCheck() {
+        #if DEBUG
+        // 🧪 测试：模拟有更新状态
+        hasAvailableUpdate = true
+        latestVersion = "2.0.0"
+
+        // 触发图标更新
+        if let percentage = usageData?.percentage {
+            updateMenuBarIcon(percentage: percentage)
+        }
+        #else
+        // 立即检查一次
+        checkForUpdatesInBackground()
+        
+        // 每24小时检查一次
+        dailyUpdateTimer = Timer.scheduledTimer(withTimeInterval: 24 * 60 * 60, repeats: true) { [weak self] _ in
+            self?.checkForUpdatesInBackground()
+        }
+
+        Logger.menuBar.info("每日更新检查已启动")
+        #endif
+    }
+    
+    /// 后台静默检查更新（无UI提示）
+    private func checkForUpdatesInBackground() {
+        let now = Date()
+        
+        // 防止重复检查：距离上次检查 < 12小时则跳过
+        if let lastCheck = lastUpdateCheckTime,
+           now.timeIntervalSince(lastCheck) < 12 * 60 * 60 {
+            return
+        }
+
+        lastUpdateCheckTime = now
+
+        updateChecker.checkForUpdatesInBackground { [weak self] hasUpdate, version in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+
+                let wasUpdateAvailable = self.hasAvailableUpdate
+                self.hasAvailableUpdate = hasUpdate
+                self.latestVersion = version
+
+                // 如果更新状态变化，刷新菜单栏图标
+                if wasUpdateAvailable != hasUpdate {
+                    if let percentage = self.usageData?.percentage {
+                        self.updateMenuBarIcon(percentage: percentage)
+                    }
+                }
+            }
+        }
+    }
+    
+    /// 创建彩虹文字 NSAttributedString
+    /// - Parameters:
+    ///   - text: 完整文本
+    ///   - highlightRange: 需要高亮的范围
+    /// - Returns: 带彩虹效果的属性字符串
+    private func createRainbowText(_ text: String, highlightRange: NSRange) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: text)
+
+        // 基础样式 - 使用UTF-16长度
+        let font = NSFont.menuFont(ofSize: 0)
+        attributedString.addAttribute(.font, value: font, range: NSRange(location: 0, length: text.utf16.count))
+
+        // 设置段落样式以支持制表符对齐
+        let paragraphStyle = NSMutableParagraphStyle()
+
+        // 计算基础文本的宽度，动态设置制表位位置
+        let nsText = text as NSString
+        let baseText = nsText.substring(to: highlightRange.location)
+        let baseTextSize = (baseText as NSString).size(withAttributes: [.font: font])
+
+        // 制表位位置 = 基础文本宽度 + 一些间距
+        let tabLocation = baseTextSize.width + 20  // 基础文本宽度 + 20pt间距
+        let tabStop = NSTextTab(textAlignment: .left, location: tabLocation, options: [:])
+        paragraphStyle.tabStops = [tabStop]
+
+        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: text.utf16.count))
+
+        // 彩虹渐变（为高亮部分的每个字符设置不同颜色）
+        let colors: [NSColor] = [.systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple]
+
+        // 获取高亮文本
+        let highlightText = nsText.substring(with: highlightRange) as String
+
+        // 遍历高亮文本的每个字符（正确处理emoji和组合字符）
+        var utf16Offset = 0
+        for (index, char) in highlightText.enumerated() {
+            let charString = String(char)
+            let charUtf16Count = charString.utf16.count
+            let colorIndex = index % colors.count
+
+            attributedString.addAttribute(
+                .foregroundColor,
+                value: colors[colorIndex],
+                range: NSRange(location: highlightRange.location + utf16Offset, length: charUtf16Count)
+            )
+
+            utf16Offset += charUtf16Count
+        }
+
+        return attributedString
+    }
+    
+    /// 创建徽章图标（小红点）
+    /// - Returns: 带徽章的图标
+    private func createBadgeIcon() -> NSImage? {
+        let size = NSSize(width: 16, height: 16)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        
+        // 绘制图标 + 红点
+        if let icon = NSImage(systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil) {
+            icon.size = NSSize(width: 12, height: 12)
+            icon.draw(in: NSRect(x: 0, y: 2, width: 12, height: 12))
+        }
+        
+        // 右上角红点
+        NSColor.systemRed.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 10, y: 10, width: 6, height: 6)).fill()
+        
+        image.unlockFocus()
+        image.isTemplate = true
+        return image
+    }
+    
     // MARK: - Cleanup
     
     /// 清理所有资源
@@ -855,6 +1289,8 @@ class MenuBarManager: ObservableObject {
         resetVerifyTimer2 = nil
         resetVerifyTimer3?.invalidate()
         resetVerifyTimer3 = nil
+        dailyUpdateTimer?.invalidate()  // 清理更新检查定时器
+        dailyUpdateTimer = nil
         
         // 移除所有事件监听器
         removePopoverCloseObserver()

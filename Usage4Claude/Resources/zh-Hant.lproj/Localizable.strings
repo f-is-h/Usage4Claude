@@ -26,6 +26,9 @@
 "usage.reset_time" = "重設時間";
 "usage.used" = "已使用";
 "usage.five_hour_limit" = "5小時限制";
+"usage.refresh" = "重新整理";
+"usage.refresh_cooldown" = "請稍後再試";
+"usage.run_diagnostic" = "執行診斷";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "一般";
@@ -33,6 +36,9 @@
 "settings.tab.about" = "關於";
 
 // MARK: - Settings - General
+"settings.general.launch_section" = "開機啟動";
+"settings.general.launch_at_login" = "登入時自動啟動";
+"settings.general.launch_hint" = "啟用後，應用程式將在系統登入時自動執行";
 "settings.general.display_section" = "顯示設定";
 "settings.general.menubar_icon" = "選單列圖示";
 "settings.general.menubar_hint" = "選擇選單列中顯示的內容";
@@ -105,6 +111,11 @@
 "update.error.no_data" = "無法取得資料";
 "update.error.parse_failed" = "解析更新資訊失敗";
 
+// MARK: - Update Notification
+"update.notification.available" = "有新版本可用！";
+"update.notification.badge_menu" = "🎉 有新版本可用！";
+"update.notification.badge_short" = "🎉 新!";
+
 // MARK: - Icon Display Mode
 "display.percentage_only" = "僅顯示百分比";
 "display.icon_only" = "僅顯示圖示";
@@ -145,3 +156,66 @@
 "error.no_credentials" = "請先在設定中設定認證資訊";
 "error.network_failed" = "網路請求失敗，請檢查網路連線";
 "error.decoding_failed" = "解析回應資料失敗，請檢查認證資訊是否正確";
+
+// MARK: - Launch at Login
+"launch.status.enabled" = "已啟用";
+"launch.status.disabled" = "未啟用";
+"launch.status.requires_approval" = "等待授權";
+"launch.status.not_found" = "未找到";
+"launch.error.title" = "開機啟動錯誤";
+"launch.error.enable" = "啟用開機啟動失敗";
+"launch.error.disable" = "禁用開機啟動失敗";
+
+// MARK: - Diagnostics
+"diagnostic.section_title" = "連線診斷";
+"diagnostic.section_description" = "測試與 Claude API 的連線並診斷問題。報告中的所有敏感資訊都會自動遮罩處理。";
+"diagnostic.test_button" = "測試連線";
+"diagnostic.view_details_button" = "檢視詳情";
+"diagnostic.export_button" = "匯出報告";
+"diagnostic.testing_connection" = "正在測試連線...";
+"diagnostic.test_completed" = "測試完成";
+"diagnostic.test_success" = "連線測試成功";
+"diagnostic.test_failed" = "連線測試失敗";
+"diagnostic.result_success" = "連線成功";
+"diagnostic.result_failed" = "連線失敗";
+"diagnostic.http_status" = "HTTP 狀態";
+"diagnostic.response_time" = "回應時間";
+"diagnostic.response_type" = "回應類型";
+"diagnostic.cloudflare_detected" = "偵測到 Cloudflare 挑戰";
+"diagnostic.diagnosis" = "診斷結果";
+"diagnostic.suggestions" = "建議操作";
+"diagnostic.privacy_notice" = "所有敏感資料都已自動遮罩，可安全分享";
+"diagnostic.detailed_report_title" = "詳細診斷報告";
+"diagnostic.no_report_available" = "暫無報告。請先執行測試。";
+"diagnostic.copy_to_clipboard" = "複製到剪貼簿";
+"diagnostic.export_title" = "匯出診斷報告";
+"diagnostic.export_message" = "此報告不包含任何敏感資訊，可安全分享。";
+"diagnostic.export_success_title" = "匯出成功";
+"diagnostic.export_success_message" = "診斷報告已儲存至:";
+"diagnostic.export_error_title" = "匯出失敗";
+
+// Diagnosis messages
+"diagnostic.diagnosis_success" = "連線正常運作。API 回傳了有效的使用資料。";
+"diagnostic.diagnosis_cloudflare" = "請求被 Cloudflare 安全系統攔截。這可能是由於 IP 信譽或網路設定導致的。";
+"diagnostic.diagnosis_decoding" = "伺服器回傳了資料但無法解析。這通常表示認證資訊不正確或不匹配。";
+"diagnostic.diagnosis_network" = "網路連線失敗。請檢查您的網際網路連線。";
+"diagnostic.diagnosis_no_credentials" = "未設定認證資訊。";
+"diagnostic.diagnosis_invalid_url" = "組織 ID 格式無效。";
+"diagnostic.diagnosis_unknown" = "發生未知錯誤。請匯出此報告並分享給開發者。";
+
+// Suggestion messages
+"diagnostic.suggestion_success" = "一切正常運作。無需任何操作。";
+"diagnostic.suggestion_visit_browser" = "在瀏覽器中造訪 claude.ai 並完成任何安全驗證";
+"diagnostic.suggestion_wait_and_retry" = "等待 5-10 分鐘後重試";
+"diagnostic.suggestion_check_vpn" = "檢查 VPN 或代理是否影響連線";
+"diagnostic.suggestion_use_smart_mode" = "使用智慧重新整理模式以降低請求頻率";
+"diagnostic.suggestion_verify_credentials" = "驗證組織 ID 和工作階段金鑰是否正確";
+"diagnostic.suggestion_update_session_key" = "您的工作階段金鑰可能已過期。請從瀏覽器更新它";
+"diagnostic.suggestion_check_browser" = "驗證您可以在瀏覽器中存取 claude.ai/settings/usage";
+"diagnostic.suggestion_check_internet" = "檢查您的網際網路連線";
+"diagnostic.suggestion_check_firewall" = "檢查防火牆或防毒軟體設定";
+"diagnostic.suggestion_retry_later" = "稍後重試";
+"diagnostic.suggestion_configure_auth" = "請在上方欄位中設定組織 ID 和工作階段金鑰";
+"diagnostic.suggestion_check_org_id" = "檢查組織 ID 格式是否正確(應該是 UUID 格式)";
+"diagnostic.suggestion_export_and_share" = "匯出此診斷報告並在 GitHub Issues 上分享";
+"diagnostic.suggestion_contact_support" = "在 github.com/f-is-h/Usage4Claude/issues 聯絡開發者尋求協助";

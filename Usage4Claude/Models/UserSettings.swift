@@ -9,6 +9,8 @@
 import Foundation
 import SwiftUI
 import Combine
+import ServiceManagement
+import OSLog
 
 // MARK: - Display Modes
 
@@ -151,17 +153,23 @@ class UserSettings: ObservableObject {
     /// 从浏览器开发者工具的网络请求中获取
     @Published var organizationId: String {
         didSet {
-            // 保存到Keychain而不是UserDefaults
-            keychain.saveOrganizationId(organizationId)
+            // 将Keychain写入操作移到后台线程，避免阻塞主线程
+            let value = organizationId
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.keychain.saveOrganizationId(value)
+            }
         }
     }
-    
+
     /// Claude Session Key
     /// 从浏览器 Cookie 中获取的 sessionKey 值
     @Published var sessionKey: String {
         didSet {
-            // 保存到Keychain而不是UserDefaults
-            keychain.saveSessionKey(sessionKey)
+            // 将Keychain写入操作移到后台线程，避免阻塞主线程
+            let value = sessionKey
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.keychain.saveSessionKey(value)
+            }
         }
     }
     
@@ -206,6 +214,26 @@ class UserSettings: ObservableObject {
         }
     }
     
+    /// 开机启动设置
+    @Published var launchAtLogin: Bool {
+        didSet {
+            // 在同步状态时不触发启用/禁用操作，避免无限循环
+            guard !isSyncingLaunchStatus else { return }
+
+            if launchAtLogin {
+                enableLaunchAtLogin()
+            } else {
+                disableLaunchAtLogin()
+            }
+        }
+    }
+    
+    /// 开机启动状态（用于UI显示）
+    @Published var launchAtLoginStatus: SMAppService.Status = .notRegistered
+
+    /// 防止同步状态时触发递归调用的标志
+    private var isSyncingLaunchStatus: Bool = false
+
     // MARK: - 智能模式内部状态（不持久化）
     
     /// 上次检测的百分比（用于检测变化）
@@ -280,6 +308,12 @@ class UserSettings: ObservableObject {
         } else {
             self.isFirstLaunch = false
         }
+        
+        // 初始化开机启动设置
+        self.launchAtLogin = defaults.bool(forKey: "launchAtLogin")
+        
+        // 同步系统实际状态
+        syncLaunchAtLoginStatus()
     }
     
     // MARK: - Computed Properties
@@ -288,6 +322,25 @@ class UserSettings: ObservableObject {
     /// - Returns: 如果 Organization ID 和 Session Key 都不为空则返回 true
     var hasValidCredentials: Bool {
         return !organizationId.isEmpty && !sessionKey.isEmpty
+    }
+
+    /// 验证 Organization ID 格式
+    /// - Parameter id: 要验证的 Organization ID
+    /// - Returns: 如果格式有效（UUID 格式）返回 true
+    func isValidOrganizationId(_ id: String) -> Bool {
+        // Organization ID 应该是 UUID 格式
+        let uuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", uuidRegex)
+        return predicate.evaluate(with: id)
+    }
+
+    /// 验证 Session Key 格式
+    /// - Parameter key: 要验证的 Session Key
+    /// - Returns: 如果格式有效返回 true
+    func isValidSessionKey(_ key: String) -> Bool {
+        // Session Key 应该是非空的，并且有合理的长度
+        // 典型的 session key 长度在 20-200 字符之间
+        return !key.isEmpty && key.count >= 20 && key.count <= 500
     }
     
     /// 获取当前生效的刷新间隔（秒）
@@ -323,7 +376,7 @@ class UserSettings: ObservableObject {
         keychain.deleteCredentials()
         organizationId = ""
         sessionKey = ""
-        print("🗑️ 已清除所有认证信息")
+        Logger.settings.notice("已清除所有认证信息")
     }
     
     /// 更新智能监控模式
@@ -332,62 +385,82 @@ class UserSettings: ObservableObject {
     func updateSmartMonitoringMode(currentUtilization: Double) {
         // 只在智能模式下工作
         guard refreshMode == .smart else { return }
-        
-        // 检测百分比是否有变化
-        if let last = lastUtilization, abs(currentUtilization - last) > 0.01 {
-            // 检测到使用，立即切换到活跃模式
-            if currentMonitoringMode != .active {
-                print("🟢 检测到使用变化，切换到活跃模式 (1分钟)")
-                currentMonitoringMode = .active
-                unchangedCount = 0
-                NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
-            }
+
+        // 检查是否有变化
+        if hasUtilizationChanged(currentUtilization) {
+            switchToActiveMode()
         } else {
-            // 没有变化，增加计数
-            unchangedCount += 1
-            
-            // 根据连续无变化次数逐步降低频率
-            let previousMode = currentMonitoringMode
-            
-            switch currentMonitoringMode {
-            case .active:
-                // 活跃模式：连续3次无变化（3分钟） -> 短期静默
-                if unchangedCount >= 3 {
-                    currentMonitoringMode = .idleShort
-                    unchangedCount = 0
-                }
-            case .idleShort:
-                // 短期静默：连续6次无变化（18分钟） -> 中期静默
-                if unchangedCount >= 6 {
-                    currentMonitoringMode = .idleMedium
-                    unchangedCount = 0
-                }
-            case .idleMedium:
-                // 中期静默：连续12次无变化（60分钟） -> 长期静默
-                if unchangedCount >= 12 {
-                    currentMonitoringMode = .idleLong
-                    unchangedCount = 0
-                }
-            case .idleLong:
-                // 长期静默：保持当前模式
-                break
-            }
-            
-            // 如果模式发生变化，发送通知
-            if previousMode != currentMonitoringMode {
-                let modeNames: [MonitoringMode: String] = [
-                    .active: "活跃 (1分钟)",
-                    .idleShort: "短期静默 (3分钟)",
-                    .idleMedium: "中期静默 (5分钟)",
-                    .idleLong: "长期静默 (10分钟)"
-                ]
-                print("🔄 监控模式切换: \(modeNames[previousMode] ?? "") -> \(modeNames[currentMonitoringMode] ?? "")")
-                NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
-            }
+            handleNoChange()
         }
-        
+
         // 更新上次的百分比
         lastUtilization = currentUtilization
+    }
+
+    /// 检查用量百分比是否有变化
+    /// - Parameter current: 当前用量百分比
+    /// - Returns: 如果变化超过 0.01 返回 true
+    private func hasUtilizationChanged(_ current: Double) -> Bool {
+        guard let last = lastUtilization else { return false }
+        return abs(current - last) > 0.01
+    }
+
+    /// 切换到活跃模式
+    private func switchToActiveMode() {
+        guard currentMonitoringMode != .active else { return }
+
+        Logger.settings.debug("检测到使用变化，切换到活跃模式 (1分钟)")
+        currentMonitoringMode = .active
+        unchangedCount = 0
+        NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
+    }
+
+    /// 处理无变化情况
+    private func handleNoChange() {
+        unchangedCount += 1
+
+        let previousMode = currentMonitoringMode
+        let newMode = calculateNewMode()
+
+        if let mode = newMode {
+            currentMonitoringMode = mode
+            unchangedCount = 0
+            logModeTransition(from: previousMode, to: mode)
+            NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
+        }
+    }
+
+    /// 根据当前模式和无变化次数计算新模式
+    /// - Returns: 如果需要切换，返回新模式；否则返回 nil
+    private func calculateNewMode() -> MonitoringMode? {
+        switch currentMonitoringMode {
+        case .active:
+            // 活跃模式：连续3次无变化（3分钟） -> 短期静默
+            return unchangedCount >= 3 ? .idleShort : nil
+        case .idleShort:
+            // 短期静默：连续6次无变化（18分钟） -> 中期静默
+            return unchangedCount >= 6 ? .idleMedium : nil
+        case .idleMedium:
+            // 中期静默：连续12次无变化（60分钟） -> 长期静默
+            return unchangedCount >= 12 ? .idleLong : nil
+        case .idleLong:
+            // 长期静默：保持当前模式
+            return nil
+        }
+    }
+
+    /// 记录模式切换日志
+    /// - Parameters:
+    ///   - from: 原模式
+    ///   - to: 新模式
+    private func logModeTransition(from: MonitoringMode, to: MonitoringMode) {
+        let modeNames: [MonitoringMode: String] = [
+            .active: "活跃 (1分钟)",
+            .idleShort: "短期静默 (3分钟)",
+            .idleMedium: "中期静默 (5分钟)",
+            .idleLong: "长期静默 (10分钟)"
+        ]
+        Logger.settings.debug("监控模式切换: \(modeNames[from] ?? "") -> \(modeNames[to] ?? "")")
     }
     
     /// 重置智能监控模式状态
@@ -396,6 +469,93 @@ class UserSettings: ObservableObject {
         lastUtilization = nil
         unchangedCount = 0
         currentMonitoringMode = .active
+    }
+    
+    // MARK: - Launch at Login Management
+    
+    /// 启用开机启动
+    private func enableLaunchAtLogin() {
+        do {
+            try SMAppService.mainApp.register()
+            defaults.set(true, forKey: "launchAtLogin")
+            syncLaunchAtLoginStatus()
+            Logger.settings.notice("开机启动已启用")
+        } catch {
+            Logger.settings.error("启用开机启动失败: \(error.localizedDescription)")
+            // 注册失败，恢复状态（避免触发didSet）
+            isSyncingLaunchStatus = true
+            DispatchQueue.main.async {
+                self.launchAtLogin = false
+                // 在异步块内重置标志，避免 race condition
+                self.isSyncingLaunchStatus = false
+                self.syncLaunchAtLoginStatus()
+            }
+
+            // 发送错误通知
+            NotificationCenter.default.post(
+                name: .launchAtLoginError,
+                object: nil,
+                userInfo: ["error": error, "operation": "enable"]
+            )
+        }
+    }
+    
+    /// 禁用开机启动
+    private func disableLaunchAtLogin() {
+        let currentStatus = SMAppService.mainApp.status
+
+        // 如果服务未注册或未找到，直接更新设置，不执行unregister操作
+        if currentStatus == .notRegistered || currentStatus == .notFound {
+            defaults.set(false, forKey: "launchAtLogin")
+            syncLaunchAtLoginStatus()
+            Logger.settings.notice("开机启动服务未注册，已更新设置")
+            return
+        }
+
+        do {
+            try SMAppService.mainApp.unregister()
+            defaults.set(false, forKey: "launchAtLogin")
+            syncLaunchAtLoginStatus()
+            Logger.settings.notice("开机启动已禁用")
+        } catch {
+            Logger.settings.error("禁用开机启动失败: \(error.localizedDescription)")
+            // 取消注册失败，恢复状态（避免触发didSet）
+            isSyncingLaunchStatus = true
+            DispatchQueue.main.async {
+                self.launchAtLogin = true
+                // 在异步块内重置标志，避免 race condition
+                self.isSyncingLaunchStatus = false
+                self.syncLaunchAtLoginStatus()
+            }
+
+            // 发送错误通知
+            NotificationCenter.default.post(
+                name: .launchAtLoginError,
+                object: nil,
+                userInfo: ["error": error, "operation": "disable"]
+            )
+        }
+    }
+    
+    /// 同步开机启动状态
+    /// 从系统读取实际状态并更新UI
+    func syncLaunchAtLoginStatus() {
+        let status = SMAppService.mainApp.status
+        DispatchQueue.main.async {
+            self.launchAtLoginStatus = status
+
+            // 同步实际状态到设置
+            let isActuallyEnabled = (status == .enabled)
+            if self.launchAtLogin != isActuallyEnabled {
+                // 设置同步标志，避免触发 didSet 中的启用/禁用操作
+                self.isSyncingLaunchStatus = true
+                self.defaults.set(isActuallyEnabled, forKey: "launchAtLogin")
+                self.launchAtLogin = isActuallyEnabled
+                self.isSyncingLaunchStatus = false
+            }
+        }
+
+        Logger.settings.debug("开机启动状态: \(String(describing: status))")
     }
 }
 
@@ -406,4 +566,5 @@ extension Notification.Name {
     static let settingsChanged = Notification.Name("settingsChanged")
     static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
     static let languageChanged = Notification.Name("languageChanged")
+    static let launchAtLoginError = Notification.Name("launchAtLoginError")
 }
