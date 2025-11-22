@@ -219,3 +219,4 @@
 "diagnostic.suggestion_check_org_id" = "检查组织 ID 格式是否正确(应该是 UUID 格式)";
 "diagnostic.suggestion_export_and_share" = "导出此诊断报告并在 GitHub Issues 上分享";
 "diagnostic.suggestion_contact_support" = "在 github.com/f-is-h/Usage4Claude/issues 联系开发者寻求帮助";
+"diagnostic.open_log_folder" = "打开日志文件夹";

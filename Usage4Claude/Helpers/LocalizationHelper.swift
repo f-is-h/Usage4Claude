@@ -259,6 +259,9 @@ enum L {
         static var suggestionCheckOrgId: String { localized("diagnostic.suggestion_check_org_id") }
         static var suggestionExportAndShare: String { localized("diagnostic.suggestion_export_and_share") }
         static var suggestionContactSupport: String { localized("diagnostic.suggestion_contact_support") }
+
+        // Log folder access
+        static var openLogFolder: String { localized("diagnostic.open_log_folder") }
     }
 
     // MARK: - Launch at Login

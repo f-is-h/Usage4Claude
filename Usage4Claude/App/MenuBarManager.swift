@@ -128,7 +128,12 @@ class MenuBarManager: ObservableObject {
     /// 处理菜单栏图标点击事件
     /// 左键切换弹出窗口，右键显示菜单
     @objc private func handleClick(_ sender: NSStatusBarButton) {
-        let event = NSApp.currentEvent!
+        guard let event = NSApp.currentEvent else {
+            // 如果无法获取当前事件，默认作为左键点击处理
+            togglePopover()
+            return
+        }
+
         if event.type == .rightMouseUp {
             showMenu()
         } else {
@@ -901,8 +906,8 @@ class MenuBarManager: ObservableObject {
             case .percentageOnly:
                 baseImage = createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18))
             case .iconOnly:
-                if let appIcon = NSImage(named: "AppIcon") {
-                    let iconCopy = appIcon.copy() as! NSImage
+                if let appIcon = NSImage(named: "AppIcon"),
+                   let iconCopy = appIcon.copy() as? NSImage {
                     iconCopy.size = NSSize(width: 18, height: 18)
                     iconCopy.isTemplate = false
                     baseImage = iconCopy
@@ -980,8 +985,8 @@ class MenuBarManager: ObservableObject {
         let image = NSImage(size: size)
         image.lockFocus()
         
-        if let appIcon = NSImage(named: "AppIcon") {
-            let iconCopy = appIcon.copy() as! NSImage
+        if let appIcon = NSImage(named: "AppIcon"),
+           let iconCopy = appIcon.copy() as? NSImage {
             iconCopy.isTemplate = false
             iconCopy.size = NSSize(width: 14, height: 14)
             let symbolRect = NSRect(x: 2, y: 2, width: 14, height: 14)

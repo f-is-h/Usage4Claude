@@ -47,6 +47,14 @@ struct DiagnosticsView: View {
                         diagnosticManager.saveReportWithDialog()
                     }
                 }
+
+                // 日志文件夹访问按钮
+                Button(L.Diagnostic.openLogFolder) {
+                    if let logPath = DiagnosticLogger.shared.getLogFilePath() {
+                        let folderURL = URL(fileURLWithPath: logPath).deletingLastPathComponent()
+                        NSWorkspace.shared.open(folderURL)
+                    }
+                }
             }
 
             // 状态消息

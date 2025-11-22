@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-11-22
+
+### Fixed
+- Critical crash caused by force unwrapping `NSApp.currentEvent` in menu
+bar click handler
+- Four unsafe force cast operations that could crash under memory pressure
+- Improved icon handling safety with proper nil checking
+
+### Added
+- Diagnostic logging system with automatic error/warning capture
+- "Open Log Folder" button in diagnostics view for easy log access
+- Automatic log sanitization to protect sensitive information (Session
+Key, Organization ID)
+
+### Changed
+- Release builds now only log Error and Warning levels (minimal disk
+usage)
+- Debug builds continue to log all levels for development
+- Log files auto-rotate at 5MB with maximum 5 archives retained
+
 ## [1.4.0] - 2025-11-20
 
 ### Added
@@ -209,6 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.4.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.1
 [1.4.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.0
 [1.3.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.3.0
 [1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0

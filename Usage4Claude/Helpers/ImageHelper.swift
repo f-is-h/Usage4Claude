@@ -18,7 +18,7 @@ enum ImageHelper {
     /// - Returns: 指定大小的应用图标，如果无法加载则返回 nil
     static func createAppIcon(size: CGFloat) -> NSImage? {
         guard let appIcon = NSImage(named: "AppIcon") else { return nil }
-        let iconCopy = appIcon.copy() as! NSImage
+        guard let iconCopy = appIcon.copy() as? NSImage else { return nil }
         iconCopy.isTemplate = false
         iconCopy.size = NSSize(width: size, height: size)
         return iconCopy
@@ -31,7 +31,7 @@ enum ImageHelper {
     /// - Returns: 指定尺寸的应用图标，如果无法加载则返回 nil
     static func createAppIcon(width: CGFloat, height: CGFloat) -> NSImage? {
         guard let appIcon = NSImage(named: "AppIcon") else { return nil }
-        let iconCopy = appIcon.copy() as! NSImage
+        guard let iconCopy = appIcon.copy() as? NSImage else { return nil }
         iconCopy.isTemplate = false
         iconCopy.size = NSSize(width: width, height: height)
         return iconCopy
