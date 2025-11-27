@@ -26,6 +26,10 @@
 "usage.reset_time" = "重置时间";
 "usage.used" = "已使用";
 "usage.five_hour_limit" = "5小时限制";
+"usage.seven_day_limit" = "7天限制";
+"usage.five_hour_limit_short" = "5h";
+"usage.seven_day_limit_short" = "7d";
+"usage.reset_date" = "重置日期";
 "usage.refresh" = "刷新";
 "usage.refresh_cooldown" = "请稍后再试";
 "usage.run_diagnostic" = "运行诊断";
@@ -144,6 +148,7 @@
 "usage_data.resetting_soon" = "即将重置";
 "usage_data.resets_in_hours" = "剩余约%d小时%d分";
 "usage_data.resets_in_minutes" = "剩余约%d分";
+"usage_data.resets_in_days" = "剩余约%d天%d小时";
 "usage_data.unknown" = "未知";
 "usage_data.today" = "今天";
 "usage_data.tomorrow" = "明天";

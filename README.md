@@ -27,8 +27,9 @@
 
 ### 🎯 Core Features
 
-- **📊 Real-time Monitoring** - Display Claude subscription's 5-hour usage quota in menu bar
-- **🎨 Smart Colors** - Automatic color changes based on usage (green/orange/red)
+- **📊 Real-time Monitoring** - Display Claude subscription's usage quota (5-hour/7-day) in menu bar
+- **🎯 Dual Limit Support** - Show 5-hour and 7-day limits simultaneously with dual-ring icon
+- **🎨 Smart Colors** - Automatic color changes based on usage (5-hour: green/orange/red; 7-day: cyan/blue-purple/deep purple)
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
 - **🔄 Smart Refresh System** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
 - **⚡ Manual Refresh** - Click refresh button to update data instantly (10-second debounce protection)
@@ -66,6 +67,7 @@ All platforms share the same usage quota, monitored in one place!
 - **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R, ⌘,, ⌘Q)
 - **👋 Friendly Onboarding** - Detailed setup wizard on first launch
 - **… Menu Display** - Multiple menu access methods, detail view and right-click
+- **🛠️ Debug Mode** - Developer options: fake data testing, simulated updates, instant refresh
 
 ### 🔒 Security & Privacy
 
@@ -80,21 +82,50 @@ All platforms share the same usage quota, monitored in one place!
 
 ### Menu Bar Display
 
-| Percentage Mode | Icon Mode | Combined Mode |
-|:---:|:---:|:---:|
-| <img src="docs/images/taskbar.ring@2x.png" width="20" alt="ring"> | <img src="docs/images/taskbar.icon@2x.png" width="20" alt="icon"> | <img src="docs/images/taskbar@2x.png" width="50" alt="icon and ring"> |
+| Icon Only | 5-Hour | 7-Day | 5-Hour+Icon | 7-Day+Icon | 5-Hour+7-Day | 5+7+Icon |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/images/taskbar.icon@2x.png" height="22" alt="icon"> | <img src="docs/images/taskbar.5.ring@2x.png" height="22" alt="5h ring"> | <img src="docs/images/taskbar.7.ring@2x.png" height="22" alt="7d ring"> | <img src="docs/images/taskbar.5.both@2x.png" height="22" alt="5h+icon"> | <img src="docs/images/taskbar.7.both@2x.png" height="22" alt="7d+icon"> | <img src="docs/images/taskbar.12@2x.png" height="22" alt="5h+7d"> | <img src="docs/images/taskbar.12.both@2x.png" height="22" alt="5+7+icon"> |
 
-**Ring Color Indicators**:
+**5-Hour Limit Mode - Ring Color Indicators**:
 
 🟢 **Green** (0-69%) - Safe usage
-
 🟠 **Orange** (70-89%) - Monitor usage
-
 🔴 **Red** (90-100%) - Approaching limit
+
+**7-Day Limit Mode - Ring Color Indicators**:
+
+🔵 **Cyan** (0-69%) - Safe usage
+🟣 **Blue-Purple** (70-89%) - Monitor usage
+🟪 **Deep Purple** (90-100%) - Approaching limit
+
+**Dual Limit Mode - Dual Ring Display**:
+
+When both 5-hour and 7-day limits exist, menu bar shows dual rings:
+
+- **Inner Ring (5-hour limit)**: 🟢 Green → 🟠 Orange → 🔴 Red
+- **Outer Ring (7-day limit)**: 🔵 Cyan → 🟣 Blue-Purple → 🟪 Deep Purple
 
 ### Detail Window
 
-<img src="docs/images/detail.en@2x.png" width="290" alt="Detail Window">
+<table border="0">
+<tr>
+<td align="center">
+<img src="docs/images/detail.5.en@2x.png" width="280" alt="5-Hour Limit Mode">
+<br/>
+<sub><i>5-Hour Limit Mode</i></sub>
+</td>
+<td align="center">
+<img src="docs/images/detail.7.en@2x.png" width="280" alt="7-Day Limit Mode">
+<br/>
+<sub><i>7-Day Limit Mode</i></sub>
+</td>
+<td align="center">
+<img src="docs/images/detail.12.en@2x.png" width="280" alt="Dual Limit Mode">
+<br/>
+<sub><i>Dual Limit Mode</i></sub>
+</td>
+</tr>
+</table>
 
 ### Settings
 
@@ -337,6 +368,10 @@ Built with modern macOS native technologies:
 - [x] Keyboard shortcuts support
 - [x] Manual refresh feature
 - [x] Three-dot menu dark mode adaptation
+- [x] Dual limit mode support (5-hour + 7-day)
+- [x] Dual-ring menu bar icon
+- [x] Unified color scheme management
+- [x] Debug mode (fake data, simulated updates)
 
 ### Short-term Plans
 1. **Developer Experience**
@@ -350,7 +385,7 @@ Built with modern macOS native technologies:
     - Detail window Focus state
 
 5. **Feature Addition**
-    - 7-day usage monitoring support (OAuth・Opus)
+    - More 7-day usage modes support (OAuth・Opus)
     - Usage notifications
     - More language localizations
 

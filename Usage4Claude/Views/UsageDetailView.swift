@@ -17,9 +17,9 @@ struct UsageDetailView: View {
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
     @StateObject private var localization = LocalizationManager.shared
-    /// 🆕 是否有可用更新（用于显示文字和徽章）
+    /// 是否有可用更新（用于显示文字和徽章）
     var hasAvailableUpdate: Bool = false
-    /// 🆕 是否应显示更新徽章（用户未确认时才显示徽章）
+    /// 是否应显示更新徽章（用户未确认时才显示徽章）
     var shouldShowUpdateBadge: Bool = false
     
     /// 加载动画效果类型
@@ -49,21 +49,21 @@ struct UsageDetailView: View {
         case webUsage
         case coffee
         case quit
-        case refresh      // 🆕 手动刷新
+        case refresh
     }
     
     // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
     @State private var rotationAngle: Double = 0
     @State private var animationTimer: Timer?
-    // 🆕 显示动画类型切换提示
+    // 显示动画类型切换提示
     @State private var showAnimationTypeHint = false
-    // 🆕 显示更新通知
+    // 显示更新通知
     @State private var showUpdateNotification = false
     
     // MARK: - Body
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: usageData?.hasBothLimits == true ? 10 : 16) {  // 双限制时与标题间距
             // 标题
             HStack {
                 // 应用图标（不使用template模式）
@@ -81,7 +81,7 @@ struct UsageDetailView: View {
                 
                 Spacer()
                 
-                // 🆕 刷新按钮（左侧）
+                // 刷新按钮（左侧）
                 Button(action: {
                     onMenuAction?(.refresh)
                 }) {
@@ -94,7 +94,7 @@ struct UsageDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!refreshState.canRefresh || refreshState.isRefreshing)
-                .focusable(false)  // 🆕 禁用Focus状态
+                .focusable(false)  // 禁用Focus状态
                 .onAppear {
                     // 如果打开时已经在刷新，启动动画
                     if refreshState.isRefreshing {
@@ -109,7 +109,7 @@ struct UsageDetailView: View {
                     }
                 }
                 
-                // 🆕 三点菜单按钮（右侧） + 徽章
+                // 三点菜单按钮（右侧） + 徽章
                 ZStack(alignment: .topTrailing) {
                     Menu {
                         Button(action: { onMenuAction?(.generalSettings) }) {
@@ -119,7 +119,7 @@ struct UsageDetailView: View {
                             Label(L.Menu.authSettings, systemImage: "key")
                         }
 
-                        // 🆕 检查更新菜单项（根据是否有更新显示不同样式）
+                        // 检查更新菜单项（根据是否有更新显示不同样式）
                         if hasAvailableUpdate {
                             Button(action: { onMenuAction?(.checkForUpdates) }) {
                                 Label {
@@ -161,7 +161,7 @@ struct UsageDetailView: View {
                     .buttonStyle(.plain)
                     .focusable(false)
 
-                    // 🆕 徽章（小红点）- 仅在用户未确认时显示
+                    // 徽章（小红点）- 仅在用户未确认时显示
                     if shouldShowUpdateBadge {
                         Circle()
                             .fill(Color.red)
@@ -219,48 +219,69 @@ struct UsageDetailView: View {
                 .padding()
             } else if let data = usageData {
                 // 使用数据
-                VStack(spacing: 20) {
+                VStack(spacing: 15) {  // 双模式时两行文字的上间距
                     // 圆形进度条
                     ZStack {
-                        // 背景圆环
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                            .frame(width: 100, height: 100)
-
-                        if refreshState.isRefreshing {
-                            // 🆕 加载动画
-                            loadingAnimation()
-                        } else {
-                            // 正常进度条
+                        if let primary = data.primaryLimit {
+                            // 1. 主圆环背景（灰色）
                             Circle()
-                                .trim(from: 0, to: CGFloat(data.percentage) / 100.0)
-                                .stroke(
-                                    colorForPercentage(data.percentage),
-                                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                                )
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 10)
                                 .frame(width: 100, height: 100)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut, value: data.percentage)
-                        }
 
-                        // 🆕 中间显示区域：正常百分比（不再在这里显示通知）
-                        VStack(spacing: 2) {
-                            Text("\(Int(data.percentage))%")
-                                .font(.system(size: 28, weight: .bold))
-                            Text(L.Usage.used)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            if refreshState.isRefreshing {
+                                // 加载动画
+                                loadingAnimation()
+                            } else {
+                                // 2. 主进度条（5小时或唯一的7天）
+                                Circle()
+                                    .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
+                                    .stroke(
+                                        colorForPrimary(data),
+                                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                                    )
+                                    .frame(width: 100, height: 100)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.easeInOut, value: primary.percentage)
+                            }
+
+                            // 3. 外层细圆环（仅在双限制时显示7天数据）
+                            if data.hasBothLimits, let sevenDay = data.sevenDay {
+                                // 7天背景圆环（灰色）
+                                Circle()
+                                    .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                                    .frame(width: 114, height: 114)
+
+                                // 7天进度条（紫色系）
+                                Circle()
+                                    .trim(from: 0, to: CGFloat(sevenDay.percentage) / 100.0)
+                                    .stroke(
+                                        colorForSevenDay(sevenDay.percentage),
+                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                    )
+                                    .frame(width: 114, height: 114)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.easeInOut, value: sevenDay.percentage)
+                            }
+
+                            // 4. 中间显示区域：百分比（显示主要限制的百分比）
+                            VStack(spacing: 2) {
+                                Text("\(Int(primary.percentage))%")
+                                    .font(.system(size: 28, weight: .bold))
+                                Text(L.Usage.used)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
-                    .contentShape(Circle())  // 🆕 定义可点击区域为整个圆形
+                    .contentShape(Circle())  // 定义可点击区域为整个圆形
                     .onTapGesture {
-                        // 🆕 点击圆环刷新数据
+                        // 点击圆环刷新数据
                         if refreshState.canRefresh && !refreshState.isRefreshing {
                             onMenuAction?(.refresh)
                         }
                     }
                     .onLongPressGesture(minimumDuration: 3.0) {
-                        // 🆕 长按圆环切换动画类型
+                        // 长按圆环切换动画类型
                         let allTypes = LoadingAnimationType.allCases
                         let currentIndex = allTypes.firstIndex(of: animationType) ?? 0
                         let nextIndex = (currentIndex + 1) % allTypes.count
@@ -279,18 +300,66 @@ struct UsageDetailView: View {
                     }
 
                     // 详细信息
-                    VStack(spacing: 8) {
-                        InfoRow(
-                            icon: "clock.fill",
-                            title: L.Usage.fiveHourLimit,
-                            value: data.formattedResetsIn
-                        )
-                        
-                        InfoRow(
-                            icon: "arrow.clockwise",
-                            title: L.Usage.resetTime,
-                            value: data.formattedResetTime
-                        )
+                    VStack(spacing: 8) {  // 两行之间的间距
+                        if data.hasBothLimits {
+                            // 场景2：同时有5小时和7天限制，使用对齐布局和SF Symbol图标
+                            if let fiveHour = data.fiveHour {
+                                AlignedInfoRow(
+                                    icon: "clock.fill",
+                                    title: L.Usage.fiveHourLimitShort,
+                                    remainingIcon: "hourglass",
+                                    remaining: fiveHour.formattedCompactRemaining,
+                                    resetIcon: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                                    resetTime: fiveHour.formattedCompactResetTime
+                                )
+                            }
+
+                            if let sevenDay = data.sevenDay {
+                                AlignedInfoRow(
+                                    icon: "calendar",
+                                    title: L.Usage.sevenDayLimitShort,
+                                    remainingIcon: "hourglass.circle",
+                                    remaining: sevenDay.formattedCompactRemaining,
+                                    resetIcon: "clock.arrow.trianglehead.2.counterclockwise.rotate.90",
+                                    resetTime: sevenDay.formattedCompactResetDate,
+                                    tintColor: .purple
+                                )
+                            }
+                        } else if let fiveHour = data.fiveHour {
+                            // 场景1a：只有5小时限制，保持原有2行显示
+                            VStack(spacing: 8) {  // 包装单限制场景
+                                InfoRow(
+                                    icon: "clock.fill",
+                                    title: L.Usage.fiveHourLimit,
+                                    value: fiveHour.formattedResetsInHours
+                                )
+
+                                InfoRow(
+                                    icon: "arrow.clockwise",
+                                    title: L.Usage.resetTime,
+                                    value: fiveHour.formattedResetTimeShort
+                                )
+                            }
+                            .padding(.top, 4)  // 单限制场景向下移动
+                        } else if let sevenDay = data.sevenDay {
+                            // 场景1b：只有7天限制，保持原有2行显示（使用紫色）
+                            VStack(spacing: 8) {  // 包装单限制场景
+                                InfoRow(
+                                    icon: "calendar",
+                                    title: L.Usage.sevenDayLimit,
+                                    value: sevenDay.formattedResetsInDays,
+                                    tintColor: .purple
+                                )
+
+                                InfoRow(
+                                    icon: "calendar.badge.clock",
+                                    title: L.Usage.resetDate,
+                                    value: sevenDay.formattedResetDateLong,
+                                    tintColor: .purple
+                                )
+                            }
+                            .padding(.top, 4)  // 单限制场景向下移动
+                        }
                     }
                     .padding(.horizontal)
                 }
@@ -306,7 +375,7 @@ struct UsageDetailView: View {
                 .frame(height: 100)
             }
 
-            // 🆕 动画类型提示（长按圆环切换）
+            // 动画类型提示（长按圆环切换）
             if showAnimationTypeHint {
                 HStack(spacing: 6) {
                     Image(systemName: "wand.and.stars")
@@ -334,7 +403,7 @@ struct UsageDetailView: View {
                 .transition(.opacity.combined(with: .scale))
             }
 
-            // 🆕 更新通知提示（在圆环下方显示）
+            // 更新通知提示（在圆环下方显示）
             if showUpdateNotification {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.down.circle.fill")
@@ -360,7 +429,7 @@ struct UsageDetailView: View {
         .frame(width: 280, height: 240)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
-            // 🆕 如果有更新通知消息，显示通知
+            // 如果有更新通知消息，显示通知
             if refreshState.notificationMessage != nil {
                 withAnimation {
                     showUpdateNotification = true
@@ -374,7 +443,7 @@ struct UsageDetailView: View {
             }
         }
         .onChange(of: refreshState.notificationMessage) { message in
-            // 🆕 监听通知消息变化
+            // 监听通知消息变化
             if message != nil {
                 withAnimation {
                     showUpdateNotification = true
@@ -497,17 +566,35 @@ struct UsageDetailView: View {
     /// - 0-70%: 绿色（安全）
     /// - 70-90%: 橙色（警告）
     /// - 90-100%: 红色（危险）
+    /// 根据5小时限制使用百分比返回对应的颜色
+    /// - Parameter percentage: 当前使用百分比
+    /// - Returns: 对应的状态颜色
+    /// - Note: 使用统一配色方案 (绿→橙→红)
     private func colorForPercentage(_ percentage: Double) -> Color {
-        if percentage < 70 {
-            return .green
-        } else if percentage < 90 {
-            return .orange
-        } else {
-            return .red
-        }
+        return UsageColorScheme.fiveHourColorSwiftUI(percentage)
     }
 
-    /// 🆕 创建彩虹文字
+    /// 根据7天限制使用百分比返回配色
+    /// - Parameter percentage: 当前使用百分比
+    /// - Returns: 对应的状态颜色
+    /// - Note: 使用统一配色方案 (青蓝→蓝紫→深紫)
+    private func colorForSevenDay(_ percentage: Double) -> Color {
+        return UsageColorScheme.sevenDayColorSwiftUI(percentage)
+    }
+
+    /// 获取主要限制的颜色（根据数据类型自动选择绿/橙/红或紫色系）
+    private func colorForPrimary(_ data: UsageData) -> Color {
+        if let fiveHour = data.fiveHour {
+            // 有5小时限制数据，使用绿/橙/红
+            return colorForPercentage(fiveHour.percentage)
+        } else if let sevenDay = data.sevenDay {
+            // 只有7天限制数据，使用紫色系
+            return colorForSevenDay(sevenDay.percentage)
+        }
+        return .gray
+    }
+
+    /// 创建彩虹文字
     /// - Parameter text: 要显示的文本
     /// - Returns: 带彩虹效果的文本视图
     @ViewBuilder
@@ -522,7 +609,7 @@ struct UsageDetailView: View {
             )
     }
 
-    /// 🆕 创建菜单更新文本（部分文字带颜色）
+    /// 创建菜单更新文本（部分文字带颜色）
     /// - Returns: 带颜色的AttributedString
     private func createUpdateMenuText() -> AttributedString {
         let baseText = L.Menu.checkUpdates
@@ -548,35 +635,145 @@ struct InfoRow: View {
     let icon: String
     let title: String
     let value: String
-    
+    var tintColor: Color = .blue  // 新增：可自定义图标颜色
+
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(.blue)
-                .frame(width: 20)
-            
+                .foregroundColor(tintColor)  // 使用自定义颜色
+                .frame(width: 8)
+                .font(.system(size: 12))  // 图标大小
+
             Text(title)
-                .font(.subheadline)
+                .font(.system(size: 12))  // 第一列文字大小
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             Text(value)
-                .font(.subheadline)
+                .font(.system(size: 12))  // 第二列文字大小
                 .fontWeight(.medium)
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 6)  // 行高
+        .padding(.horizontal, 12) // 行宽
         .background(Color.gray.opacity(0.1))
         .cornerRadius(8)
+    }
+}
+
+/// 对齐的信息行组件（用于双限制场景的垂直对齐）
+/// 使用固定宽度布局确保两行的时间数据垂直对齐
+struct AlignedInfoRow: View {
+    let icon: String
+    let title: String
+    let remainingIcon: String
+    let remaining: String
+    let resetIcon: String
+    let resetTime: String
+    var tintColor: Color = .blue
+
+    var body: some View {
+        HStack(spacing: 6) {  // 整行宽度
+            // 左侧：图标+标题（固定区域）
+            HStack(spacing: 4) {  // 图标和标题间距
+                Image(systemName: icon)
+                    .foregroundColor(tintColor)
+                    .frame(width: 18)  // 宽度
+
+                Text(title)
+                    .font(.system(size: 12))  // 字体
+                    .foregroundColor(.secondary)
+            }
+            .frame(width: 50, alignment: .leading)  // 左侧整体宽度
+
+            Spacer()
+
+            // 右侧：使用固定宽度布局对齐时间数据
+            HStack(spacing: 8) {
+                // 剩余时间
+                HStack(spacing: 3) {  // 图标和文字间距
+                    Image(systemName: remainingIcon)
+                        .font(.system(size: 12))  // 图标大小
+                        .foregroundColor(.secondary)
+                    Text(remaining)
+                        .font(.system(size: 12))  // 字号
+                        .fontWeight(.medium)
+                }
+                .frame(width: 75, alignment: .leading)  // 显示宽度
+
+                // 重置时间
+                HStack(spacing: 3) {  // 图标和文字间距
+                    Image(systemName: resetIcon)
+                        .font(.system(size: 12))  // 图标大小
+                        .foregroundColor(.secondary)
+                    Text(resetTime)
+                        .font(.system(size: 12))  // 显示宽度
+                        .fontWeight(.medium)
+                }
+                .frame(width: 90, alignment: .leading)  // 显示宽度
+            }
+        }
+        .padding(.vertical, 6) // 行高
+        .padding(.horizontal, 12)  // 行宽
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
+}
+
+/// 极简信息行组件（用于双模式两行显示）
+/// 使用图标代替文字标签，所有信息在一行内紧凑显示
+struct CompactInfoRow: View {
+    let limitIcon: String      // 限制类型图标（⏱ 或 📅）
+    let limitLabel: String     // 限制标签（5h 或 7d）
+    let remainingIcon: String  // 剩余时间图标（⏳）
+    let remaining: String      // 剩余时间（1h48m 或 3d12h）
+    let resetIcon: String      // 重置图标（↻）
+    let resetTime: String      // 重置时间（15:07 或 11/29-12h）
+    var tintColor: Color = .blue
+
+    var body: some View {
+        HStack(spacing: 6) {
+            // 限制类型
+            HStack(spacing: 3) {
+                Text(limitIcon)
+                    .font(.system(size: 14))
+                Text(limitLabel)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(tintColor)
+            }
+
+            // 剩余时间
+            HStack(spacing: 3) {
+                Text(remainingIcon)
+                    .font(.system(size: 12))
+                Text(remaining)
+                    .font(.system(size: 13, weight: .medium))
+            }
+
+            // 重置时间
+            HStack(spacing: 3) {
+                Text(resetIcon)
+                    .font(.system(size: 12))
+                Text(resetTime)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(tintColor.opacity(0.08))
+        .cornerRadius(6)
     }
 }
 
 // 预览
 struct UsageDetailView_Previews: PreviewProvider {
     @State static var sampleData: UsageData? = UsageData(
-        percentage: 45,
-        resetsAt: Date().addingTimeInterval(3600 * 2.5)
+        fiveHour: UsageData.LimitData(
+            percentage: 45,
+            resetsAt: Date().addingTimeInterval(3600 * 2.5)
+        ),
+        sevenDay: nil
     )
 
     @State static var errorMsg: String? = nil

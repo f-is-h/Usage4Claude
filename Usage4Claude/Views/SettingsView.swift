@@ -331,6 +331,134 @@ struct GeneralSettingsView: View {
                     .buttonStyle(.borderedProminent)
                 }
                 .padding(.top, 8)
+
+                // MARK: - 调试模式区域（仅Debug编译可见）
+
+                #if DEBUG
+                // 调试设置卡片
+                SettingCard(
+                    icon: "ladybug.fill",
+                    iconColor: .orange,
+                    title: "调试模式",
+                    hint: "切换场景后，点击刷新按钮查看效果"
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // 启用调试模式开关
+                        HStack {
+                            Toggle("", isOn: $settings.debugModeEnabled)
+                                .toggleStyle(.switch)
+                                .controlSize(.mini)
+                                .focusable(false)
+                                .labelsHidden()
+
+                            Text("启用调试模式")
+
+                            Spacer()
+
+                            Text("仅Debug编译可见")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // 模拟更新开关（独立于调试模式）
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        HStack {
+                            Toggle("", isOn: $settings.simulateUpdateAvailable)
+                                .toggleStyle(.switch)
+                                .controlSize(.mini)
+                                .focusable(false)
+                                .labelsHidden()
+
+                            Text("模拟有可用更新")
+                                .font(.subheadline)
+
+                            Spacer()
+
+                            Text("重启菜单栏查看效果")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // 场景选择（仅在启用调试模式时显示）
+                        if settings.debugModeEnabled {
+                            Divider()
+                                .padding(.vertical, 4)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("模拟数据场景：")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 4)
+
+                                Picker("", selection: $settings.debugScenario) {
+                                    ForEach(UserSettings.DebugScenario.allCases, id: \.self) { scenario in
+                                        Text(scenario.displayName).tag(scenario)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+
+                                // 百分比设置（仅在非真实数据场景时显示）
+                                if settings.debugScenario != .realData {
+                                    Divider()
+                                        .padding(.vertical, 4)
+
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        // 5小时百分比滑块（仅在 fiveHourOnly 或 both 场景显示）
+                                        if settings.debugScenario == .fiveHourOnly || settings.debugScenario == .both {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                HStack {
+                                                    Text("5小时限制百分比：")
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                    Spacer()
+                                                    Text("\(Int(settings.debugFiveHourPercentage))%")
+                                                        .font(.caption)
+                                                        .fontWeight(.medium)
+                                                        .foregroundColor(.blue)
+                                                }
+
+                                                Slider(
+                                                    value: $settings.debugFiveHourPercentage,
+                                                    in: 0...100,
+                                                    step: 1
+                                                )
+                                                .tint(.blue)
+                                            }
+                                        }
+
+                                        // 7天百分比滑块（仅在 sevenDayOnly 或 both 场景显示）
+                                        if settings.debugScenario == .sevenDayOnly || settings.debugScenario == .both {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                HStack {
+                                                    Text("7天限制百分比：")
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                    Spacer()
+                                                    Text("\(Int(settings.debugSevenDayPercentage))%")
+                                                        .font(.caption)
+                                                        .fontWeight(.medium)
+                                                        .foregroundColor(.purple)
+                                                }
+
+                                                Slider(
+                                                    value: $settings.debugSevenDayPercentage,
+                                                    in: 0...100,
+                                                    step: 1
+                                                )
+                                                .tint(.purple)
+                                            }
+                                        }
+                                    }
+                                    .padding(.leading, 20)
+                                }
+                            }
+                            .padding(.leading, 20)
+                        }
+                    }
+                }
+                #endif
             }
             .padding()
         }

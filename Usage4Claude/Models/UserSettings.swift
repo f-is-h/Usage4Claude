@@ -130,6 +130,22 @@ enum AppLanguage: String, CaseIterable, Codable {
     }
 }
 
+extension AppLanguage {
+    /// 将应用语言转换为对应的 Locale
+    var locale: Locale {
+        switch self {
+        case .english:
+            return Locale(identifier: "en_US")
+        case .japanese:
+            return Locale(identifier: "ja_JP")
+        case .chinese:
+            return Locale(identifier: "zh_CN")
+        case .chineseTraditional:
+            return Locale(identifier: "zh_TW")
+        }
+    }
+}
+
 // MARK: - User Settings
 
 /// 用户设置管理类
@@ -234,6 +250,68 @@ class UserSettings: ObservableObject {
     /// 防止同步状态时触发递归调用的标志
     private var isSyncingLaunchStatus: Bool = false
 
+    // MARK: - Debug Mode (仅Debug编译时可用)
+
+    #if DEBUG
+    /// 是否启用调试模式（模拟不同数据场景）
+    @Published var debugModeEnabled: Bool {
+        didSet {
+            defaults.set(debugModeEnabled, forKey: "debugModeEnabled")
+        }
+    }
+
+    /// 调试场景类型
+    @Published var debugScenario: DebugScenario {
+        didSet {
+            defaults.set(debugScenario.rawValue, forKey: "debugScenario")
+        }
+    }
+
+    /// 调试用的5小时限制百分比（0-100）
+    @Published var debugFiveHourPercentage: Double {
+        didSet {
+            defaults.set(debugFiveHourPercentage, forKey: "debugFiveHourPercentage")
+        }
+    }
+
+    /// 调试用的7天限制百分比（0-100）
+    @Published var debugSevenDayPercentage: Double {
+        didSet {
+            defaults.set(debugSevenDayPercentage, forKey: "debugSevenDayPercentage")
+        }
+    }
+
+    /// 是否模拟有可用更新（调试用）
+    @Published var simulateUpdateAvailable: Bool {
+        didSet {
+            defaults.set(simulateUpdateAvailable, forKey: "simulateUpdateAvailable")
+            // 发送通知让 MenuBarManager 重新检查更新状态
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 调试场景枚举
+    enum DebugScenario: String, CaseIterable {
+        case realData = "real"              // 真实API数据
+        case fiveHourOnly = "five_hour"     // 仅5小时限制
+        case sevenDayOnly = "seven_day"     // 仅7天限制
+        case both = "both"                  // 同时有两种限制
+
+        var displayName: String {
+            switch self {
+            case .realData:
+                return "真实数据"
+            case .fiveHourOnly:
+                return "仅5小时限制"
+            case .sevenDayOnly:
+                return "仅7天限制"
+            case .both:
+                return "双限制"
+            }
+        }
+    }
+    #endif
+
     // MARK: - 智能模式内部状态（不持久化）
     
     /// 上次检测的百分比（用于检测变化）
@@ -311,13 +389,30 @@ class UserSettings: ObservableObject {
         
         // 初始化开机启动设置
         self.launchAtLogin = defaults.bool(forKey: "launchAtLogin")
-        
+
+        // MARK: - 初始化调试模式设置
+
+        #if DEBUG
+        self.debugModeEnabled = defaults.bool(forKey: "debugModeEnabled")
+        self.debugScenario = DebugScenario(
+            rawValue: defaults.string(forKey: "debugScenario") ?? "real"
+        ) ?? .realData
+        self.debugFiveHourPercentage = defaults.object(forKey: "debugFiveHourPercentage") as? Double ?? 65.0
+        self.debugSevenDayPercentage = defaults.object(forKey: "debugSevenDayPercentage") as? Double ?? 78.0
+        self.simulateUpdateAvailable = defaults.bool(forKey: "simulateUpdateAvailable")
+        #endif
+
         // 同步系统实际状态
         syncLaunchAtLoginStatus()
     }
     
     // MARK: - Computed Properties
-    
+
+    /// 当前应用使用的 Locale（基于用户选择的语言）
+    var appLocale: Locale {
+        return language.locale
+    }
+
     /// 检查认证信息是否已配置
     /// - Returns: 如果 Organization ID 和 Session Key 都不为空则返回 true
     var hasValidCredentials: Bool {

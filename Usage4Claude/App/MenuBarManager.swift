@@ -330,6 +330,25 @@ class MenuBarManager: ObservableObject {
                 // 设置改变时清除图标缓存（显示模式可能改变）
                 self?.iconCache.removeAll()
                 self?.updateMenuBarIcon(percentage: self?.usageData?.percentage ?? 0)
+
+                #if DEBUG
+                // 如果模拟更新设置发生变化，重新应用更新状态
+                if let self = self {
+                    if self.settings.simulateUpdateAvailable {
+                        self.hasAvailableUpdate = true
+                        self.latestVersion = "2.0.0"
+                        Logger.menuBar.debug("模拟更新已启用")
+                    } else {
+                        self.hasAvailableUpdate = false
+                        self.latestVersion = ""
+                        Logger.menuBar.debug("模拟更新已禁用")
+                    }
+                    // 刷新图标以显示/隐藏更新徽章
+                    if let percentage = self.usageData?.percentage {
+                        self.updateMenuBarIcon(percentage: percentage)
+                    }
+                }
+                #endif
             }
             .store(in: &cancellables)
         
@@ -728,15 +747,17 @@ class MenuBarManager: ObservableObject {
     }
     
     /// 处理手动刷新
-    /// 防抖机制：10秒内只能刷新一次
+    /// 防抖机制：10秒内只能刷新一次（调试模式下不启用）
     private func handleManualRefresh() {
         let now = Date()
-        
-        // 防抖检查：10秒内只能刷新一次
+
+        #if !DEBUG
+        // 防抖检查：10秒内只能刷新一次（仅在 Release 模式下）
         if let lastManual = lastManualRefreshTime,
            now.timeIntervalSince(lastManual) < 10 {
             return
         }
+        #endif
 
         // 用户主动刷新，强制切换到活跃模式（1分钟刷新）
         if settings.refreshMode == .smart {
@@ -749,12 +770,18 @@ class MenuBarManager: ObservableObject {
         lastManualRefreshTime = now
         refreshAnimationStartTime = now  // 记录动画开始时间
         refreshState.isRefreshing = true
-        refreshState.canRefresh = false
 
+        #if DEBUG
+        // 调试模式：立即允许下次刷新
+        refreshState.canRefresh = true
+        #else
+        // 正式模式：设置防抖
+        refreshState.canRefresh = false
         // 10秒后解除防抖
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             self?.refreshState.canRefresh = true
         }
+        #endif
         
         // 触发刷新
         fetchUsage()
@@ -891,9 +918,15 @@ class MenuBarManager: ObservableObject {
     /// - Parameter percentage: 当前使用百分比
     private func updateMenuBarIcon(percentage: Double) {
         guard let button = statusItem.button else { return }
+        guard let data = usageData else { return }
 
-        // 生成缓存键
-        let cacheKey = "\(settings.iconDisplayMode.rawValue)_\(Int(percentage))"
+        // 生成缓存键（包含5小时和7天的百分比）
+        let cacheKey: String
+        if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
+            cacheKey = "\(settings.iconDisplayMode.rawValue)_\(Int(fiveHour.percentage))_\(Int(sevenDay.percentage))"
+        } else {
+            cacheKey = "\(settings.iconDisplayMode.rawValue)_\(Int(percentage))"
+        }
 
         var baseImage: NSImage?
 
@@ -904,7 +937,20 @@ class MenuBarManager: ObservableObject {
             // 缓存未命中，创建新图标
             switch settings.iconDisplayMode {
             case .percentageOnly:
-                baseImage = createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18))
+                if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
+                    // 场景2：双圆环（并排显示）
+                    baseImage = createDualCircleImage(
+                        fiveHourPercentage: fiveHour.percentage,
+                        sevenDayPercentage: sevenDay.percentage,
+                        size: NSSize(width: 18, height: 18)
+                    )
+                } else if let fiveHour = data.fiveHour {
+                    // 场景1a：仅5小时限制（绿/橙/红配色）
+                    baseImage = createCircleImage(percentage: fiveHour.percentage, size: NSSize(width: 18, height: 18))
+                } else if let sevenDay = data.sevenDay {
+                    // 场景1b：仅7天限制（紫色系配色）
+                    baseImage = createCircleImage(percentage: sevenDay.percentage, size: NSSize(width: 18, height: 18), useSevenDayColor: true)
+                }
             case .iconOnly:
                 if let appIcon = NSImage(named: "AppIcon"),
                    let iconCopy = appIcon.copy() as? NSImage {
@@ -915,7 +961,19 @@ class MenuBarManager: ObservableObject {
                     baseImage = createSimpleCircleIcon()
                 }
             case .both:
-                baseImage = createCombinedImage(percentage: percentage)
+                if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
+                    // 双限制：显示应用图标 + 双圆环
+                    baseImage = createCombinedDualImage(
+                        fiveHourPercentage: fiveHour.percentage,
+                        sevenDayPercentage: sevenDay.percentage
+                    )
+                } else if let fiveHour = data.fiveHour {
+                    // 单限制（仅5小时）：应用图标 + 单圆环（绿/橙/红）
+                    baseImage = createCombinedImage(percentage: fiveHour.percentage)
+                } else if let sevenDay = data.sevenDay {
+                    // 单限制（仅7天）：应用图标 + 单圆环（紫色系）
+                    baseImage = createCombinedImage(percentage: sevenDay.percentage, useSevenDayColor: true)
+                }
             }
 
             // 存入缓存
@@ -978,13 +1036,15 @@ class MenuBarManager: ObservableObject {
     }
     
     /// 创建组合图标（应用图标 + 百分比圆环）
-    /// - Parameter percentage: 当前使用百分比
+    /// - Parameters:
+    ///   - percentage: 当前使用百分比
+    ///   - useSevenDayColor: 是否使用7天限制的紫色系配色（默认false，使用绿/橙/红）
     /// - Returns: 组合后的图标
-    private func createCombinedImage(percentage: Double) -> NSImage {
+    private func createCombinedImage(percentage: Double, useSevenDayColor: Bool = false) -> NSImage {
         let size = NSSize(width: 40, height: 18)
         let image = NSImage(size: size)
         image.lockFocus()
-        
+
         if let appIcon = NSImage(named: "AppIcon"),
            let iconCopy = appIcon.copy() as? NSImage {
             iconCopy.isTemplate = false
@@ -992,11 +1052,11 @@ class MenuBarManager: ObservableObject {
             let symbolRect = NSRect(x: 2, y: 2, width: 14, height: 14)
             iconCopy.draw(in: symbolRect)
         }
-        
+
         let circleX: CGFloat = 22
         let center = NSPoint(x: circleX + 9, y: 9)
         let radius: CGFloat = 7
-        
+
         NSColor.gray.withAlphaComponent(0.3).setStroke()
         let backgroundPath = NSBezierPath()
         backgroundPath.appendArc(
@@ -1008,14 +1068,14 @@ class MenuBarManager: ObservableObject {
         )
         backgroundPath.lineWidth = 2.0
         backgroundPath.stroke()
-        
-        let color = colorForPercentage(percentage)
+
+        let color = useSevenDayColor ? colorForSevenDay(percentage) : colorForPercentage(percentage)
         color.setStroke()
-        
+
         let progressPath = NSBezierPath()
         let startAngle: CGFloat = 90
         let endAngle = startAngle - (CGFloat(percentage) / 100.0 * 360)
-        
+
         progressPath.appendArc(
             withCenter: center,
             radius: radius,
@@ -1025,16 +1085,16 @@ class MenuBarManager: ObservableObject {
         )
         progressPath.lineWidth = 2.5
         progressPath.stroke()
-        
+
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
-        
+
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 6, weight: .medium),
             .foregroundColor: NSColor.labelColor,
             .paragraphStyle: paragraphStyle
         ]
-        
+
         let text = "\(Int(percentage))"
         let textSize = text.size(withAttributes: attrs)
         let textRect = NSRect(
@@ -1044,9 +1104,145 @@ class MenuBarManager: ObservableObject {
             height: textSize.height
         )
         text.draw(in: textRect, withAttributes: attrs)
-        
+
         image.unlockFocus()
         // 不要设置 isTemplate，否则图标会变成纯白色
+        return image
+    }
+
+    /// 创建组合图标（应用图标 + 双圆环）用于双限制场景
+    /// - Parameters:
+    ///   - fiveHourPercentage: 5小时限制的使用百分比
+    ///   - sevenDayPercentage: 7天限制的使用百分比
+    /// - Returns: 包含应用图标和两个独立圆环的组合图标
+    private func createCombinedDualImage(
+        fiveHourPercentage: Double,
+        sevenDayPercentage: Double
+    ) -> NSImage {
+        // 画布宽度需要容纳：图标(14px) + 间距(4px) + 双圆环(约32px)
+        let size = NSSize(width: 56, height: 18)  // 增加4px以容纳更大圆环间距
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        // 1. 绘制应用图标（左侧）
+        if let appIcon = NSImage(named: "AppIcon"),
+           let iconCopy = appIcon.copy() as? NSImage {
+            iconCopy.isTemplate = false
+            iconCopy.size = NSSize(width: 14, height: 14)
+            let symbolRect = NSRect(x: 2, y: 2, width: 14, height: 14)
+            iconCopy.draw(in: symbolRect)
+        }
+
+        // 2. 绘制双圆环（右侧）
+        let circlesStartX: CGFloat = 20  // 图标后留4px间距
+        let circleRadius: CGFloat = 7
+        let circleSpacing: CGFloat = 5
+
+        // 左圆环中心（5小时限制）
+        let leftCenter = NSPoint(x: circlesStartX + circleRadius, y: 9)
+
+        // 右圆环中心（7天限制）
+        let rightCenter = NSPoint(
+            x: circlesStartX + circleRadius * 2 + circleSpacing + circleRadius,
+            y: 9
+        )
+
+        // 绘制左圆环（5小时限制）
+        // 背景圆环
+        NSColor.gray.withAlphaComponent(0.3).setStroke()
+        let leftBackgroundPath = NSBezierPath()
+        leftBackgroundPath.appendArc(
+            withCenter: leftCenter,
+            radius: circleRadius,
+            startAngle: 0,
+            endAngle: 360,
+            clockwise: false
+        )
+        leftBackgroundPath.lineWidth = 2.0
+        leftBackgroundPath.stroke()
+
+        // 进度圆环
+        let fiveHourColor = colorForPercentage(fiveHourPercentage)
+        fiveHourColor.setStroke()
+
+        let leftProgressPath = NSBezierPath()
+        let startAngle: CGFloat = 90
+        let leftEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
+
+        leftProgressPath.appendArc(
+            withCenter: leftCenter,
+            radius: circleRadius,
+            startAngle: startAngle,
+            endAngle: leftEndAngle,
+            clockwise: true
+        )
+        leftProgressPath.lineWidth = 2.5
+        leftProgressPath.stroke()
+
+        // 绘制右圆环（7天限制）
+        // 背景圆环
+        NSColor.gray.withAlphaComponent(0.3).setStroke()
+        let rightBackgroundPath = NSBezierPath()
+        rightBackgroundPath.appendArc(
+            withCenter: rightCenter,
+            radius: circleRadius,
+            startAngle: 0,
+            endAngle: 360,
+            clockwise: false
+        )
+        rightBackgroundPath.lineWidth = 2.0
+        rightBackgroundPath.stroke()
+
+        // 进度圆环（使用紫色系配色以区分）
+        let sevenDayColor = colorForSevenDay(sevenDayPercentage)
+        sevenDayColor.setStroke()
+
+        let rightProgressPath = NSBezierPath()
+        let rightEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
+
+        rightProgressPath.appendArc(
+            withCenter: rightCenter,
+            radius: circleRadius,
+            startAngle: startAngle,
+            endAngle: rightEndAngle,
+            clockwise: true
+        )
+        rightProgressPath.lineWidth = 2.5
+        rightProgressPath.stroke()
+
+        // 3. 绘制百分比文字
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 6, weight: .medium),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: paragraphStyle
+        ]
+
+        // 左圆环百分比（5小时）
+        let leftText = "\(Int(fiveHourPercentage))"
+        let leftTextSize = leftText.size(withAttributes: attrs)
+        let leftTextRect = NSRect(
+            x: leftCenter.x - leftTextSize.width / 2,
+            y: leftCenter.y - leftTextSize.height / 2,
+            width: leftTextSize.width,
+            height: leftTextSize.height
+        )
+        leftText.draw(in: leftTextRect, withAttributes: attrs)
+
+        // 右圆环百分比（7天）
+        let rightText = "\(Int(sevenDayPercentage))"
+        let rightTextSize = rightText.size(withAttributes: attrs)
+        let rightTextRect = NSRect(
+            x: rightCenter.x - rightTextSize.width / 2,
+            y: rightCenter.y - rightTextSize.height / 2,
+            width: rightTextSize.width,
+            height: rightTextSize.height
+        )
+        rightText.draw(in: rightTextRect, withAttributes: attrs)
+
+        image.unlockFocus()
         return image
     }
     
@@ -1054,14 +1250,15 @@ class MenuBarManager: ObservableObject {
     /// - Parameters:
     ///   - percentage: 当前使用百分比
     ///   - size: 图标尺寸
+    ///   - useSevenDayColor: 是否使用7天限制的紫色系配色（默认false，使用绿/橙/红）
     /// - Returns: 圆形进度图标
-    private func createCircleImage(percentage: Double, size: NSSize) -> NSImage {
+    private func createCircleImage(percentage: Double, size: NSSize, useSevenDayColor: Bool = false) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
-        
+
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
         let radius = min(size.width, size.height) / 2 - 2
-        
+
         NSColor.gray.withAlphaComponent(0.3).setStroke()
         let backgroundPath = NSBezierPath()
         backgroundPath.appendArc(
@@ -1073,8 +1270,8 @@ class MenuBarManager: ObservableObject {
         )
         backgroundPath.lineWidth = 2.0
         backgroundPath.stroke()
-        
-        let color = colorForPercentage(percentage)
+
+        let color = useSevenDayColor ? colorForSevenDay(percentage) : colorForPercentage(percentage)
         color.setStroke()
         
         let progressPath = NSBezierPath()
@@ -1114,21 +1311,252 @@ class MenuBarManager: ObservableObject {
         image.unlockFocus()
         return image
     }
-    
-    /// 根据使用百分比返回对应的颜色
+
+    /// 创建同心圆环图标（5小时内圈 + 7天外圈）
+    /// - Parameters:
+    ///   - fiveHourPercentage: 5小时限制的使用百分比
+    ///   - sevenDayPercentage: 7天限制的使用百分比
+    ///   - size: 图标尺寸
+    /// - Returns: 同心圆环图标
+    private func createConcentricCircleImage(
+        fiveHourPercentage: Double,
+        sevenDayPercentage: Double,
+        size: NSSize
+    ) -> NSImage {
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        let center = NSPoint(x: size.width / 2, y: size.height / 2)
+        let outerRadius = min(size.width, size.height) / 2 - 2
+        let innerRadius = outerRadius - 3  // 内圈半径小3px
+
+        // 1. 绘制外圈背景（灰色，7天限制）
+        NSColor.gray.withAlphaComponent(0.3).setStroke()
+        let outerBackgroundPath = NSBezierPath()
+        outerBackgroundPath.appendArc(
+            withCenter: center,
+            radius: outerRadius,
+            startAngle: 0,
+            endAngle: 360,
+            clockwise: false
+        )
+        outerBackgroundPath.lineWidth = 1.5
+        outerBackgroundPath.stroke()
+
+        // 2. 绘制外圈进度（7天，紫色）
+        let sevenDayColor = colorForSevenDay(sevenDayPercentage)
+        sevenDayColor.setStroke()
+
+        let outerProgressPath = NSBezierPath()
+        let startAngle: CGFloat = 90
+        let outerEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
+
+        outerProgressPath.appendArc(
+            withCenter: center,
+            radius: outerRadius,
+            startAngle: startAngle,
+            endAngle: outerEndAngle,
+            clockwise: true
+        )
+        outerProgressPath.lineWidth = 1.5
+        outerProgressPath.stroke()
+
+        // 3. 绘制内圈背景（灰色，5小时限制）
+        NSColor.gray.withAlphaComponent(0.3).setStroke()
+        let innerBackgroundPath = NSBezierPath()
+        innerBackgroundPath.appendArc(
+            withCenter: center,
+            radius: innerRadius,
+            startAngle: 0,
+            endAngle: 360,
+            clockwise: false
+        )
+        innerBackgroundPath.lineWidth = 2.0
+        innerBackgroundPath.stroke()
+
+        // 4. 绘制内圈进度（5小时，绿/橙/红）
+        let fiveHourColor = colorForPercentage(fiveHourPercentage)
+        fiveHourColor.setStroke()
+
+        let innerProgressPath = NSBezierPath()
+        let innerEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
+
+        innerProgressPath.appendArc(
+            withCenter: center,
+            radius: innerRadius,
+            startAngle: startAngle,
+            endAngle: innerEndAngle,
+            clockwise: true
+        )
+        innerProgressPath.lineWidth = 2.5
+        innerProgressPath.stroke()
+
+        // 5. 绘制中心百分比（显示5小时）
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let fontSize: CGFloat = size.width * 0.35
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: paragraphStyle
+        ]
+
+        let text = "\(Int(fiveHourPercentage))"
+        let textSize = text.size(withAttributes: attrs)
+        let textRect = NSRect(
+            x: center.x - textSize.width / 2,
+            y: center.y - textSize.height / 2,
+            width: textSize.width,
+            height: textSize.height
+        )
+        text.draw(in: textRect, withAttributes: attrs)
+
+        image.unlockFocus()
+        return image
+    }
+
+    /// 创建双圆环图标（5小时和7天限制并排显示）
+    /// - Parameters:
+    ///   - fiveHourPercentage: 5小时限制的使用百分比
+    ///   - sevenDayPercentage: 7天限制的使用百分比
+    ///   - size: 图标大小
+    /// - Returns: 包含两个独立圆环的图标
+    private func createDualCircleImage(
+        fiveHourPercentage: Double,
+        sevenDayPercentage: Double,
+        size: NSSize
+    ) -> NSImage {
+        let circleSize = min(size.width, size.height)
+        let spacing: CGFloat = 5  // 两个圆环之间的间距
+        
+        // 正确计算画布宽度：左圆环 + 间距 + 右圆环
+        let totalWidth = circleSize + spacing + circleSize
+        let image = NSImage(size: NSSize(width: totalWidth, height: size.height))
+        image.lockFocus()
+
+        let radius = circleSize / 2 - 2
+
+        // 左侧圆环中心（5小时限制）
+        let leftCenter = NSPoint(x: circleSize / 2, y: size.height / 2)
+
+        // 右侧圆环中心（7天限制）
+        let rightCenter = NSPoint(x: circleSize + spacing + circleSize / 2, y: size.height / 2)
+
+        // 绘制左侧圆环（5小时限制）
+        // 1. 背景圆环
+        NSColor.gray.withAlphaComponent(0.3).setStroke()
+        let leftBackgroundPath = NSBezierPath()
+        leftBackgroundPath.appendArc(
+            withCenter: leftCenter,
+            radius: radius,
+            startAngle: 0,
+            endAngle: 360,
+            clockwise: false
+        )
+        leftBackgroundPath.lineWidth = 2.0
+        leftBackgroundPath.stroke()
+
+        // 2. 进度圆环（5小时，绿/橙/红）
+        let fiveHourColor = colorForPercentage(fiveHourPercentage)
+        fiveHourColor.setStroke()
+
+        let leftProgressPath = NSBezierPath()
+        let startAngle: CGFloat = 90
+        let leftEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
+
+        leftProgressPath.appendArc(
+            withCenter: leftCenter,
+            radius: radius,
+            startAngle: startAngle,
+            endAngle: leftEndAngle,
+            clockwise: true
+        )
+        leftProgressPath.lineWidth = 2.5
+        leftProgressPath.stroke()
+
+        // 绘制右侧圆环（7天限制）
+        // 3. 背景圆环
+        NSColor.gray.withAlphaComponent(0.3).setStroke()
+        let rightBackgroundPath = NSBezierPath()
+        rightBackgroundPath.appendArc(
+            withCenter: rightCenter,
+            radius: radius,
+            startAngle: 0,
+            endAngle: 360,
+            clockwise: false
+        )
+        rightBackgroundPath.lineWidth = 2.0
+        rightBackgroundPath.stroke()
+
+        // 4. 进度圆环（7天，使用紫色系配色以区分）
+        let sevenDayColor = colorForSevenDay(sevenDayPercentage)
+        sevenDayColor.setStroke()
+
+        let rightProgressPath = NSBezierPath()
+        let rightEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
+
+        rightProgressPath.appendArc(
+            withCenter: rightCenter,
+            radius: radius,
+            startAngle: startAngle,
+            endAngle: rightEndAngle,
+            clockwise: true
+        )
+        rightProgressPath.lineWidth = 2.5
+        rightProgressPath.stroke()
+
+        // 5. 绘制左侧百分比文字（5小时）
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let fontSize: CGFloat = circleSize * 0.35
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: paragraphStyle
+        ]
+
+        let leftText = "\(Int(fiveHourPercentage))"
+        let leftTextSize = leftText.size(withAttributes: attrs)
+        let leftTextRect = NSRect(
+            x: leftCenter.x - leftTextSize.width / 2,
+            y: leftCenter.y - leftTextSize.height / 2,
+            width: leftTextSize.width,
+            height: leftTextSize.height
+        )
+        leftText.draw(in: leftTextRect, withAttributes: attrs)
+
+        // 6. 绘制右侧百分比文字（7天）
+        let rightText = "\(Int(sevenDayPercentage))"
+        let rightTextSize = rightText.size(withAttributes: attrs)
+        let rightTextRect = NSRect(
+            x: rightCenter.x - rightTextSize.width / 2,
+            y: rightCenter.y - rightTextSize.height / 2,
+            width: rightTextSize.width,
+            height: rightTextSize.height
+        )
+        rightText.draw(in: rightTextRect, withAttributes: attrs)
+
+        image.unlockFocus()
+        return image
+    }
+
+    /// 根据5小时限制使用百分比返回对应的颜色
     /// - Parameter percentage: 当前使用百分比
     /// - Returns: 对应的状态颜色
-    /// - Note: 0-70% 绿色, 70-90% 橙色, 90-100% 红色
+    /// - Note: 使用统一配色方案 (绿→橙→红)
     private func colorForPercentage(_ percentage: Double) -> NSColor {
-        if percentage < 70 {
-            return NSColor.systemGreen
-        } else if percentage < 90 {
-            return NSColor.systemOrange
-        } else {
-            return NSColor.systemRed
-        }
+        return UsageColorScheme.fiveHourColor(percentage)
     }
-    
+
+    /// 根据7天限制使用百分比返回配色
+    /// - Parameter percentage: 当前使用百分比
+    /// - Returns: 对应的状态颜色
+    private func colorForSevenDay(_ percentage: Double) -> NSColor {
+        return UsageColorScheme.sevenDayColor(percentage)
+    }
+
     /// 创建简单圆形图标（备用）
     /// - Returns: 简单的圆形轮廓图标
     private func createSimpleCircleIcon() -> NSImage {
@@ -1153,18 +1581,30 @@ class MenuBarManager: ObservableObject {
     /// 安排每日更新检查
     private func scheduleDailyUpdateCheck() {
         #if DEBUG
-        // 🧪 测试：模拟有更新状态
-        hasAvailableUpdate = true
-        latestVersion = "2.0.0"
+        // 🧪 调试模式：检查是否启用模拟更新
+        if settings.simulateUpdateAvailable {
+            hasAvailableUpdate = true
+            latestVersion = "2.0.0"
 
-        // 触发图标更新
-        if let percentage = usageData?.percentage {
-            updateMenuBarIcon(percentage: percentage)
+            // 触发图标更新
+            if let percentage = usageData?.percentage {
+                updateMenuBarIcon(percentage: percentage)
+            }
+            Logger.menuBar.debug("模拟更新已启用，显示更新通知")
+        } else {
+            // 即使在 Debug 模式，也进行真实的更新检查
+            checkForUpdatesInBackground()
+
+            dailyUpdateTimer = Timer.scheduledTimer(withTimeInterval: 24 * 60 * 60, repeats: true) { [weak self] _ in
+                self?.checkForUpdatesInBackground()
+            }
+
+            Logger.menuBar.info("Debug 模式：真实更新检查已启动")
         }
         #else
-        // 立即检查一次
+        // Release 模式：始终进行真实更新检查
         checkForUpdatesInBackground()
-        
+
         // 每24小时检查一次
         dailyUpdateTimer = Timer.scheduledTimer(withTimeInterval: 24 * 60 * 60, repeats: true) { [weak self] _ in
             self?.checkForUpdatesInBackground()

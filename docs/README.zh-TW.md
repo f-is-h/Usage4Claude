@@ -1,4 +1,4 @@
-# Usage4Claude
+#  Usage4Claude
 
 [English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
 
@@ -27,8 +27,9 @@
 
 ### 🎯 核心功能
 
-- **📊 即時監控** - 在選單列即時顯示 Claude 訂閱的 5 小時使用配額
-- **🎨 智慧色彩** - 根據使用率自動變色提醒（綠色/橙色/紅色）
+- **📊 即時監控** - 在選單列即時顯示 Claude 訂閱的使用配額（5小時/7天）
+- **🎯 雙限制支援** - 同時顯示5小時和7天限制，雙圓環圖示清晰區分
+- **🎨 智慧色彩** - 根據使用率自動變色提醒（5小時：綠/橙/紅；7天：青色/藍紫/深紫）
 - **⏰ 精確計時** - 精確到分鐘的配額重置時間顯示
 - **🔄 智慧刷新系統** - 智惠4級自適應刷新或固定間隔（1/3/5/10分鐘）
 - **⚡ 手動重新整理** - 點擊重新整理按鈕後立即更新資料（並具有 10 秒防抖保護）
@@ -66,6 +67,7 @@
 - **⌨️ 鍵盤快速鍵支援** - 常用操作支援鍵盤快速鍵（⌘R、⌘,、⌘Q）
 - **👋 友善引導** - 首次啟動提供詳細的設定精靈
 - **… 選單顯示** - 多種選單存取方式，詳情檢視和右鍵
+- **🛠️ 除錯模式** - 開發者選項：假資料測試、模擬更新、即時重新整理
 
 ### 🔒 安全與隱私
 
@@ -80,21 +82,50 @@
 
 ### 選單列顯示效果
 
-| 百分比模式 | 圖示模式 | 組合模式 |
-|:---:|:---:|:---:|
-| <img src="images/taskbar.ring@2x.png" width="20" alt="ring"> | <img src="images/taskbar.icon@2x.png" width="20" alt="icon"> | <img src="images/taskbar@2x.png" width="50" alt="icon and ring"> |
+| 純圖示 | 5小時 | 7天 | 5小時+圖示 | 7天+圖示 | 5小時+7天 | 5+7+圖示 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="images/taskbar.icon@2x.png" height="22" alt="icon"> | <img src="images/taskbar.5.ring@2x.png" height="22" alt="5h ring"> | <img src="images/taskbar.7.ring@2x.png" height="22" alt="7d ring"> | <img src="images/taskbar.5.both@2x.png" height="22" alt="5h+icon"> | <img src="images/taskbar.7.both@2x.png" height="22" alt="7d+icon"> | <img src="images/taskbar.12@2x.png" height="22" alt="5h+7d"> | <img src="images/taskbar.12.both@2x.png" height="22" alt="5+7+icon"> |
 
-**圓環顏色指示**：
+**5小時限制模式 - 圓環顏色指示**：
 
 🟢 **綠色**（0-69%）- 安全使用中
-
 🟠 **橙色**（70-89%）- 注意用量
-
 🔴 **紅色**（90-100%）- 接近限制
+
+**7天限制模式 - 圓環顏色指示**：
+
+🔵 **青色**（0-69%）- 安全使用中
+🟣 **藍紫色**（70-89%）- 注意用量
+🟪 **深紫色**（90-100%）- 接近限制
+
+**雙限制模式 - 雙圓環顯示**：
+
+當同時有5小時和7天限制時，選單列顯示雙圓環：
+
+- **內圈（5小時限制）**：🟢 綠色 → 🟠 橙色 → 🔴 紅色
+- **外圈（7天限制）**：🔵 青色 → 🟣 藍紫色 → 🟪 深紫色
 
 ### 詳情視窗
 
-<img src="images/detail.zh-TW@2x.png" width="290" alt="Detail Window">
+<table border="0">
+<tr>
+<td align="center">
+<img src="images/detail.5.zh-TW@2x.png" width="280" alt="5小時限制模式">
+<br/>
+<sub><i>5小時限制模式</i></sub>
+</td>
+<td align="center">
+<img src="images/detail.7.zh-TW@2x.png" width="280" alt="7天限制模式">
+<br/>
+<sub><i>7天限制模式</i></sub>
+</td>
+<td align="center">
+<img src="images/detail.12.zh-TW@2x.png" width="280" alt="雙限制模式">
+<br/>
+<sub><i>雙限制模式</i></sub>
+</td>
+</tr>
+</table>
 
 ### 設定介面
 
@@ -337,6 +368,10 @@ A: **是的，支持所有Claude平台！**
 - [x] 快速鍵支援
 - [x] 手動重新整理功能
 - [x] 三點選單黑暗模式適配
+- [x] 雙限制模式支援（5小時 + 7天）
+- [x] 雙圓環選單列圖示
+- [x] 統一配色方案管理
+- [x] 除錯模式（假資料、模擬更新）
 
 
 ### 短期計畫
@@ -351,7 +386,7 @@ A: **是的，支持所有Claude平台！**
     - 詳情視窗 Focus 狀態
 
 5. **功能增加**
-    - 7天使用量監控支援（OAuth・Opus）
+    - 更多模式的7天使用量支援（OAuth・Opus）
     - 用量通知提醒
     - 更多語言本地化
 

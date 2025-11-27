@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-11-27
+
+### Added
+- Dual limit support: 5-hour and 7-day limits can now be displayed
+  simultaneously
+- Dual-circle menu bar icon showing both limits with color-coded
+  indicators
+- Debug mode settings for development: toggle fake data, simulated
+  updates, and instant refresh
+- Unified color scheme management via ColorScheme.swift for consistent
+  colors across UI
+
+### Improved
+- Enhanced color transparency in detail view for softer appearance
+
 ## [1.4.1] - 2025-11-22
 
 ### Fixed
@@ -229,6 +244,7 @@ usage)
 
 ---
 
+[1.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.0
 [1.4.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.1
 [1.4.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.0
 [1.3.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.3.0

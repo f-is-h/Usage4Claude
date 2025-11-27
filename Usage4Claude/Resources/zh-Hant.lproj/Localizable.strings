@@ -26,6 +26,10 @@
 "usage.reset_time" = "重設時間";
 "usage.used" = "已使用";
 "usage.five_hour_limit" = "5小時限制";
+"usage.seven_day_limit" = "7天限制";
+"usage.five_hour_limit_short" = "5h";
+"usage.seven_day_limit_short" = "7d";
+"usage.reset_date" = "重設日期";
 "usage.refresh" = "重新整理";
 "usage.refresh_cooldown" = "請稍後再試";
 "usage.run_diagnostic" = "執行診斷";
@@ -144,6 +148,7 @@
 "usage_data.resetting_soon" = "即將重設";
 "usage_data.resets_in_hours" = "剩餘約%d小時%d分";
 "usage_data.resets_in_minutes" = "剩餘約%d分";
+"usage_data.resets_in_days" = "剩餘約%d天%d小時";
 "usage_data.unknown" = "未知";
 "usage_data.today" = "今天";
 "usage_data.tomorrow" = "明天";

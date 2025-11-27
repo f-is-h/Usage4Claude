@@ -26,6 +26,10 @@
 "usage.reset_time" = "リセット時刻";
 "usage.used" = "使用済";
 "usage.five_hour_limit" = "5時間制限";
+"usage.seven_day_limit" = "7日間制限";
+"usage.five_hour_limit_short" = "5h";
+"usage.seven_day_limit_short" = "7d";
+"usage.reset_date" = "リセット日";
 "usage.refresh" = "更新";
 "usage.refresh_cooldown" = "少々お待ちください";
 "usage.run_diagnostic" = "診断を実行";
@@ -144,6 +148,7 @@
 "usage_data.resetting_soon" = "まもなくリセット";
 "usage_data.resets_in_hours" = "残り約%d時間%d分";
 "usage_data.resets_in_minutes" = "残り約%d分";
+"usage_data.resets_in_days" = "残り約%d日%d時間";
 "usage_data.unknown" = "不明";
 "usage_data.today" = "今日";
 "usage_data.tomorrow" = "明日";

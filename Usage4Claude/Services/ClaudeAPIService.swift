@@ -48,6 +48,17 @@ class ClaudeAPIService {
     /// - Note: 请求会自动添加必要的 Headers 以绕过 Cloudflare 防护
     /// - Important: 调用前确保用户已配置有效的认证信息
     func fetchUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
+        #if DEBUG
+        // 调试模式：返回模拟数据
+        if settings.debugModeEnabled && settings.debugScenario != .realData {
+            let mockData = createMockData(for: settings.debugScenario)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                completion(.success(mockData))
+            }
+            return
+        }
+        #endif
+
         // 取消之前的请求（如果存在）
         currentTask?.cancel()
 
@@ -73,7 +84,7 @@ class ClaudeAPIService {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue("web_claude_ai", forHTTPHeaderField: "anthropic-client-platform")
         request.setValue("1.0.0", forHTTPHeaderField: "anthropic-client-version")
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36", 
+        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
                         forHTTPHeaderField: "user-agent")
         request.setValue("https://claude.ai", forHTTPHeaderField: "origin")
         request.setValue("https://claude.ai/settings/usage", forHTTPHeaderField: "referer")
@@ -193,6 +204,70 @@ class ClaudeAPIService {
         currentTask = nil
         Logger.api.debug("已取消所有网络请求")
     }
+
+    // MARK: - Debug Mock Data
+
+    #if DEBUG
+    /// 创建分钟为00的未来时间
+    /// - Parameter hoursFromNow: 从现在开始的小时数
+    /// - Returns: 分钟为00的未来日期
+    private func createResetTime(hoursFromNow: Double) -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        let targetDate = now.addingTimeInterval(3600 * hoursFromNow)
+        
+        // 获取目标日期的组件
+        var components = calendar.dateComponents([.year, .month, .day, .hour], from: targetDate)
+        components.minute = 0
+        components.second = 0
+        
+        // 返回分钟为00的时间
+        return calendar.date(from: components) ?? targetDate
+    }
+    
+    /// 创建模拟数据用于调试
+    /// - Parameter scenario: 调试场景类型
+    /// - Returns: 模拟的 UsageData 实例
+    private func createMockData(for scenario: UserSettings.DebugScenario) -> UsageData {
+        switch scenario {
+        case .realData:
+            fatalError("Should not call mock data for real scenario")
+
+        case .fiveHourOnly:
+            // 场景1a：只有5小时限制（使用用户设置的百分比）
+            return UsageData(
+                fiveHour: UsageData.LimitData(
+                    percentage: settings.debugFiveHourPercentage,
+                    resetsAt: createResetTime(hoursFromNow: 2.5)  // 2.5小时后重置，分钟为00
+                ),
+                sevenDay: nil
+            )
+
+        case .sevenDayOnly:
+            // 场景1b：只有7天限制（使用用户设置的百分比）
+            return UsageData(
+                fiveHour: nil,
+                sevenDay: UsageData.LimitData(
+                    percentage: settings.debugSevenDayPercentage,
+                    resetsAt: createResetTime(hoursFromNow: 24 * 3.5)  // 3.5天后重置，分钟为00
+                )
+            )
+
+        case .both:
+            // 场景2：同时有两种限制（使用用户设置的百分比）
+            return UsageData(
+                fiveHour: UsageData.LimitData(
+                    percentage: settings.debugFiveHourPercentage,
+                    resetsAt: createResetTime(hoursFromNow: 1.8)  // 1.8小时后重置，分钟为00
+                ),
+                sevenDay: UsageData.LimitData(
+                    percentage: settings.debugSevenDayPercentage,
+                    resetsAt: createResetTime(hoursFromNow: 24 * 2.3)  // 2.3天后重置，分钟为00
+                )
+            )
+        }
+    }
+    #endif
 }
 
 // MARK: - 数据模型
@@ -201,16 +276,16 @@ class ClaudeAPIService {
 /// 对应 Claude API 返回的 JSON 结构
 nonisolated struct UsageResponse: Codable, Sendable {
     /// 5小时用量限制数据
-    let five_hour: FiveHourUsage
-    /// 7天用量（暂未使用）
-    let seven_day: String?
+    let five_hour: LimitUsage
+    /// 7天用量限制数据
+    let seven_day: LimitUsage?
     /// 7天 OAuth 应用用量（暂未使用）
     let seven_day_oauth_apps: String?
     /// 7天 Opus 用量（暂未使用）
-    let seven_day_opus: String?
-    
-    /// 5小时用量详情
-    struct FiveHourUsage: Codable, Sendable {
+    let seven_day_opus: LimitUsage?
+
+    /// 通用限制用量详情（适用于5小时、7天等各种限制）
+    struct LimitUsage: Codable, Sendable {
         /// 当前使用率 (0-100 的整数)
         let utilization: Int
         /// 重置时间（ISO 8601 格式），nil 表示尚未开始使用
@@ -221,11 +296,37 @@ nonisolated struct UsageResponse: Codable, Sendable {
     /// - Returns: 转换后的 UsageData 实例
     /// - Note: 会自动处理时间四舍五入，确保显示准确
     func toUsageData() -> UsageData {
+        // 解析5小时限制数据
+        let fiveHourData = parseLimitData(five_hour)
+
+        // 解析7天限制数据（仅当存在且有效时）
+        let sevenDayData: UsageData.LimitData? = {
+            guard let sevenDay = seven_day else {
+                return nil
+            }
+            // 如果utilization为0且resets_at为空，视为无数据
+            if sevenDay.utilization == 0 && sevenDay.resets_at == nil {
+                return nil
+            }
+            let parsed = parseLimitData(sevenDay)
+            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
+        }()
+
+        return UsageData(
+            fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
+            sevenDay: sevenDayData
+        )
+    }
+
+    /// 解析单个限制的数据（5小时或7天）
+    /// - Parameter limit: LimitUsage 结构
+    /// - Returns: 包含百分比和重置时间的元组
+    private func parseLimitData(_ limit: LimitUsage) -> (percentage: Double, resetsAt: Date?) {
         let resetsAt: Date?
-        if let resetString = five_hour.resets_at {
+        if let resetString = limit.resets_at {
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            
+
             if let date = formatter.date(from: resetString) {
                 // 对时间进行四舍五入到最接近的秒
                 // 例如：05:59:59.645 → 06:00:00
@@ -239,86 +340,251 @@ nonisolated struct UsageResponse: Codable, Sendable {
         } else {
             resetsAt = nil
         }
-        
-        return UsageData(
-            percentage: Double(five_hour.utilization),
-            resetsAt: resetsAt
-        )
+
+        return (percentage: Double(limit.utilization), resetsAt: resetsAt)
     }
 }
 
 /// 用量数据模型
 /// 应用内部使用的标准化用量数据结构
 struct UsageData: Sendable {
-    /// 当前使用百分比 (0-100)
-    let percentage: Double
-    /// 用量重置时间，nil 表示尚未开始使用
-    let resetsAt: Date?
-    
-    /// 距离重置的剩余时间（秒）
-    /// - Returns: 剩余秒数，如果 resetsAt 为 nil 则返回 nil
-    var resetsIn: TimeInterval? {
-        guard let resetsAt = resetsAt else { return nil }
-        return resetsAt.timeIntervalSinceNow
-    }
-    
-    /// 格式化的剩余时间字符串
-    /// - Returns: 本地化的剩余时间描述（如 "2小时30分钟后重置"）
-    var formattedResetsIn: String {
-        // 如果 resetsAt 为 nil，说明还未开始使用
-        guard let resetsAt = resetsAt else {
-            return L.UsageData.notStartedReset
+    /// 5小时限制数据（可选）
+    let fiveHour: LimitData?
+    /// 7天限制数据（可选）
+    let sevenDay: LimitData?
+
+    /// 单个限制的数据（5小时或7天）
+    struct LimitData: Sendable {
+        /// 当前使用百分比 (0-100)
+        let percentage: Double
+        /// 用量重置时间，nil 表示尚未开始使用
+        let resetsAt: Date?
+
+        /// 距离重置的剩余时间（秒）
+        /// - Returns: 剩余秒数，如果 resetsAt 为 nil 则返回 nil
+        var resetsIn: TimeInterval? {
+            guard let resetsAt = resetsAt else { return nil }
+            return resetsAt.timeIntervalSinceNow
         }
-        
-        // 计算剩余时间
-        let resetsIn = resetsAt.timeIntervalSinceNow
-        
-        // 如果时间已过或即将到达，显示即将重置
-        guard resetsIn > 0 else {
-            return L.UsageData.resettingSoon
+
+        /// 格式化的剩余时间字符串（用于5小时限制，显示X小时Y分）
+        /// - Returns: 本地化的剩余时间描述（如 "2小时30分"）
+        var formattedResetsInHours: String {
+            guard let resetsAt = resetsAt else {
+                return L.UsageData.notStartedReset
+            }
+
+            let resetsIn = resetsAt.timeIntervalSinceNow
+
+            guard resetsIn > 0 else {
+                return L.UsageData.resettingSoon
+            }
+
+            // 向上取整到分钟（使用 ceil 函数）
+            let totalMinutes = Int(ceil(resetsIn / 60))
+            let hours = totalMinutes / 60
+            let minutes = totalMinutes % 60
+
+            if hours > 0 {
+                return L.UsageData.resetsInHours(hours, minutes)
+            } else {
+                return L.UsageData.resetsInMinutes(minutes)
+            }
         }
-        
-        // 向上取整到分钟（使用 ceil 函数）
-        let totalMinutes = Int(ceil(resetsIn / 60))
-        let hours = totalMinutes / 60
-        let minutes = totalMinutes % 60
-        
-        if hours > 0 {
-            return L.UsageData.resetsInHours(hours, minutes)
-        } else {
-            return L.UsageData.resetsInMinutes(minutes)
+
+        /// 格式化的剩余时间字符串（用于7天限制，显示X天Y小时）
+        /// - Returns: 本地化的剩余时间描述（如 "剩余约3天12小时"）
+        var formattedResetsInDays: String {
+            guard let resetsAt = resetsAt else {
+                return L.UsageData.notStartedReset
+            }
+
+            let resetsIn = resetsAt.timeIntervalSinceNow
+
+            guard resetsIn > 0 else {
+                return L.UsageData.resettingSoon
+            }
+
+            // 向上取整到小时
+            let totalHours = Int(ceil(resetsIn / 3600))
+            let days = totalHours / 24
+            let hours = totalHours % 24
+
+            if days > 0 {
+                return L.UsageData.resetsInDays(days, hours)
+            } else {
+                // 不足1天时，显示"约X小时"
+                return L.UsageData.resetsInHours(hours, 0)
+            }
         }
-    }
-    
-    /// 格式化的重置时间字符串
-    /// - Returns: 本地化的重置时间描述（如 "今天 14:30" 或 "明天 09:00"）
-    var formattedResetTime: String {
-        guard let resetsAt = resetsAt else {
-            return L.UsageData.unknown
+
+        /// 格式化的重置时间字符串（短格式，用于5小时限制）
+        /// - Returns: 本地化的重置时间描述（如 "今天 14:30" 或 "明天 09:00"）
+        var formattedResetTimeShort: String {
+            guard let resetsAt = resetsAt else {
+                return L.UsageData.unknown
+            }
+
+            let formatter = DateFormatter()
+            formatter.locale = UserSettings.shared.appLocale
+            formatter.timeZone = TimeZone.current
+            formatter.dateFormat = "HH:mm"
+
+            var calendar = Calendar.current
+            calendar.locale = UserSettings.shared.appLocale
+            let timeString = formatter.string(from: resetsAt)
+
+            if calendar.isDateInToday(resetsAt) {
+                return "\(L.UsageData.today) \(timeString)"
+            } else if calendar.isDateInTomorrow(resetsAt) {
+                return "\(L.UsageData.tomorrow) \(timeString)"
+            } else {
+                formatter.setLocalizedDateFormatFromTemplate("Md HH:mm")
+                return formatter.string(from: resetsAt)
+            }
         }
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        formatter.timeZone = TimeZone.current
-        formatter.locale = Locale.current
-        
-        let calendar = Calendar.current
-        let timeString = formatter.string(from: resetsAt)
-        
-        if calendar.isDateInToday(resetsAt) {
-            return "\(L.UsageData.today) \(timeString)"
-        } else if calendar.isDateInTomorrow(resetsAt) {
-            return "\(L.UsageData.tomorrow) \(timeString)"
-        } else {
-            formatter.dateFormat = "M月d日 HH:mm"
+
+        /// 格式化的重置时间字符串（长格式，用于7天限制）
+        /// - Returns: 本地化的重置日期描述（如 "11月29日 下午2时" (中文) 或 "Nov 29 2 PM" (英文)）
+        var formattedResetDateLong: String {
+            guard let resetsAt = resetsAt else {
+                return L.UsageData.unknown
+            }
+
+            let formatter = DateFormatter()
+            formatter.locale = UserSettings.shared.appLocale
+            formatter.timeZone = TimeZone.current
+            formatter.setLocalizedDateFormatFromTemplate("MMMd ha")
+
+            return formatter.string(from: resetsAt)
+        }
+
+        // MARK: - 极简格式化方法（用于双模式两行显示）
+
+        /// 极简格式化的剩余时间（省略零值单位）
+        /// - 示例: "45m", "1h30m", "3d12h"
+        var formattedCompactRemaining: String {
+            guard let resetsAt = resetsAt else {
+                return "-"
+            }
+
+            let resetsIn = resetsAt.timeIntervalSinceNow
+            guard resetsIn > 0 else {
+                return "即将重置"
+            }
+
+            let totalMinutes = Int(ceil(resetsIn / 60))
+
+            // 如果不足1小时，只显示分钟
+            if totalMinutes < 60 {
+                return "\(totalMinutes)m"
+            }
+
+            let totalHours = totalMinutes / 60
+            let minutes = totalMinutes % 60
+
+            // 如果不足1天，显示小时(+分钟)
+            if totalHours < 24 {
+                if minutes > 0 {
+                    return "\(totalHours)h\(minutes)m"
+                } else {
+                    return "\(totalHours)h"
+                }
+            }
+
+            // 超过1天，显示天+小时
+            let days = totalHours / 24
+            let hours = totalHours % 24
+
+            if hours > 0 {
+                return "\(days)d\(hours)h"
+            } else {
+                return "\(days)d"
+            }
+        }
+
+        /// 极简格式化的重置时间（用于5小时限制）
+        /// - 示例: "15:07", "09:30"
+        var formattedCompactResetTime: String {
+            guard let resetsAt = resetsAt else {
+                return "-"
+            }
+
+            let formatter = DateFormatter()
+            formatter.locale = UserSettings.shared.appLocale
+            formatter.timeZone = TimeZone.current
+            formatter.dateFormat = "HH:mm"
+
+            return formatter.string(from: resetsAt)
+        }
+
+        /// 极简格式化的重置日期（用于7天限制）
+        /// - 示例: "11/29, 2 PM" (始终使用英文格式)
+        var formattedCompactResetDate: String {
+            guard let resetsAt = resetsAt else {
+                return "-"
+            }
+
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US")  // 强制使用英文格式
+            formatter.timeZone = TimeZone.current
+            formatter.setLocalizedDateFormatFromTemplate("Md ha")
+
             return formatter.string(from: resetsAt)
         }
     }
-    
+
+    /// 便捷访问：当前主要显示的数据（优先5小时，否则7天）
+    var primaryLimit: LimitData? {
+        return fiveHour ?? sevenDay
+    }
+
+    /// 是否同时有两种限制数据
+    var hasBothLimits: Bool {
+        return fiveHour != nil && sevenDay != nil
+    }
+
+    /// 是否只有7天限制数据
+    var hasOnlySevenDay: Bool {
+        return fiveHour == nil && sevenDay != nil
+    }
+
+    // MARK: - 向后兼容属性（保留用于旧代码）
+
+    /// 当前使用百分比 (0-100)
+    /// - Note: 向后兼容属性，返回主要限制的百分比
+    var percentage: Double {
+        return primaryLimit?.percentage ?? 0
+    }
+
+    /// 用量重置时间，nil 表示尚未开始使用
+    /// - Note: 向后兼容属性，返回主要限制的重置时间
+    var resetsAt: Date? {
+        return primaryLimit?.resetsAt
+    }
+
+    /// 距离重置的剩余时间（秒）
+    /// - Note: 向后兼容属性
+    var resetsIn: TimeInterval? {
+        return primaryLimit?.resetsIn
+    }
+
+    /// 格式化的剩余时间字符串
+    /// - Note: 向后兼容属性
+    var formattedResetsIn: String {
+        return primaryLimit?.formattedResetsInHours ?? L.UsageData.notStartedReset
+    }
+
+    /// 格式化的重置时间字符串
+    /// - Note: 向后兼容属性
+    var formattedResetTime: String {
+        return primaryLimit?.formattedResetTimeShort ?? L.UsageData.unknown
+    }
+
     /// 根据使用百分比返回对应的状态颜色
-    /// - Returns: 颜色名称字符串
-    /// - Note: green (0-50%), yellow (50-70%), orange (70-90%), red (90-100%)
+    /// - Note: 向后兼容属性
     var statusColor: String {
+        let percentage = self.percentage
         if percentage < 50 {
             return "green"
         } else if percentage < 70 {

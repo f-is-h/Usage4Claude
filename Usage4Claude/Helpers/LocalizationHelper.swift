@@ -36,6 +36,10 @@ enum L {
         static var resetTime: String { localized("usage.reset_time") }
         static var used: String { localized("usage.used") }
         static var fiveHourLimit: String { localized("usage.five_hour_limit") }
+        static var sevenDayLimit: String { localized("usage.seven_day_limit") }
+        static var fiveHourLimitShort: String { localized("usage.five_hour_limit_short") }
+        static var sevenDayLimitShort: String { localized("usage.seven_day_limit_short") }
+        static var resetDate: String { localized("usage.reset_date") }
         static var refresh: String { localized("usage.refresh") }
         static var refreshCooldown: String { localized("usage.refresh_cooldown") }
         static var runDiagnostic: String { localized("usage.run_diagnostic") }
@@ -188,6 +192,9 @@ enum L {
         }
         static func resetsInMinutes(_ minutes: Int) -> String {
             String(format: localized("usage_data.resets_in_minutes"), minutes)
+        }
+        static func resetsInDays(_ days: Int, _ hours: Int) -> String {
+            String(format: localized("usage_data.resets_in_days"), days, hours)
         }
         static var unknown: String { localized("usage_data.unknown") }
         static var today: String { localized("usage_data.today") }

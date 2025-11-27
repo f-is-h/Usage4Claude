@@ -27,8 +27,9 @@
 
 ### 🎯 核心功能
 
-- **📊 实时监控** - 在菜单栏实时显示 Claude 订阅的5小时使用配额
-- **🎨 智能色彩** - 根据使用率自动变色提醒（绿色/橙色/红色）
+- **📊 实时监控** - 在菜单栏实时显示 Claude 订阅的使用配额（5小时/7天）
+- **🎯 双限制支持** - 同时显示5小时和7天限制，双圆环图标清晰区分
+- **🎨 智能色彩** - 根据使用率自动变色提醒（5小时：绿/橙/红；7天：青蓝/蓝紫/深紫）
 - **⏰ 精确计时** - 精确到分的配额重置时间显示
 - **🔄 智能刷新系统** - 智能4级自适应刷新或固定间隔（1/3/5/10分钟）
 - **⚡ 手动刷新** - 点击刷新按钮立即更新数据（10秒防抖保护）
@@ -66,6 +67,7 @@
 - **⌨️ 快捷键支持** - 常用操作支持键盘快捷键（⌘R、⌘,、⌘Q）
 - **👋 友好引导** - 首次启动提供详细的配置向导
 - **… 菜单显示** - 多种菜单打开方式，详情页与右键
+- **🛠️ 调试模式** - 开发者选项：假数据测试、模拟更新、即时刷新
 
 ### 🔒 安全与隐私
 
@@ -80,21 +82,50 @@
 
 ### 菜单栏显示效果
 
-| 百分比模式 | 图标模式 | 组合模式 |
-|:---:|:---:|:---:|
-| <img src="images/taskbar.ring@2x.png" width="20" alt="ring"> | <img src="images/taskbar.icon@2x.png" width="20" alt="icon"> | <img src="images/taskbar@2x.png" width="50" alt="icon and ring"> |
+| 纯图标 | 5小时 | 7天 | 5小时+图标 | 7天+图标 | 5小时+7天 | 5+7+图标 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="images/taskbar.icon@2x.png" height="32" alt="icon"> | <img src="images/taskbar.5.ring@2x.png" height="32" alt="5h ring"> | <img src="images/taskbar.7.ring@2x.png" height="32" alt="7d ring"> | <img src="images/taskbar.5.both@2x.png" height="32" alt="5h+icon"> | <img src="images/taskbar.7.both@2x.png" height="32" alt="7d+icon"> | <img src="images/taskbar.12@2x.png" height="32" alt="5h+7d"> | <img src="images/taskbar.12.both@2x.png" height="32" alt="5+7+icon"> |
 
-**圆环颜色指示**：
+**5小时限制模式 - 圆环颜色指示**：
 
 🟢 **绿色**（0-69%）- 安全使用中
-
 🟠 **橙色**（70-89%）- 注意用量
-
 🔴 **红色**（90-100%）- 接近限制
+
+**7天限制模式 - 圆环颜色指示**：
+
+🩵 **青色**（0-69%）- 安全使用中
+💙 **蓝紫色**（70-89%）- 注意用量
+💜 **深紫色**（90-100%）- 接近限制
+
+**双限制模式 - 双圆环显示**：
+
+当同时有5小时和7天限制时，菜单栏显示双圆环：
+
+- **内圈（5小时限制）**：🟢 绿色 → 🟠 橙色 → 🔴 红色
+- **外圈（7天限制）**：🩵 青色 → 💙 蓝紫色 → 💜 深紫色
 
 ### 详情窗口
 
-<img src="images/detail.zh-CN@2x.png" width="290" alt="Detail Window">
+<table border="0">
+<tr>
+<td align="center">
+<img src="images/detail.5.zh-CN@2x.png" width="280" alt="5小时限制模式">
+<br/>
+<sub><i>5小时限制模式</i></sub>
+</td>
+<td align="center">
+<img src="images/detail.7.zh-CN@2x.png" width="280" alt="7天限制模式">
+<br/>
+<sub><i>7天限制模式</i></sub>
+</td>
+<td align="center">
+<img src="images/detail.12.zh-CN@2x.png" width="280" alt="双限制模式">
+<br/>
+<sub><i>双限制模式</i></sub>
+</td>
+</tr>
+</table>
 
 ### 设置界面
 
@@ -337,6 +368,10 @@ A: **是的，支持所有Claude平台！**
 - [x] 快捷键支持
 - [x] 手动刷新功能
 - [x] 三点菜单暗黑模式适配
+- [x] 双限制模式支持（5小时 + 7天）
+- [x] 双圆环菜单栏图标
+- [x] 统一配色方案管理
+- [x] 调试模式（假数据、模拟更新）
 
 ### 短期计划
 1. **开发者体验**
@@ -350,7 +385,7 @@ A: **是的，支持所有Claude平台！**
     - 详情窗口 Focus 状态
 
 5. **功能增加**
-    - 7天使用量监控支持（OAuth・Opus）
+    - 更多模式的7天使用量支持（OAuth・Opus）
     - 用量通知提醒
     - 更多语言本地化
 

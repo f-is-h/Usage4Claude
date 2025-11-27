@@ -26,6 +26,10 @@
 "usage.reset_time" = "Reset Time";
 "usage.used" = "Used";
 "usage.five_hour_limit" = "5-Hour Limit";
+"usage.seven_day_limit" = "7-Day Limit";
+"usage.five_hour_limit_short" = "5h";
+"usage.seven_day_limit_short" = "7d";
+"usage.reset_date" = "Reset Date";
 "usage.refresh" = "Refresh";
 "usage.refresh_cooldown" = "Please wait a moment";
 "usage.run_diagnostic" = "Run Diagnostic";
@@ -144,6 +148,7 @@
 "usage_data.resetting_soon" = "Resetting soon";
 "usage_data.resets_in_hours" = "About %dh %dm left";
 "usage_data.resets_in_minutes" = "About %dm left";
+"usage_data.resets_in_days" = "About %dd %dh left";
 "usage_data.unknown" = "Unknown";
 "usage_data.today" = "Today";
 "usage_data.tomorrow" = "Tomorrow";
