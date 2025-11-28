@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2025-11-27
+
+### Fixed
+- Fixed JSON decoding error for accounts with 7-day usage limits
+- API now correctly handles floating-point usage percentages (e.g., `54.0` instead of `54`)
+- Added support for new API fields (`seven_day_sonnet`, `seven_day_oauth_apps`)
+
+### Technical Details
+- Changed `utilization` field type from `Int` to `Double` to match actual API response format
+- This fix resolves the "Data Parsing Error" issue reported by users with newer Claude Pro accounts
+
 ## [1.5.0] - 2025-11-27
 
 ### Added
@@ -244,6 +255,7 @@ usage)
 
 ---
 
+[1.5.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.1
 [1.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.0
 [1.4.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.1
 [1.4.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.0
