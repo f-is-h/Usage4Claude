@@ -280,14 +280,16 @@ nonisolated struct UsageResponse: Codable, Sendable {
     /// 7天用量限制数据
     let seven_day: LimitUsage?
     /// 7天 OAuth 应用用量（暂未使用）
-    let seven_day_oauth_apps: String?
-    /// 7天 Opus 用量（暂未使用）
+    let seven_day_oauth_apps: LimitUsage?
+    /// 7天 Opus 用量限制数据
     let seven_day_opus: LimitUsage?
+    /// 7天 Sonnet 用量限制数据（新字段）
+    let seven_day_sonnet: LimitUsage?
 
     /// 通用限制用量详情（适用于5小时、7天等各种限制）
     struct LimitUsage: Codable, Sendable {
-        /// 当前使用率 (0-100 的整数)
-        let utilization: Int
+        /// 当前使用率 (0-100，可以是浮点数)
+        let utilization: Double
         /// 重置时间（ISO 8601 格式），nil 表示尚未开始使用
         let resets_at: String?
     }
