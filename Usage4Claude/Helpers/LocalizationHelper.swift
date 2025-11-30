@@ -60,6 +60,9 @@ enum L {
         static var displaySection: String { localized("settings.general.display_section") }
         static var menubarIcon: String { localized("settings.general.menubar_icon") }
         static var menubarHint: String { localized("settings.general.menubar_hint") }
+        static var menubarTheme: String { localized("settings.general.menubar_theme") }
+        static var displayContent: String { localized("settings.general.display_content") }
+        static var monochromeNoIconHint: String { localized("settings.general.monochrome_no_icon_hint") }
         static var refreshSection: String { localized("settings.general.refresh_section") }
         static var refreshMode: String { localized("settings.general.refresh_mode") }
         static var refreshInterval: String { localized("settings.general.refresh_interval") }
@@ -157,6 +160,16 @@ enum L {
         static var percentageOnly: String { localized("display.percentage_only") }
         static var iconOnly: String { localized("display.icon_only") }
         static var both: String { localized("display.both") }
+    }
+    
+    // MARK: - Icon Style Mode
+    enum IconStyle {
+        static var colorTranslucent: String { localized("icon_style.color_translucent") }
+        static var colorWithBackground: String { localized("icon_style.color_with_background") }
+        static var monochrome: String { localized("icon_style.monochrome") }
+        static var colorTranslucentDesc: String { localized("icon_style.color_translucent_desc") }
+        static var colorWithBackgroundDesc: String { localized("icon_style.color_with_background_desc") }
+        static var monochromeDesc: String { localized("icon_style.monochrome_desc") }
     }
     
     // MARK: - Refresh Interval

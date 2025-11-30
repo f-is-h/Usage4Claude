@@ -261,13 +261,77 @@ struct GeneralSettingsView: View {
                     title: L.SettingsGeneral.displaySection,
                     hint: L.SettingsGeneral.menubarHint
                 ) {
-                    Picker("", selection: $settings.iconDisplayMode) {
-                        ForEach(IconDisplayMode.allCases, id: \.self) { mode in
-                            Text(mode.localizedName).tag(mode)
+                    VStack(alignment: .leading, spacing: 16) {
+                        // 图标样式选择
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L.SettingsGeneral.menubarTheme)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                            
+                            Picker("", selection: $settings.iconStyleMode) {
+                                ForEach(IconStyleMode.allCases, id: \.self) { mode in
+                                    Text(mode.localizedName).tag(mode)
+                                }
+                            }
+                            .pickerStyle(.radioGroup)
+                            .labelsHidden()
+                            
+                            // 描述文字
+                            if !settings.iconStyleMode.description.isEmpty {
+                                HStack(alignment: .top, spacing: 4) {
+                                    Image(systemName: "info.circle.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(.blue)
+                                    Text(settings.iconStyleMode.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.leading, 20)
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        // 显示内容选择
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L.SettingsGeneral.displayContent)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                            
+                            Picker("", selection: $settings.iconDisplayMode) {
+                                ForEach(IconDisplayMode.allCases, id: \.self) { mode in
+                                    // 单色模式下禁用"仅显示图标"和"同时显示"选项
+                                    if settings.iconStyleMode == .monochrome && (mode == .iconOnly || mode == .both) {
+                                        Text(mode.localizedName)
+                                            .tag(mode)
+                                            .disabled(true)
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text(mode.localizedName).tag(mode)
+                                    }
+                                }
+                            }
+                            .pickerStyle(.radioGroup)
+                            .labelsHidden()
+                            
+                            // 提示信息（单色模式下）
+                            if settings.iconStyleMode == .monochrome {
+                                HStack(alignment: .top, spacing: 4) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(.orange)
+                                    Text(L.SettingsGeneral.monochromeNoIconHint)
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.leading, 20)
+                            }
                         }
                     }
-                    .pickerStyle(.radioGroup)
-                    .labelsHidden()
                 }
                 
                 // 刷新设置卡片

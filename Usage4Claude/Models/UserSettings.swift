@@ -35,6 +35,38 @@ enum IconDisplayMode: String, CaseIterable, Codable {
     }
 }
 
+/// 菜单栏图标样式模式
+enum IconStyleMode: String, CaseIterable, Codable {
+    /// 彩色通透（默认，彩色无背景）
+    case colorTranslucent = "color_translucent"
+    /// 彩色带背景
+    case colorWithBackground = "color_with_background"
+    /// 单色（Template模式，跟随系统主题）
+    case monochrome = "monochrome"
+    
+    var localizedName: String {
+        switch self {
+        case .colorTranslucent:
+            return L.IconStyle.colorTranslucent
+        case .colorWithBackground:
+            return L.IconStyle.colorWithBackground
+        case .monochrome:
+            return L.IconStyle.monochrome
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .colorTranslucent:
+            return L.IconStyle.colorTranslucentDesc
+        case .colorWithBackground:
+            return L.IconStyle.colorWithBackgroundDesc
+        case .monochrome:
+            return L.IconStyle.monochromeDesc
+        }
+    }
+}
+
 // MARK: - Refresh Modes
 
 /// 刷新模式
@@ -195,6 +227,22 @@ class UserSettings: ObservableObject {
     @Published var iconDisplayMode: IconDisplayMode {
         didSet {
             defaults.set(iconDisplayMode.rawValue, forKey: "iconDisplayMode")
+            // 如果选择单色模式且当前不是"仅显示圆环"，自动切换为"仅显示圆环"
+            if iconStyleMode == .monochrome && iconDisplayMode != .percentageOnly {
+                iconDisplayMode = .percentageOnly
+            }
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+    
+    /// 菜单栏图标样式模式
+    @Published var iconStyleMode: IconStyleMode {
+        didSet {
+            defaults.set(iconStyleMode.rawValue, forKey: "iconStyleMode")
+            // 如果切换到单色模式且当前不是"仅显示圆环"，自动切换为"仅显示圆环"
+            if iconStyleMode == .monochrome && iconDisplayMode != .percentageOnly {
+                iconDisplayMode = .percentageOnly
+            }
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -358,6 +406,13 @@ class UserSettings: ObservableObject {
             self.iconDisplayMode = mode
         } else {
             self.iconDisplayMode = .percentageOnly
+        }
+        
+        if let styleString = defaults.string(forKey: "iconStyleMode"),
+           let style = IconStyleMode(rawValue: styleString) {
+            self.iconStyleMode = style
+        } else {
+            self.iconStyleMode = .colorTranslucent  // 默认彩色通透
         }
         
         // 加载刷新模式，默认为智能模式

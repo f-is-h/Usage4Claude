@@ -46,6 +46,9 @@
 "settings.general.display_section" = "显示设置";
 "settings.general.menubar_icon" = "菜单栏图标";
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
+"settings.general.menubar_theme" = "菜单栏主题";
+"settings.general.display_content" = "显示内容";
+"settings.general.monochrome_no_icon_hint" = "单色主题下不支持显示图标";
 "settings.general.refresh_section" = "刷新设置";
 "settings.general.refresh_mode" = "刷新模式";
 "settings.general.refresh_interval" = "固定刷新频率";
@@ -53,8 +56,14 @@
 "settings.general.refresh_hint_fixed" = "按照设定的固定时间间隔刷新数据";
 "settings.general.language_section" = "语言设置";
 "settings.general.interface_language" = "界面语言";
-"settings.general.language_hint" = "更改界面显示语言（立即生效）";
+"settings.general.language_hint" = "更改界面显示语言";
 "settings.general.reset_button" = "恢复默认设置";
+"icon_style.color_translucent" = "彩色通透";
+"icon_style.color_with_background" = "彩色背景";
+"icon_style.monochrome" = "单色主题";
+"icon_style.color_translucent_desc" = "彩色圆环，背景透明，适合大部分菜单栏样式";
+"icon_style.color_with_background_desc" = "彩色圆环带半透明白色背景，适合彩色通透主题在深色壁纸表现不佳时";
+"icon_style.monochrome_desc" = "自动适应系统菜单栏样式，简洁优雅";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "如何获取认证信息";

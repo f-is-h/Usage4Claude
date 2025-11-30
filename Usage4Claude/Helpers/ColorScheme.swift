@@ -8,10 +8,37 @@
 
 import SwiftUI
 import AppKit
+import OSLog
 
 /// 统一配色方案管理
 /// 提供5小时和7天限制的颜色配置，支持 AppKit 和 SwiftUI
 enum UsageColorScheme {
+
+    // MARK: - 外观检测
+
+    /// 检测当前是否为深色模式
+    /// - Parameter statusButton: 可选的状态栏按钮，用于获取外观信息
+    /// - Returns: true 表示深色模式，false 表示浅色模式
+    static func isDarkMode(for statusButton: NSStatusBarButton? = nil) -> Bool {
+        // 方法1: 使用状态栏按钮的外观
+        if let button = statusButton,
+           let appearance = button.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) {
+            return appearance == .darkAqua
+        }
+
+        // 方法2: 使用应用的 effectiveAppearance
+        if let appearance = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) {
+            return appearance == .darkAqua
+        }
+
+        // 最终降级
+        return true
+    }
+
+    /// 检测当前是否为深色模式（便捷属性）
+    static var isDarkMode: Bool {
+        return isDarkMode(for: nil)
+    }
 
     // MARK: - 5小时限制配色（绿→橙→红）
 
@@ -21,7 +48,7 @@ enum UsageColorScheme {
     /// - Note: 0-70% 绿色(安全), 70-90% 橙色(警告), 90-100% 红色(危险)
     static func fiveHourColor(_ percentage: Double) -> NSColor {
         if percentage < 70 {
-            return NSColor.systemGreen
+            return NSColor(red: 40/255.0, green: 180/255.0, blue: 70/255.0, alpha: 1.0)  // 稍暗的绿色 #28B446
         } else if percentage < 90 {
             return NSColor.systemOrange
         } else {
@@ -36,11 +63,29 @@ enum UsageColorScheme {
     ///         详细界面使用时会添加透明度，使颜色更柔和
     static func fiveHourColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
         if percentage < 70 {
-            return .green.opacity(opacity)
+            return Color(red: 40/255.0, green: 180/255.0, blue: 70/255.0).opacity(opacity)  // 稍暗的绿色 #28B446
         } else if percentage < 90 {
             return .orange.opacity(opacity)
         } else {
             return .red.opacity(opacity)
+        }
+    }
+
+    /// 根据5小时限制使用百分比返回自适应 NSColor（根据系统外观调整亮度）
+    /// - Parameters:
+    ///   - percentage: 使用百分比 (0-100)
+    ///   - statusButton: 状态栏按钮，用于获取准确的外观
+    /// - Returns: 适配当前外观的状态颜色
+    /// - Note: 深色模式下会自动提高亮度，确保在深色背景下清晰可见
+    static func fiveHourColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = fiveHourColor(percentage)
+
+        if isDarkMode(for: statusButton) {
+            // 深色模式：提高亮度，让颜色更明亮
+            return baseColor.adjustedForDarkMode()
+        } else {
+            // 浅色模式：使用原色或稍微加深
+            return baseColor
         }
     }
 
@@ -49,31 +94,49 @@ enum UsageColorScheme {
     /// 根据7天限制使用百分比返回 NSColor
     /// - Parameter percentage: 使用百分比 (0-100)
     /// - Returns: 对应的状态颜色
-    /// - Note: 当前方案 - 青蓝→蓝紫→深紫
-    ///         0-70% 青蓝色(安全), 70-90% 蓝紫色(警告), 90-100% 深紫色(危险)
+    /// - Note: 当前方案 - 青蓝→浓紫→深紫红
+    ///         0-70% 青蓝色(安全), 70-90% 浓紫色(警告), 90-100% 深紫红色(危险)
     static func sevenDayColor(_ percentage: Double) -> NSColor {
         if percentage < 70 {
             return NSColor(red: 90/255.0, green: 200/255.0, blue: 250/255.0, alpha: 1.0)  // 青蓝色 #5AC8FA
         } else if percentage < 90 {
-            return NSColor(red: 123/255.0, green: 104/255.0, blue: 238/255.0, alpha: 1.0)  // 蓝紫色 #7B68EE
+            return NSColor(red: 180/255.0, green: 80/255.0, blue: 240/255.0, alpha: 1.0)  // 浓紫色 #B450F0
         } else {
-            return NSColor(red: 100/255.0, green: 50/255.0, blue: 180/255.0, alpha: 1.0)   // 深紫色 #6432B4
+            return NSColor(red: 180/255.0, green: 30/255.0, blue: 160/255.0, alpha: 1.0)   // 深紫红色 #B41EA0（浓郁警示）
         }
     }
 
     /// 根据7天限制使用百分比返回 SwiftUI Color
     /// - Parameter percentage: 使用百分比 (0-100)
     /// - Returns: 对应的状态颜色
-    /// - Note: 当前方案 - 青蓝→蓝紫→深紫
-    ///         0-70% 青蓝色(安全), 70-90% 蓝紫色(警告), 90-100% 深紫色(危险)
+    /// - Note: 当前方案 - 青蓝→浓紫→深紫红
+    ///         0-70% 青蓝色(安全), 70-90% 浓紫色(警告), 90-100% 深紫红色(危险)
     ///         详细界面使用时会添加透明度，使颜色更柔和
     static func sevenDayColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
         if percentage < 70 {
             return Color(red: 90/255.0, green: 200/255.0, blue: 250/255.0).opacity(opacity)  // 青蓝色 #5AC8FA
         } else if percentage < 90 {
-            return Color(red: 123/255.0, green: 104/255.0, blue: 238/255.0).opacity(opacity)  // 蓝紫色 #7B68EE
+            return Color(red: 180/255.0, green: 80/255.0, blue: 240/255.0).opacity(opacity)  // 浓紫色 #B450F0
         } else {
-            return Color(red: 100/255.0, green: 50/255.0, blue: 180/255.0).opacity(opacity)   // 深紫色 #6432B4
+            return Color(red: 180/255.0, green: 30/255.0, blue: 160/255.0).opacity(opacity)   // 深紫红色 #B41EA0（浓郁警示）
+        }
+    }
+
+    /// 根据7天限制使用百分比返回自适应 NSColor（根据系统外观调整亮度）
+    /// - Parameters:
+    ///   - percentage: 使用百分比 (0-100)
+    ///   - statusButton: 状态栏按钮，用于获取准确的外观
+    /// - Returns: 适配当前外观的状态颜色
+    /// - Note: 深色模式下会自动提高亮度和饱和度，确保在深色背景下清晰可见
+    static func sevenDayColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = sevenDayColor(percentage)
+
+        if isDarkMode(for: statusButton) {
+            // 深色模式：提高亮度和饱和度
+            return baseColor.adjustedForDarkMode()
+        } else {
+            // 浅色模式：使用原色
+            return baseColor
         }
     }
 
@@ -147,4 +210,31 @@ enum UsageColorScheme {
         }
     }
     */
+}
+
+// MARK: - NSColor 扩展
+
+extension NSColor {
+    /// 为深色模式调整颜色（提高亮度和饱和度）
+    /// - Returns: 适合深色背景显示的更亮版本
+    func adjustedForDarkMode() -> NSColor {
+        guard let rgbColor = self.usingColorSpace(.deviceRGB) else {
+            return self
+        }
+
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        rgbColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+
+        // 提高亮度：确保亮度至少为 0.75，最多提升 40%（从 0.7/1.3 提升到 0.75/1.4）
+        let adjustedBrightness = min(1.0, max(0.75, brightness * 1.4))
+
+        // 保持饱和度不变，让颜色更鲜艳（从 0.9 改为 1.0）
+        let adjustedSaturation = min(1.0, saturation * 1.0)
+
+        return NSColor(hue: hue, saturation: adjustedSaturation, brightness: adjustedBrightness, alpha: alpha)
+    }
 }

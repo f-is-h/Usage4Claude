@@ -46,6 +46,9 @@
 "settings.general.display_section" = "Display Settings";
 "settings.general.menubar_icon" = "Menu Bar Icon";
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
+"settings.general.menubar_theme" = "Menu Bar Theme";
+"settings.general.display_content" = "Display Content";
+"settings.general.monochrome_no_icon_hint" = "Icon display is not supported in Monochrome theme";
 "settings.general.refresh_section" = "Refresh Settings";
 "settings.general.refresh_mode" = "Refresh Mode";
 "settings.general.refresh_interval" = "Fixed Refresh Interval";
@@ -53,8 +56,14 @@
 "settings.general.refresh_hint_fixed" = "Refresh data at fixed time intervals";
 "settings.general.language_section" = "Language Settings";
 "settings.general.interface_language" = "Interface Language";
-"settings.general.language_hint" = "Change the interface display language (takes effect immediately)";
+"settings.general.language_hint" = "Change the interface display language";
 "settings.general.reset_button" = "Reset to Defaults";
+"icon_style.color_translucent" = "Color Translucent";
+"icon_style.color_with_background" = "Color with Background";
+"icon_style.monochrome" = "Monochrome";
+"icon_style.color_translucent_desc" = "Colored rings with transparent background, suitable for most menu bar styles";
+"icon_style.color_with_background_desc" = "Colored rings with translucent white background, ideal when Color Translucent performs poorly on dark wallpapers";
+"icon_style.monochrome_desc" = "Automatically adapts to system menu bar style, clean and elegant";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "How to Get Authentication Info";
