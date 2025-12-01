@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-12-01
+
+### Added
+- **Menu Bar Icon Themes**: Three theme options for menu bar icon display
+  - Color Translucent (default): Colored rings with transparent background
+  - Color with Background: Colored rings with semi-transparent white background for better visibility on dark wallpapers
+  - Monochrome: Template mode that automatically adapts to system menu bar style
+- **Detail Window Auto Close**: Use global event monitor for better click detection outside app
+
+### Changed
+- **Icon size**: Increased from 18px to 20px for better readability
+- **Text size**: Increased from 6-7pt to 8pt
+- **Background ring opacity**: Increased from 0.3 to 0.7 for better contrast
+- **5-hour limit color**: Updated to darker green (#28B446)
+- **7-day limit colors**: Enhanced purple tones - medium purple (#B450F0) and deep magenta (#B41EA0)
+- **Update badge**: Smaller and more compact positioning (2px radius)
+- **Auto active**: Activate detail window when showing popover for proper focus management
+
+### Improved
+- **Settings UI**: Separated icon settings into "Theme" and "Display Content" sections with helpful descriptions
+- **Menu bar display**: Fully optimize the display of existing menu bars
+
 ## [1.5.1] - 2025-11-27
 
 ### Fixed
@@ -34,8 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.1] - 2025-11-22
 
 ### Fixed
-- Critical crash caused by force unwrapping `NSApp.currentEvent` in menu
-bar click handler
+- Critical crash caused by force unwrapping `NSApp.currentEvent` in menu bar click handler
 - Four unsafe force cast operations that could crash under memory pressure
 - Improved icon handling safety with proper nil checking
 
@@ -46,8 +67,7 @@ bar click handler
 Key, Organization ID)
 
 ### Changed
-- Release builds now only log Error and Warning levels (minimal disk
-usage)
+- Release builds now only log Error and Warning levels (minimal disk usage)
 - Debug builds continue to log all levels for development
 - Log files auto-rotate at 5MB with maximum 5 archives retained
 
@@ -243,18 +263,7 @@ usage)
 
 ---
 
-## [Unreleased]
-
-### Planned
-
-- Launch at login option
-- Keyboard shortcuts
-- Usage notifications
-- Historical usage tracking
-- Browser extension for auto-authentication
-
----
-
+[1.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.6.0
 [1.5.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.1
 [1.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.0
 [1.4.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.4.1

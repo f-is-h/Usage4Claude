@@ -61,7 +61,11 @@ class MenuBarManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     /// 窗口关闭观察者
     private var windowCloseObserver: NSObjectProtocol?
-    
+    /// 弹出窗口关闭监听器 - 监听鼠标点击事件
+    private var popoverCloseObserver: Any?
+    /// 应用失焦观察者 - 用于在应用失去焦点时关闭 popover
+    private var appResignActiveObserver: NSObjectProtocol?
+
     /// 当前用量数据
     @Published var usageData: UsageData?
     /// 加载状态
@@ -422,6 +426,10 @@ class MenuBarManager: ObservableObject {
         // 创建并设置内容视图控制器
         popover.contentViewController = createPopoverContentViewController()
 
+        // 激活应用，使 popover 能够正确响应焦点变化
+        // 这是修复 NSPopover 在菜单栏应用中自动关闭的关键
+        NSApp.activate(ignoringOtherApps: true)
+
         // 显示 popover
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
 
@@ -431,6 +439,7 @@ class MenuBarManager: ObservableObject {
         // 启动定时器和监听器
         startPopoverRefreshTimer()
         setupPopoverCloseObserver()
+        setupAppResignActiveObserver()
     }
 
     /// 显示更新通知（如果需要）
@@ -476,8 +485,8 @@ class MenuBarManager: ObservableObject {
         // 设置窗口level，确保显示在其他窗口之上
         popoverWindow.level = .popUpMenu
 
-        // 禁止窗口成为key window，避免Focus外观变化
-        popoverWindow.styleMask.remove(.titled)
+        // 让窗口成为 key window，显示 Focus 状态
+        popoverWindow.makeKey()
     }
     
     /// 关闭弹出窗口
@@ -491,38 +500,25 @@ class MenuBarManager: ObservableObject {
         // 清理刷新定时器
         popoverRefreshTimer?.invalidate()
         popoverRefreshTimer = nil
-        
+
         // 移除事件监听器
         removePopoverCloseObserver()
+        removeAppResignActiveObserver()
     }
-    
-    /// 弹出窗口关闭监听器
-    private var popoverCloseObserver: Any?
-    
+
     /// 设置弹出窗口外部点击监听
     /// 点击 popover 外部时自动关闭
     private func setupPopoverCloseObserver() {
         // 先移除旧的观察者，防止累积
         removePopoverCloseObserver()
 
-        // 监听鼠标点击事件，点击popover外部时关闭
-        popoverCloseObserver = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-            guard let self = self, self.popover.isShown else { return event }
-            
-            // 检查点击是否在popover或status item之外
-            if let popoverWindow = self.popover.contentViewController?.view.window,
-               let statusButton = self.statusItem.button {
-                let popoverFrame = popoverWindow.frame
-                let buttonFrame = statusButton.window?.convertToScreen(statusButton.frame) ?? .zero
-                let screenClickLocation = NSEvent.mouseLocation
-                
-                // 如果点击在popover和button之外，关闭popover
-                if !popoverFrame.contains(screenClickLocation) && !buttonFrame.contains(screenClickLocation) {
-                    self.closePopover()
-                }
-            }
-            
-            return event
+        // 使用全局事件监听器监听鼠标点击事件
+        // 这样可以捕获应用外的点击事件
+        popoverCloseObserver = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self, self.popover.isShown else { return }
+
+            // 点击任何地方都关闭 popover
+            self.closePopover()
         }
     }
     
@@ -533,7 +529,38 @@ class MenuBarManager: ObservableObject {
             popoverCloseObserver = nil
         }
     }
-    
+
+    /// 设置应用失焦监听
+    /// 当应用失去焦点时自动关闭 popover（如 Cmd+Tab 切换应用）
+    private func setupAppResignActiveObserver() {
+        // 先移除旧的观察者，防止累积
+        removeAppResignActiveObserver()
+
+        // 监听应用失去焦点事件
+        appResignActiveObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: NSApp,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self, self.popover.isShown else { return }
+
+            // 应用失去焦点时关闭 popover
+            self.closePopover()
+
+            #if DEBUG
+            Logger.menuBar.debug("应用失去焦点，自动关闭 popover")
+            #endif
+        }
+    }
+
+    /// 移除应用失焦监听器
+    private func removeAppResignActiveObserver() {
+        if let observer = appResignActiveObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignActiveObserver = nil
+        }
+    }
+
     /// 更新弹出窗口内容
     /// 用于实时刷新倒计时显示
     private func updatePopoverContent() {
@@ -641,7 +668,7 @@ class MenuBarManager: ObservableObject {
                 NotificationCenter.default.removeObserver(observer)
             }
             
-            // 添加新的观察者并保存引用
+            // 添加窗口关闭观察者
             windowCloseObserver = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
                 object: settingsWindow,
@@ -649,10 +676,21 @@ class MenuBarManager: ObservableObject {
             ) { [weak self] _ in
                 // 窗口关闭时切换回 accessory 模式（不显示在 Dock）
                 NSApp.setActivationPolicy(.accessory)
-                
+
                 self?.settingsWindow = nil
                 if self?.settings.hasValidCredentials == true && self?.usageData == nil {
                     self?.startRefreshing()
+                }
+            }
+
+            // 添加窗口获得焦点观察者 - 当设置窗口成为 key window 时关闭 popover
+            NotificationCenter.default.addObserver(
+                forName: NSWindow.didBecomeKeyNotification,
+                object: settingsWindow,
+                queue: .main
+            ) { [weak self] _ in
+                if self?.popover.isShown == true {
+                    self?.closePopover()
                 }
             }
         }
@@ -2206,7 +2244,8 @@ class MenuBarManager: ObservableObject {
         
         // 移除所有事件监听器
         removePopoverCloseObserver()
-        
+        removeAppResignActiveObserver()
+
         // 清理窗口观察者
         if let observer = windowCloseObserver {
             NotificationCenter.default.removeObserver(observer)
