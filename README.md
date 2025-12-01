@@ -82,9 +82,9 @@ All platforms share the same usage quota, monitored in one place!
 
 ### Menu Bar Display
 
-| Icon Only | 5-Hour | 7-Day | 5-Hour+Icon | 7-Day+Icon | 5-Hour+7-Day | 5+7+Icon |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="docs/images/taskbar.icon@2x.png" height="22" alt="icon"> | <img src="docs/images/taskbar.5.ring@2x.png" height="22" alt="5h ring"> | <img src="docs/images/taskbar.7.ring@2x.png" height="22" alt="7d ring"> | <img src="docs/images/taskbar.5.both@2x.png" height="22" alt="5h+icon"> | <img src="docs/images/taskbar.7.both@2x.png" height="22" alt="7d+icon"> | <img src="docs/images/taskbar.12@2x.png" height="22" alt="5h+7d"> | <img src="docs/images/taskbar.12.both@2x.png" height="22" alt="5+7+icon"> |
+| Icon Only | 5-Hour | 5-Hour+Icon | 5-Hour+7-Day | 5+7+Icon | Monochrome (Adaptive) |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/images/bar.icon@2x.png" width="auto" height="32" style="min-width: 32px" alt="icon"> | <img src="docs/images/bar.5.ring@2x.png" width="auto" height="32" style="min-width: 32px" alt="5h ring"> | <img src="docs/images/bar.5.both@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+icon"> | <img src="docs/images/bar.12.ring@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+7d"> | <img src="docs/images/bar.12.both@2x.png" width="auto" height="32" style="min-width: 64px" alt="5+7+icon"> | <nobr><img src="docs/images/bar.mono.b@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono black"> <img src="docs/images/bar.mono.w@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono white"></nobr> |
 
 **5-Hour Limit Mode - Ring Color Indicators**:
 

@@ -82,9 +82,9 @@
 
 ### メニューバー表示
 
-| アイコンのみ | 5時間 | 7日間 | 5時間+アイコン | 7日間+アイコン | 5時間+7日間 | 5+7+アイコン |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="images/taskbar.icon@2x.png" height="32" alt="icon"> | <img src="images/taskbar.5.ring@2x.png" height="32" alt="5h ring"> | <img src="images/taskbar.7.ring@2x.png" height="32" alt="7d ring"> | <img src="images/taskbar.5.both@2x.png" height="32" alt="5h+icon"> | <img src="images/taskbar.7.both@2x.png" height="32" alt="7d+icon"> | <img src="images/taskbar.12@2x.png" height="32" alt="5h+7d"> | <img src="images/taskbar.12.both@2x.png" height="32" alt="5+7+icon"> |
+| アイコンのみ | 5時間 | 5時間+アイコン | 5時間+7日間 | 5+7+アイコン | モノクロ(自動調整) |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="images/bar.icon@2x.png" width="auto" height="32" style="min-width: 32px" alt="icon"> | <img src="images/bar.5.ring@2x.png" width="auto" height="32" style="min-width: 32px" alt="5h ring"> | <img src="images/bar.5.both@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+icon"> | <img src="images/bar.12.ring@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+7d"> | <img src="images/bar.12.both@2x.png" width="auto" height="32" style="min-width: 64px" alt="5+7+icon"> | <nobr><img src="images/bar.mono.b@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono black"> <img src="images/bar.mono.w@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono white"></nobr> |
 
 **5時間制限モード - リングカラーインジケーター**：
 
