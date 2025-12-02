@@ -31,23 +31,37 @@ print_info() {
 # Get previous version from git tags
 # ============================================
 get_previous_version() {
+    local current_version="$1"  # Current version to exclude
+
     # Get all tags sorted by version
     local all_tags=$(git tag -l 'v*' | sort -V)
-    
+
     if [ -z "$all_tags" ]; then
         # No previous tags
         echo "0.0.0"
         return
     fi
-    
-    # Get the latest tag (excluding test tags)
-    local latest_tag=$(echo "$all_tags" | grep -v 'test-' | tail -n 1)
-    
-    if [ -z "$latest_tag" ]; then
+
+    # Filter out test tags first
+    local release_tags=$(echo "$all_tags" | grep -v 'test-')
+
+    # Get all tags before current version (handling the case where current tag doesn't exist yet)
+    # This ensures we get the latest tag that is less than current version
+    local previous_tags=""
+    while IFS= read -r tag; do
+        local tag_version="${tag#v}"
+        # Skip if this is the current version or later
+        if [[ "$tag_version" == "$current_version" ]]; then
+            break
+        fi
+        previous_tags="$tag"
+    done <<< "$(echo "$release_tags" | sort -V)"
+
+    if [ -z "$previous_tags" ]; then
         echo "0.0.0"
     else
         # Remove 'v' prefix
-        echo "${latest_tag#v}"
+        echo "${previous_tags#v}"
     fi
 }
 
@@ -71,7 +85,7 @@ generate_notes() {
     fi
     
     # Get previous version
-    local previous_version=$(get_previous_version)
+    local previous_version=$(get_previous_version "$version")
     
     print_info "Current version: $version"
     print_info "Previous version: $previous_version"

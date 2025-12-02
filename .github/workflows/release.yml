@@ -122,6 +122,29 @@ jobs:
           
           echo "✅ Version $VERSION is new"
 
+      - name: Validate version is newer than published releases
+        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.is_test == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          echo "Checking if version $VERSION is greater than latest published release..."
+
+          if ! .github/scripts/compare_versions.sh validate "$VERSION" "false"; then
+            echo ""
+            echo "❌ Version validation failed!"
+            echo "The version number in CHANGELOG.md must be greater than the latest published release."
+            echo ""
+            echo "To fix this:"
+            echo "1. Check latest release: https://github.com/${{ github.repository }}/releases"
+            echo "2. Update version in CHANGELOG.md to a higher version number"
+            echo "3. Update version in Xcode project to match"
+            exit 1
+          fi
+
+          echo "✅ Version validation passed"
+
   # ============================================
   # Job 2: Build Application
   # ============================================
@@ -254,7 +277,17 @@ jobs:
         with:
           name: release-artifacts
           path: ./artifacts
-      
+
+      - name: Generate release notes
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          .github/scripts/generate_release_notes.sh \
+            .github/RELEASE_TEMPLATE.md \
+            "$VERSION" \
+            release_notes.md
+
+          echo "✅ Release notes generated"
+
       - name: Create git tag
         env:
           VERSION: ${{ needs.validate.outputs.version }}
@@ -275,17 +308,7 @@ jobs:
           git push origin "$TAG"
           
           echo "✅ Tag created: $TAG"
-      
-      - name: Generate release notes
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          .github/scripts/generate_release_notes.sh \
-            .github/RELEASE_TEMPLATE.md \
-            "$VERSION" \
-            release_notes.md
-          
-          echo "✅ Release notes generated"
-      
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
