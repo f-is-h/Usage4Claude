@@ -28,7 +28,7 @@ Use the [Feature Request template](https://github.com/f-is-h/Usage4Claude/issues
 
 2. **Clone and create a branch**
    ```bash
-   git clone https://github.com/your-username/Usage4Claude.git
+   git clone https://github.com/f-is-h/Usage4Claude.git
    cd Usage4Claude
    git checkout -b feature/your-feature-name
    ```
