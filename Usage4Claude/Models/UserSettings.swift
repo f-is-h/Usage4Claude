@@ -22,7 +22,7 @@ enum IconDisplayMode: String, CaseIterable, Codable {
     case iconOnly = "icon_only"
     /// 同时显示图标和百分比
     case both = "both"
-    
+
     var localizedName: String {
         switch self {
         case .percentageOnly:
@@ -31,6 +31,27 @@ enum IconDisplayMode: String, CaseIterable, Codable {
             return L.Display.iconOnly
         case .both:
             return L.Display.both
+        }
+    }
+}
+
+/// 显示哪个限制的数据
+enum LimitDisplayMode: String, CaseIterable, Codable {
+    /// 显示所有可用限制
+    case all = "all"
+    /// 仅显示5小时限制
+    case fiveHourOnly = "five_hour_only"
+    /// 仅显示7天限制
+    case sevenDayOnly = "seven_day_only"
+
+    var localizedName: String {
+        switch self {
+        case .all:
+            return "All Limits"
+        case .fiveHourOnly:
+            return "5-Hour Only"
+        case .sevenDayOnly:
+            return "7-Day Only"
         }
     }
 }
@@ -246,6 +267,22 @@ class UserSettings: ObservableObject {
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
+
+    /// 是否显示目标进度条（对比实际使用与理想均匀使用）
+    @Published var showTargetBars: Bool {
+        didSet {
+            defaults.set(showTargetBars, forKey: "showTargetBars")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 显示哪个限制（全部、仅5小时、仅7天）
+    @Published var limitDisplayMode: LimitDisplayMode {
+        didSet {
+            defaults.set(limitDisplayMode.rawValue, forKey: "limitDisplayMode")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
     
     /// 刷新模式（智能/固定）
     @Published var refreshMode: RefreshMode {
@@ -414,7 +451,18 @@ class UserSettings: ObservableObject {
         } else {
             self.iconStyleMode = .colorTranslucent  // 默认彩色通透
         }
-        
+
+        // 加载目标进度条设置，默认开启
+        self.showTargetBars = defaults.object(forKey: "showTargetBars") as? Bool ?? true
+
+        // 加载限制显示模式，默认显示全部
+        if let limitModeString = defaults.string(forKey: "limitDisplayMode"),
+           let limitMode = LimitDisplayMode(rawValue: limitModeString) {
+            self.limitDisplayMode = limitMode
+        } else {
+            self.limitDisplayMode = .all
+        }
+
         // 加载刷新模式，默认为智能模式
         if let modeString = defaults.string(forKey: "refreshMode"),
            let mode = RefreshMode(rawValue: modeString) {
@@ -510,10 +558,11 @@ class UserSettings: ObservableObject {
     /// 只重置非敏感设置，不影响认证信息
     func resetToDefaults() {
         iconDisplayMode = .percentageOnly
+        showTargetBars = true
         refreshMode = .smart
         refreshInterval = 180  // 固定模式默认3分钟
         language = .chinese
-        
+
         // 重置智能模式状态
         lastUtilization = nil
         unchangedCount = 0

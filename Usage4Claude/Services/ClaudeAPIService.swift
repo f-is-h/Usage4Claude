@@ -229,6 +229,9 @@ class ClaudeAPIService {
     /// - Parameter scenario: 调试场景类型
     /// - Returns: 模拟的 UsageData 实例
     private func createMockData(for scenario: UserSettings.DebugScenario) -> UsageData {
+        let fiveHourPeriod: TimeInterval = 5 * 60 * 60
+        let sevenDayPeriod: TimeInterval = 7 * 24 * 60 * 60
+
         switch scenario {
         case .realData:
             fatalError("Should not call mock data for real scenario")
@@ -238,7 +241,8 @@ class ClaudeAPIService {
             return UsageData(
                 fiveHour: UsageData.LimitData(
                     percentage: settings.debugFiveHourPercentage,
-                    resetsAt: createResetTime(hoursFromNow: 2.5)  // 2.5小时后重置，分钟为00
+                    resetsAt: createResetTime(hoursFromNow: 2.5),  // 2.5小时后重置，分钟为00
+                    periodDuration: fiveHourPeriod
                 ),
                 sevenDay: nil
             )
@@ -249,7 +253,8 @@ class ClaudeAPIService {
                 fiveHour: nil,
                 sevenDay: UsageData.LimitData(
                     percentage: settings.debugSevenDayPercentage,
-                    resetsAt: createResetTime(hoursFromNow: 24 * 3.5)  // 3.5天后重置，分钟为00
+                    resetsAt: createResetTime(hoursFromNow: 24 * 3.5),  // 3.5天后重置，分钟为00
+                    periodDuration: sevenDayPeriod
                 )
             )
 
@@ -258,11 +263,13 @@ class ClaudeAPIService {
             return UsageData(
                 fiveHour: UsageData.LimitData(
                     percentage: settings.debugFiveHourPercentage,
-                    resetsAt: createResetTime(hoursFromNow: 1.8)  // 1.8小时后重置，分钟为00
+                    resetsAt: createResetTime(hoursFromNow: 1.8),  // 1.8小时后重置，分钟为00
+                    periodDuration: fiveHourPeriod
                 ),
                 sevenDay: UsageData.LimitData(
                     percentage: settings.debugSevenDayPercentage,
-                    resetsAt: createResetTime(hoursFromNow: 24 * 2.3)  // 2.3天后重置，分钟为00
+                    resetsAt: createResetTime(hoursFromNow: 24 * 2.3),  // 2.3天后重置，分钟为00
+                    periodDuration: sevenDayPeriod
                 )
             )
         }
@@ -294,6 +301,12 @@ nonisolated struct UsageResponse: Codable, Sendable {
         let resets_at: String?
     }
     
+    /// 5小时限制的周期时长（秒）
+    private static let fiveHourPeriod: TimeInterval = 5 * 60 * 60  // 18000 seconds
+
+    /// 7天限制的周期时长（秒）
+    private static let sevenDayPeriod: TimeInterval = 7 * 24 * 60 * 60  // 604800 seconds
+
     /// 将 API 响应转换为应用内部使用的 UsageData 模型
     /// - Returns: 转换后的 UsageData 实例
     /// - Note: 会自动处理时间四舍五入，确保显示准确
@@ -311,11 +324,19 @@ nonisolated struct UsageResponse: Codable, Sendable {
                 return nil
             }
             let parsed = parseLimitData(sevenDay)
-            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
+            return UsageData.LimitData(
+                percentage: parsed.percentage,
+                resetsAt: parsed.resetsAt,
+                periodDuration: Self.sevenDayPeriod
+            )
         }()
 
         return UsageData(
-            fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
+            fiveHour: UsageData.LimitData(
+                percentage: fiveHourData.percentage,
+                resetsAt: fiveHourData.resetsAt,
+                periodDuration: Self.fiveHourPeriod
+            ),
             sevenDay: sevenDayData
         )
     }
@@ -361,12 +382,35 @@ struct UsageData: Sendable {
         let percentage: Double
         /// 用量重置时间，nil 表示尚未开始使用
         let resetsAt: Date?
+        /// 限制周期总时长（秒）- 5小时=18000，7天=604800
+        let periodDuration: TimeInterval
 
         /// 距离重置的剩余时间（秒）
         /// - Returns: 剩余秒数，如果 resetsAt 为 nil 则返回 nil
         var resetsIn: TimeInterval? {
             guard let resetsAt = resetsAt else { return nil }
             return resetsAt.timeIntervalSinceNow
+        }
+
+        /// 目标使用百分比 - 如果均匀分配使用量，此刻应达到的百分比
+        /// - Returns: 目标百分比 (0-100)，如果无法计算则返回 nil
+        var targetPercentage: Double? {
+            guard let remaining = resetsIn, remaining > 0 else { return nil }
+            let elapsed = periodDuration - remaining
+            guard elapsed >= 0 else { return nil }
+            return (elapsed / periodDuration) * 100.0
+        }
+
+        /// 是否超过目标使用量
+        var isOverTarget: Bool {
+            guard let target = targetPercentage else { return false }
+            return percentage > target
+        }
+
+        /// 相对于目标的差值（正数表示超出，负数表示低于目标）
+        var targetDelta: Double? {
+            guard let target = targetPercentage else { return nil }
+            return percentage - target
         }
 
         /// 格式化的剩余时间字符串（用于5小时限制，显示X小时Y分）
@@ -549,6 +593,18 @@ struct UsageData: Sendable {
     /// 是否只有7天限制数据
     var hasOnlySevenDay: Bool {
         return fiveHour == nil && sevenDay != nil
+    }
+
+    /// 任一限制是否超过目标使用量
+    var isAnyOverTarget: Bool {
+        let fiveHourOver = fiveHour?.isOverTarget ?? false
+        let sevenDayOver = sevenDay?.isOverTarget ?? false
+        return fiveHourOver || sevenDayOver
+    }
+
+    /// 主要限制是否超过目标使用量
+    var isPrimaryOverTarget: Bool {
+        return primaryLimit?.isOverTarget ?? false
     }
 
     // MARK: - 向后兼容属性（保留用于旧代码）
