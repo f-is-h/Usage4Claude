@@ -17,6 +17,7 @@ struct UsageDetailView: View {
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
     @StateObject private var localization = LocalizationManager.shared
+    @ObservedObject private var settings = UserSettings.shared
     /// 是否有可用更新（用于显示文字和徽章）
     var hasAvailableUpdate: Bool = false
     /// 是否应显示更新徽章（用户未确认时才显示徽章）
@@ -236,12 +237,22 @@ struct UsageDetailView: View {
                                 Circle()
                                     .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
                                     .stroke(
-                                        colorForPrimary(data),
+                                        colorForPrimaryWithTarget(data),
                                         style: StrokeStyle(lineWidth: 10, lineCap: .round)
                                     )
                                     .frame(width: 100, height: 100)
                                     .rotationEffect(.degrees(-90))
                                     .animation(.easeInOut, value: primary.percentage)
+
+                                // 2a. 目标标记（如果启用）
+                                if settings.showTargetBars, let target = primary.targetPercentage {
+                                    TargetMarker(
+                                        targetPercentage: target,
+                                        diameter: 100,
+                                        lineWidth: 10,
+                                        isOverTarget: primary.isOverTarget
+                                    )
+                                }
                             }
 
                             // 3. 外层细圆环（仅在双限制时显示7天数据）
@@ -255,18 +266,29 @@ struct UsageDetailView: View {
                                 Circle()
                                     .trim(from: 0, to: CGFloat(sevenDay.percentage) / 100.0)
                                     .stroke(
-                                        colorForSevenDay(sevenDay.percentage),
+                                        colorForSevenDayWithTarget(sevenDay),
                                         style: StrokeStyle(lineWidth: 3, lineCap: .round)
                                     )
                                     .frame(width: 114, height: 114)
                                     .rotationEffect(.degrees(-90))
                                     .animation(.easeInOut, value: sevenDay.percentage)
+
+                                // 3a. 7天目标标记（如果启用）
+                                if settings.showTargetBars, let target = sevenDay.targetPercentage {
+                                    TargetMarker(
+                                        targetPercentage: target,
+                                        diameter: 114,
+                                        lineWidth: 3,
+                                        isOverTarget: sevenDay.isOverTarget
+                                    )
+                                }
                             }
 
                             // 4. 中间显示区域：百分比（显示主要限制的百分比）
                             VStack(spacing: 2) {
                                 Text("\(Int(primary.percentage))%")
                                     .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(primary.isOverTarget && settings.showTargetBars ? .red : .primary)
                                 Text(L.Usage.used)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -594,6 +616,44 @@ struct UsageDetailView: View {
         return .gray
     }
 
+    /// 获取主要限制的颜色（考虑目标对比）
+    /// 如果超过目标，使用警告色；否则使用正常色
+    private func colorForPrimaryWithTarget(_ data: UsageData) -> Color {
+        guard settings.showTargetBars else {
+            return colorForPrimary(data)
+        }
+
+        if let fiveHour = data.fiveHour {
+            if fiveHour.isOverTarget {
+                // 超过目标：使用橙色/红色
+                return fiveHour.percentage >= 90 ? .red : .orange
+            } else {
+                // 低于目标：使用绿色
+                return UsageColorScheme.fiveHourColorSwiftUI(min(fiveHour.percentage, 69))
+            }
+        } else if let sevenDay = data.sevenDay {
+            if sevenDay.isOverTarget {
+                return sevenDay.percentage >= 90 ? Color(red: 180/255.0, green: 30/255.0, blue: 160/255.0) : Color(red: 180/255.0, green: 80/255.0, blue: 240/255.0)
+            } else {
+                return UsageColorScheme.sevenDayColorSwiftUI(min(sevenDay.percentage, 69))
+            }
+        }
+        return .gray
+    }
+
+    /// 获取7天限制的颜色（考虑目标对比）
+    private func colorForSevenDayWithTarget(_ limit: UsageData.LimitData) -> Color {
+        guard settings.showTargetBars else {
+            return colorForSevenDay(limit.percentage)
+        }
+
+        if limit.isOverTarget {
+            return limit.percentage >= 90 ? Color(red: 180/255.0, green: 30/255.0, blue: 160/255.0) : Color(red: 180/255.0, green: 80/255.0, blue: 240/255.0)
+        } else {
+            return UsageColorScheme.sevenDayColorSwiftUI(min(limit.percentage, 69))
+        }
+    }
+
     /// 创建彩虹文字
     /// - Parameter text: 要显示的文本
     /// - Returns: 带彩虹效果的文本视图
@@ -628,6 +688,46 @@ struct UsageDetailView: View {
 }
 
 // MARK: - Supporting Views
+
+/// 目标标记视图
+/// 在圆环上显示一个小标记表示目标位置
+struct TargetMarker: View {
+    let targetPercentage: Double
+    let diameter: CGFloat
+    let lineWidth: CGFloat
+    let isOverTarget: Bool
+
+    var body: some View {
+        GeometryReader { _ in
+            // 计算标记位置的角度（从顶部开始，顺时针）
+            let angle = (targetPercentage / 100.0) * 360.0 - 90.0
+            let radius = diameter / 2
+
+            // 标记线 - 一个小的径向线段
+            Path { path in
+                let centerX = radius
+                let centerY = radius
+                let innerRadius = radius - lineWidth / 2 - 2
+                let outerRadius = radius + lineWidth / 2 + 2
+
+                let radians = angle * .pi / 180
+
+                let innerX = centerX + innerRadius * cos(radians)
+                let innerY = centerY + innerRadius * sin(radians)
+                let outerX = centerX + outerRadius * cos(radians)
+                let outerY = centerY + outerRadius * sin(radians)
+
+                path.move(to: CGPoint(x: innerX, y: innerY))
+                path.addLine(to: CGPoint(x: outerX, y: outerY))
+            }
+            .stroke(
+                isOverTarget ? Color.white.opacity(0.9) : Color.gray.opacity(0.6),
+                style: StrokeStyle(lineWidth: 2, lineCap: .round)
+            )
+        }
+        .frame(width: diameter, height: diameter)
+    }
+}
 
 /// 信息行组件
 /// 显示一行信息，包含图标、标题和值
@@ -771,7 +871,8 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var sampleData: UsageData? = UsageData(
         fiveHour: UsageData.LimitData(
             percentage: 45,
-            resetsAt: Date().addingTimeInterval(3600 * 2.5)
+            resetsAt: Date().addingTimeInterval(3600 * 2.5),
+            periodDuration: 5 * 60 * 60
         ),
         sevenDay: nil
     )

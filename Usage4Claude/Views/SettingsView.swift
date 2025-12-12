@@ -300,11 +300,11 @@ struct GeneralSettingsView: View {
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
-                            
+
                             Picker("", selection: $settings.iconDisplayMode) {
                                 ForEach(IconDisplayMode.allCases, id: \.self) { mode in
-                                    // 单色模式下禁用"仅显示图标"和"同时显示"选项
-                                    if settings.iconStyleMode == .monochrome && (mode == .iconOnly || mode == .both) {
+                                    // 单色模式下仅禁用"同时显示"选项（图标+圆环在单色下难以区分）
+                                    if settings.iconStyleMode == .monochrome && mode == .both {
                                         Text(mode.localizedName)
                                             .tag(mode)
                                             .disabled(true)
@@ -316,9 +316,9 @@ struct GeneralSettingsView: View {
                             }
                             .pickerStyle(.radioGroup)
                             .labelsHidden()
-                            
-                            // 提示信息（单色模式下）
-                            if settings.iconStyleMode == .monochrome {
+
+                            // 提示信息（单色模式下选择了"同时显示"）
+                            if settings.iconStyleMode == .monochrome && settings.iconDisplayMode == .both {
                                 HStack(alignment: .top, spacing: 4) {
                                     Image(systemName: "exclamationmark.circle.fill")
                                         .font(.caption2)
@@ -330,6 +330,36 @@ struct GeneralSettingsView: View {
                                 }
                                 .padding(.leading, 20)
                             }
+                        }
+
+                        Divider()
+
+                        // 限制显示模式选择
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Limits to Display")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+
+                            Picker("", selection: $settings.limitDisplayMode) {
+                                ForEach(LimitDisplayMode.allCases, id: \.self) { mode in
+                                    Text(mode.localizedName).tag(mode)
+                                }
+                            }
+                            .pickerStyle(.radioGroup)
+                            .labelsHidden()
+
+                            // 描述文字
+                            HStack(alignment: .top, spacing: 4) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                                Text("Choose which usage limits to show in the menu bar indicator.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.leading, 20)
                         }
                     }
                 }

@@ -951,23 +951,45 @@ class MenuBarManager: ObservableObject {
         updateMenuBarIcon(percentage: percentage)
     }
     
+    /// 根据limitDisplayMode设置过滤UsageData
+    /// - Parameter data: 原始使用数据
+    /// - Returns: 根据设置过滤后的数据
+    private func filterDataForDisplay(_ data: UsageData) -> UsageData {
+        switch settings.limitDisplayMode {
+        case .all:
+            return data
+        case .fiveHourOnly:
+            return UsageData(fiveHour: data.fiveHour, sevenDay: nil)
+        case .sevenDayOnly:
+            return UsageData(fiveHour: nil, sevenDay: data.sevenDay)
+        }
+    }
+
     /// 根据用户设置更新菜单栏图标
     /// 支持三种显示模式：仅百分比、仅图标、两者组合
     /// - Parameter percentage: 当前使用百分比
     private func updateMenuBarIcon(percentage: Double) {
         guard let button = statusItem.button else { return }
-        guard let data = usageData else { return }
+        guard let rawData = usageData else { return }
+
+        // 根据limitDisplayMode过滤数据
+        let data = filterDataForDisplay(rawData)
 
         // 根据用户设置决定是否使用 Template 模式
         let useTemplateMode = (settings.iconStyleMode == .monochrome)
         let removeBackground = (settings.iconStyleMode == .colorTranslucent)
         
-        // 生成缓存键（包含5小时和7天的百分比以及样式模式）
+        // 生成缓存键（包含百分比、样式模式、限制过滤和目标状态）
         let cacheKey: String
+        let limitPrefix = settings.limitDisplayMode.rawValue
+        let targetSuffix = settings.showTargetBars ? "_t\(data.isAnyOverTarget ? "1" : "0")" : ""
         if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
-            cacheKey = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(Int(fiveHour.percentage))_\(Int(sevenDay.percentage))"
+            let fiveOver = settings.showTargetBars && fiveHour.isOverTarget ? "o" : ""
+            let sevenOver = settings.showTargetBars && sevenDay.isOverTarget ? "o" : ""
+            cacheKey = "\(limitPrefix)_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(Int(fiveHour.percentage))\(fiveOver)_\(Int(sevenDay.percentage))\(sevenOver)\(targetSuffix)"
         } else {
-            cacheKey = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(Int(percentage))"
+            let primaryOver = settings.showTargetBars && data.isPrimaryOverTarget ? "o" : ""
+            cacheKey = "\(limitPrefix)_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(Int(percentage))\(primaryOver)\(targetSuffix)"
         }
 
         var baseImage: NSImage?
@@ -985,12 +1007,26 @@ class MenuBarManager: ObservableObject {
                         baseImage = createDualCircleTemplateImage(
                             fiveHourPercentage: fiveHour.percentage,
                             sevenDayPercentage: sevenDay.percentage,
-                            size: NSSize(width: 20, height: 20)
+                            size: NSSize(width: 20, height: 20),
+                            fiveHourTarget: settings.showTargetBars ? fiveHour.targetPercentage : nil,
+                            sevenDayTarget: settings.showTargetBars ? sevenDay.targetPercentage : nil,
+                            fiveHourOverTarget: settings.showTargetBars && fiveHour.isOverTarget,
+                            sevenDayOverTarget: settings.showTargetBars && sevenDay.isOverTarget
                         )
                     } else if let fiveHour = data.fiveHour {
-                        baseImage = createCircleTemplateImage(percentage: fiveHour.percentage, size: NSSize(width: 20, height: 20))
+                        baseImage = createCircleTemplateImage(
+                            percentage: fiveHour.percentage,
+                            size: NSSize(width: 20, height: 20),
+                            targetPercentage: settings.showTargetBars ? fiveHour.targetPercentage : nil,
+                            isOverTarget: settings.showTargetBars && fiveHour.isOverTarget
+                        )
                     } else if let sevenDay = data.sevenDay {
-                        baseImage = createCircleTemplateImage(percentage: sevenDay.percentage, size: NSSize(width: 20, height: 20))
+                        baseImage = createCircleTemplateImage(
+                            percentage: sevenDay.percentage,
+                            size: NSSize(width: 20, height: 20),
+                            targetPercentage: settings.showTargetBars ? sevenDay.targetPercentage : nil,
+                            isOverTarget: settings.showTargetBars && sevenDay.isOverTarget
+                        )
                     }
                 case .iconOnly:
                     if let appIcon = NSImage(named: "AppIcon"),
@@ -1686,8 +1722,15 @@ class MenuBarManager: ObservableObject {
     /// - Parameters:
     ///   - percentage: 当前使用百分比
     ///   - size: 图标尺寸
+    ///   - targetPercentage: 目标百分比（可选，用于显示目标标记）
+    ///   - isOverTarget: 是否超过目标
     /// - Returns: Template 模式的圆形进度图标
-    private func createCircleTemplateImage(percentage: Double, size: NSSize) -> NSImage {
+    private func createCircleTemplateImage(
+        percentage: Double,
+        size: NSSize,
+        targetPercentage: Double? = nil,
+        isOverTarget: Bool = false
+    ) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -1708,6 +1751,7 @@ class MenuBarManager: ObservableObject {
         backgroundPath.stroke()
 
         // 2. 进度圆环（粗线，圆角端点）
+        // 当超过目标时，使用更粗的线条作为视觉指示
         NSColor.labelColor.setStroke()
         let progressPath = NSBezierPath()
         let startAngle: CGFloat = 90
@@ -1720,9 +1764,36 @@ class MenuBarManager: ObservableObject {
             endAngle: endAngle,
             clockwise: true
         )
-        progressPath.lineWidth = 2.5
-        progressPath.lineCapStyle = .round  // 圆角端点
+        // 超过目标时使用更粗的线条
+        progressPath.lineWidth = isOverTarget ? 3.5 : 2.5
+        progressPath.lineCapStyle = .round
         progressPath.stroke()
+
+        // 2a. 目标标记线（如果有目标百分比）
+        if let target = targetPercentage {
+            let targetAngle: CGFloat = 90.0 - CGFloat(target / 100.0 * 360.0)
+            let targetRadians: CGFloat = targetAngle * .pi / 180.0
+
+            let innerRadiusTarget: CGFloat = radius - 4
+            let outerRadiusTarget: CGFloat = radius + 2
+
+            let innerPoint = NSPoint(
+                x: center.x + innerRadiusTarget * CoreGraphics.cos(targetRadians),
+                y: center.y + innerRadiusTarget * CoreGraphics.sin(targetRadians)
+            )
+            let outerPoint = NSPoint(
+                x: center.x + outerRadiusTarget * CoreGraphics.cos(targetRadians),
+                y: center.y + outerRadiusTarget * CoreGraphics.sin(targetRadians)
+            )
+
+            NSColor.labelColor.withAlphaComponent(isOverTarget ? 0.9 : 0.5).setStroke()
+            let targetPath = NSBezierPath()
+            targetPath.move(to: innerPoint)
+            targetPath.line(to: outerPoint)
+            targetPath.lineWidth = 1.5
+            targetPath.lineCapStyle = .round
+            targetPath.stroke()
+        }
 
         // 3. 绘制百分比文字
         let fontSize: CGFloat = size.width * 0.4
@@ -1757,15 +1828,23 @@ class MenuBarManager: ObservableObject {
     ///   - fiveHourPercentage: 5小时限制的使用百分比
     ///   - sevenDayPercentage: 7天限制的使用百分比
     ///   - size: 图标大小
+    ///   - fiveHourTarget: 5小时目标百分比（可选）
+    ///   - sevenDayTarget: 7天目标百分比（可选）
+    ///   - fiveHourOverTarget: 5小时是否超过目标
+    ///   - sevenDayOverTarget: 7天是否超过目标
     /// - Returns: Template 模式的双圆环图标
     private func createDualCircleTemplateImage(
         fiveHourPercentage: Double,
         sevenDayPercentage: Double,
-        size: NSSize
+        size: NSSize,
+        fiveHourTarget: Double? = nil,
+        sevenDayTarget: Double? = nil,
+        fiveHourOverTarget: Bool = false,
+        sevenDayOverTarget: Bool = false
     ) -> NSImage {
         let circleSize = min(size.width, size.height)
         let spacing: CGFloat = 2 // 两个圆环的距离
-        
+
         let totalWidth = circleSize + spacing + circleSize
         let image = NSImage(size: NSSize(width: totalWidth, height: size.height))
         image.lockFocus()
@@ -1805,9 +1884,19 @@ class MenuBarManager: ObservableObject {
             endAngle: leftEndAngle,
             clockwise: true
         )
-        leftProgressPath.lineWidth = 2.5
-        leftProgressPath.lineCapStyle = .round  // 圆角端点
+        leftProgressPath.lineWidth = fiveHourOverTarget ? 3.5 : 2.5
+        leftProgressPath.lineCapStyle = .round
         leftProgressPath.stroke()
+
+        // 左侧目标标记
+        if let target = fiveHourTarget {
+            drawTargetMarker(
+                at: leftCenter,
+                radius: radius,
+                targetPercentage: target,
+                isOverTarget: fiveHourOverTarget
+            )
+        }
 
         // 绘制右侧圆环（7天限制）
         // 右侧背景圆环（调淡颜色）
@@ -1835,9 +1924,19 @@ class MenuBarManager: ObservableObject {
             endAngle: rightEndAngle,
             clockwise: true
         )
-        rightProgressPath.lineWidth = 2.5
-        rightProgressPath.lineCapStyle = .round  // 圆角端点
+        rightProgressPath.lineWidth = sevenDayOverTarget ? 3.5 : 2.5
+        rightProgressPath.lineCapStyle = .round
         rightProgressPath.stroke()
+
+        // 右侧目标标记
+        if let target = sevenDayTarget {
+            drawTargetMarker(
+                at: rightCenter,
+                radius: radius,
+                targetPercentage: target,
+                isOverTarget: sevenDayOverTarget
+            )
+        }
 
         // 绘制百分比文字
         let fontSize: CGFloat = circleSize * 0.4
@@ -1874,7 +1973,43 @@ class MenuBarManager: ObservableObject {
         image.isTemplate = true
         return image
     }
-    
+
+    /// 绘制目标标记（用于Template模式圆环）
+    /// - Parameters:
+    ///   - center: 圆环中心点
+    ///   - radius: 圆环半径
+    ///   - targetPercentage: 目标百分比
+    ///   - isOverTarget: 是否超过目标
+    private func drawTargetMarker(
+        at center: NSPoint,
+        radius: CGFloat,
+        targetPercentage: Double,
+        isOverTarget: Bool
+    ) {
+        let targetAngle: CGFloat = 90.0 - CGFloat(targetPercentage / 100.0 * 360.0)
+        let targetRadians: CGFloat = targetAngle * .pi / 180.0
+
+        let innerRadius: CGFloat = radius - 4
+        let outerRadius: CGFloat = radius + 2
+
+        let innerPoint = NSPoint(
+            x: center.x + innerRadius * CoreGraphics.cos(targetRadians),
+            y: center.y + innerRadius * CoreGraphics.sin(targetRadians)
+        )
+        let outerPoint = NSPoint(
+            x: center.x + outerRadius * CoreGraphics.cos(targetRadians),
+            y: center.y + outerRadius * CoreGraphics.sin(targetRadians)
+        )
+
+        NSColor.labelColor.withAlphaComponent(isOverTarget ? 0.9 : 0.5).setStroke()
+        let targetPath = NSBezierPath()
+        targetPath.move(to: innerPoint)
+        targetPath.line(to: outerPoint)
+        targetPath.lineWidth = 1.5
+        targetPath.lineCapStyle = .round
+        targetPath.stroke()
+    }
+
     /// 创建组合图标（应用图标 + 百分比圆环，Template 模式）
     /// - Parameter percentage: 当前使用百分比
     /// - Returns: Template 模式的组合图标
