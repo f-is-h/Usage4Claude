@@ -18,9 +18,9 @@ struct UsageDetailView: View {
     var onMenuAction: ((MenuAction) -> Void)? = nil
     @StateObject private var localization = LocalizationManager.shared
     /// 是否有可用更新（用于显示文字和徽章）
-    var hasAvailableUpdate: Bool = false
+    @Binding var hasAvailableUpdate: Bool
     /// 是否应显示更新徽章（用户未确认时才显示徽章）
-    var shouldShowUpdateBadge: Bool = false
+    @Binding var shouldShowUpdateBadge: Bool
     
     /// 加载动画效果类型
     enum LoadingAnimationType: Int, CaseIterable {
@@ -627,145 +627,6 @@ struct UsageDetailView: View {
     }
 }
 
-// MARK: - Supporting Views
-
-/// 信息行组件
-/// 显示一行信息，包含图标、标题和值
-struct InfoRow: View {
-    let icon: String
-    let title: String
-    let value: String
-    var tintColor: Color = .blue  // 新增：可自定义图标颜色
-
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(tintColor)  // 使用自定义颜色
-                .frame(width: 8)
-                .font(.system(size: 12))  // 图标大小
-
-            Text(title)
-                .font(.system(size: 12))  // 第一列文字大小
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.system(size: 12))  // 第二列文字大小
-                .fontWeight(.medium)
-        }
-        .padding(.vertical, 6)  // 行高
-        .padding(.horizontal, 12) // 行宽
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
-    }
-}
-
-/// 对齐的信息行组件（用于双限制场景的垂直对齐）
-/// 使用固定宽度布局确保两行的时间数据垂直对齐
-struct AlignedInfoRow: View {
-    let icon: String
-    let title: String
-    let remainingIcon: String
-    let remaining: String
-    let resetIcon: String
-    let resetTime: String
-    var tintColor: Color = .blue
-
-    var body: some View {
-        HStack(spacing: 6) {  // 整行宽度
-            // 左侧：图标+标题（固定区域）
-            HStack(spacing: 4) {  // 图标和标题间距
-                Image(systemName: icon)
-                    .foregroundColor(tintColor)
-                    .frame(width: 18)  // 宽度
-
-                Text(title)
-                    .font(.system(size: 12))  // 字体
-                    .foregroundColor(.secondary)
-            }
-            .frame(width: 50, alignment: .leading)  // 左侧整体宽度
-
-            Spacer()
-
-            // 右侧：使用固定宽度布局对齐时间数据
-            HStack(spacing: 8) {
-                // 剩余时间
-                HStack(spacing: 3) {  // 图标和文字间距
-                    Image(systemName: remainingIcon)
-                        .font(.system(size: 12))  // 图标大小
-                        .foregroundColor(.secondary)
-                    Text(remaining)
-                        .font(.system(size: 12))  // 字号
-                        .fontWeight(.medium)
-                }
-                .frame(width: 75, alignment: .leading)  // 显示宽度
-
-                // 重置时间
-                HStack(spacing: 3) {  // 图标和文字间距
-                    Image(systemName: resetIcon)
-                        .font(.system(size: 12))  // 图标大小
-                        .foregroundColor(.secondary)
-                    Text(resetTime)
-                        .font(.system(size: 12))  // 显示宽度
-                        .fontWeight(.medium)
-                }
-                .frame(width: 90, alignment: .leading)  // 显示宽度
-            }
-        }
-        .padding(.vertical, 6) // 行高
-        .padding(.horizontal, 12)  // 行宽
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
-    }
-}
-
-/// 极简信息行组件（用于双模式两行显示）
-/// 使用图标代替文字标签，所有信息在一行内紧凑显示
-struct CompactInfoRow: View {
-    let limitIcon: String      // 限制类型图标（⏱ 或 📅）
-    let limitLabel: String     // 限制标签（5h 或 7d）
-    let remainingIcon: String  // 剩余时间图标（⏳）
-    let remaining: String      // 剩余时间（1h48m 或 3d12h）
-    let resetIcon: String      // 重置图标（↻）
-    let resetTime: String      // 重置时间（15:07 或 11/29-12h）
-    var tintColor: Color = .blue
-
-    var body: some View {
-        HStack(spacing: 6) {
-            // 限制类型
-            HStack(spacing: 3) {
-                Text(limitIcon)
-                    .font(.system(size: 14))
-                Text(limitLabel)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(tintColor)
-            }
-
-            // 剩余时间
-            HStack(spacing: 3) {
-                Text(remainingIcon)
-                    .font(.system(size: 12))
-                Text(remaining)
-                    .font(.system(size: 13, weight: .medium))
-            }
-
-            // 重置时间
-            HStack(spacing: 3) {
-                Text(resetIcon)
-                    .font(.system(size: 12))
-                Text(resetTime)
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 10)
-        .background(tintColor.opacity(0.08))
-        .cornerRadius(6)
-    }
-}
-
 // 预览
 struct UsageDetailView_Previews: PreviewProvider {
     @State static var sampleData: UsageData? = UsageData(
@@ -778,12 +639,16 @@ struct UsageDetailView_Previews: PreviewProvider {
 
     @State static var errorMsg: String? = nil
     @StateObject static var refreshState = RefreshState()
+    @State static var hasUpdate = false
+    @State static var shouldShowBadge = false
 
     static var previews: some View {
         UsageDetailView(
             usageData: $sampleData,
             errorMessage: $errorMsg,
-            refreshState: refreshState
+            refreshState: refreshState,
+            hasAvailableUpdate: $hasUpdate,
+            shouldShowUpdateBadge: $shouldShowBadge
         )
     }
 }

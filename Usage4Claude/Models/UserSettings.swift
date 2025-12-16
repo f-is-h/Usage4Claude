@@ -712,9 +712,5 @@ class UserSettings: ObservableObject {
 // MARK: - Notification Names
 
 /// 设置相关通知名称扩展
-extension Notification.Name {
-    static let settingsChanged = Notification.Name("settingsChanged")
-    static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
-    static let languageChanged = Notification.Name("languageChanged")
-    static let launchAtLoginError = Notification.Name("launchAtLoginError")
-}
+// 注意：通知名称现已迁移到 NotificationNames.swift
+// 保持向后兼容性的导入

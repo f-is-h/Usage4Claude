@@ -281,33 +281,8 @@ class DiagnosticLogger {
 
     /// 脱敏敏感信息
     private func sanitize(_ message: String) -> String {
-        var sanitized = message
-
-        // 脱敏Session Key (保留前4位和后4位)
-        let sessionKeyPattern = "sessionKey[=:]\\s*[\"']?([a-zA-Z0-9-]{20,})[\"']?"
-        if let regex = try? NSRegularExpression(pattern: sessionKeyPattern, options: .caseInsensitive) {
-            let range = NSRange(sanitized.startIndex..., in: sanitized)
-            sanitized = regex.stringByReplacingMatches(
-                in: sanitized,
-                options: [],
-                range: range,
-                withTemplate: "sessionKey=***REDACTED***"
-            )
-        }
-
-        // 脱敏Organization ID (只保留格式)
-        let orgIdPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-        if let regex = try? NSRegularExpression(pattern: orgIdPattern, options: .caseInsensitive) {
-            let range = NSRange(sanitized.startIndex..., in: sanitized)
-            sanitized = regex.stringByReplacingMatches(
-                in: sanitized,
-                options: [],
-                range: range,
-                withTemplate: "********-****-****-****-************"
-            )
-        }
-
-        return sanitized
+        // 使用统一的敏感数据脱敏工具
+        return SensitiveDataRedactor.redactText(message)
     }
 
     /// 转换为系统日志级别

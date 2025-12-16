@@ -77,24 +77,13 @@ class ClaudeAPIService {
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        
-        // 添加完整的浏览器Headers以绕过Cloudflare
-        request.setValue("*/*", forHTTPHeaderField: "accept")
-        request.setValue("zh-CN,zh;q=0.9,en;q=0.8", forHTTPHeaderField: "accept-language")
-        request.setValue("application/json", forHTTPHeaderField: "content-type")
-        request.setValue("web_claude_ai", forHTTPHeaderField: "anthropic-client-platform")
-        request.setValue("1.0.0", forHTTPHeaderField: "anthropic-client-version")
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                        forHTTPHeaderField: "user-agent")
-        request.setValue("https://claude.ai", forHTTPHeaderField: "origin")
-        request.setValue("https://claude.ai/settings/usage", forHTTPHeaderField: "referer")
-        request.setValue("empty", forHTTPHeaderField: "sec-fetch-dest")
-        request.setValue("cors", forHTTPHeaderField: "sec-fetch-mode")
-        request.setValue("same-origin", forHTTPHeaderField: "sec-fetch-site")
-        
-        // 设置 Cookie
-        let cookieString = "sessionKey=\(settings.sessionKey)"
-        request.setValue(cookieString, forHTTPHeaderField: "Cookie")
+
+        // 使用统一的 Header 构建器添加完整的浏览器 Headers 以绕过 Cloudflare
+        ClaudeAPIHeaderBuilder.applyHeaders(
+            to: &request,
+            organizationId: settings.organizationId,
+            sessionKey: settings.sessionKey
+        )
 
         // 创建并保存任务引用
         currentTask = session.dataTask(with: request) { data, response, error in

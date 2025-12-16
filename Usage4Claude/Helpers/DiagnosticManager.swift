@@ -163,23 +163,12 @@ class DiagnosticManager: ObservableObject {
         request.httpMethod = "GET"
         request.timeoutInterval = 30
 
-        // 添加完整的浏览器 Headers (与 ClaudeAPIService 完全一致)
-        request.setValue("*/*", forHTTPHeaderField: "accept")
-        request.setValue("zh-CN,zh;q=0.9,en;q=0.8", forHTTPHeaderField: "accept-language")
-        request.setValue("application/json", forHTTPHeaderField: "content-type")
-        request.setValue("web_claude_ai", forHTTPHeaderField: "anthropic-client-platform")
-        request.setValue("1.0.0", forHTTPHeaderField: "anthropic-client-version")
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                        forHTTPHeaderField: "user-agent")
-        request.setValue("https://claude.ai", forHTTPHeaderField: "origin")
-        request.setValue("https://claude.ai/settings/usage", forHTTPHeaderField: "referer")
-        request.setValue("empty", forHTTPHeaderField: "sec-fetch-dest")
-        request.setValue("cors", forHTTPHeaderField: "sec-fetch-mode")
-        request.setValue("same-origin", forHTTPHeaderField: "sec-fetch-site")
-
-        // 设置 Cookie
-        let cookieString = "sessionKey=\(settings.sessionKey)"
-        request.setValue(cookieString, forHTTPHeaderField: "Cookie")
+        // 使用统一的 Header 构建器添加完整的浏览器 Headers
+        ClaudeAPIHeaderBuilder.applyHeaders(
+            to: &request,
+            organizationId: settings.organizationId,
+            sessionKey: settings.sessionKey
+        )
 
         return request
     }
@@ -483,28 +472,16 @@ class DiagnosticManager: ObservableObject {
 
     /// 脱敏 Organization ID
     /// 例如: "12345678-abcd-ef90-1234-567890abcdef" -> "1234...cdef"
+    /// 脱敏 Organization ID
+    /// 使用统一的脱敏工具
     private func redactOrganizationId(_ orgId: String) -> String {
-        guard orgId.count > 8 else {
-            return String(repeating: "*", count: orgId.count)
-        }
-        let prefix = orgId.prefix(4)
-        let suffix = orgId.suffix(4)
-        return "\(prefix)...\(suffix)"
+        return SensitiveDataRedactor.redactOrganizationId(orgId)
     }
 
     /// 脱敏 Session Key
-    /// 例如: "sk-ant-sid01-XXXX..." -> "sk-ant-***...*** (128 chars)"
+    /// 使用统一的脱敏工具
     private func redactSessionKey(_ sessionKey: String) -> String {
-        guard sessionKey.count > 20 else {
-            return "***"
-        }
-
-        // 保留前缀 "sk-ant-"
-        if sessionKey.hasPrefix("sk-ant-") {
-            return "sk-ant-***...*** (\(sessionKey.count) chars)"
-        }
-
-        return "***...*** (\(sessionKey.count) chars)"
+        return SensitiveDataRedactor.redactSessionKey(sessionKey)
     }
 
     /// 从 HTTP 响应中提取安全的头信息（过滤敏感数据）

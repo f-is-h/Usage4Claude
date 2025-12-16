@@ -5,9 +5,10 @@
 ## 📅 项目时间线
 
 - **创建日期**: 2025年10月15日
-- **当前版本**: 1.1.0
-- **最后更新**: 2025年10月26日
+- **当前版本**: 1.6.0
+- **最后更新**: 2025年12月03日
 - **状态**: ✅ 持续改进中
+- **重大重构**: 2025年12月1-3日（v2-Pragmatic 架构重构）
 
 ---
 
@@ -28,6 +29,7 @@
 - ✅ 多语言支持（英/日/简体中文/繁体中文）
 - ✅ 自动更新检查功能
 - ✅ 敏感信息 Keychain 存储
+- ✅ v2-Pragmatic 架构重构（2269行 → 4核心类2081行）
 
 ---
 
@@ -54,7 +56,7 @@ Usage4Claude/
 └── Resources/              # 资源文件
 ```
 
-#### 1. App 层
+#### 1. App 层（重构后架构）
 
 **ClaudeUsageMonitorApp.swift**（应用入口）
 - 使用 `@NSApplicationDelegateAdaptor` 集成 AppDelegate
@@ -62,12 +64,38 @@ Usage4Claude/
 - 管理应用生命周期和资源清理
 - 首次启动欢迎流程
 
-**MenuBarManager.swift**（核心控制器）
-- 管理菜单栏状态项和弹出窗口
-- 双定时器设计（数据刷新 + UI实时更新）
-- 动态生成进度图标（3种显示模式）
-- 智能刷新频率调度
-- Focus 控制和事件监听
+**MenuBarManager.swift**（协调层 - 452行）
+- **职责**：协调 UI 和数据层，管理设置窗口
+- 数据绑定：将 DataRefreshManager 状态同步到视图
+- 弹出窗口管理：打开/关闭 popover，设置内容视图
+- 菜单操作处理：刷新、设置、更新检查、关于等
+- 设置窗口生命周期管理
+- 用户确认版本管理（`acknowledgedVersion`）
+
+**MenuBarUI.swift**（UI层 - 480行）
+- **职责**：管理菜单栏UI元素和用户交互
+- NSStatusItem 管理和点击事件处理
+- Popover 生命周期管理
+- 图标缓存机制（提升性能）
+- 右键菜单创建
+- 点击外部关闭逻辑
+
+**MenuBarIconRenderer.swift**（渲染层 - 614行）
+- **职责**：专注于图标绘制和渲染逻辑
+- 8种图标绘制方法（彩色/模板模式 × 4种样式）
+- 双限制图标支持（内外双圈）
+- 更新徽章渲染
+- 百分比颜色映射
+- 模板模式和透明背景支持
+
+**DataRefreshManager.swift**（数据层 - 409行）
+- **职责**：管理数据刷新、定时器、更新检查
+- API 数据获取和状态管理
+- 智能刷新逻辑（4级监控模式）
+- 重置时间验证（+1s/+10s/+30s）
+- 每日自动更新检查
+- 刷新动画最小时长控制
+- TimerManager 统一定时器管理
 
 #### 2. Services 层
 
@@ -114,6 +142,48 @@ Usage4Claude/
 - 类型安全的字符串访问
 - 4 语言支持（en/ja/zh-Hans/zh-Hant）
 - 动态语言切换
+
+**TimerManager.swift**（定时器管理）
+- 统一的定时器创建和管理
+- 支持单次和重复定时器
+- 自动清理机制
+
+**NotificationNames.swift**（通知名称）
+- 类型安全的通知名称常量
+- 避免硬编码字符串错误
+- UserInfo 键名常量
+
+---
+
+## 🔄 架构重构历程
+
+### v2-Pragmatic 重构（2025年12月1-3日）
+
+**重构动机**：
+- 原 MenuBarManager.swift 单文件 2269 行，职责过多
+- 代码可读性差，维护困难
+- 违反单一职责原则
+
+**重构方案**：v2-Pragmatic（实用主义方案）
+- **核心思想**：3-4 核心类平衡实用性和可维护性
+- **目标**：每个文件 400-600 行，职责清晰
+- **优势**：LLM 友好（2-3 次文件读取理解全貌）
+
+**重构成果**：
+- MenuBarManager: 2269 行 → 452 行（-80%）
+- 新增 MenuBarUI: 480 行（UI 层）
+- 新增 MenuBarIconRenderer: 614 行（渲染层）
+- 新增 DataRefreshManager: 409 行（数据层）
+- **总计**：4 核心类 2081 行（比原来少 188 行）
+
+**重构收益**：
+- ✅ 单一职责：每个类职责明确
+- ✅ 易于理解：文件大小适中
+- ✅ 便于维护：修改影响范围小
+- ✅ LLM 友好：快速理解代码结构
+- ✅ 零功能损失：所有功能正常工作
+
+**详细文档**：参见 [docs/REFACTORING_V2_PRAGMATIC.md](REFACTORING_V2_PRAGMATIC.md)
 
 ---
 
@@ -417,6 +487,59 @@ class ClaudeAPIService {
 
 ---
 
+### 问题10：重构后更新徽章实时更新失效
+
+**问题**：v2-Pragmatic 重构第7天完成后，更新徽章无法实时更新
+- 从无更新切换到有更新：需要重启应用才能看到徽章
+- 从有更新切换到无更新：菜单栏徽章消失，但详情窗口和菜单徽章依然存在
+
+**原因**：重构时将 `acknowledgedVersion` 从 MenuBarManager 移到了 DataRefreshManager
+- 导致 `shouldShowUpdateBadge` 计算属性跨对象访问状态
+- `objectWillChange.send()` 无法正确触发 SwiftUI 视图更新
+- 跨 ObservableObject 的响应式更新时序问题
+
+**错误尝试**：
+1. 添加 `.updateBadgeDismissed` 通知
+2. 在 DataRefreshManager 中发送通知
+3. 在 MenuBarManager 中监听并清除缓存
+4. **结果**：完全无效（"和刚才没有任何区别"）
+
+**正确解决**（参考 GitHub 原始代码）：
+1. 将 `acknowledgedVersion` 移回 MenuBarManager（状态应在同一对象）
+2. 保持 `shouldShowUpdateBadge` 作为 MenuBarManager 的计算属性
+3. `checkForUpdates()` 直接修改本地状态并调用 `objectWillChange.send()`
+4. 保留 UsageDetailView 的 `@Binding` 改进（正确的优化）
+
+**核心代码**：
+```swift
+// MenuBarManager.swift
+private var acknowledgedVersion: String?
+
+var shouldShowUpdateBadge: Bool {
+    guard hasAvailableUpdate, let latest = latestVersion else { return false }
+    return acknowledgedVersion != latest
+}
+
+@objc func checkForUpdates() {
+    if let version = latestVersion {
+        acknowledgedVersion = version
+        objectWillChange.send()  // 触发UI更新
+        updateMenuBarIcon()
+    }
+    dataManager.checkForUpdatesManually()
+}
+```
+
+**关键教训**：
+- SwiftUI 响应式状态应保持在同一个 ObservableObject 中
+- 计算属性依赖的状态不应跨对象访问
+- 遇到问题时参考原始实现（GitHub 源码）
+- 失败的修复尝试应及时清理（删除无用通知）
+
+**效果**：✅ 所有更新徽章实时显示，无需重启
+
+---
+
 ## 🔧 关键技术实现细节
 
 ### 1. 动态生成菜单栏图标
@@ -498,19 +621,31 @@ class MenuBarManager {
 - ✅ **0 个编译错误**
 - ✅ **Swift 6 并发模式兼容**
 
-### 代码规模
+### 代码规模（重构后）
+
+#### 核心架构层
+| 文件 | 行数 | 说明 |
+|------|------|------|
+| MenuBarManager.swift | 452 | 协调层：UI/数据绑定 + 窗口管理 |
+| MenuBarUI.swift | 480 | UI层：状态项 + Popover + 菜单 |
+| MenuBarIconRenderer.swift | 614 | 渲染层：8种图标绘制方法 |
+| DataRefreshManager.swift | 409 | 数据层：刷新 + 定时器 + 更新检查 |
+| **核心小计** | **1955** | **4个文件，职责清晰** |
+
+#### 其他组件
 | 文件 | 行数 | 说明 |
 |------|------|------|
 | ClaudeUsageMonitorApp.swift | ~80 | 应用入口 + 生命周期 |
-| MenuBarManager.swift | ~500 | 核心逻辑 + 智能刷新 |
 | ClaudeAPIService.swift | ~200 | 网络服务 |
-| UsageDetailView.swift | ~180 | UI视图 |
+| UsageDetailView.swift | ~650 | 详情视图（含菜单） |
 | SettingsView.swift | ~350 | 设置界面 |
 | UserSettings.swift | ~230 | 设置管理 + 智能逻辑 |
 | KeychainManager.swift | ~100 | 安全存储 |
 | LocalizationHelper.swift | ~120 | 本地化支持 |
 | UpdateChecker.swift | ~150 | 更新检查 |
-| **总计** | **~1860行** | 功能完善，结构清晰 |
+| TimerManager.swift | ~80 | 定时器统一管理 |
+| NotificationNames.swift | ~60 | 通知名称常量 |
+| **总计** | **~3975行** | 功能完善，结构清晰 |
 
 ### 性能指标
 - CPU 使用率：< 0.1%（空闲时）
@@ -547,6 +682,18 @@ class MenuBarManager {
 **理由**：减少依赖，提高可维护性
 **结果**：应用轻量，无兼容性问题
 
+### 6. v2-Pragmatic 重构方案
+**决策**：4核心类架构（协调/UI/渲染/数据）
+**权衡**：未选择更细粒度的v3方案（10+类）
+**理由**：
+- 平衡可维护性与复杂度
+- LLM 友好（2-3次读取理解全貌）
+- 每个文件 400-600 行，适中大小
+**效果**：
+- 单一职责原则
+- 易于理解和修改
+- 零功能损失
+
 ---
 
 ## 🔮 未来展望
@@ -571,10 +718,14 @@ class MenuBarManager {
 
 ---
 
-*文档更新时间：2025年10月26日*
-*版本：1.1.0*
+*文档更新时间：2025年12月03日*
+*版本：1.6.0*
 *状态：持续更新中*
 
 > "The best code is no code at all. The second best is simple, clear code."
-> 
+>
 > — Jeff Atwood
+>
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+>
+> — Martin Fowler
