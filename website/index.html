@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Usage4Claude - Real-time Claude AI Usage Monitor for macOS</title>
+  <meta name="description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring. Supports 5-hour and 7-day limits, cross-platform, local storage, open source.">
+  <meta name="keywords" content="Claude AI, Usage Monitor, macOS, Menu Bar, Real-time Monitoring">
+
+  <link rel="canonical" href="https://usage4claude.pages.dev/">
+  <link rel="alternate" hreflang="en" href="https://usage4claude.pages.dev/">
+  <link rel="alternate" hreflang="zh-CN" href="https://usage4claude.pages.dev/index.zh-cn.html">
+  <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
+  <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Usage4Claude">
+  <meta property="og:title" content="Usage4Claude - Real-time Claude AI Usage Monitor">
+  <meta property="og:description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring. Supports 5-hour and 7-day limits, cross-platform, local storage, open source.">
+  <meta property="og:url" content="https://usage4claude.pages.dev/">
+  <meta property="og:image" content="https://usage4claude.pages.dev/images/og-image.png">
+  <meta property="og:image:width" content="1224">
+  <meta property="og:image:height" content="1168">
+  <meta property="og:image:alt" content="Usage4Claude App Screenshot">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Usage4Claude - Real-time Claude AI Usage Monitor">
+  <meta name="twitter:description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring.">
+  <meta name="twitter:image" content="https://usage4claude.pages.dev/images/og-image.png">
+
+  <link rel="icon" type="image/png" href="favicon.ico">
+  <link rel="apple-touch-icon" href="images/icon.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="css/custom.css" rel="stylesheet">
+
+  <script>
+    (function() {
+      if (!localStorage.getItem('languageSelected')) {
+        const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
+        const langMap = {
+          'zh-cn': 'index.zh-cn.html', 'zh': 'index.zh-cn.html',
+          'ja': 'index.ja.html', 'ja-jp': 'index.ja.html',
+          'zh-tw': 'index.zh-tw.html', 'zh-hk': 'index.zh-tw.html'
+        };
+        const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
+        if (targetPage) window.location.href = targetPage;
+      }
+    })();
+  </script>
+</head>
+<body class="font-sans antialiased">
+
+  <header class="fixed top-0 w-full bg-white/90 backdrop-blur-lg z-50 border-b border-gray-200">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
+        <span class="text-xl font-semibold">Usage4Claude</span>
+      </div>
+
+      <ul class="hidden md:flex space-x-8">
+        <li><a href="#features" class="hover:text-[#CC785C] transition-colors">Features</a></li>
+        <li><a href="#screenshots" class="hover:text-[#CC785C] transition-colors">Screenshots</a></li>
+        <li><a href="#download" class="hover:text-[#CC785C] transition-colors">Download</a></li>
+        <li><a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+
+      <div class="flex items-center space-x-3">
+        <a href="index.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">EN</a>
+        <a href="index.ja.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">日本語</a>
+        <a href="index.zh-cn.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
+        <a href="index.zh-tw.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="min-h-screen bg-gradient-to-br from-[#F5F3ED] to-white flex items-center pt-20">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="animate-fadeInUp">
+          <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            Real-time<br>Claude AI Usage Monitor
+          </h1>
+          <p class="text-xl lg:text-2xl text-gray-600 mb-8">
+            Elegant macOS menu bar app for all Claude platforms
+          </p>
+
+          <ul class="mb-8 space-y-3 text-lg text-gray-700">
+            <li class="flex items-start">
+              <span class="text-2xl mr-3">•</span>
+              <span>Dual Limit Display - 5-hour + 7-day quotas at a glance</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-2xl mr-3">•</span>
+              <span>Cross-Platform - Monitor Web/CLI/Desktop/Mobile usage</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-2xl mr-3">•</span>
+              <span>Privacy First - Local storage, open source, Keychain encryption</span>
+            </li>
+          </ul>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#download" class="btn-primary px-8 py-4 bg-[#CC785C] text-white text-center rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
+              Download Latest
+            </a>
+            <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-8 py-4 border-2 border-gray-300 text-center rounded-lg font-semibold hover:border-gray-400 transition-all">
+              ⭐ Star on GitHub
+            </a>
+          </div>
+        </div>
+
+        <div class="animate-fadeInUp">
+          <img src="images/screenshots/detail-dual-en.png" alt="Usage4Claude Detail Window - Dual Limit Mode" class="rounded-2xl shadow-2xl">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">Core Features</h2>
+        <p class="text-xl text-gray-600">Professional monitoring tool designed for Claude AI users</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">📊</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Real-time Monitoring</h3>
+          <p class="text-gray-600">
+            Menu bar displays usage quotas in real-time, supports 5-hour and 7-day dual limits, smart color alerts (green→orange→red / cyan→purple→deep purple)
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌐</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Cross-Platform Support</h3>
+          <p class="text-gray-600">
+            Unified monitoring for all Claude platforms: Web, Claude Code, Desktop App, Mobile App - view all usage in one place
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔄</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Smart Refresh</h3>
+          <p class="text-gray-600">
+            4-level adaptive refresh frequency, 1-minute fast refresh when active, gradually reduces to 10 minutes when idle
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌍</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Multi-Language Support</h3>
+          <p class="text-gray-600">
+            Native support for English, Japanese, Simplified Chinese, Traditional Chinese, interface language auto-follows system or manual switch
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🎨</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Personalization</h3>
+          <p class="text-gray-600">
+            3 display modes (icon only/percentage only/icon+percentage), 3 themes (default/monochrome/color), satisfy different preferences
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔒</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Security & Privacy</h3>
+          <p class="text-gray-600">
+            All data stored locally only, Session Key encrypted via Keychain, 100% open source code, freely auditable
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screenshots" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">Screenshots</h2>
+        <p class="text-xl text-gray-600">See Usage4Claude in action</p>
+      </div>
+
+      <div class="mb-16">
+        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">Menu Bar Display Styles</h3>
+        <div class="flex flex-wrap justify-center gap-8 items-center">
+          <div class="text-center">
+            <img src="images/screenshots/bar-icon.png" alt="Icon Only" class="h-12 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">Icon Only</p>
+          </div>
+          <div class="text-center">
+            <img src="images/screenshots/bar-5h-ring.png" alt="5-Hour Limit" class="h-12 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">5-Hour Limit</p>
+          </div>
+          <div class="text-center">
+            <img src="images/screenshots/bar-dual-ring.png" alt="Dual Limits" class="h-12 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">Dual Limits</p>
+          </div>
+          <div class="text-center">
+            <img src="images/screenshots/bar-dual-both.png" alt="Icon + Dual Limits" class="h-14 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">Icon + Dual Limits</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">Detail Window</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div class="screenshot-card">
+            <img src="images/screenshots/detail-5h-en.png" alt="5-Hour Limit Mode" loading="lazy" class="w-full rounded-xl shadow-xl">
+            <p class="text-center mt-4 text-gray-600">5-Hour Limit Mode</p>
+          </div>
+          <div class="screenshot-card">
+            <img src="images/screenshots/detail-7d-en.png" alt="7-Day Limit Mode" loading="lazy" class="w-full rounded-xl shadow-xl">
+            <p class="text-center mt-4 text-gray-600">7-Day Limit Mode</p>
+          </div>
+          <div class="screenshot-card">
+            <img src="images/screenshots/detail-dual-en.png" alt="Dual Limit Mode" loading="lazy" class="w-full rounded-xl shadow-xl">
+            <p class="text-center mt-4 text-gray-600">Dual Limit Mode</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download" class="py-20 bg-gradient-to-br from-[#F5F3ED] to-white">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-4xl lg:text-5xl font-bold mb-6 text-gray-900">Get Started with Usage4Claude</h2>
+
+      <div class="mb-8 text-gray-600">
+        <p class="text-lg mb-2">System Requirements: macOS 13.0 (Ventura) or later</p>
+        <p class="text-lg">Supports Intel and Apple Silicon (M1/M2/M3/M4) chips</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
+        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
+          Download Latest (v1.6.0)
+        </a>
+        <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
+          ⭐ Star on GitHub
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div class="bg-white p-8 rounded-xl shadow-lg">
+          <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+          <h3 class="text-xl font-semibold mb-2 text-gray-900">Download DMG</h3>
+          <p class="text-gray-600">Download the latest version from GitHub Releases</p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg">
+          <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+          <h3 class="text-xl font-semibold mb-2 text-gray-900">Drag to Install</h3>
+          <p class="text-gray-600">Open DMG, drag to Applications folder</p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg">
+          <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+          <h3 class="text-xl font-semibold mb-2 text-gray-900">First Launch</h3>
+          <p class="text-gray-600">Right-click and select "Open" to allow running</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-gray-900 text-gray-300 py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center space-x-3 mb-4">
+            <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
+            <span class="text-xl font-semibold text-white">Usage4Claude</span>
+          </div>
+          <p class="text-sm">Elegant macOS menu bar app for real-time Claude AI usage monitoring</p>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-white mb-4">Resources</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="https://github.com/f-is-h/Usage4Claude" class="hover:text-white transition-colors">GitHub</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/releases" class="hover:text-white transition-colors">Download</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/issues" class="hover:text-white transition-colors">Issues</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/discussions" class="hover:text-white transition-colors">Discussions</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-white mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="legal.html" class="hover:text-white transition-colors">Legal Notice</a></li>
+            <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" class="hover:text-white transition-colors">MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+        <p>&copy; 2025 f-is-h. Licensed under MIT License.</p>
+        <p class="mt-2 text-gray-500">This project is not officially associated with Anthropic or Claude AI</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

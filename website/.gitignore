@@ -1,0 +1,29 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+dist/
+build/
+
+*.tmp
+*.log
+
+.env
+.env.local
+
+*.bak
+*.backup

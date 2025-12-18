@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Privacy Policy | Usage4Claude</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="css/custom.css" rel="stylesheet">
+</head>
+<body class="font-sans antialiased bg-gray-50">
+
+  <div class="container mx-auto px-6 py-12 max-w-4xl">
+    <div class="mb-8 text-center">
+      <a href="index.html" class="inline-flex items-center text-[#CC785C] hover:text-[#B36A4D] transition-colors mb-6">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        <span data-i18n="privacy.back">Back to Home</span>
+      </a>
+      <h1 class="text-3xl font-bold text-gray-800" data-i18n="privacy.title">Privacy Policy</h1>
+    </div>
+
+    <div class="flex justify-center mb-8 border-b border-gray-300 flex-wrap">
+      <button onclick="switchLanguage('en')" class="lang-btn px-4 py-3 font-medium border-b-2 text-sm">English</button>
+      <button onclick="switchLanguage('ja')" class="lang-btn px-4 py-3 font-medium border-b-2 text-sm">日本語</button>
+      <button onclick="switchLanguage('zh-CN')" class="lang-btn px-4 py-3 font-medium border-b-2 text-sm">简体中文</button>
+      <button onclick="switchLanguage('zh-TW')" class="lang-btn px-4 py-3 font-medium border-b-2 text-sm">繁體中文</button>
+    </div>
+
+    <div class="space-y-8">
+      <section class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded">
+        <h2 class="text-2xl font-bold text-blue-900 mb-3" data-i18n="privacy.core.title">Core Principle</h2>
+        <p class="text-lg font-semibold text-blue-800" data-i18n="privacy.core.main">
+          We do not collect any user data.
+        </p>
+        <p class="text-blue-700 mt-2" data-i18n="privacy.core.desc">
+          Usage4Claude is a 100% local application. All data is stored only on your Mac.
+        </p>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.storage.title">Data Storage</h2>
+
+        <h3 class="text-lg font-medium text-gray-700 mb-2" data-i18n="privacy.storage.local.title">Local Storage</h3>
+        <ul class="list-disc list-inside text-gray-600 space-y-2 mb-4">
+          <li data-i18n="privacy.storage.local.item1">Usage quota data: Cached locally after fetching from Claude API</li>
+          <li data-i18n="privacy.storage.local.item2">App settings: Stored in local user preferences</li>
+          <li data-i18n="privacy.storage.local.item3">No data uploaded to any external servers</li>
+        </ul>
+
+        <h3 class="text-lg font-medium text-gray-700 mb-2" data-i18n="privacy.storage.keychain.title">Keychain Encryption</h3>
+        <ul class="list-disc list-inside text-gray-600 space-y-2">
+          <li data-i18n="privacy.storage.keychain.item1">Organization ID and Session Key: Encrypted in macOS Keychain</li>
+          <li data-i18n="privacy.storage.keychain.item2">Encryption: AES-256 + Hardware protection (T2/Secure Enclave)</li>
+          <li data-i18n="privacy.storage.keychain.item3">Access Control: Only this app can access, other apps cannot read</li>
+        </ul>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.network.title">Network Requests</h2>
+
+        <h3 class="text-lg font-medium text-gray-700 mb-2" data-i18n="privacy.network.api.title">Claude API Calls</h3>
+        <ul class="list-disc list-inside text-gray-600 space-y-2">
+          <li data-i18n="privacy.network.api.item1">Purpose: Fetch usage quota data</li>
+          <li data-i18n="privacy.network.api.item2">Frequency: Based on settings (1-10 min intervals)</li>
+          <li data-i18n="privacy.network.api.item3">Content: Only authentication info, no other data</li>
+        </ul>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.tracking.title">No Tracking, No Analytics</h2>
+        <ul class="list-disc list-inside text-gray-600 space-y-2">
+          <li>❌ <span data-i18n="privacy.tracking.item1">No Google Analytics</span></li>
+          <li>❌ <span data-i18n="privacy.tracking.item2">No other analytics tools</span></li>
+          <li>❌ <span data-i18n="privacy.tracking.item3">No ad tracking</span></li>
+          <li>❌ <span data-i18n="privacy.tracking.item4">No third-party SDKs</span></li>
+          <li>✅ <span data-i18n="privacy.tracking.item5">Completely zero tracking</span></li>
+        </ul>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.opensource.title">Open Source Transparency</h2>
+        <ul class="list-disc list-inside text-gray-600 space-y-2">
+          <li data-i18n="privacy.opensource.item1">Source Code: <a href="https://github.com/f-is-h/Usage4Claude" class="text-[#CC785C] hover:underline">GitHub Repository</a></li>
+          <li data-i18n="privacy.opensource.item2">License: MIT License</li>
+          <li data-i18n="privacy.opensource.item3">Audit: Anyone can review and audit the code</li>
+          <li data-i18n="privacy.opensource.item4">No Obfuscation: Fully transparent, no hidden features</li>
+        </ul>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.security.title">Data Security</h2>
+        <ul class="list-disc list-inside text-gray-600 space-y-2">
+          <li>✅ <span data-i18n="privacy.security.item1">App Sandbox Enabled - Limits system access</span></li>
+          <li>✅ <span data-i18n="privacy.security.item2">Keychain Encryption - Hardware-level protection for sensitive info</span></li>
+          <li>✅ <span data-i18n="privacy.security.item3">Minimal Permissions - Only requests necessary permissions (Network + Keychain)</span></li>
+          <li>✅ <span data-i18n="privacy.security.item4">No File Access - Does not access your files, contacts, etc.</span></li>
+        </ul>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.rights.title">Your Rights</h2>
+        <ul class="list-disc list-inside text-gray-600 space-y-2">
+          <li data-i18n="privacy.rights.item1">Delete app and data anytime</li>
+          <li data-i18n="privacy.rights.item2">View/delete credentials via "Keychain Access" app</li>
+          <li data-i18n="privacy.rights.item3">No data residue concerns - all data stored locally only</li>
+        </ul>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.changes.title">Policy Changes</h2>
+        <p class="text-gray-600" data-i18n="privacy.changes.desc">
+          If this privacy policy changes, updates will be posted here and users will be notified in the app.
+        </p>
+      </section>
+
+      <section class="bg-white p-6 rounded-lg shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="privacy.contact.title">Contact Us</h2>
+        <p class="text-gray-600" data-i18n="privacy.contact.desc">
+          If you have any privacy-related questions, please contact us via:
+        </p>
+        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+          <li>GitHub Issues: <a href="https://github.com/f-is-h/Usage4Claude/issues" class="text-[#CC785C] hover:underline">f-is-h/Usage4Claude/issues</a></li>
+          <li>GitHub Discussions: <a href="https://github.com/f-is-h/Usage4Claude/discussions" class="text-[#CC785C] hover:underline">f-is-h/Usage4Claude/discussions</a></li>
+        </ul>
+      </section>
+
+      <p class="text-center text-sm text-gray-500 mt-8" data-i18n="privacy.updated">Last Updated: December 18, 2025</p>
+    </div>
+  </div>
+
+  <script src="js/translations-privacy.js"></script>
+  <script src="js/i18n.js"></script>
+</body>
+</html>

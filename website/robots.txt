@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /legal.html
+
+Sitemap: https://usage4claude.pages.dev/sitemap.xml

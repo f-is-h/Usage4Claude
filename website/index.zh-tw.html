@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Usage4Claude - macOS 選單列即時監控 Claude AI 使用配額</title>
+  <meta name="description" content="優雅的 macOS 選單列應用程式，即時監控 Claude AI 使用配額。支援 5 小時和 7 天雙限制、跨平台、本地儲存、開放原始碼。">
+  <meta name="keywords" content="Claude AI, 使用監控, macOS, 選單列, 即時監控">
+
+  <link rel="canonical" href="https://usage4claude.pages.dev/index.zh-tw.html">
+  <link rel="alternate" hreflang="en" href="https://usage4claude.pages.dev/">
+  <link rel="alternate" hreflang="zh-CN" href="https://usage4claude.pages.dev/index.zh-cn.html">
+  <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
+  <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Usage4Claude">
+  <meta property="og:title" content="Usage4Claude - 即時監控 Claude AI 使用配額">
+  <meta property="og:description" content="優雅的 macOS 選單列應用程式，即時監控 Claude AI 使用配額。支援 5 小時和 7 天雙限制、跨平台、本地儲存、開放原始碼。">
+  <meta property="og:url" content="https://usage4claude.pages.dev/index.zh-tw.html">
+  <meta property="og:image" content="https://usage4claude.pages.dev/images/og-image.png">
+  <meta property="og:image:width" content="1224">
+  <meta property="og:image:height" content="1168">
+  <meta property="og:image:alt" content="Usage4Claude 應用程式截圖">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Usage4Claude - 即時監控 Claude AI 使用配額">
+  <meta name="twitter:description" content="優雅的 macOS 選單列應用程式，即時監控 Claude AI 使用配額。">
+  <meta name="twitter:image" content="https://usage4claude.pages.dev/images/og-image.png">
+
+  <link rel="icon" type="image/png" href="favicon.ico">
+  <link rel="apple-touch-icon" href="images/icon.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="css/custom.css" rel="stylesheet">
+
+  <script>
+    (function() {
+      if (!localStorage.getItem('languageSelected')) {
+        const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
+        const langMap = {
+          'zh-cn': 'index.zh-cn.html', 'zh': 'index.zh-cn.html',
+          'ja': 'index.ja.html', 'ja-jp': 'index.ja.html',
+          'zh-tw': 'index.zh-tw.html', 'zh-hk': 'index.zh-tw.html'
+        };
+        const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
+        if (targetPage) window.location.href = targetPage;
+      }
+    })();
+  </script>
+</head>
+<body class="font-sans antialiased">
+
+  <header class="fixed top-0 w-full bg-white/90 backdrop-blur-lg z-50 border-b border-gray-200">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
+        <span class="text-xl font-semibold">Usage4Claude</span>
+      </div>
+
+      <ul class="hidden md:flex space-x-8">
+        <li><a href="#features" class="hover:text-[#CC785C] transition-colors">功能特性</a></li>
+        <li><a href="#screenshots" class="hover:text-[#CC785C] transition-colors">產品截圖</a></li>
+        <li><a href="#download" class="hover:text-[#CC785C] transition-colors">下載</a></li>
+        <li><a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+
+      <div class="flex items-center space-x-3">
+        <a href="index.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">EN</a>
+        <a href="index.ja.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">日本語</a>
+        <a href="index.zh-cn.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
+        <a href="index.zh-tw.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">繁中</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="min-h-screen bg-gradient-to-br from-[#F5F3ED] to-white flex items-center pt-20">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="animate-fadeInUp">
+          <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            即時監控<br>Claude AI 使用配額
+          </h1>
+          <p class="text-xl lg:text-2xl text-gray-600 mb-8">
+            優雅的 macOS 選單列應用程式，支援所有 Claude 平台
+          </p>
+
+          <ul class="mb-8 space-y-3 text-lg text-gray-700">
+            <li class="flex items-start">
+              <span class="text-2xl mr-3">•</span>
+              <span>雙限制顯示 - 5 小時 + 7 天配額一目了然</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-2xl mr-3">•</span>
+              <span>跨平台通用 - Web/CLI/Desktop/Mobile 統一監控</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-2xl mr-3">•</span>
+              <span>隱私優先 - 本地儲存，開放原始碼，Keychain 加密</span>
+            </li>
+          </ul>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#download" class="btn-primary px-8 py-4 bg-[#CC785C] text-white text-center rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
+              下載最新版本
+            </a>
+            <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-8 py-4 border-2 border-gray-300 text-center rounded-lg font-semibold hover:border-gray-400 transition-all">
+              ⭐ Star on GitHub
+            </a>
+          </div>
+        </div>
+
+        <div class="animate-fadeInUp">
+          <img src="images/screenshots/detail-dual-zh-tw.png" alt="Usage4Claude 詳情視窗 - 雙限制模式" class="rounded-2xl shadow-2xl">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">核心功能</h2>
+        <p class="text-xl text-gray-600">為 Claude AI 使用者設計的專業監控工具</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">📊</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">即時監控</h3>
+          <p class="text-gray-600">
+            選單列即時顯示使用配額，支援 5 小時和 7 天雙限制，智慧色彩提醒（綠色→橙色→紅色 / 青色→紫色→深紫色）
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌐</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">跨平台支援</h3>
+          <p class="text-gray-600">
+            統一監控所有 Claude 平台：Web 網頁版、Claude Code、桌面應用程式、行動應用程式 - 一處查看全部使用
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔄</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">智慧更新</h3>
+          <p class="text-gray-600">
+            4 級自適應更新頻率，活躍時 1 分鐘快速更新，閒置時逐步降至 10 分鐘
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌍</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">多語言支援</h3>
+          <p class="text-gray-600">
+            原生支援英語、日語、簡體中文、繁體中文，介面語言自動跟隨系統或手動切換
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🎨</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">個人化定製</h3>
+          <p class="text-gray-600">
+            3 種顯示模式（僅圖示/僅百分比/圖示+百分比），3 種主題（預設/單色/彩色），滿足不同偏好
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔒</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">安全隱私</h3>
+          <p class="text-gray-600">
+            所有資料僅本地儲存，Session Key 透過 Keychain 加密，100% 開放原始碼，可自由審計
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screenshots" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">產品截圖</h2>
+        <p class="text-xl text-gray-600">查看 Usage4Claude 實際執行效果</p>
+      </div>
+
+      <div class="mb-16">
+        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">選單列顯示樣式</h3>
+        <div class="flex flex-wrap justify-center gap-8 items-center">
+          <div class="text-center">
+            <img src="images/screenshots/bar-icon.png" alt="僅圖示" class="h-12 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">僅圖示</p>
+          </div>
+          <div class="text-center">
+            <img src="images/screenshots/bar-5h-ring.png" alt="5 小時限制" class="h-12 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">5 小時限制</p>
+          </div>
+          <div class="text-center">
+            <img src="images/screenshots/bar-dual-ring.png" alt="雙限制" class="h-12 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">雙限制</p>
+          </div>
+          <div class="text-center">
+            <img src="images/screenshots/bar-dual-both.png" alt="圖示 + 雙限制" class="h-14 mx-auto mb-2 shadow-md rounded">
+            <p class="text-sm text-gray-600">圖示 + 雙限制</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">詳情視窗</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div class="screenshot-card">
+            <img src="images/screenshots/detail-5h-zh-tw.png" alt="5 小時限制模式" loading="lazy" class="w-full rounded-xl shadow-xl">
+            <p class="text-center mt-4 text-gray-600">5 小時限制模式</p>
+          </div>
+          <div class="screenshot-card">
+            <img src="images/screenshots/detail-7d-zh-tw.png" alt="7 天限制模式" loading="lazy" class="w-full rounded-xl shadow-xl">
+            <p class="text-center mt-4 text-gray-600">7 天限制模式</p>
+          </div>
+          <div class="screenshot-card">
+            <img src="images/screenshots/detail-dual-zh-tw.png" alt="雙限制模式" loading="lazy" class="w-full rounded-xl shadow-xl">
+            <p class="text-center mt-4 text-gray-600">雙限制模式</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download" class="py-20 bg-gradient-to-br from-[#F5F3ED] to-white">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-4xl lg:text-5xl font-bold mb-6 text-gray-900">開始使用 Usage4Claude</h2>
+
+      <div class="mb-8 text-gray-600">
+        <p class="text-lg mb-2">系統要求：macOS 13.0 (Ventura) 或更高版本</p>
+        <p class="text-lg">支援 Intel 和 Apple Silicon（M1/M2/M3/M4）晶片</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
+        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
+          下載最新版本 (v1.6.0)
+        </a>
+        <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
+          ⭐ Star on GitHub
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div class="bg-white p-8 rounded-xl shadow-lg">
+          <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+          <h3 class="text-xl font-semibold mb-2 text-gray-900">下載 DMG</h3>
+          <p class="text-gray-600">從 GitHub Releases 下載最新版本</p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg">
+          <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+          <h3 class="text-xl font-semibold mb-2 text-gray-900">拖曳安裝</h3>
+          <p class="text-gray-600">開啟 DMG，拖曳到應用程式資料夾</p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg">
+          <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+          <h3 class="text-xl font-semibold mb-2 text-gray-900">首次啟動</h3>
+          <p class="text-gray-600">右鍵點選並選擇「開啟」以允許執行</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-gray-900 text-gray-300 py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center space-x-3 mb-4">
+            <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
+            <span class="text-xl font-semibold text-white">Usage4Claude</span>
+          </div>
+          <p class="text-sm">優雅的 macOS 選單列應用程式，即時監控 Claude AI 使用配額</p>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-white mb-4">資源</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="https://github.com/f-is-h/Usage4Claude" class="hover:text-white transition-colors">GitHub</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/releases" class="hover:text-white transition-colors">下載</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/issues" class="hover:text-white transition-colors">問題回報</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/discussions" class="hover:text-white transition-colors">討論區</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-white mb-4">法律</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="legal.html" class="hover:text-white transition-colors">特定商取引法表記</a></li>
+            <li><a href="privacy.html" class="hover:text-white transition-colors">隱私政策</a></li>
+            <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" class="hover:text-white transition-colors">MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+        <p>&copy; 2025 f-is-h. Licensed under MIT License.</p>
+        <p class="mt-2 text-gray-500">本專案與 Anthropic 或 Claude AI 無官方關聯</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
