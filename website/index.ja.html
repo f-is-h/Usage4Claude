@@ -41,9 +41,9 @@
       if (!localStorage.getItem('languageSelected')) {
         const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
         const langMap = {
-          'zh-cn': 'index.zh-cn.html', 'zh': 'index.zh-cn.html',
-          'ja': 'index.ja.html', 'ja-jp': 'index.ja.html',
-          'zh-tw': 'index.zh-tw.html', 'zh-hk': 'index.zh-tw.html'
+          'zh-cn': 'index.zh-cn', 'zh': 'index.zh-cn',
+          'ja': 'index.ja', 'ja-jp': 'index.ja',
+          'zh-tw': 'index.zh-tw', 'zh-hk': 'index.zh-tw'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
         if (targetPage) window.location.href = targetPage;
@@ -68,10 +68,10 @@
       </ul>
 
       <div class="flex items-center space-x-3">
-        <a href="index.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">EN</a>
-        <a href="index.ja.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">日本語</a>
-        <a href="index.zh-cn.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
-        <a href="index.zh-tw.html" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
+        <a href="/" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">EN</a>
+        <a href="/index.ja" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">日本語</a>
+        <a href="/index.zh-cn" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
+        <a href="/index.zh-tw" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
       </div>
     </nav>
   </header>
