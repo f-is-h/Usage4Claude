@@ -7,16 +7,7 @@ export async function onRequest(context) {
   }
 
   let html = await response.text();
-
-  const realAddress = context.env.REAL_ADDRESS || '[ENV_VAR_NOT_FOUND]';
-
-  const debugInfo = `<!-- DEBUG: Middleware executed at ${new Date().toISOString()} -->
-<!-- DEBUG: Env var exists: ${!!context.env.REAL_ADDRESS} -->
-<!-- DEBUG: Env var length: ${context.env.REAL_ADDRESS ? context.env.REAL_ADDRESS.length : 0} -->
-<!-- DEBUG: Placeholder found: ${html.includes('[ADDRESS_PLACEHOLDER')} -->
-`;
-
-  html = debugInfo + html;
+  const realAddress = context.env.REAL_ADDRESS || '[ADDRESS_PLACEHOLDER]';
   html = html.replace(/\[ADDRESS_PLACEHOLDER[^\]]*\]/g, realAddress);
 
   return new Response(html, {
