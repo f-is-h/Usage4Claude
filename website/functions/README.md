@@ -20,7 +20,9 @@ This middleware replaces `[ADDRESS_PLACEHOLDER]` in HTML files with the real add
 ## How it works
 
 - Intercepts all HTML responses
-- Searches for `[ADDRESS_PLACEHOLDER]` in `<p>`, `<span>`, and `<div>` elements
-- Replaces with the value from `REAL_ADDRESS` environment variable
-- Runs at edge, no build step needed
+- Reads the full HTML response as text
+- Uses regex to replace `[ADDRESS_PLACEHOLDER]` with the real address
+- Returns modified HTML with original headers preserved
+- Runs at Cloudflare edge, no build step needed
 - Address never appears in GitHub source code
+- Fast and reliable (no chunking issues)
