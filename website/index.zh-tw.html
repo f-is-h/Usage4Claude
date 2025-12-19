@@ -41,12 +41,15 @@
       if (!localStorage.getItem('languageSelected')) {
         const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
         const langMap = {
-          'zh-cn': 'index.zh-cn', 'zh': 'index.zh-cn',
-          'ja': 'index.ja', 'ja-jp': 'index.ja',
-          'zh-tw': 'index.zh-tw', 'zh-hk': 'index.zh-tw'
+          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn',
+          'ja': '/index.ja', 'ja-jp': '/index.ja',
+          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
-        if (targetPage) window.location.href = targetPage;
+        const currentPath = window.location.pathname;
+        if (targetPage && currentPath !== targetPage && currentPath + '.html' !== targetPage) {
+          window.location.href = targetPage;
+        }
       }
     })();
   </script>
