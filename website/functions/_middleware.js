@@ -12,7 +12,8 @@ export async function onRequest(context) {
 
   return new Response(html, {
     status: response.status,
-    statusText: response.statusText,
-    headers: response.headers
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8'
+    }
   });
 }
