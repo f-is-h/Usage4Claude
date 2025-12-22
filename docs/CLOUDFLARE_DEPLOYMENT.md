@@ -32,12 +32,19 @@
 | **Build command** | （留空）|
 | **Build output directory** | `/` |
 | **Root directory** | `website` |
-| **Variables and Secrets** | Name: `REAL_ADDRESS`</br> Value: `〒100-0001 東京都千代田区千代田 1-1`|
+
+**环境变量（Environment Variables）**：
+
+| Variable name | Value (示例) | 说明 |
+|--------------|-------------|------|
+| `REAL_NAME` | `山田 太郎` | 真实姓名 |
+| `REAL_EMAIL` | `contact@example.com` | 联系邮箱 |
+| `REAL_ADDRESS` | `〒100-0001 東京都千代田区千代田 1-1` | 物理地址 |
 
 点击 **Save and Deploy**
 
 **关于 Pages Functions**：
-- 项目使用 `website/functions/_middleware.js` 动态替换地址占位符
+- 项目使用 `website/functions/_middleware.js` 动态替换敏感信息占位符
 - Cloudflare 会自动检测并部署 Functions，无需额外配置
 - 修改后需重新部署才能生效
 
@@ -203,9 +210,9 @@ Cloudflare Pages 会自动重新部署。
 2. 清除 localStorage：`localStorage.clear()`
 3. 确认语言检测脚本包含当前页面检查
 
-### Q: Legal 页面地址未替换？
+### Q: Legal 页面占位符未替换？
 **A**:
-1. 检查环境变量 `REAL_ADDRESS` 已设置
+1. 检查环境变量（`REAL_NAME`、`REAL_EMAIL`、`REAL_ADDRESS`）已设置
 2. 查看 Real-time Logs 确认 Functions 执行
 3. 确认访问路径正确（`/legal` 不是 `/legal.html`）
 
@@ -253,8 +260,8 @@ Cloudflare Pages 会自动重新部署。
 - [ ] 隐私模式正常
 
 **Pages Functions**：
-- [ ] Legal 页面地址已替换
-- [ ] 环境变量 REAL_ADDRESS 已设置
+- [ ] Legal 页面所有占位符已替换（姓名、邮箱、地址）
+- [ ] 环境变量已设置（`REAL_NAME`、`REAL_EMAIL`、`REAL_ADDRESS`）
 - [ ] Real-time Logs 显示 Functions 执行
 
 ---
