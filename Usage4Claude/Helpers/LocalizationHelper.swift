@@ -21,6 +21,7 @@ enum L {
         static var about: String { localized("menu.about") }
         static var webUsage: String { localized("menu.web_usage") }
         static var coffee: String { localized("menu.coffee") }
+        static var githubSponsor: String { localized("menu.github_sponsor") }
         static var quit: String { localized("menu.quit") }
     }
     
@@ -83,11 +84,7 @@ enum L {
         static var step4: String { localized("settings.auth.step4") }
         static var step5: String { localized("settings.auth.step5") }
         static var step6: String { localized("settings.auth.step6") }
-        static var step7: String { localized("settings.auth.step7") }
         static var openBrowser: String { localized("settings.auth.open_browser") }
-        static var orgIdLabel: String { localized("settings.auth.org_id_label") }
-        static var orgIdPlaceholder: String { localized("settings.auth.org_id_placeholder") }
-        static var orgIdHint: String { localized("settings.auth.org_id_hint") }
         static var sessionKeyLabel: String { localized("settings.auth.session_key_label") }
         static var sessionKeyPlaceholder: String { localized("settings.auth.session_key_placeholder") }
         static var sessionKeyHint: String { localized("settings.auth.session_key_hint") }
@@ -111,6 +108,7 @@ enum L {
         static var licenseValue: String { localized("settings.about.license_value") }
         static var github: String { localized("settings.about.github") }
         static var coffee: String { localized("settings.about.coffee") }
+        static var githubSponsor: String { localized("settings.about.github_sponsor") }
         static var copyright: String { localized("settings.about.copyright") }
     }
     
@@ -120,6 +118,30 @@ enum L {
         static var subtitle: String { localized("welcome.subtitle") }
         static var setupButton: String { localized("welcome.setup_button") }
         static var laterButton: String { localized("welcome.later_button") }
+
+        // v2.0.0 Welcome Flow
+        static var credentialsTitle: String { localized("welcome_credentials_title") }
+        static var credentialsSubtitle: String { localized("welcome_credentials_subtitle") }
+        static var displayTitle: String { localized("welcome.display_title") }
+        static var displaySubtitle: String { localized("welcome.display_subtitle") }
+        static var preview: String { localized("welcome.preview") }
+        static var back: String { localized("welcome.back") }
+        static var continue_: String { localized("welcome.continue") }
+        static var skip: String { localized("welcome.skip") }
+        static var finish: String { localized("welcome.finish") }
+        static var authenticationSetup: String { localized("welcome.authentication_setup") }
+        static var sessionKey: String { localized("welcome.session_key") }
+        static var sessionKeyPlaceholder: String { localized("welcome.session_key_placeholder") }
+        static var sessionKeyHint: String { localized("welcome.session_key_hint") }
+        static var validFormat: String { localized("welcome.valid_format") }
+        static var howToGetSessionKey: String { localized("welcome.how_to_get_session_key") }
+        static var invalidFormat: String { localized("welcome.invalid_format") }
+        static var selectLimits: String { localized("welcome.select_limits") }
+        static var smartModeRecommended: String { localized("welcome.smart_mode_recommended") }
+        static var customSelection: String { localized("welcome.custom_selection") }
+        static var configuring: String { localized("welcome.configuring") }
+        static var fetchOrgIdFailed: String { localized("welcome.fetch_org_id_failed") }
+        static var menubarIconNotVisible: String { localized("welcome.menubar_icon_not_visible") }
     }
     
     // MARK: - Update Checker
@@ -160,6 +182,8 @@ enum L {
         static var percentageOnly: String { localized("display.percentage_only") }
         static var iconOnly: String { localized("display.icon_only") }
         static var both: String { localized("display.both") }
+        static var showIcon: String { localized("display.show_icon") }
+        static var showPercentage: String { localized("display.show_percentage") }
     }
     
     // MARK: - Icon Style Mode
@@ -188,6 +212,7 @@ enum L {
         static var japanese: String { localized("language.japanese") }
         static var chinese: String { localized("language.chinese") }
         static var chineseTraditional: String { localized("language.chinese_traditional") }
+        static var korean: String { localized("language.korean") }
     }
     
     // MARK: - Window Titles
@@ -195,7 +220,16 @@ enum L {
         static var settingsTitle: String { localized("window.settings_title") }
         static var welcomeTitle: String { localized("window.welcome_title") }
     }
-    
+
+    // MARK: - Limit Types
+    enum Limit {
+        static var fiveHour: String { localized("five_hour_limit") }
+        static var sevenDay: String { localized("seven_day_limit") }
+        static var opusWeekly: String { localized("opus_weekly_limit") }
+        static var sonnetWeekly: String { localized("sonnet_weekly_limit") }
+        static var extraUsage: String { localized("extra_usage") }
+    }
+
     // MARK: - Usage Data Formatting
     enum UsageData {
         static var notStartedReset: String { localized("usage_data.not_started_reset") }
@@ -212,6 +246,18 @@ enum L {
         static var unknown: String { localized("usage_data.unknown") }
         static var today: String { localized("usage_data.today") }
         static var tomorrow: String { localized("usage_data.tomorrow") }
+
+        // Compact remaining formats
+        static var compactResettingSoon: String { localized("usage_data.compact_resetting_soon") }
+        static func compactRemainingMinutes(_ minutes: Int) -> String {
+            String(format: localized("usage_data.compact_remaining_minutes"), minutes)
+        }
+        static func compactRemainingHours(_ hours: Int, _ minutes: Int) -> String {
+            String(format: localized("usage_data.compact_remaining_hours"), hours, minutes)
+        }
+        static func compactRemainingDays(_ days: Int, _ hours: Int) -> String {
+            String(format: localized("usage_data.compact_remaining_days"), days, hours)
+        }
     }
     
     // MARK: - Error Messages
@@ -223,6 +269,9 @@ enum L {
         static var noCredentials: String { localized("error.no_credentials") }
         static var networkFailed: String { localized("error.network_failed") }
         static var decodingFailed: String { localized("error.decoding_failed") }
+        static var noOrganizationsFound: String { localized("error.no_organizations_found") }
+        static var unauthorized: String { localized("error.unauthorized") }
+        static var rateLimited: String { localized("error.rate_limited") }
     }
 
     // MARK: - Diagnostics
@@ -284,6 +333,28 @@ enum L {
         static var openLogFolder: String { localized("diagnostic.open_log_folder") }
     }
 
+    // MARK: - Limit Types (v2.0.0)
+    enum LimitTypes {
+        static var fiveHour: String { localized("five_hour_limit") }
+        static var sevenDay: String { localized("seven_day_limit") }
+        static var opusWeekly: String { localized("opus_weekly_limit") }
+        static var sonnetWeekly: String { localized("sonnet_weekly_limit") }
+        static var extraUsage: String { localized("extra_usage") }
+    }
+
+    // MARK: - Display Options (v2.0.0)
+    enum DisplayOptions {
+        static var title: String { localized("display_options") }
+        static var smartDisplay: String { localized("smart_display") }
+        static var smartDisplayDescription: String { localized("smart_display_description") }
+        static var customDisplay: String { localized("custom_display") }
+        static var customDisplayDescription: String { localized("custom_display_description") }
+        static var displayModeLabel: String { localized("display_mode_label") }
+        static var selectLimitTypes: String { localized("select_limit_types") }
+        static var circularIconConstraint: String { localized("circular_icon_constraint") }
+        static var coloredThemeUnavailable: String { localized("colored_theme_unavailable") }
+    }
+
     // MARK: - Launch at Login
     enum LaunchAtLogin {
         static var statusEnabled: String { localized("launch.status.enabled") }
@@ -294,7 +365,28 @@ enum L {
         static var errorEnable: String { localized("launch.error.enable") }
         static var errorDisable: String { localized("launch.error.disable") }
     }
-    
+
+    // MARK: - Extra Usage
+    enum ExtraUsage {
+        static var notEnabled: String { localized("extra_usage.not_enabled") }
+        static func usageAmount(_ used: Double, _ limit: Double) -> String {
+            String(format: localized("extra_usage.usage_amount"), used, limit)
+        }
+        static func remainingAmount(_ remaining: Double) -> String {
+            String(format: localized("extra_usage.remaining_amount"), remaining)
+        }
+    }
+
+    // MARK: - Loading Animation
+    enum LoadingAnimation {
+        static var rainbow: String { localized("loading_animation.rainbow") }
+        static var dashed: String { localized("loading_animation.dashed") }
+        static var pulse: String { localized("loading_animation.pulse") }
+        static func current(_ name: String) -> String {
+            String(format: localized("loading_animation.current"), name)
+        }
+    }
+
     // MARK: - Helper Methods
     
     /// 本地化字符串辅助方法

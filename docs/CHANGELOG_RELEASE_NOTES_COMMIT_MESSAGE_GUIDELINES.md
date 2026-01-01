@@ -1,5 +1,11 @@
 # 如何编写 CHANGELOG，RELEASE NOTES，COMMIT MESSAGE
 
+## 注意事项
+以下注意事项适用于CHANGELOG，RELEASE NOTES和Commit Message的生成
+- 如果一个功能是新增的（Added），那么对这个新功能的所有修改、调整、优化、bug修复都应该被视为该新功能开发过程的一部分，而不应该单独列在 Improved 或 Fixed 部分
+
+
+
 ## CHANGELOG
 
 参照项目根目录下 CHANGELOG.md 文件，编写最新版本的 CHANGELOG 说明。
@@ -10,7 +16,7 @@
 **要求**: 
 - 简洁不赘述
 - 每个变更点使用一条说明文字
-- 不同一变更点只出现一次
+- 不同变更点只出现一次
 
 **示例**:
 
@@ -45,7 +51,7 @@ This release brings a refined user interface and improved window management for 
 - Commit Message 格式：
    ```
    <type>: <subject>
-
+   
    <body>
    ```
 - Type 类型：
@@ -73,3 +79,8 @@ Improved window management:
 - Automatically hide from Dock when closed
 - Popover remains lightweight menu bar element
 ```
+
+**注意**:
+
+- 不要使用任何的Emoji
+- 不要在结尾添加与 Generated with [Claude Code]  类似的任何文字

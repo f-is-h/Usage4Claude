@@ -82,6 +82,8 @@ class MenuBarUI {
         popover = NSPopover()
         // 固定尺寸以避免布局跳动
         popover.contentSize = NSSize(width: 280, height: 240)
+        // 设置行为，允许自定义外观
+        popover.behavior = .semitransient
     }
 
     /// 设置 Popover 内容视图
@@ -119,6 +121,29 @@ class MenuBarUI {
 
         // 让窗口成为 key window，显示 Focus 状态
         popoverWindow.makeKey()
+
+        #if DEBUG
+        // 根据调试开关设置背景颜色
+        if settings.debugKeepDetailWindowOpen {
+            // 开启时：纯白色不透明背景
+            popoverWindow.backgroundColor = NSColor.white
+            popoverWindow.isOpaque = true
+            // 设置内容视图的背景
+            if let contentView = popover.contentViewController?.view {
+                contentView.wantsLayer = true
+                contentView.layer?.backgroundColor = NSColor.white.cgColor
+            }
+        } else {
+            // 关闭时：使用默认透明背景
+            popoverWindow.backgroundColor = NSColor.clear
+            popoverWindow.isOpaque = false
+            // 恢复内容视图的透明背景
+            if let contentView = popover.contentViewController?.view {
+                contentView.wantsLayer = true
+                contentView.layer?.backgroundColor = NSColor.clear.cgColor
+            }
+        }
+        #endif
     }
 
     /// 关闭弹出窗口
@@ -142,6 +167,14 @@ class MenuBarUI {
         // 使用全局事件监听器监听鼠标点击事件
         popoverCloseObserver = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self = self, self.popover.isShown else { return }
+
+            #if DEBUG
+            // Debug模式：如果开启了"保持详情窗口打开"，则不自动关闭
+            if UserSettings.shared.debugKeepDetailWindowOpen {
+                return
+            }
+            #endif
+
             self.closePopover()
         }
     }
@@ -167,6 +200,14 @@ class MenuBarUI {
             queue: .main
         ) { [weak self] _ in
             guard let self = self, self.popover.isShown else { return }
+
+            #if DEBUG
+            // Debug模式：如果开启了"保持详情窗口打开"，则不自动关闭
+            if UserSettings.shared.debugKeepDetailWindowOpen {
+                return
+            }
+            #endif
+
             self.closePopover()
         }
     }
@@ -282,6 +323,16 @@ class MenuBarUI {
         coffeeItem.target = target
         setMenuItemIcon(coffeeItem, systemName: "cup.and.saucer")
         menu.addItem(coffeeItem)
+
+        // GitHub Sponsor
+        let sponsorItem = NSMenuItem(
+            title: L.Menu.githubSponsor,
+            action: #selector(MenuBarManager.openGithubSponsor),
+            keyEquivalent: ""
+        )
+        sponsorItem.target = target
+        setMenuItemIcon(sponsorItem, systemName: "heart")
+        menu.addItem(sponsorItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -428,10 +479,21 @@ class MenuBarUI {
 
         var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)"
 
-        if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
-            key += "_\(Int(fiveHour.percentage))_\(Int(sevenDay.percentage))"
-        } else {
-            key += "_\(Int(data.percentage))"
+        // 包含所有限制类型的百分比，确保形状图标也能正确缓存
+        if let fiveHour = data.fiveHour {
+            key += "_5h\(Int(fiveHour.percentage))"
+        }
+        if let sevenDay = data.sevenDay {
+            key += "_7d\(Int(sevenDay.percentage))"
+        }
+        if let opus = data.opus {
+            key += "_opus\(Int(opus.percentage))"
+        }
+        if let sonnet = data.sonnet {
+            key += "_sonnet\(Int(sonnet.percentage))"
+        }
+        if let extraUsage = data.extraUsage, extraUsage.enabled, let percentage = extraUsage.percentage {
+            key += "_extra\(Int(percentage))"
         }
 
         if hasUpdate {

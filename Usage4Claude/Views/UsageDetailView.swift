@@ -30,15 +30,15 @@ struct UsageDetailView: View {
 
         var name: String {
             switch self {
-            case .rainbow: return "彩虹渐变"
-            case .dashed: return "虚线旋转"
-            case .pulse: return "脉冲效果"
+            case .rainbow: return L.LoadingAnimation.rainbow
+            case .dashed: return L.LoadingAnimation.dashed
+            case .pulse: return L.LoadingAnimation.pulse
             }
         }
     }
 
     // 当前使用的加载动画类型（可长按圆环切换）
-    @State private var animationType: LoadingAnimationType = .rainbow
+    @State var animationType: LoadingAnimationType = .rainbow
     
     /// 菜单操作类型
     enum MenuAction {
@@ -48,22 +48,50 @@ struct UsageDetailView: View {
         case about
         case webUsage
         case coffee
+        case githubSponsor
         case quit
         case refresh
     }
     
     // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
-    @State private var rotationAngle: Double = 0
-    @State private var animationTimer: Timer?
+    @State var rotationAngle: Double = 0
+    @State var animationTimer: Timer?
     // 显示动画类型切换提示
     @State private var showAnimationTypeHint = false
     // 显示更新通知
     @State private var showUpdateNotification = false
+    // 显示模式切换（false: 重置时间, true: 剩余时间）
+    @State private var showRemainingMode = false
     
     // MARK: - Body
-    
+
+    /// 获取当前活动的显示类型
+    private var activeDisplayTypes: [LimitType] {
+        guard let data = usageData else { return [] }
+        return UserSettings.shared.getActiveDisplayTypes(usageData: data)
+    }
+
+    /// 根据活动类型数量计算动态高度
+    private var dynamicHeight: CGFloat {
+        let activeCount = activeDisplayTypes.count
+
+        // 统一使用动态计算，确保底部边距一致
+        // 基础高度：圆环、标题、上下边距等固定内容的总高度
+        // 每行实际高度：文字(12pt) + vertical padding(12pt) + 背景高度 ≈ 26pt
+        // 行间距：5pt
+        let baseHeight: CGFloat = 190
+        let rowHeight: CGFloat = 26
+        let spacing: CGFloat = 5
+
+        // 单限制固定显示2行，双限制和3+限制显示对应行数
+        let rowCount = activeCount == 1 ? 2 : activeCount
+        let textHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
+
+        return baseHeight + textHeight
+    }
+
     var body: some View {
-        VStack(spacing: usageData?.hasBothLimits == true ? 10 : 16) {  // 双限制时与标题间距
+        VStack(spacing: activeDisplayTypes.count >= 2 ? 10 : 16) {  // 多限制时减小间距
             // 标题
             HStack {
                 // 应用图标（不使用template模式）
@@ -144,6 +172,9 @@ struct UsageDetailView: View {
                         Button(action: { onMenuAction?(.coffee) }) {
                             Label(L.Menu.coffee, systemImage: "cup.and.saucer")
                         }
+                        Button(action: { onMenuAction?(.githubSponsor) }) {
+                            Label(L.Menu.githubSponsor, systemImage: "heart")
+                        }
                         Divider()
                         Button(action: { onMenuAction?(.quit) }) {
                             Label(L.Menu.quit, systemImage: "power")
@@ -222,7 +253,10 @@ struct UsageDetailView: View {
                 VStack(spacing: 15) {  // 双模式时两行文字的上间距
                     // 圆形进度条
                     ZStack {
-                        if let primary = data.primaryLimit {
+                        // 根据用户选择的显示类型确定主要限制
+                        let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
+
+                        if let primary = primaryLimitData {
                             // 1. 主圆环背景（灰色）
                             Circle()
                                 .stroke(Color.gray.opacity(0.2), lineWidth: 10)
@@ -232,11 +266,11 @@ struct UsageDetailView: View {
                                 // 加载动画
                                 loadingAnimation()
                             } else {
-                                // 2. 主进度条（5小时或唯一的7天）
+                                // 2. 主进度条（根据用户选择的限制类型）
                                 Circle()
                                     .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
                                     .stroke(
-                                        colorForPrimary(data),
+                                        colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes),
                                         style: StrokeStyle(lineWidth: 10, lineCap: .round)
                                     )
                                     .frame(width: 100, height: 100)
@@ -244,23 +278,34 @@ struct UsageDetailView: View {
                                     .animation(.easeInOut, value: primary.percentage)
                             }
 
-                            // 3. 外层细圆环（仅在双限制时显示7天数据）
-                            if data.hasBothLimits, let sevenDay = data.sevenDay {
-                                // 7天背景圆环（灰色）
-                                Circle()
-                                    .stroke(Color.gray.opacity(0.15), lineWidth: 3)
-                                    .frame(width: 114, height: 114)
+                            // 3. 外层细圆环（仅在用户同时选择了5h和7d限制时显示）
+                            if activeDisplayTypes.contains(.fiveHour) &&
+                               activeDisplayTypes.contains(.sevenDay) {
+                                // 在自定义模式下，即使数据为 nil 也显示占位圆环
+                                let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.displayMode == .custom ? 0 : nil)
 
-                                // 7天进度条（紫色系）
-                                Circle()
-                                    .trim(from: 0, to: CGFloat(sevenDay.percentage) / 100.0)
-                                    .stroke(
-                                        colorForSevenDay(sevenDay.percentage),
-                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                                    )
-                                    .frame(width: 114, height: 114)
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.easeInOut, value: sevenDay.percentage)
+                                if let percentage = sevenDayPercentage {
+                                    // 7天背景圆环（灰色）
+                                    Circle()
+                                        .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                                        .frame(width: 114, height: 114)
+
+                                    if refreshState.isRefreshing {
+                                        // 刷新时显示对应类型的外侧圆环动画（逆时针旋转）
+                                        outerLoadingAnimation()
+                                    } else {
+                                        // 7天进度条（紫色系）
+                                        Circle()
+                                            .trim(from: 0, to: CGFloat(percentage) / 100.0)
+                                            .stroke(
+                                                colorForSevenDay(percentage),
+                                                style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                            )
+                                            .frame(width: 114, height: 114)
+                                            .rotationEffect(.degrees(-90))
+                                            .animation(.easeInOut, value: percentage)
+                                    }
+                                }
                             }
 
                             // 4. 中间显示区域：百分比（显示主要限制的百分比）
@@ -273,6 +318,7 @@ struct UsageDetailView: View {
                             }
                         }
                     }
+                    .frame(height: 114)  // 固定高度，确保有无双圆环时高度一致
                     .contentShape(Circle())  // 定义可点击区域为整个圆形
                     .onTapGesture {
                         // 点击圆环刷新数据
@@ -299,69 +345,84 @@ struct UsageDetailView: View {
                         }
                     }
 
-                    // 详细信息
-                    VStack(spacing: 8) {  // 两行之间的间距
-                        if data.hasBothLimits {
-                            // 场景2：同时有5小时和7天限制，使用对齐布局和SF Symbol图标
-                            if let fiveHour = data.fiveHour {
-                                AlignedInfoRow(
-                                    icon: "clock.fill",
-                                    title: L.Usage.fiveHourLimitShort,
-                                    remainingIcon: "hourglass",
-                                    remaining: fiveHour.formattedCompactRemaining,
-                                    resetIcon: "clock.arrow.trianglehead.counterclockwise.rotate.90",
-                                    resetTime: fiveHour.formattedCompactResetTime
-                                )
-                            }
+                    // 详细信息 - 根据用户选择的显示类型数量使用不同的显示方式
+                    VStack(spacing: 8) {
+                        let activeTypes = activeDisplayTypes
 
-                            if let sevenDay = data.sevenDay {
-                                AlignedInfoRow(
-                                    icon: "calendar",
-                                    title: L.Usage.sevenDayLimitShort,
-                                    remainingIcon: "hourglass.circle",
-                                    remaining: sevenDay.formattedCompactRemaining,
-                                    resetIcon: "clock.arrow.trianglehead.2.counterclockwise.rotate.90",
-                                    resetTime: sevenDay.formattedCompactResetDate,
-                                    tintColor: .purple
-                                )
+                        if activeTypes.count >= 3 {
+                            // 场景3: 3种及以上限制，使用统一行显示
+                            VStack(spacing: 5) {
+                                ForEach(activeTypes, id: \.self) { type in
+                                    UnifiedLimitRow(
+                                        type: type,
+                                        data: data,
+                                        showRemainingMode: showRemainingMode
+                                    )
+                                }
                             }
-                        } else if let fiveHour = data.fiveHour {
-                            // 场景1a：只有5小时限制，保持原有2行显示
-                            VStack(spacing: 8) {  // 包装单限制场景
-                                InfoRow(
-                                    icon: "clock.fill",
-                                    title: L.Usage.fiveHourLimit,
-                                    value: fiveHour.formattedResetsInHours
-                                )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showRemainingMode.toggle()
+                                }
+                            }
+                        } else if activeTypes.count == 2 {
+                            // 场景2：用户选择了2种限制，使用统一行显示
+                            VStack(spacing: 5) {
+                                ForEach(activeTypes, id: \.self) { type in
+                                    UnifiedLimitRow(
+                                        type: type,
+                                        data: data,
+                                        showRemainingMode: showRemainingMode
+                                    )
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showRemainingMode.toggle()
+                                }
+                            }
+                        } else if activeTypes.count == 1 {
+                            // 场景1：用户只选择了1种限制，使用大圆环+2行信息显示
+                            let singleType = activeTypes.first!
 
-                                InfoRow(
-                                    icon: "arrow.clockwise",
-                                    title: L.Usage.resetTime,
-                                    value: fiveHour.formattedResetTimeShort
-                                )
-                            }
-                            .padding(.top, 4)  // 单限制场景向下移动
-                        } else if let sevenDay = data.sevenDay {
-                            // 场景1b：只有7天限制，保持原有2行显示（使用紫色）
-                            VStack(spacing: 8) {  // 包装单限制场景
-                                InfoRow(
-                                    icon: "calendar",
-                                    title: L.Usage.sevenDayLimit,
-                                    value: sevenDay.formattedResetsInDays,
-                                    tintColor: .purple
-                                )
+                            if singleType == .fiveHour, let fiveHour = data.fiveHour {
+                                // 场景1a：只显示5小时限制
+                                VStack(spacing: 5) {
+                                    InfoRow(
+                                        icon: "clock.fill",
+                                        title: L.Usage.fiveHourLimit,
+                                        value: fiveHour.formattedResetsInHours
+                                    )
 
-                                InfoRow(
-                                    icon: "calendar.badge.clock",
-                                    title: L.Usage.resetDate,
-                                    value: sevenDay.formattedResetDateLong,
-                                    tintColor: .purple
-                                )
+                                    InfoRow(
+                                        icon: "arrow.clockwise",
+                                        title: L.Usage.resetTime,
+                                        value: fiveHour.formattedResetTimeShort
+                                    )
+                                }
+                            } else if singleType == .sevenDay, let sevenDay = data.sevenDay {
+                                // 场景1b：只显示7天限制（使用紫色）
+                                VStack(spacing: 5) {
+                                    InfoRow(
+                                        icon: "calendar",
+                                        title: L.Usage.sevenDayLimit,
+                                        value: sevenDay.formattedResetsInDays,
+                                        tintColor: .purple
+                                    )
+
+                                    InfoRow(
+                                        icon: "calendar.badge.clock",
+                                        title: L.Usage.resetDate,
+                                        value: sevenDay.formattedResetDateLong,
+                                        tintColor: .purple
+                                    )
+                                }
                             }
-                            .padding(.top, 4)  // 单限制场景向下移动
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 14)
                 }
             } else {
                 // 加载中
@@ -387,7 +448,7 @@ struct UsageDetailView: View {
                                 endPoint: .trailing
                             )
                         )
-                    Text("加载动画: \(animationType.name)")
+                    Text(L.LoadingAnimation.current(animationType.name))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(
                             LinearGradient(
@@ -426,7 +487,7 @@ struct UsageDetailView: View {
 
             Spacer()
         }
-        .frame(width: 280, height: 240)
+        .frame(width: 290, height: dynamicHeight)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
             // 如果有更新通知消息，显示通知
@@ -461,169 +522,16 @@ struct UsageDetailView: View {
             }
         }
         .onDisappear {
-            // 视图消失时清理定时器
+            // 视图消失时清理定时器和重置状态
             stopRotationAnimation()
+            // 重置显示模式为默认（重置时间模式）
+            showRemainingMode = false
         }
-    }
-    
-    // MARK: - Helper Methods
-    
-    /// 启动旋转动画
-    private func startRotationAnimation() {
-        // 清除旧的定时器
-        stopRotationAnimation()
-
-        // 重置角度
-        rotationAngle = 0
-
-        // 创建新的定时器，每 0.016 秒更新一次（约 60fps）
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
-            withAnimation(.linear(duration: 0.016)) {
-                rotationAngle += 6  // 每帧旋转 6 度，1秒完成一圈
-                if rotationAngle >= 360 {
-                    rotationAngle -= 360
-                }
-            }
-        }
-    }
-
-    /// 停止旋转动画
-    private func stopRotationAnimation() {
-        animationTimer?.invalidate()
-        animationTimer = nil
-        withAnimation(.default) {
-            rotationAngle = 0
-        }
-    }
-    
-    /// 加载动画视图
-    /// 根据animationType返回不同的加载效果
-    @ViewBuilder
-    private func loadingAnimation() -> some View {
-        switch animationType {
-        case .rainbow:
-            rainbowLoadingAnimation()
-        case .dashed:
-            dashedLoadingAnimation()
-        case .pulse:
-            pulseLoadingAnimation()
-        }
-    }
-    
-    /// 效果1：彩虹渐变旋转（推荐）
-    private func rainbowLoadingAnimation() -> some View {
-        Circle()
-            .trim(from: 0, to: 0.7)
-            .stroke(
-                AngularGradient(
-                    gradient: Gradient(colors: [.blue, .purple, .pink, .orange, .blue]),
-                    center: .center
-                ),
-                style: StrokeStyle(lineWidth: 10, lineCap: .round)
-            )
-            .frame(width: 100, height: 100)
-            .rotationEffect(.degrees(rotationAngle))
-    }
-    
-    /// 效果2：虚线旋转
-    private func dashedLoadingAnimation() -> some View {
-        Circle()
-            .trim(from: 0, to: 1)
-            .stroke(
-                Color.blue,
-                style: StrokeStyle(lineWidth: 10, lineCap: .round, dash: [10, 8])
-            )
-            .frame(width: 100, height: 100)
-            .rotationEffect(.degrees(rotationAngle))
-    }
-    
-    /// 效果3：脉冲效果
-    private func pulseLoadingAnimation() -> some View {
-        ZStack {
-            // 内圈 - 快速脉冲
-            Circle()
-                .trim(from: 0, to: 0.6)
-                .stroke(
-                    Color.blue.opacity(0.8),
-                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                )
-                .frame(width: 90, height: 90)
-                .rotationEffect(.degrees(rotationAngle))
-            
-            // 外圈 - 慢速脉冲
-            Circle()
-                .trim(from: 0, to: 0.4)
-                .stroke(
-                    Color.blue.opacity(0.4),
-                    style: StrokeStyle(lineWidth: 6, lineCap: .round)
-                )
-                .frame(width: 100, height: 100)
-                .rotationEffect(.degrees(-rotationAngle * 0.7))
-        }
-    }
-    
-    /// 根据使用百分比返回对应的颜色
-    /// - 0-70%: 绿色（安全）
-    /// - 70-90%: 橙色（警告）
-    /// - 90-100%: 红色（危险）
-    /// 根据5小时限制使用百分比返回对应的颜色
-    /// - Parameter percentage: 当前使用百分比
-    /// - Returns: 对应的状态颜色
-    /// - Note: 使用统一配色方案 (绿→橙→红)
-    private func colorForPercentage(_ percentage: Double) -> Color {
-        return UsageColorScheme.fiveHourColorSwiftUI(percentage)
-    }
-
-    /// 根据7天限制使用百分比返回配色
-    /// - Parameter percentage: 当前使用百分比
-    /// - Returns: 对应的状态颜色
-    /// - Note: 使用统一配色方案 (青蓝→蓝紫→深紫)
-    private func colorForSevenDay(_ percentage: Double) -> Color {
-        return UsageColorScheme.sevenDayColorSwiftUI(percentage)
-    }
-
-    /// 获取主要限制的颜色（根据数据类型自动选择绿/橙/红或紫色系）
-    private func colorForPrimary(_ data: UsageData) -> Color {
-        if let fiveHour = data.fiveHour {
-            // 有5小时限制数据，使用绿/橙/红
-            return colorForPercentage(fiveHour.percentage)
-        } else if let sevenDay = data.sevenDay {
-            // 只有7天限制数据，使用紫色系
-            return colorForSevenDay(sevenDay.percentage)
-        }
-        return .gray
-    }
-
-    /// 创建彩虹文字
-    /// - Parameter text: 要显示的文本
-    /// - Returns: 带彩虹效果的文本视图
-    @ViewBuilder
-    private func rainbowText(_ text: String) -> some View {
-        Text(text)
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [.red, .orange, .yellow, .green, .blue, .purple, .red],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-    }
-
-    /// 创建菜单更新文本（部分文字带颜色）
-    /// - Returns: 带颜色的AttributedString
-    private func createUpdateMenuText() -> AttributedString {
-        let baseText = L.Menu.checkUpdates
-        let badgeText = L.Update.Notification.badgeShort
-        let fullText = baseText + "   " + badgeText
-
-        var attributedString = AttributedString(fullText)
-
-        // 找到徽章文本的范围并设置颜色
-        if let range = attributedString.range(of: badgeText) {
-            attributedString[range].foregroundColor = .orange
-        }
-
-        return attributedString
+        #if DEBUG
+        .background(
+            UserSettings.shared.debugKeepDetailWindowOpen ? Color.white : Color.clear
+        )
+        #endif
     }
 }
 
@@ -634,7 +542,10 @@ struct UsageDetailView_Previews: PreviewProvider {
             percentage: 45,
             resetsAt: Date().addingTimeInterval(3600 * 2.5)
         ),
-        sevenDay: nil
+        sevenDay: nil,
+        opus: nil,
+        sonnet: nil,
+        extraUsage: nil
     )
 
     @State static var errorMsg: String? = nil

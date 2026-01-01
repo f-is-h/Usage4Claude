@@ -1,0 +1,339 @@
+/*
+  Localizable.strings (Korean)
+  Usage4Claude
+
+  Created by f-is-h on 2025-10-15.
+  Copyright © 2025 f-is-h. All rights reserved.
+*/
+
+// MARK: - Menu Items
+"menu.general_settings" = "일반 설정";
+"menu.auth_settings" = "인증 정보";
+"menu.check_updates" = "업데이트 확인";
+"menu.about" = "정보";
+"menu.web_usage" = "Claude 사용량 웹페이지";
+"menu.coffee" = "Buy Me A Coffee";
+"menu.github_sponsor" = "GitHub Sponsor";
+"menu.quit" = "Usage4Claude 종료";
+
+// MARK: - Usage Detail View
+"usage.title" = "Claude 사용 현황";
+"usage.not_started" = "사용 후 표시됩니다";
+"usage.reset_in" = "재설정까지 남은 시간";
+"usage.remaining" = "남은 시간";
+"usage.loading" = "로딩 중...";
+"usage.not_configured" = "인증 정보 미설정";
+"usage.go_to_settings" = "인증 정보 설정하기";
+"usage.reset_time" = "재설정 시간";
+"usage.used" = "사용함";
+"usage.five_hour_limit" = "5시간 제한";
+"usage.seven_day_limit" = "7일 제한";
+"usage.five_hour_limit_short" = "5h";
+"usage.seven_day_limit_short" = "7d";
+"usage.reset_date" = "재설정 날짜";
+"usage.refresh" = "새로고침";
+"usage.refresh_cooldown" = "잠시 후 다시 시도하세요";
+"usage.run_diagnostic" = "진단 실행";
+
+// MARK: - Settings - Tabs
+"settings.tab.general" = "일반";
+"settings.tab.auth" = "인증";
+"settings.tab.about" = "정보";
+
+// MARK: - Settings - General
+"settings.general.launch_section" = "시작 프로그램";
+"settings.general.launch_at_login" = "로그인 시 자동 시작";
+"settings.general.launch_hint" = "활성화 시 시스템 로그인 시 앱이 자동으로 실행됩니다";
+"settings.general.display_section" = "표시 설정";
+"settings.general.menubar_icon" = "메뉴바 아이콘";
+"settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
+"settings.general.menubar_theme" = "메뉴바 테마";
+"settings.general.display_content" = "표시 내용";
+"settings.general.monochrome_no_icon_hint" = "단색 테마에서는 아이콘 표시를 지원하지 않습니다";
+"settings.general.refresh_section" = "새로고침 설정";
+"settings.general.refresh_mode" = "새로고침 모드";
+"settings.general.refresh_interval" = "고정 새로고침 간격";
+"settings.general.refresh_hint_smart" = "사용 상황에 따라 새로고침 간격을 자동 조정(활성 시 1분, 비활성 시 최대 10분)";
+"settings.general.refresh_hint_fixed" = "설정한 고정 시간 간격으로 데이터를 새로고침합니다";
+"settings.general.language_section" = "언어 설정";
+"settings.general.interface_language" = "인터페이스 언어";
+"settings.general.language_hint" = "인터페이스 표시 언어 변경";
+"settings.general.reset_button" = "기본값으로 복원";
+"icon_style.color_translucent" = "컬러 반투명";
+"icon_style.color_with_background" = "컬러 배경";
+"icon_style.monochrome" = "단색 테마";
+"icon_style.color_translucent_desc" = "컬러 링, 투명 배경, 대부분의 메뉴바 스타일에 적합";
+"icon_style.color_with_background_desc" = "컬러 링과 반투명 흰색 배경, 어두운 배경에서 컬러 반투명이 잘 보이지 않을 때 적합";
+"icon_style.monochrome_desc" = "시스템 메뉴바 스타일에 자동 적응, 간결하고 우아함";
+
+// MARK: - Settings - Authentication
+"settings.auth.how_to_title" = "인증 정보 얻는 방법";
+"settings.auth.step1" = "1. 브라우저에서 claude.ai에 접속하여 로그인";
+"settings.auth.step2" = "2. 브라우저 개발자 도구 열기(F12 또는 Cmd+Option+I)";
+"settings.auth.step3" = "3. Network(네트워크) 탭으로 전환";
+"settings.auth.step4" = "4. 페이지를 새로고침하고 usage 요청 찾기";
+"settings.auth.step5" = "5. Headers의 Cookie에서 sessionKey 찾기";
+"settings.auth.step6" = "6. sessionKey 값을 복사하여 위에 붙여넣기";
+"settings.auth.open_browser" = "브라우저에서 Claude 사용량 페이지 열기";
+"settings.auth.session_key_label" = "Session Key";
+"settings.auth.session_key_placeholder" = "Session Key 붙여넣기";
+"settings.auth.session_key_hint" = "sk-ant-sid01-로 시작하는 긴 문자열";
+"settings.auth.configured" = "인증 정보가 설정되었습니다";
+"settings.auth.not_configured" = "Session Key를 입력하세요";
+"settings.auth.credentials_title" = "인증 정보";
+"settings.auth.ready_to_use" = "앱을 사용할 수 있습니다";
+"settings.auth.need_credentials" = "Session Key를 입력해야 합니다";
+"settings.auth.show_password" = "표시";
+"settings.auth.hide_password" = "숨기기";
+
+// MARK: - Settings - About
+"settings.about.version" = "버전 %@";
+"settings.about.description" = "Claude AI의 5시간 사용 제한 모니터링";
+"settings.about.developer" = "개발자";
+"settings.about.license" = "라이선스";
+"settings.about.license_value" = "MIT License";
+"settings.about.github" = "GitHub 저장소 방문";
+"settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.github_sponsor" = "GitHub Sponsor";
+"settings.about.copyright" = "© 2025 All Rights Reserved";
+
+// MARK: - Welcome View
+"welcome.title" = "Usage4Claude에 오신 것을 환영합니다";
+"welcome.subtitle" = "시작하기 전에 인증 정보를 설정하세요";
+"welcome.setup_button" = "인증 정보 설정하기";
+"welcome.later_button" = "나중에 설정";
+
+// MARK: - Update Checker
+"update.new_version_title" = "새 버전 발견";
+"update.latest_version" = "최신 버전";
+"update.current_version" = "현재 버전";
+"update.view_details_hint" = "[세부 정보 보기]를 클릭하여 전체 업데이트 내용 확인";
+"update.view_release_page" = "전체 업데이트 내용은 Release 페이지에서 확인하세요";
+"update.download_button" = "업데이트 다운로드";
+"update.remind_later_button" = "나중에 알림";
+"update.view_details_button" = "세부 정보 보기";
+"update.up_to_date_title" = "최신 버전입니다";
+"update.up_to_date_message" = "현재 버전 %@는 최신 버전입니다.";
+"update.ok_button" = "확인";
+"update.check_failed_title" = "업데이트 확인 실패";
+"update.confirm_button" = "확인";
+"update.error.invalid_url" = "유효하지 않은 URL";
+"update.error.network" = "네트워크 오류, 네트워크 연결을 확인하세요";
+"update.error.no_data" = "데이터를 가져올 수 없습니다";
+"update.error.parse_failed" = "업데이트 정보 파싱 실패";
+
+// MARK: - Update Notification
+"update.notification.available" = "새 버전이 있습니다!";
+"update.notification.badge_menu" = "🎉 새 버전이 있습니다!";
+"update.notification.badge_short" = "🎉 새버전!";
+
+// MARK: - Icon Display Mode
+"display.percentage_only" = "백분율만 표시";
+"display.icon_only" = "아이콘만 표시";
+"display.both" = "아이콘과 백분율";
+"display.show_icon" = "아이콘 표시";
+"display.show_percentage" = "백분율 표시";
+
+// MARK: - Refresh Interval
+"refresh.smart_mode" = "스마트 간격";
+"refresh.fixed_mode" = "고정 간격";
+"refresh.1_minute" = "1분";
+"refresh.3_minutes" = "3분";
+"refresh.5_minutes" = "5분";
+"refresh.10_minutes" = "10분";
+
+// MARK: - Language Names
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "中文（简体）";
+"language.chinese_traditional" = "中文（繁体）";
+"language.korean" = "한국어";
+
+// MARK: - Window Titles
+"window.settings_title" = "Usage4Claude 설정";
+"window.welcome_title" = "환영합니다";
+
+// MARK: - Usage Data Formatting
+"usage_data.not_started_reset" = "사용 후 재설정 시간 표시";
+"usage_data.resetting_soon" = "곧 재설정됩니다";
+"usage_data.resets_in_hours" = "약 %d시간 %d분 남음";
+"usage_data.resets_in_minutes" = "약 %d분 남음";
+"usage_data.resets_in_days" = "약 %d일 %d시간 남음";
+"usage_data.unknown" = "알 수 없음";
+"usage_data.today" = "오늘";
+"usage_data.tomorrow" = "내일";
+
+// MARK: - Error Messages
+"error.invalid_url" = "유효하지 않은 URL";
+"error.no_data" = "데이터를 받지 못했습니다";
+"error.session_expired" = "세션이 만료되었습니다. 설정에서 다시 구성하세요";
+"error.cloudflare_blocked" = "요청이 보안 시스템에 의해 차단되었습니다. 브라우저에서 claude.ai에 접속하여 로봇이 아님을 확인한 후 다시 시도하세요.";
+"error.no_credentials" = "설정에서 먼저 인증 정보를 설정하세요";
+"error.network_failed" = "네트워크 요청 실패, 네트워크 연결을 확인하세요";
+"error.decoding_failed" = "응답 데이터 파싱 실패, 인증 정보가 올바른지 확인하세요";
+"error.no_organizations_found" = "조직을 찾을 수 없습니다";
+"error.unauthorized" = "인증 실패, 자격 증명을 확인하세요";
+"error.rate_limited" = "요청이 너무 빈번합니다. 잠시 후 다시 시도하세요";
+
+// MARK: - Launch at Login
+"launch.status.enabled" = "활성화됨";
+"launch.status.disabled" = "비활성화됨";
+"launch.status.requires_approval" = "승인 대기 중";
+"launch.status.not_found" = "찾을 수 없음";
+"launch.error.title" = "시작 프로그램 오류";
+"launch.error.enable" = "시작 프로그램 활성화 실패";
+"launch.error.disable" = "시작 프로그램 비활성화 실패";
+
+// MARK: - Diagnostics
+"diagnostic.section_title" = "연결 진단";
+"diagnostic.section_description" = "Claude API와의 연결을 테스트하고 문제를 진단합니다. 보고서의 모든 민감한 정보는 자동으로 마스킹 처리됩니다.";
+"diagnostic.test_button" = "연결 테스트";
+"diagnostic.view_details_button" = "세부 정보 보기";
+"diagnostic.export_button" = "보고서 내보내기";
+"diagnostic.testing_connection" = "연결 테스트 중...";
+"diagnostic.test_completed" = "테스트 완료";
+"diagnostic.test_success" = "연결 테스트 성공";
+"diagnostic.test_failed" = "연결 테스트 실패";
+"diagnostic.result_success" = "연결 성공";
+"diagnostic.result_failed" = "연결 실패";
+"diagnostic.http_status" = "HTTP 상태";
+"diagnostic.response_time" = "응답 시간";
+"diagnostic.response_type" = "응답 유형";
+"diagnostic.cloudflare_detected" = "Cloudflare 챌린지 감지";
+"diagnostic.diagnosis" = "진단 결과";
+"diagnostic.suggestions" = "권장 조치";
+"diagnostic.privacy_notice" = "모든 민감한 데이터가 자동으로 마스킹되어 안전하게 공유할 수 있습니다";
+"diagnostic.detailed_report_title" = "상세 진단 보고서";
+"diagnostic.no_report_available" = "보고서가 없습니다. 먼저 테스트를 실행하세요.";
+"diagnostic.copy_to_clipboard" = "클립보드에 복사";
+"diagnostic.export_title" = "진단 보고서 내보내기";
+"diagnostic.export_message" = "이 보고서에는 민감한 정보가 포함되어 있지 않으며 안전하게 공유할 수 있습니다.";
+"diagnostic.export_success_title" = "내보내기 성공";
+"diagnostic.export_success_message" = "진단 보고서가 저장되었습니다:";
+"diagnostic.export_error_title" = "내보내기 실패";
+
+// Diagnosis messages
+"diagnostic.diagnosis_success" = "연결이 정상적으로 작동합니다. API가 유효한 사용 데이터를 반환했습니다.";
+"diagnostic.diagnosis_cloudflare" = "요청이 Cloudflare 보안 시스템에 의해 차단되었습니다. IP 평판이나 네트워크 구성 때문일 수 있습니다.";
+"diagnostic.diagnosis_decoding" = "서버가 데이터를 반환했지만 파싱할 수 없습니다. 일반적으로 인증 정보가 올바르지 않거나 일치하지 않음을 의미합니다.";
+"diagnostic.diagnosis_network" = "네트워크 연결 실패. 인터넷 연결을 확인하세요.";
+"diagnostic.diagnosis_no_credentials" = "인증 정보가 설정되지 않았습니다.";
+"diagnostic.diagnosis_invalid_url" = "조직 ID 형식이 유효하지 않습니다.";
+"diagnostic.diagnosis_unknown" = "알 수 없는 오류가 발생했습니다. 이 보고서를 내보내서 개발자와 공유하세요.";
+
+// Suggestion messages
+"diagnostic.suggestion_success" = "모든 것이 정상적으로 작동합니다. 조치가 필요하지 않습니다.";
+"diagnostic.suggestion_visit_browser" = "브라우저에서 claude.ai에 접속하여 보안 확인을 완료하세요";
+"diagnostic.suggestion_wait_and_retry" = "5-10분 후 다시 시도하세요";
+"diagnostic.suggestion_check_vpn" = "VPN이나 프록시가 연결에 영향을 주는지 확인하세요";
+"diagnostic.suggestion_use_smart_mode" = "요청 빈도를 줄이기 위해 스마트 새로고침 모드를 사용하세요";
+"diagnostic.suggestion_verify_credentials" = "조직 ID와 세션 키가 올바른지 확인하세요";
+"diagnostic.suggestion_update_session_key" = "세션 키가 만료되었을 수 있습니다. 브라우저에서 업데이트하세요";
+"diagnostic.suggestion_check_browser" = "브라우저에서 claude.ai/settings/usage에 접속할 수 있는지 확인하세요";
+"diagnostic.suggestion_check_internet" = "인터넷 연결을 확인하세요";
+"diagnostic.suggestion_check_firewall" = "방화벽이나 백신 설정을 확인하세요";
+"diagnostic.suggestion_retry_later" = "나중에 다시 시도하세요";
+"diagnostic.suggestion_configure_auth" = "위 필드에 조직 ID와 세션 키를 설정하세요";
+"diagnostic.suggestion_check_org_id" = "조직 ID 형식이 올바른지 확인하세요(UUID 형식이어야 함)";
+"diagnostic.suggestion_export_and_share" = "이 진단 보고서를 내보내서 GitHub Issues에 공유하세요";
+"diagnostic.suggestion_contact_support" = "github.com/f-is-h/Usage4Claude/issues에서 개발자에게 도움을 요청하세요";
+"diagnostic.open_log_folder" = "로그 폴더 열기";
+
+// MARK: - Limit Types (v2.0.0)
+"five_hour_limit" = "5시간 제한";
+"seven_day_limit" = "7일 제한";
+"opus_weekly_limit" = "7일 Opus 제한";
+"sonnet_weekly_limit" = "7일 Sonnet 제한";
+"extra_usage" = "추가 사용량";
+
+// MARK: - Display Options (v2.0.0)
+"display_options" = "표시 옵션";
+"smart_display" = "스마트 표시";
+"smart_display_description" = "데이터가 있는 모든 제한 유형을 자동으로 표시";
+"custom_display" = "사용자 정의 표시";
+"custom_display_description" = "표시할 제한을 수동으로 선택";
+"display_mode_label" = "표시 모드";
+"select_limit_types" = "표시할 제한 유형 선택";
+"circular_icon_constraint" = "최소한 하나의 원형 아이콘(5시간 또는 7일)을 선택해야 합니다";
+"colored_theme_unavailable" = "컬러 테마는 1-2개의 원형 아이콘과 다른 유형이 없을 때만 사용할 수 있습니다";
+
+// MARK: - Theme Selection (v2.0.0)
+"theme_selection" = "테마";
+"monochrome_theme" = "단색 테마";
+"colored_theme" = "컬러 테마";
+"colored_theme_unavailable_reason" = "사용 불가: 2개 이하의 원형 표시기만 있을 때 지원됩니다";
+
+// MARK: - Credentials Configuration (v2.0.0)
+"credentials" = "자격 증명";
+"session_key_hint" = "브라우저 개발자 도구 → Application → Cookies → claude.ai에서 찾기";
+"session_key_help" = "Session Key는 macOS 키체인에 안전하게 저장됩니다";
+"session_key_required" = "Session Key가 필요합니다";
+"fetching" = "가져오는 중...";
+"refetch" = "다시 가져오기";
+"configuring" = "설정 중...";
+"credentials_saved" = "자격 증명이 저장되었습니다";
+"save" = "저장";
+"back" = "뒤로";
+"continue" = "계속";
+
+// MARK: - Welcome Flow (v2.0.0)
+"welcome_credentials_title" = "Claude 액세스 설정";
+"welcome_credentials_subtitle" = "Session Key를 입력하면 Organization ID를 자동으로 가져옵니다";
+"welcome_display_title" = "표시 옵션 선택";
+"welcome_display_subtitle" = "메뉴바에 표시할 사용 제한 선택";
+"preview" = "미리보기";
+"welcome.skip" = "건너뛰기";
+"welcome.finish" = "완료";
+"welcome.authentication_setup" = "인증 설정";
+"welcome.session_key" = "Session Key";
+"welcome.session_key_placeholder" = "여기에 Session Key를 붙여넣으세요";
+"welcome.session_key_hint" = "sk-ant-sid01-로 시작...";
+"welcome.valid_format" = "형식이 올바릅니다";
+"welcome.invalid_format" = "Session Key 길이는 20-500자 사이여야 합니다";
+"welcome.select_limits" = "제한 선택";
+"welcome.smart_mode_recommended" = "스마트 모드(권장)";
+"welcome.custom_selection" = "사용자 정의 선택";
+"welcome.display_title" = "표시 옵션";
+"welcome.display_subtitle" = "표시할 제한 유형 선택";
+"welcome.preview" = "미리보기";
+"welcome.back" = "뒤로";
+"welcome.continue" = "계속";
+"welcome.how_to_get_session_key" = "Session Key 얻는 방법?";
+"welcome.configuring" = "설정 중...";
+"welcome.fetch_org_id_failed" = "Organization ID를 가져올 수 없습니다. 나중에 설정에서 다시 시도하세요";
+"welcome.menubar_icon_not_visible" = "메뉴바 아이콘이 보이지 않나요?";
+
+// MARK: - Detail Window - Date/Time Formats (v2.0.0)
+"today" = "오늘";
+"today_time" = "오늘 %@";
+"month_day" = "%d월 %d일";
+"extra_usage_format" = "$%d/$%d";
+
+// MARK: - Detail Window - Remaining Time (v2.0.0)
+"extra_usage_remaining" = "$%@ 더 사용 가능";
+"remaining_days_hours" = "%d일 %d시간 남음";
+"remaining_hours_minutes" = "%d시간 %d분 남음";
+"remaining_minutes" = "%d분 남음";
+
+// MARK: - Settings Window (v2.0.0)
+"settings" = "설정";
+
+// MARK: - General (v2.0.0)
+"unknown" = "알 수 없음";
+
+// MARK: - Usage Data - Compact Remaining Formats
+"usage_data.compact_resetting_soon" = "곧 재설정됩니다";
+"usage_data.compact_remaining_minutes" = "%d분 남음";
+"usage_data.compact_remaining_hours" = "%d시간 %d분 남음";
+"usage_data.compact_remaining_days" = "%d일 %d시간 남음";
+
+// MARK: - Extra Usage
+"extra_usage.not_enabled" = "활성화되지 않음";
+"extra_usage.usage_amount" = "$%.0f/$%.0f";
+"extra_usage.remaining_amount" = "$%.0f 더 사용 가능";
+
+// MARK: - Loading Animation
+"loading_animation.rainbow" = "무지개 그라데이션";
+"loading_animation.dashed" = "점선 회전";
+"loading_animation.pulse" = "펄스 효과";
+"loading_animation.current" = "로딩 애니메이션: %@";

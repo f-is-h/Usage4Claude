@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md)
+[English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [한국어](docs/README.kr.md)
 
 <div align="center">
 
@@ -27,9 +27,11 @@
 
 ### 🎯 Core Features
 
-- **📊 Real-time Monitoring** - Display Claude subscription's usage quota (5-hour/7-day) in menu bar
-- **🎯 Dual Limit Support** - Show 5-hour and 7-day limits simultaneously with dual-ring icon
-- **🎨 Smart Colors** - Automatic color changes based on usage (5-hour: green/orange/red; 7-day: cyan/blue-purple/deep purple)
+- **📊 Real-time Monitoring** - Display Claude subscription's usage quota in menu bar
+- **🎯 Multi-Limit Support** - Show up to 5 limits simultaneously (5-hour/7-day/Extra/7-day Opus/7-day Sonnet)
+- **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
+- **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
+- **🎨 Smart Colors** - Automatic color changes based on usage (5-hour: green/orange/red; 7-day: purple gradient)
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
 - **🔄 Smart Refresh System** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
 - **⚡ Manual Refresh** - Click refresh button to update data instantly (10-second debounce protection)
@@ -57,6 +59,7 @@ All platforms share the same usage quota, monitored in one place!
   - 日本語
   - 简体中文
   - 繁体中文
+  - 한국어
   - More languages coming soon...
 
 ### 🔧 Convenient Features
@@ -82,60 +85,53 @@ All platforms share the same usage quota, monitored in one place!
 
 ### Menu Bar Display
 
-| Icon Only | 5-Hour | 5-Hour+Icon | 5-Hour+7-Day | 5+7+Icon | Monochrome (Adaptive) |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="docs/images/bar.icon@2x.png" width="auto" height="32" style="min-width: 32px" alt="icon"> | <img src="docs/images/bar.5.ring@2x.png" width="auto" height="32" style="min-width: 32px" alt="5h ring"> | <img src="docs/images/bar.5.both@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+icon"> | <img src="docs/images/bar.12.ring@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+7d"> | <img src="docs/images/bar.12.both@2x.png" width="auto" height="32" style="min-width: 64px" alt="5+7+icon"> | <nobr><img src="docs/images/bar.mono.b@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono black"> <img src="docs/images/bar.mono.w@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono white"></nobr> |
+- Icons and any limit type can be freely combined for display (at least one item must be shown)
+- Dual indicators through shape and color ensure easy identification even in monochrome themes
 
-**5-Hour Limit Mode - Ring Color Indicators**:
+| Icon | 5-Hour | 7-Day | Extra | 7-Day Opus | 7-Day Sonnet | Monochrome (Adaptive) |
+|:---:|:---:|:---:|:---:|:---:|:---:|-----|
+| <img src="docs/images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="docs/images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="docs/images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="docs/images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="docs/images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="docs/images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="docs/images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="docs/images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
 
-🟢 **Green** (0-69%) - Safe usage
-🟠 **Orange** (70-89%) - Monitor usage
-🔴 **Red** (90-100%) - Approaching limit
+**Color Indicators**:
 
-**7-Day Limit Mode - Ring Color Indicators**:
-
-🔵 **Cyan** (0-69%) - Safe usage
-🟣 **Blue-Purple** (70-89%) - Monitor usage
-🟪 **Deep Purple** (90-100%) - Approaching limit
-
-**Dual Limit Mode - Dual Ring Display**:
-
-When both 5-hour and 7-day limits exist, menu bar shows dual rings:
-
-- **Inner Ring (5-hour limit)**: 🟢 Green → 🟠 Orange → 🔴 Red
-- **Outer Ring (7-day limit)**: 🔵 Cyan → 🟣 Blue-Purple → 🟪 Deep Purple
+- **5-Hour Limit (incl. detail window)**: ![macOS Green](https://img.shields.io/badge/macOS_Green-34C759) → ![macOS Orange](https://img.shields.io/badge/macOS_Orange-FF9500) → ![macOS Red](https://img.shields.io/badge/macOS_Red-FF3B30)
+- **7-Day Limit (incl. detail window)**: ![Light Purple](https://img.shields.io/badge/Light_Purple-C084FC) → ![Purple](https://img.shields.io/badge/Purple-B450F0) → ![Deep Purple](https://img.shields.io/badge/Deep_Purple-B41EA0)
+- **Extra Usage**: ![Pink](https://img.shields.io/badge/Pink-FF9ECD) → ![Rose](https://img.shields.io/badge/Rose-EC4899) → ![Magenta](https://img.shields.io/badge/Magenta-D946EF)
+- **7-Day Opus Limit**: ![Light Orange](https://img.shields.io/badge/Light_Orange-FFC864) → ![Amber](https://img.shields.io/badge/Amber-FBBF24) → ![Orange Red](https://img.shields.io/badge/Orange_Red-FF6432)
+- **7-Day Sonnet Limit**: ![Light Blue](https://img.shields.io/badge/Light_Blue-64C8FF) → ![Blue](https://img.shields.io/badge/Blue-007AFF) → ![Indigo](https://img.shields.io/badge/Indigo-4F46E5)
 
 ### Detail Window
 
 <table border="0">
 <tr>
-<td align="center">
+<td align="top" valign="top">
 <img src="docs/images/detail.5.en@2x.png" width="280" alt="5-Hour Limit Mode">
-<br/>
+<br/><br/><br/><br/>
 <sub><i>5-Hour Limit Mode</i></sub>
 </td>
-<td align="center">
-<img src="docs/images/detail.7.en@2x.png" width="280" alt="7-Day Limit Mode">
+<td align="center" valign="top">
+<img src="docs/images/detail.all.en@2x.png" width="280" alt="All Limits Mode">
 <br/>
-<sub><i>7-Day Limit Mode</i></sub>
+<sub><i>All Limits Mode (Any combination freely selectable)</i></sub>
 </td>
-<td align="center">
-<img src="docs/images/detail.12.en@2x.png" width="280" alt="Dual Limit Mode">
+<td align="center" valign="top">
+<img src="docs/images/detail@2x.gif" width="280" alt="Time Remaining Toggle Animation">
 <br/>
-<sub><i>Dual Limit Mode</i></sub>
+<sub><i>Time Remaining Toggle Animation</i></sub>
 </td>
 </tr>
 </table>
 
 ### Settings
 
-**General** - Launch at login, customize display, refresh, and language options  
-**Authentication** - Configure Claude account authentication  
+**General** - Launch at login, customize display, theme settings, refresh, and language options
+**Authentication** - Configure Claude account authentication, connection diagnostics
 **About** - Version info and related links
 
 ### Welcome Screen
 
-**Set Up Authentication** - Go directly to authentication settings to complete setup  
+**Configure Authentication** - Session Key, auto-retrieve Organization ID
+**Configure Display Options** - Display options and theme settings with live preview
 **Set Up Later** - Close welcome screen, configure later in settings
 
 ---
@@ -148,7 +144,7 @@ When both 5-hour and 7-day limits exist, menu bar shows dual rings:
 2. Download the latest `.dmg` file
 3. Double-click to open, drag app to Applications folder
 4. Right-click the app and select "Open" on first launch (allow unsigned app)
-5. Allow Keychain access for authentication info (Need to allow again after version updates. Authorization prompt appears twice: Organization ID, Session Key)
+5. Allow Keychain access for authentication info (Need to allow again after version updates. Authorization prompt appears once: Session Key)
 
 ### Option 2: Build from Source
 
@@ -182,18 +178,15 @@ open Usage4Claude.xcodeproj
 2. **Configure Authentication**  
    Click "Go to Authentication Settings" button
 
-3. **Get Required Info**  
+3. **Get Session Key**
    - Click "Open Claude Usage Page in Browser"
    - Open browser developer tools (press F12 or Cmd + Option + I)
    - Switch to "Network" tab
    - Refresh the page
    - Find request named `usage`
-   - View Headers and find:
-     - `sessionKey=sk-ant-...` value in `Cookie`
-     - Organization ID in URL (format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
+   - View Headers, find `sessionKey=sk-ant-...` value in `Cookie`
 
-4. **Enter Information**  
-   - Paste Organization ID into "Organization ID" field
+4. **Enter Information**
    - Paste Session Key into "Session Key" field
    - Monitoring will start automatically after configuration
 
@@ -275,9 +268,10 @@ A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon
 <details>
 <summary><b>Q: Why does it need Keychain permission?</b></summary>
 
-A: 
+A:
 - Keychain is macOS's system-level password manager
-- Your Session Key and Organization ID are encrypted in Keychain
+- Your Session Key is encrypted in Keychain
+- Organization ID is stored in local config (non-sensitive identifier)
 - This is Apple's recommended secure storage method
 - Only this app can access the information, other apps cannot view it
 
@@ -317,9 +311,9 @@ You can verify all of this by reviewing the source code on GitHub!
 <details>
 <summary><b>Q: Does it work with Claude Code / Desktop App / Mobile App?</b></summary>
 
-A: **Yes, it works with all Claude platforms!** 
+A: **Yes, it works with all Claude platforms!**
 
-Since all Claude products (Web, Claude Code, Desktop App, Mobile App) share the same 5-hour usage quota, Usage4Claude monitors your combined usage across all platforms.
+Since all Claude products (Web, Claude Code, Desktop App, Mobile App) share the same usage quota, Usage4Claude monitors your combined usage across all platforms.
 
 Whether you're:
 - Coding in terminal with `claude code`
@@ -328,6 +322,23 @@ Whether you're:
 - Using mobile apps
 
 You'll see your real-time total usage in the menu bar. No platform-specific configuration needed!
+
+</details>
+
+<details>
+<summary><b>Q: Can't see the icon in menu bar?</b></summary>
+
+A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may automatically hide menu bar icons.
+
+**Solution:**
+1. Hold **Command (⌘) key**
+2. Drag icons in the menu bar with mouse
+3. Drag Usage4Claude icon to the visible area on the right side of menu bar
+4. Release mouse
+
+**Note:**
+- macOS Sonoma (14.0+) automatically hides infrequently used icons to "Control Center"
+- You can adjust menu bar icon display in "System Settings" → "Control Center"
 
 </details>
 
@@ -372,38 +383,43 @@ Built with modern macOS native technologies:
 - [x] Dual-ring menu bar icon
 - [x] Unified color scheme management
 - [x] Debug mode (fake data, simulated updates)
+- [x] Detail window remove Focus state
+- [x] Multi-limit type support (5 types)
+- [x] Smart/custom display mode
+- [x] Auto-retrieve Organization ID
+- [x] Optimized welcome flow
+- [x] Monochrome theme icon display
+- [x] Korean language support
 
 ### Short-term Plans
 1. **Developer Experience**
     - 🚧 GitHub Actions check online version
 
-2. **Display Optimization**
-    - 🚧 Settings interface dark mode adaptation
-
 ### Mid-term Plans
-3. **Display Optimization**
-    - Detail window Focus state
+2. **Display Optimization**
 
-5. **Feature Addition**
-    - More 7-day usage modes support (OAuth・Opus)
+- 🚧 Settings interface dark mode adaptation
+
+3. **Feature Addition**
     - Usage notifications
     - More language localizations
 
 ### Long-term Vision
-5. **Auto Setup**
+4. **Auto Setup**
 
 - Browser extension for auto-authentication
 - Automatic credential configuration
 
-6. **More Display Methods**
-   - Desktop widgets
-   - Browser extension icon usage display
+5. **More Display Methods**
 
-7. **Data Analysis**
+- Desktop widgets
+- Browser extension icon usage display
+
+6. **Data Analysis**
    - Usage history records
    - Trend charts
 
-8. **Multi-platform Support**
+7. **Multi-platform Support**
    - iOS / iPadOS version
    - Apple Watch version
    - Windows version
@@ -450,9 +466,9 @@ Giving a star is the biggest encouragement!
 ### ☕ Buy Me a Coffee
 
 <!-- GitHub Sponsors -->
-<!-- <a href="https://github.com/sponsors/f-is-h">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a> -->
+</a>
 
 <!-- Ko-fi -->
 <a href="https://ko-fi.com/1attle">

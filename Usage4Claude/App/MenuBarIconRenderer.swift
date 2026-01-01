@@ -38,66 +38,44 @@ class MenuBarIconRenderer {
         hasUpdate: Bool,
         button: NSStatusBarButton?
     ) -> NSImage {
-        let size = NSSize(width: 22, height: 22)
-
-        // 根据显示模式选择图标样式
-        let isTemplateMode = settings.iconStyleMode == .monochrome
-        let removeBackground = settings.iconStyleMode == .colorTranslucent
-
         // 无数据时显示默认图标
         guard let data = usageData else {
-            return isTemplateMode ?
+            let size = NSSize(width: 22, height: 22)
+            return settings.iconStyleMode == .monochrome ?
                 createCircleTemplateImage(percentage: 0, size: size, button: button, removeBackground: true) :
                 createCircleImage(percentage: 0, size: size, button: button, removeBackground: true)
         }
+
+        // 获取要显示的限制类型
+        let activeTypes = settings.getActiveDisplayTypes(usageData: data)
+
+        // 判断是否可以使用彩色主题
+        let canUseColor = settings.canUseColoredTheme(usageData: data)
+        let forceMonochrome = !canUseColor && settings.iconStyleMode != .monochrome
+        let isMonochrome = settings.iconStyleMode == .monochrome || forceMonochrome
 
         var icon: NSImage
 
         // 根据显示模式创建图标
         switch settings.iconDisplayMode {
         case .percentageOnly:
-            if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
-                icon = isTemplateMode ?
-                    createDualCircleTemplateImage(fiveHourPercentage: fiveHour.percentage, sevenDayPercentage: sevenDay.percentage, size: size, button: button, removeBackground: removeBackground) :
-                    createDualCircleImage(fiveHourPercentage: fiveHour.percentage, sevenDayPercentage: sevenDay.percentage, size: size, button: button, removeBackground: removeBackground)
-            } else if let fiveHour = data.fiveHour {
-                icon = isTemplateMode ?
-                    createCircleTemplateImage(percentage: fiveHour.percentage, size: size, button: button, removeBackground: removeBackground) :
-                    createCircleImage(percentage: fiveHour.percentage, size: size, button: button, removeBackground: removeBackground)
-            } else if let sevenDay = data.sevenDay {
-                icon = isTemplateMode ?
-                    createCircleTemplateImage(percentage: sevenDay.percentage, size: size, button: button, removeBackground: removeBackground) :
-                    createCircleImage(percentage: sevenDay.percentage, size: size, useSevenDayColor: true, button: button, removeBackground: removeBackground)
-            } else {
-                // Fallback
-                icon = createSimpleCircleIcon()
-            }
+            // 仅显示百分比（圆形/矩形/六边形组合）
+            icon = createCombinedPercentageIcon(data: data, types: activeTypes, isMonochrome: isMonochrome, button: button)
 
         case .iconOnly:
-            if let appIcon = NSImage(named: "AppIcon"), let iconCopy = appIcon.copy() as? NSImage {
+            // 仅显示 App 图标
+            let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
+            if let appIcon = NSImage(named: iconName), let iconCopy = appIcon.copy() as? NSImage {
                 iconCopy.size = NSSize(width: 18, height: 18)
-                iconCopy.isTemplate = isTemplateMode
+                iconCopy.isTemplate = isMonochrome
                 icon = iconCopy
             } else {
                 icon = createSimpleCircleIcon()
             }
 
         case .both:
-            if data.hasBothLimits, let fiveHour = data.fiveHour, let sevenDay = data.sevenDay {
-                icon = isTemplateMode ?
-                    createCombinedDualTemplateImage(fiveHourPercentage: fiveHour.percentage, sevenDayPercentage: sevenDay.percentage, button: button, removeBackground: removeBackground) :
-                    createCombinedDualImage(fiveHourPercentage: fiveHour.percentage, sevenDayPercentage: sevenDay.percentage, button: button, removeBackground: removeBackground)
-            } else if let fiveHour = data.fiveHour {
-                icon = isTemplateMode ?
-                    createCombinedTemplateImage(percentage: fiveHour.percentage, button: button, removeBackground: removeBackground) :
-                    createCombinedImage(percentage: fiveHour.percentage, button: button, removeBackground: removeBackground)
-            } else if let sevenDay = data.sevenDay {
-                icon = isTemplateMode ?
-                    createCombinedTemplateImage(percentage: sevenDay.percentage, button: button, removeBackground: removeBackground) :
-                    createCombinedImage(percentage: sevenDay.percentage, useSevenDayColor: true, button: button, removeBackground: removeBackground)
-            } else {
-                icon = createSimpleCircleIcon()
-            }
+            // App 图标 + 百分比组合
+            icon = createCombinedIconWithAppIcon(data: data, types: activeTypes, isMonochrome: isMonochrome, button: button)
         }
 
         // 如果需要徽章，添加徽章
@@ -106,6 +84,64 @@ class MenuBarIconRenderer {
         }
 
         return icon
+    }
+
+    /// 创建仅百分比的组合图标
+    private func createCombinedPercentageIcon(
+        data: UsageData,
+        types: [LimitType],
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        guard !types.isEmpty else {
+            return createSimpleCircleIcon()
+        }
+
+        // 为每个类型创建图标
+        let icons = types.compactMap { type in
+            createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
+        }
+
+        // 组合图标
+        if icons.isEmpty {
+            return createSimpleCircleIcon()
+        } else if icons.count == 1 {
+            return icons[0]
+        } else {
+            let combined = combineIcons(icons, spacing: 3.0, height: 18)
+            combined.isTemplate = isMonochrome
+            return combined
+        }
+    }
+
+    /// 创建 App 图标 + 百分比的组合图标
+    private func createCombinedIconWithAppIcon(
+        data: UsageData,
+        types: [LimitType],
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        // 获取 App 图标（单色模式使用反转图标）
+        let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
+        guard let appIcon = NSImage(named: iconName), let appIconCopy = appIcon.copy() as? NSImage else {
+            return createCombinedPercentageIcon(data: data, types: types, isMonochrome: isMonochrome, button: button)
+        }
+
+        appIconCopy.size = NSSize(width: 18, height: 18)
+        appIconCopy.isTemplate = isMonochrome
+
+        // 创建百分比图标
+        let percentageIcons = types.compactMap { type in
+            createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
+        }
+
+        // 组合 App 图标 + 百分比图标
+        var allIcons = [appIconCopy]
+        allIcons.append(contentsOf: percentageIcons)
+
+        let combined = combineIcons(allIcons, spacing: 3.0, height: 18)
+        combined.isTemplate = isMonochrome
+        return combined
     }
     
     // MARK: - Icon Drawing - Colored Mode (彩色模式)
@@ -124,21 +160,50 @@ class MenuBarIconRenderer {
             backgroundCircle.fill()
         }
 
-        NSColor.gray.withAlphaComponent(0.7).setStroke()
+        NSColor.gray.withAlphaComponent(0.5).setStroke()
         let backgroundPath = NSBezierPath()
         backgroundPath.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        backgroundPath.lineWidth = 2.0
+        backgroundPath.lineWidth = 1.5
+
+        // 7天限制使用虚线以区分5小时限制
+        if useSevenDayColor {
+            let dashPattern: [CGFloat] = [3, 1]
+            backgroundPath.setLineDash(dashPattern, count: dashPattern.count, phase: 0)
+        }
+
         backgroundPath.stroke()
 
         let color = useSevenDayColor ? UsageColorScheme.sevenDayColorAdaptive(percentage, for: button) : UsageColorScheme.fiveHourColorAdaptive(percentage, for: button)
         color.setStroke()
 
         let progressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let endAngle = startAngle - (CGFloat(percentage) / 100.0 * 360)
+        let lineWidth: CGFloat = 2.5
+
+        // 计算进度角度
+        let baseAngle = CGFloat(percentage) / 100.0 * 360
+        let circumference = 2 * CGFloat.pi * radius  // 圆周长
+        let capAngle = (lineWidth / circumference) * 360  // 圆头延伸对应的角度
+
+        let progressAngle: CGFloat
+        let startAngle: CGFloat
+
+        if percentage >= 100 {
+            // 100%: 使用完整角度和固定起点，因为 .butt 端点无延伸
+            progressAngle = baseAngle
+            startAngle = 90
+        } else {
+            // 5小时/7天限制：使用渐进式减法，保持起点固定，实现平滑增长
+            // 减去的角度随百分比线性增加，在50%时完成完整减法，50%-100%显示完全精确
+            progressAngle = baseAngle - capAngle * min(1.0, CGFloat(percentage / 50.0))
+            startAngle = 90 - capAngle / 2 + 0.5
+        }
+
+        let endAngle = startAngle - progressAngle
 
         progressPath.appendArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-        progressPath.lineWidth = 2.5
+        progressPath.lineWidth = lineWidth
+        // 100%时使用平头让圆环完美闭合，其他进度使用圆头
+        progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
         progressPath.stroke()
 
         let fontSize: CGFloat = size.width * 0.4
@@ -156,209 +221,9 @@ class MenuBarIconRenderer {
         return image
     }
 
-    private func createDualCircleImage(fiveHourPercentage: Double, sevenDayPercentage: Double, size: NSSize, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
-        let circleSize = min(size.width, size.height)
-        let spacing: CGFloat = 2
-        let totalWidth = circleSize + spacing + circleSize
-        let image = NSImage(size: NSSize(width: totalWidth, height: size.height))
-        image.lockFocus()
-
-        let radius = circleSize / 2 - 2
-        let leftCenter = NSPoint(x: circleSize / 2, y: size.height / 2)
-        let rightCenter = NSPoint(x: circleSize + spacing + circleSize / 2, y: size.height / 2)
-
-        // 左圆环（5小时）
-        if !removeBackground {
-            let leftBackgroundCircle = NSBezierPath()
-            leftBackgroundCircle.appendArc(withCenter: leftCenter, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor(white: 1, alpha: 0.5).setFill()
-            leftBackgroundCircle.fill()
-        }
-
-        NSColor.gray.withAlphaComponent(0.7).setStroke()
-        let leftBackgroundPath = NSBezierPath()
-        leftBackgroundPath.appendArc(withCenter: leftCenter, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        leftBackgroundPath.lineWidth = 2.0
-        leftBackgroundPath.stroke()
-
-        UsageColorScheme.fiveHourColorAdaptive(fiveHourPercentage, for: button).setStroke()
-        let leftProgressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let leftEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
-        leftProgressPath.appendArc(withCenter: leftCenter, radius: radius, startAngle: startAngle, endAngle: leftEndAngle, clockwise: true)
-        leftProgressPath.lineWidth = 2.5
-        leftProgressPath.stroke()
-
-        // 右圆环（7天）
-        if !removeBackground {
-            let rightBackgroundCircle = NSBezierPath()
-            rightBackgroundCircle.appendArc(withCenter: rightCenter, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor(white: 1, alpha: 0.5).setFill()
-            rightBackgroundCircle.fill()
-        }
-
-        NSColor.gray.withAlphaComponent(0.7).setStroke()
-        let rightBackgroundPath = NSBezierPath()
-        rightBackgroundPath.appendArc(withCenter: rightCenter, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        rightBackgroundPath.lineWidth = 2.0
-        rightBackgroundPath.stroke()
-
-        UsageColorScheme.sevenDayColorAdaptive(sevenDayPercentage, for: button).setStroke()
-        let rightProgressPath = NSBezierPath()
-        let rightEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
-        rightProgressPath.appendArc(withCenter: rightCenter, radius: radius, startAngle: startAngle, endAngle: rightEndAngle, clockwise: true)
-        rightProgressPath.lineWidth = 2.5
-        rightProgressPath.stroke()
-
-        let fontSize: CGFloat = circleSize * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
-
-        let leftText = "\(Int(fiveHourPercentage))"
-        let leftTextSize = leftText.size(withAttributes: attrs)
-        leftText.draw(at: NSPoint(x: leftCenter.x - leftTextSize.width / 2, y: leftCenter.y - leftTextSize.height / 2), withAttributes: attrs)
-
-        let rightText = "\(Int(sevenDayPercentage))"
-        let rightTextSize = rightText.size(withAttributes: attrs)
-        rightText.draw(at: NSPoint(x: rightCenter.x - rightTextSize.width / 2, y: rightCenter.y - rightTextSize.height / 2), withAttributes: attrs)
-
-        image.unlockFocus()
-        return image
-    }
-
-    private func createCombinedImage(percentage: Double, useSevenDayColor: Bool = false, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
-        let size = NSSize(width: 42, height: 20)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        if let appIcon = NSImage(named: "AppIcon"), let iconCopy = appIcon.copy() as? NSImage {
-            iconCopy.isTemplate = false
-            iconCopy.size = NSSize(width: 16, height: 16)
-            iconCopy.draw(in: NSRect(x: 1, y: 2, width: 16, height: 16))
-        }
-
-        let circleX: CGFloat = 20
-        let center = NSPoint(x: circleX + 10, y: 10)
-        let radius: CGFloat = 8
-
-        if !removeBackground {
-            let backgroundCircle = NSBezierPath()
-            backgroundCircle.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor.white.withAlphaComponent(0.5).setFill()
-            backgroundCircle.fill()
-        }
-
-        NSColor.gray.withAlphaComponent(0.7).setStroke()
-        let backgroundPath = NSBezierPath()
-        backgroundPath.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        backgroundPath.lineWidth = 2.0
-        backgroundPath.stroke()
-
-        let color = useSevenDayColor ? UsageColorScheme.sevenDayColorAdaptive(percentage, for: button) : UsageColorScheme.fiveHourColorAdaptive(percentage, for: button)
-        color.setStroke()
-
-        let progressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let endAngle = startAngle - (CGFloat(percentage) / 100.0 * 360)
-        progressPath.appendArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-        progressPath.lineWidth = 2.5
-        progressPath.stroke()
-
-        let font = NSFont.systemFont(ofSize: 8, weight: .semibold)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
-
-        let text = "\(Int(percentage))"
-        let textSize = text.size(withAttributes: attrs)
-        text.draw(at: NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2), withAttributes: attrs)
-
-        image.unlockFocus()
-        return image
-    }
-
-    private func createCombinedDualImage(fiveHourPercentage: Double, sevenDayPercentage: Double, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
-        let size = NSSize(width: 60, height: 20)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        if let appIcon = NSImage(named: "AppIcon"), let iconCopy = appIcon.copy() as? NSImage {
-            iconCopy.isTemplate = false
-            iconCopy.size = NSSize(width: 16, height: 16)
-            iconCopy.draw(in: NSRect(x: 1, y: 2, width: 16, height: 16))
-        }
-
-        let circlesStartX: CGFloat = 20
-        let circleRadius: CGFloat = 8
-        let circleSpacing: CGFloat = 4
-        let leftCenter = NSPoint(x: circlesStartX + circleRadius, y: 10)
-        let rightCenter = NSPoint(x: circlesStartX + circleRadius * 2 + circleSpacing + circleRadius, y: 10)
-
-        // 左圆环
-        if !removeBackground {
-            let leftBackgroundCircle = NSBezierPath()
-            leftBackgroundCircle.appendArc(withCenter: leftCenter, radius: circleRadius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor.white.withAlphaComponent(0.5).setFill()
-            leftBackgroundCircle.fill()
-        }
-
-        NSColor.gray.withAlphaComponent(0.7).setStroke()
-        let leftBackgroundPath = NSBezierPath()
-        leftBackgroundPath.appendArc(withCenter: leftCenter, radius: circleRadius, startAngle: 0, endAngle: 360, clockwise: false)
-        leftBackgroundPath.lineWidth = 2.0
-        leftBackgroundPath.stroke()
-
-        UsageColorScheme.fiveHourColorAdaptive(fiveHourPercentage, for: button).setStroke()
-        let leftProgressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let leftEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
-        leftProgressPath.appendArc(withCenter: leftCenter, radius: circleRadius, startAngle: startAngle, endAngle: leftEndAngle, clockwise: true)
-        leftProgressPath.lineWidth = 2.5
-        leftProgressPath.stroke()
-
-        // 右圆环
-        if !removeBackground {
-            let rightBackgroundCircle = NSBezierPath()
-            rightBackgroundCircle.appendArc(withCenter: rightCenter, radius: circleRadius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor.white.withAlphaComponent(0.5).setFill()
-            rightBackgroundCircle.fill()
-        }
-
-        NSColor.gray.withAlphaComponent(0.7).setStroke()
-        let rightBackgroundPath = NSBezierPath()
-        rightBackgroundPath.appendArc(withCenter: rightCenter, radius: circleRadius, startAngle: 0, endAngle: 360, clockwise: false)
-        rightBackgroundPath.lineWidth = 2.0
-        rightBackgroundPath.stroke()
-
-        UsageColorScheme.sevenDayColorAdaptive(sevenDayPercentage, for: button).setStroke()
-        let rightProgressPath = NSBezierPath()
-        let rightEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
-        rightProgressPath.appendArc(withCenter: rightCenter, radius: circleRadius, startAngle: startAngle, endAngle: rightEndAngle, clockwise: true)
-        rightProgressPath.lineWidth = 2.5
-        rightProgressPath.stroke()
-
-        let font = NSFont.systemFont(ofSize: 8, weight: .semibold)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
-
-        let leftText = "\(Int(fiveHourPercentage))"
-        let leftTextSize = leftText.size(withAttributes: attrs)
-        leftText.draw(at: NSPoint(x: leftCenter.x - leftTextSize.width / 2, y: leftCenter.y - leftTextSize.height / 2), withAttributes: attrs)
-
-        let rightText = "\(Int(sevenDayPercentage))"
-        let rightTextSize = rightText.size(withAttributes: attrs)
-        rightText.draw(at: NSPoint(x: rightCenter.x - rightTextSize.width / 2, y: rightCenter.y - rightTextSize.height / 2), withAttributes: attrs)
-
-        image.unlockFocus()
-        return image
-    }
-
     // MARK: - Icon Drawing - Template Mode (单色模式)
 
-    private func createCircleTemplateImage(percentage: Double, size: NSSize, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
+    private func createCircleTemplateImage(percentage: Double, size: NSSize, useSevenDayStyle: Bool = false, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -369,15 +234,44 @@ class MenuBarIconRenderer {
         let backgroundPath = NSBezierPath()
         backgroundPath.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
         backgroundPath.lineWidth = 1.5
+
+        // 7天限制使用虚线以区分5小时限制
+        if useSevenDayStyle {
+            let dashPattern: [CGFloat] = [3, 1]
+            backgroundPath.setLineDash(dashPattern, count: dashPattern.count, phase: 0)
+        }
+
         backgroundPath.stroke()
 
         NSColor.labelColor.setStroke()
         let progressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let endAngle = startAngle - (CGFloat(percentage) / 100.0 * 360)
+        let lineWidth: CGFloat = 2.5
+
+        // 计算进度角度
+        let baseAngle = CGFloat(percentage) / 100.0 * 360
+        let circumference = 2 * CGFloat.pi * radius  // 圆周长
+        let capAngle = (lineWidth / circumference) * 360  // 圆头延伸对应的角度
+
+        let progressAngle: CGFloat
+        let startAngle: CGFloat
+
+        if percentage >= 100 {
+            // 100%: 使用完整角度和固定起点，因为 .butt 端点无延伸
+            progressAngle = baseAngle
+            startAngle = 90
+        } else {
+            // 单色模式：使用渐进式减法，保持起点固定，实现平滑增长
+            // 减去的角度随百分比线性增加，在50%时完成完整减法，50%-100%显示完全精确
+            progressAngle = baseAngle - capAngle * min(1.0, CGFloat(percentage / 50.0))
+            startAngle = 90 - capAngle / 2 + 0.5
+        }
+
+        let endAngle = startAngle - progressAngle
+
         progressPath.appendArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-        progressPath.lineWidth = 2.5
-        progressPath.lineCapStyle = .round
+        progressPath.lineWidth = lineWidth
+        // 100%时使用平头让圆环完美闭合，其他进度使用圆头
+        progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
         progressPath.stroke()
 
         let fontSize: CGFloat = size.width * 0.4
@@ -385,180 +279,9 @@ class MenuBarIconRenderer {
         let text = "\(Int(percentage))"
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraphStyle]
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
         let textSize = text.size(withAttributes: attrs)
         text.draw(at: NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2), withAttributes: attrs)
-
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
-    }
-
-    private func createDualCircleTemplateImage(fiveHourPercentage: Double, sevenDayPercentage: Double, size: NSSize, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
-        let circleSize = min(size.width, size.height)
-        let spacing: CGFloat = 2
-        let totalWidth = circleSize + spacing + circleSize
-        let image = NSImage(size: NSSize(width: totalWidth, height: size.height))
-        image.lockFocus()
-
-        let radius = circleSize / 2 - 2
-        let leftCenter = NSPoint(x: circleSize / 2, y: size.height / 2)
-        let rightCenter = NSPoint(x: circleSize + spacing + circleSize / 2, y: size.height / 2)
-
-        // 左圆环
-        NSColor.labelColor.withAlphaComponent(0.25).setStroke()
-        let leftBackgroundPath = NSBezierPath()
-        leftBackgroundPath.appendArc(withCenter: leftCenter, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        leftBackgroundPath.lineWidth = 1.5
-        leftBackgroundPath.stroke()
-
-        NSColor.labelColor.setStroke()
-        let leftProgressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let leftEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
-        leftProgressPath.appendArc(withCenter: leftCenter, radius: radius, startAngle: startAngle, endAngle: leftEndAngle, clockwise: true)
-        leftProgressPath.lineWidth = 2.5
-        leftProgressPath.lineCapStyle = .round
-        leftProgressPath.stroke()
-
-        // 右圆环
-        NSColor.labelColor.withAlphaComponent(0.25).setStroke()
-        let rightBackgroundPath = NSBezierPath()
-        rightBackgroundPath.appendArc(withCenter: rightCenter, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        rightBackgroundPath.lineWidth = 1.5
-        rightBackgroundPath.stroke()
-
-        NSColor.labelColor.setStroke()
-        let rightProgressPath = NSBezierPath()
-        let rightEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
-        rightProgressPath.appendArc(withCenter: rightCenter, radius: radius, startAngle: startAngle, endAngle: rightEndAngle, clockwise: true)
-        rightProgressPath.lineWidth = 2.5
-        rightProgressPath.lineCapStyle = .round
-        rightProgressPath.stroke()
-
-        let fontSize: CGFloat = circleSize * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraphStyle]
-
-        let leftText = "\(Int(fiveHourPercentage))"
-        let leftTextSize = leftText.size(withAttributes: attrs)
-        leftText.draw(at: NSPoint(x: leftCenter.x - leftTextSize.width / 2, y: leftCenter.y - leftTextSize.height / 2), withAttributes: attrs)
-
-        let rightText = "\(Int(sevenDayPercentage))"
-        let rightTextSize = rightText.size(withAttributes: attrs)
-        rightText.draw(at: NSPoint(x: rightCenter.x - rightTextSize.width / 2, y: rightCenter.y - rightTextSize.height / 2), withAttributes: attrs)
-
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
-    }
-
-    private func createCombinedTemplateImage(percentage: Double, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
-        let size = NSSize(width: 42, height: 20)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        if let appIcon = NSImage(named: "AppIcon"), let iconCopy = appIcon.copy() as? NSImage {
-            iconCopy.isTemplate = true
-            iconCopy.size = NSSize(width: 16, height: 16)
-            iconCopy.draw(in: NSRect(x: 1, y: 2, width: 16, height: 16))
-        }
-
-        let circleX: CGFloat = 20
-        let center = NSPoint(x: circleX + 10, y: 10)
-        let radius: CGFloat = 8
-
-        NSColor.labelColor.withAlphaComponent(0.25).setStroke()
-        let backgroundPath = NSBezierPath()
-        backgroundPath.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-        backgroundPath.lineWidth = 1.5
-        backgroundPath.stroke()
-
-        NSColor.labelColor.setStroke()
-        let progressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let endAngle = startAngle - (CGFloat(percentage) / 100.0 * 360)
-        progressPath.appendArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-        progressPath.lineWidth = 2.5
-        progressPath.lineCapStyle = .round
-        progressPath.stroke()
-
-        let font = NSFont.systemFont(ofSize: 8, weight: .semibold)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraphStyle]
-
-        let text = "\(Int(percentage))"
-        let textSize = text.size(withAttributes: attrs)
-        text.draw(at: NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2), withAttributes: attrs)
-
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
-    }
-
-    private func createCombinedDualTemplateImage(fiveHourPercentage: Double, sevenDayPercentage: Double, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
-        let size = NSSize(width: 60, height: 20)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        if let appIcon = NSImage(named: "AppIcon"), let iconCopy = appIcon.copy() as? NSImage {
-            iconCopy.isTemplate = true
-            iconCopy.size = NSSize(width: 16, height: 16)
-            iconCopy.draw(in: NSRect(x: 1, y: 2, width: 16, height: 16))
-        }
-
-        let circlesStartX: CGFloat = 20
-        let circleRadius: CGFloat = 8
-        let circleSpacing: CGFloat = 4
-        let leftCenter = NSPoint(x: circlesStartX + circleRadius, y: 10)
-        let rightCenter = NSPoint(x: circlesStartX + circleRadius * 2 + circleSpacing + circleRadius, y: 10)
-
-        // 左圆环
-        NSColor.labelColor.withAlphaComponent(0.25).setStroke()
-        let leftBackgroundPath = NSBezierPath()
-        leftBackgroundPath.appendArc(withCenter: leftCenter, radius: circleRadius, startAngle: 0, endAngle: 360, clockwise: false)
-        leftBackgroundPath.lineWidth = 1.5
-        leftBackgroundPath.stroke()
-
-        NSColor.labelColor.setStroke()
-        let leftProgressPath = NSBezierPath()
-        let startAngle: CGFloat = 90
-        let leftEndAngle = startAngle - (CGFloat(fiveHourPercentage) / 100.0 * 360)
-        leftProgressPath.appendArc(withCenter: leftCenter, radius: circleRadius, startAngle: startAngle, endAngle: leftEndAngle, clockwise: true)
-        leftProgressPath.lineWidth = 2.5
-        leftProgressPath.lineCapStyle = .round
-        leftProgressPath.stroke()
-
-        // 右圆环
-        NSColor.labelColor.withAlphaComponent(0.25).setStroke()
-        let rightBackgroundPath = NSBezierPath()
-        rightBackgroundPath.appendArc(withCenter: rightCenter, radius: circleRadius, startAngle: 0, endAngle: 360, clockwise: false)
-        rightBackgroundPath.lineWidth = 1.5
-        rightBackgroundPath.stroke()
-
-        NSColor.labelColor.setStroke()
-        let rightProgressPath = NSBezierPath()
-        let rightEndAngle = startAngle - (CGFloat(sevenDayPercentage) / 100.0 * 360)
-        rightProgressPath.appendArc(withCenter: rightCenter, radius: circleRadius, startAngle: startAngle, endAngle: rightEndAngle, clockwise: true)
-        rightProgressPath.lineWidth = 2.5
-        rightProgressPath.lineCapStyle = .round
-        rightProgressPath.stroke()
-
-        let font = NSFont.systemFont(ofSize: 8, weight: .semibold)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraphStyle]
-
-        let leftText = "\(Int(fiveHourPercentage))"
-        let leftTextSize = leftText.size(withAttributes: attrs)
-        leftText.draw(at: NSPoint(x: leftCenter.x - leftTextSize.width / 2, y: leftCenter.y - leftTextSize.height / 2), withAttributes: attrs)
-
-        let rightText = "\(Int(sevenDayPercentage))"
-        let rightTextSize = rightText.size(withAttributes: attrs)
-        rightText.draw(at: NSPoint(x: rightCenter.x - rightTextSize.width / 2, y: rightCenter.y - rightTextSize.height / 2), withAttributes: attrs)
 
         image.unlockFocus()
         image.isTemplate = true
@@ -609,6 +332,105 @@ class MenuBarIconRenderer {
         badgedImage.isTemplate = baseImage.isTemplate
 
         return badgedImage
+    }
+
+    // MARK: - Icon Combination Methods (v2.0)
+
+    /// 组合多个图标到单个图像
+    /// - Parameters:
+    ///   - icons: 要组合的图标数组
+    ///   - spacing: 图标间距
+    ///   - height: 统一高度（默认18）
+    /// - Returns: 组合后的图标
+    private func combineIcons(_ icons: [NSImage], spacing: CGFloat = 3.0, height: CGFloat = 18) -> NSImage {
+        guard !icons.isEmpty else {
+            return createSimpleCircleIcon()
+        }
+
+        // 计算总宽度
+        let totalWidth = icons.reduce(0) { $0 + $1.size.width } + CGFloat(icons.count - 1) * spacing
+        let size = NSSize(width: totalWidth, height: height)
+
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        var currentX: CGFloat = 0
+        for icon in icons {
+            let y = (height - icon.size.height) / 2  // 垂直居中
+            icon.draw(at: NSPoint(x: currentX, y: y),
+                     from: NSRect(origin: .zero, size: icon.size),
+                     operation: .sourceOver,
+                     fraction: 1.0)
+            currentX += icon.size.width + spacing
+        }
+
+        image.unlockFocus()
+        return image
+    }
+
+    /// 根据限制类型和数据创建单个图标
+    /// - Parameters:
+    ///   - type: 限制类型
+    ///   - data: 用量数据
+    ///   - isMonochrome: 是否为单色模式
+    ///   - button: 状态栏按钮
+    /// - Returns: 图标图像
+    func createIconForType(
+        _ type: LimitType,
+        data: UsageData,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage? {
+        // 根据主题模式决定是否移除背景
+        // colorTranslucent: 移除背景（通透）
+        // colorWithBackground: 保留背景（半透明白色）
+        let removeBackground = settings.iconStyleMode == .colorTranslucent
+
+        // 在自定义模式下，即使数据为 nil 也显示占位图标（0%）
+        // 在智能模式下，数据为 nil 时返回 nil
+        let showPlaceholder = settings.displayMode == .custom
+
+        switch type {
+        case .fiveHour:
+            let percentage = data.fiveHour?.percentage ?? (showPlaceholder ? 0 : nil)
+            guard let percentage = percentage else { return nil }
+            if isMonochrome {
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
+            } else {
+                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: removeBackground)
+            }
+
+        case .sevenDay:
+            let percentage = data.sevenDay?.percentage ?? (showPlaceholder ? 0 : nil)
+            guard let percentage = percentage else { return nil }
+            if isMonochrome {
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
+            } else {
+                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayColor: true, button: button, removeBackground: removeBackground)
+            }
+
+        case .opusWeekly:
+            let percentage = data.opus?.percentage ?? (showPlaceholder ? 0 : nil)
+            guard let percentage = percentage else { return nil }
+            return ShapeIconRenderer.createVerticalRectangleIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+
+        case .sonnetWeekly:
+            let percentage = data.sonnet?.percentage ?? (showPlaceholder ? 0 : nil)
+            guard let percentage = percentage else { return nil }
+            return ShapeIconRenderer.createHorizontalRectangleIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+
+        case .extraUsage:
+            let percentage: Double?
+            if let extraUsage = data.extraUsage, extraUsage.enabled {
+                percentage = extraUsage.percentage
+            } else if showPlaceholder {
+                percentage = 0
+            } else {
+                percentage = nil
+            }
+            guard let percentage = percentage else { return nil }
+            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+        }
     }
 
 }

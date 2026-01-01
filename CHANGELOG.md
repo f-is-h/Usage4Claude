@@ -5,6 +5,100 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-01-01
+
+### Added
+- **Multi-limit type support**: Now supports displaying 5 types of usage limits
+  - 5-hour limit (circle icon)
+  - 7-day limit (circle icon with dashed border)
+  - Extra usage (hexagon icon)
+  - 7-day Opus limit (rounded square icon)
+  - 7-day Sonnet limit (rounded square icon with top-right corner cut)
+- **Smart/Custom display modes**: Flexible display options
+  - Smart mode: Automatically detects and displays all limit types with data
+  - Custom mode: Manually select which limit types to display, supports any combination
+  - At least one circular icon (5-hour or 7-day) must be kept
+- **Auto-fetch Organization ID**: Simplified configuration process
+  - Only Session Key input required, Organization ID fetched automatically
+  - Reduced Keychain prompts from 2 to 1
+  - Lowered configuration barrier, improved user experience
+- **Enhanced welcome flow**: Guided configuration experience
+  - All configuration options displayed on second page
+  - Real-time menu bar icon preview
+  - Auto-configuration and localization support
+- **Enhanced detail window**: Supports displaying 1-5 limit types
+  - Two-column layout (limit name | reset time/remaining quota)
+  - Click to toggle display mode (reset time ↔ remaining time/quota)
+  - Dynamic window height adaptation
+  - Smooth vertical slide transition animation
+- **Monochrome theme icon display**: Removed icon display restrictions in monochrome theme
+  - Added reverse app icon
+  - Users can freely choose display mode (percentage/icon/combined)
+  - All themes support all display content
+- **7-day limit visual distinction**: Dashed border style
+  - 7-day limit circle uses dashed border
+  - Supported in both color and monochrome modes
+  - Distinguish 5-hour and 7-day limits at a glance
+- **Korean language support**: Added Korean interface
+  - Complete Korean translations
+  - Korean date format support (M월d일)
+  - System language auto-detection for Korean
+- **GitHub Sponsor support**: Added sponsorship links
+  - Added "GitHub Sponsor" option in popover menu
+  - Added "GitHub Sponsor" option in right-click context menu
+  - Added "GitHub Sponsor" button in About page
+  - Uses heart icon for identification
+
+### Changed
+- **Data storage strategy**: Organization ID migrated from Keychain to UserDefaults
+  - Reduced sensitive data storage, simplified access flow
+  - Automatic data migration (v1.x → v2.0)
+  - Organization ID is just an identifier, doesn't require high-security storage
+- **Detail window layout**: Multi-limit scenarios changed from two-row to multi-row text layout
+  - Up to 5 rows of limit information
+  - Two-column alignment (name | time/quota)
+  - Window width adjusted from 280pt to 290pt
+  - Horizontal padding adjusted from 16pt to 14pt
+- **Menu bar icon spacing**: Reduced from 4pt to 3pt
+  - More compact multi-icon combination display
+  - Maximum total width: 102pt (18×5 + 3×4)
+- **Configuration flow**: Simplified welcome and settings interfaces
+  - Removed manual Organization ID input
+  - Unified automatic fetching mechanism
+
+### Improved
+- **Debug mode optimization**: Enhanced performance and responsiveness
+  - Added debounce mechanism (50ms) to prevent task accumulation
+  - Removed 500ms artificial delay for instant data fetching
+  - Simplified UI, removed scenario picker, direct slider control for 5 limits
+  - Smooth slider response, no lag
+  - Final slider values accurately reflected in menu bar icons
+- **Code quality**: Eliminated code duplication
+  - Extracted IconShapePaths shared utility class to eliminate duplicate icon drawing logic
+  - Extracted ShapeIconRenderer helper class
+  - Split UsageRowComponents and UsageDetailView+Helpers
+  - Removed unused legacy methods (6 v1.0 methods from MenuBarIconRenderer)
+  - All files comply with 650-line limit (v2-Pragmatic spec)
+
+### Fixed
+- **Language switching**: Fixed settings window title not updating in real-time when switching languages, optimized settings window title bar height
+- **Settings responsiveness**: Removed debounce delay for menu bar icon updates, icon now updates immediately after settings change
+- **Reset to defaults**: Improved reset functionality
+  - Added missing icon style mode reset (colorTranslucent)
+  - Added missing display mode reset (smart display)
+  - Added missing custom display types reset (including extra usage)
+  - Language reset now uses system language detection instead of hardcoded Chinese
+- **Settings focus state**: Removed unwanted focus rings from settings controls when window first opens
+  - Theme picker, display mode picker, refresh mode picker, language picker
+  - Icon and percentage checkboxes
+
+### Security
+- **Credential storage optimization**: Minimized sensitive data
+  - Session Key strictly protected in Keychain
+  - Organization ID reasonably protected in UserDefaults (non-sensitive identifier)
+  - Organization ID cannot be used alone for account operations
+  - Reduced Keychain access frequency, improved user convenience
+
 ## [1.6.0] - 2025-12-01
 
 ### Added
@@ -263,6 +357,7 @@ Key, Organization ID)
 
 ---
 
+[2.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.0.0
 [1.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.6.0
 [1.5.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.1
 [1.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.0

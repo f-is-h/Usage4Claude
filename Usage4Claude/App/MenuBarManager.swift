@@ -47,6 +47,8 @@ class MenuBarManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     /// 窗口关闭观察者
     private var windowCloseObserver: NSObjectProtocol?
+    /// 语言变化观察者
+    private var languageChangeObserver: NSObjectProtocol?
 
     /// 当前用量数据（从 dataManager 同步）
     @Published var usageData: UsageData?
@@ -171,6 +173,9 @@ class MenuBarManager: ObservableObject {
             if let url = URL(string: "https://ko-fi.com/1atte") {
                 NSWorkspace.shared.open(url)
             }
+        case .githubSponsor:
+            closePopover()
+            openGithubSponsor()
         case .quit:
             quitApp()
         }
@@ -184,9 +189,14 @@ class MenuBarManager: ObservableObject {
                 guard let self = self else { return }
                 // 设置改变时清除图标缓存（显示模式可能改变）
                 self.ui.clearIconCache()
+
+                // 立即更新图标，无需等待
                 self.updateMenuBarIcon()
 
                 #if DEBUG
+                // 调试模式下立即刷新数据（不使用防抖）
+                self.dataManager.fetchUsage()
+
                 // 如果模拟更新设置发生变化，重新应用更新状态
                 if self.settings.simulateUpdateAvailable {
                     self.hasAvailableUpdate = true
@@ -197,8 +207,6 @@ class MenuBarManager: ObservableObject {
                     self.latestVersion = ""
                     Logger.menuBar.debug("模拟更新已禁用")
                 }
-                // 刷新图标以显示/隐藏更新徽章
-                self.updateMenuBarIcon()
                 #endif
             }
             .store(in: &cancellables)
@@ -334,6 +342,12 @@ class MenuBarManager: ObservableObject {
         }
     }
 
+    @objc func openGithubSponsor() {
+        if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     @objc func checkForUpdates() {
         // 记录用户已确认当前版本的更新
         if let version = latestVersion {
@@ -391,9 +405,30 @@ class MenuBarManager: ObservableObject {
                 object: settingsWindow,
                 queue: .main
             ) { [weak self] _ in
+                #if DEBUG
+                // Debug模式：如果开启了"保持详情窗口打开"，则不自动关闭
+                if UserSettings.shared.debugKeepDetailWindowOpen {
+                    return
+                }
+                #endif
+
                 if self?.ui.popover.isShown == true {
                     self?.closePopover()
                 }
+            }
+
+            // 移除旧的语言变化观察者（如果存在）
+            if let observer = languageChangeObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
+
+            // 添加语言变化观察者 - 当语言切换时更新窗口标题
+            languageChangeObserver = NotificationCenter.default.addObserver(
+                forName: .languageChanged,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.settingsWindow?.title = L.Window.settingsTitle
             }
         }
 
@@ -430,6 +465,12 @@ class MenuBarManager: ObservableObject {
         if let observer = windowCloseObserver {
             NotificationCenter.default.removeObserver(observer)
             windowCloseObserver = nil
+        }
+
+        // 清理语言变化观察者
+        if let observer = languageChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            languageChangeObserver = nil
         }
 
         // 取消所有 Combine 订阅

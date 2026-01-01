@@ -63,7 +63,7 @@ enum UsageColorScheme {
     ///         详细界面使用时会添加透明度，使颜色更柔和
     static func fiveHourColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
         if percentage < 70 {
-            return Color(red: 40/255.0, green: 180/255.0, blue: 70/255.0).opacity(opacity)  // 稍暗的绿色 #28B446
+            return .green.opacity(opacity)  // 系统绿色
         } else if percentage < 90 {
             return .orange.opacity(opacity)
         } else {
@@ -94,11 +94,11 @@ enum UsageColorScheme {
     /// 根据7天限制使用百分比返回 NSColor
     /// - Parameter percentage: 使用百分比 (0-100)
     /// - Returns: 对应的状态颜色
-    /// - Note: 当前方案 - 青蓝→浓紫→深紫红
-    ///         0-70% 青蓝色(安全), 70-90% 浓紫色(警告), 90-100% 深紫红色(危险)
+    /// - Note: 当前方案 - 淡紫→浓紫→深紫红
+    ///         0-70% 淡紫色(安全), 70-90% 浓紫色(警告), 90-100% 深紫红色(危险)
     static func sevenDayColor(_ percentage: Double) -> NSColor {
         if percentage < 70 {
-            return NSColor(red: 90/255.0, green: 200/255.0, blue: 250/255.0, alpha: 1.0)  // 青蓝色 #5AC8FA
+            return NSColor(red: 192/255.0, green: 132/255.0, blue: 252/255.0, alpha: 1.0)  // 淡紫色 #C084FC
         } else if percentage < 90 {
             return NSColor(red: 180/255.0, green: 80/255.0, blue: 240/255.0, alpha: 1.0)  // 浓紫色 #B450F0
         } else {
@@ -109,12 +109,12 @@ enum UsageColorScheme {
     /// 根据7天限制使用百分比返回 SwiftUI Color
     /// - Parameter percentage: 使用百分比 (0-100)
     /// - Returns: 对应的状态颜色
-    /// - Note: 当前方案 - 青蓝→浓紫→深紫红
-    ///         0-70% 青蓝色(安全), 70-90% 浓紫色(警告), 90-100% 深紫红色(危险)
+    /// - Note: 当前方案 - 淡紫→浓紫→深紫红
+    ///         0-70% 淡紫色(安全), 70-90% 浓紫色(警告), 90-100% 深紫红色(危险)
     ///         详细界面使用时会添加透明度，使颜色更柔和
     static func sevenDayColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
         if percentage < 70 {
-            return Color(red: 90/255.0, green: 200/255.0, blue: 250/255.0).opacity(opacity)  // 青蓝色 #5AC8FA
+            return Color(red: 192/255.0, green: 132/255.0, blue: 252/255.0).opacity(opacity)  // 淡紫色 #C084FC
         } else if percentage < 90 {
             return Color(red: 180/255.0, green: 80/255.0, blue: 240/255.0).opacity(opacity)  // 浓紫色 #B450F0
         } else {
@@ -136,6 +136,84 @@ enum UsageColorScheme {
             return baseColor.adjustedForDarkMode()
         } else {
             // 浅色模式：使用原色
+            return baseColor
+        }
+    }
+
+    // MARK: - Extra Usage 配色（粉→红→紫红）
+
+    /// 根据Extra Usage使用百分比返回 NSColor
+    /// - Parameter percentage: 使用百分比 (0-100)
+    /// - Returns: 对应的状态颜色
+    /// - Note: 0-70% 粉色(安全), 70-90% 玫红色(警告), 90-100% 紫红色(危险)
+    static func extraUsageColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 255/255.0, green: 158/255.0, blue: 205/255.0, alpha: 1.0)  // 粉色 #FF9ECD
+        } else if percentage < 90 {
+            return NSColor(red: 236/255.0, green: 72/255.0, blue: 153/255.0, alpha: 1.0)   // 玫红色 #EC4899
+        } else {
+            return NSColor(red: 217/255.0, green: 70/255.0, blue: 239/255.0, alpha: 1.0)   // 紫红色 #D946EF
+        }
+    }
+
+    /// 根据Extra Usage使用百分比返回自适应 NSColor
+    static func extraUsageColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = extraUsageColor(percentage)
+        if isDarkMode(for: statusButton) {
+            return baseColor.adjustedForDarkMode()
+        } else {
+            return baseColor
+        }
+    }
+
+    // MARK: - Opus Weekly 配色（浅橙→橙→橙红）
+
+    /// 根据Opus Weekly使用百分比返回 NSColor
+    /// - Parameter percentage: 使用百分比 (0-100)
+    /// - Returns: 对应的状态颜色
+    /// - Note: 0-70% 琥珀色(安全), 70-90% 橙色(警告), 90-100% 橙红色(危险)
+    static func opusWeeklyColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 251/255.0, green: 191/255.0, blue: 36/255.0, alpha: 1.0)  // 琥珀色 #FBBF24
+        } else if percentage < 90 {
+            return NSColor.systemOrange
+        } else {
+            return NSColor(red: 255/255.0, green: 100/255.0, blue: 50/255.0, alpha: 1.0)   // 橙红色 #FF6432
+        }
+    }
+
+    /// 根据Opus Weekly使用百分比返回自适应 NSColor
+    static func opusWeeklyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = opusWeeklyColor(percentage)
+        if isDarkMode(for: statusButton) {
+            return baseColor.adjustedForDarkMode()
+        } else {
+            return baseColor
+        }
+    }
+
+    // MARK: - Sonnet Weekly 配色（浅蓝→蓝→蓝紫）
+
+    /// 根据Sonnet Weekly使用百分比返回 NSColor
+    /// - Parameter percentage: 使用百分比 (0-100)
+    /// - Returns: 对应的状态颜色
+    /// - Note: 0-70% 浅蓝色(安全), 70-90% 蓝色(警告), 90-100% 深靛蓝色(危险)
+    static func sonnetWeeklyColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 100/255.0, green: 200/255.0, blue: 255/255.0, alpha: 1.0)  // 浅蓝色 #64C8FF
+        } else if percentage < 90 {
+            return NSColor.systemBlue
+        } else {
+            return NSColor(red: 79/255.0, green: 70/255.0, blue: 229/255.0, alpha: 1.0)   // 深靛蓝色 #4F46E5
+        }
+    }
+
+    /// 根据Sonnet Weekly使用百分比返回自适应 NSColor
+    static func sonnetWeeklyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = sonnetWeeklyColor(percentage)
+        if isDarkMode(for: statusButton) {
+            return baseColor.adjustedForDarkMode()
+        } else {
             return baseColor
         }
     }

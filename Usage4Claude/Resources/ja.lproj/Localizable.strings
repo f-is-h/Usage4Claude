@@ -13,6 +13,7 @@
 "menu.about" = "このアプリについて";
 "menu.web_usage" = "Claude使用状況を表示";
 "menu.coffee" = "Buy Me A Coffee";
+"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claudeを終了";
 
 // MARK: - Usage Detail View
@@ -70,22 +71,18 @@
 "settings.auth.step1" = "1. ブラウザでclaude.aiにアクセスしてログイン";
 "settings.auth.step2" = "2. ブラウザの開発者ツールを開く（F12またはCmd+Option+I）";
 "settings.auth.step3" = "3. Networkタブに切り替え";
-"settings.auth.step4" = "4. ページを更新して任意のリクエストを見つける";
-"settings.auth.step5" = "5. Headersで以下を見つける：";
-"settings.auth.step6" = "   • CookieのsessionKey";
-"settings.auth.step7" = "   • URLのOrganization ID";
+"settings.auth.step4" = "4. ページを更新して usage リクエストを見つける";
+"settings.auth.step5" = "5. HeadersのCookieでsessionKeyを見つける";
+"settings.auth.step6" = "6. sessionKeyの値をコピーして上に貼り付ける";
 "settings.auth.open_browser" = "ブラウザでClaude使用状況ページを開く";
-"settings.auth.org_id_label" = "Organization ID";
-"settings.auth.org_id_placeholder" = "Organization IDを貼り付け";
-"settings.auth.org_id_hint" = "通常はUUIDのような文字列、例：12345678-abcd-ef90-1234-567890abcdef";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Session Keyを貼り付け";
 "settings.auth.session_key_hint" = "sk-ant-sid01-で始まる長い文字列";
 "settings.auth.configured" = "認証情報が設定済み";
-"settings.auth.not_configured" = "認証情報を入力してください";
+"settings.auth.not_configured" = "Session Keyを入力してください";
 "settings.auth.credentials_title" = "認証情報";
 "settings.auth.ready_to_use" = "アプリを使用できます";
-"settings.auth.need_credentials" = "上記のOrganization IDとSession Keyを入力してください";
+"settings.auth.need_credentials" = "Session Keyを入力してください";
 "settings.auth.show_password" = "表示";
 "settings.auth.hide_password" = "非表示";
 
@@ -97,6 +94,7 @@
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "GitHubリポジトリを表示";
 "settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 All Rights Reserved";
 
 // MARK: - Welcome View
@@ -133,6 +131,8 @@
 "display.percentage_only" = "パーセンテージのみ";
 "display.icon_only" = "アイコンのみ";
 "display.both" = "アイコンとパーセンテージ";
+"display.show_icon" = "アイコンを表示";
+"display.show_percentage" = "パーセンテージを表示";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "スマート頻度";
@@ -147,6 +147,7 @@
 "language.japanese" = "日本語";
 "language.chinese" = "中文（簡体字）";
 "language.chinese_traditional" = "中文（繁體字）";
+"language.korean" = "한국어";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 設定";
@@ -170,6 +171,9 @@
 "error.no_credentials" = "まず設定で認証情報を設定してください";
 "error.network_failed" = "ネットワークリクエストが失敗しました。インターネット接続を確認してください。";
 "error.decoding_failed" = "レスポンスデータの解析に失敗しました。認証情報が正しいか確認してください。";
+"error.no_organizations_found" = "組織が見つかりませんでした";
+"error.unauthorized" = "認証に失敗しました。認証情報を確認してください";
+"error.rate_limited" = "リクエストが多すぎます。しばらくしてから再試行してください";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "有効";
@@ -234,3 +238,103 @@
 "diagnostic.suggestion_export_and_share" = "この診断レポートをエクスポートしてGitHub Issuesで共有してください";
 "diagnostic.suggestion_contact_support" = "github.com/f-is-h/Usage4Claude/issuesで開発者にお問い合わせください";
 "diagnostic.open_log_folder" = "ログフォルダを開く";
+
+// MARK: - Limit Types (v2.0.0)
+"five_hour_limit" = "5時間制限";
+"seven_day_limit" = "7日制限";
+"opus_weekly_limit" = "7日Opus制限";
+"sonnet_weekly_limit" = "7日Sonnet制限";
+"extra_usage" = "追加使用量";
+
+// MARK: - Display Options (v2.0.0)
+"display_options" = "表示オプション";
+"smart_display" = "スマート表示";
+"smart_display_description" = "データのある制限タイプを自動的に表示";
+"custom_display" = "カスタム表示";
+"custom_display_description" = "表示する制限を手動で選択";
+"display_mode_label" = "表示モード";
+"select_limit_types" = "表示する制限タイプを選択";
+"circular_icon_constraint" = "少なくとも1つの円形アイコン（5時間または7日）を選択する必要があります";
+"colored_theme_unavailable" = "カラーテーマは、他のタイプなしで1〜2個の円形アイコンを表示する場合のみ利用可能です";
+
+// MARK: - Theme Selection (v2.0.0)
+"theme_selection" = "テーマ";
+"monochrome_theme" = "モノクロテーマ";
+"colored_theme" = "カラーテーマ";
+"colored_theme_unavailable_reason" = "利用不可：2つ以下の円形インジケーターを表示する場合のみサポート";
+
+// MARK: - Credentials Configuration (v2.0.0)
+"credentials" = "認証情報";
+"session_key_hint" = "ブラウザのDevTools → Application → Cookies → claude.aiで確認";
+"session_key_help" = "セッションキーはmacOSキーチェーンに安全に保存されます";
+"session_key_required" = "セッションキーが必要です";
+"fetching" = "取得中...";
+"refetch" = "再取得";
+"configuring" = "設定中...";
+"credentials_saved" = "認証情報を保存しました";
+"save" = "保存";
+"back" = "戻る";
+"continue" = "続ける";
+
+// MARK: - Welcome Flow (v2.0.0)
+"welcome_credentials_title" = "Claudeアクセス設定";
+"welcome_credentials_subtitle" = "セッションキーを入力してください。組織IDは自動的に取得されます";
+"welcome_display_title" = "表示オプションを選択";
+"welcome_display_subtitle" = "メニューバーに表示する使用量制限を選択してください";
+"preview" = "プレビュー";
+"welcome.skip" = "スキップ";
+"welcome.finish" = "完了";
+"welcome.authentication_setup" = "認証設定";
+"welcome.session_key" = "セッションキー";
+"welcome.session_key_placeholder" = "セッションキーをここに貼り付けてください";
+"welcome.session_key_hint" = "sk-ant-sid01-で始まります...";
+"welcome.valid_format" = "形式が正しい";
+"welcome.invalid_format" = "セッションキーは20〜500文字である必要があります";
+"welcome.select_limits" = "制限を選択";
+"welcome.smart_mode_recommended" = "スマートモード（推奨）";
+"welcome.custom_selection" = "カスタム選択";
+"welcome.display_title" = "表示オプション";
+"welcome.display_subtitle" = "表示する制限タイプを選択してください";
+"welcome.preview" = "プレビュー";
+"welcome.back" = "戻る";
+"welcome.skip" = "スキップ";
+"welcome.continue" = "続ける";
+"welcome.finish" = "完了";
+"welcome.how_to_get_session_key" = "Session Key の取得方法は？";
+"welcome.fetch_org_id_failed" = "Organization ID を取得できませんでした。後で設定で再試行してください";
+"welcome.menubar_icon_not_visible" = "メニューバーアイコンが見えませんか？";
+
+// MARK: - Detail Window - Date/Time Formats (v2.0.0)
+"today" = "今日";
+"today_time" = "今日 %@";
+"month_day" = "%d月%d日";
+"extra_usage_format" = "$%d/$%d";
+
+// MARK: - Detail Window - Remaining Time (v2.0.0)
+"extra_usage_remaining" = "残り$%@";
+"remaining_days_hours" = "残り%d日%d時間";
+"remaining_hours_minutes" = "残り%d時間%d分";
+"remaining_minutes" = "残り%d分";
+
+// MARK: - Settings Window (v2.0.0)
+"settings" = "設定";
+
+// MARK: - General (v2.0.0)
+"unknown" = "不明";
+
+// MARK: - Usage Data - Compact Remaining Formats
+"usage_data.compact_resetting_soon" = "まもなくリセット";
+"usage_data.compact_remaining_minutes" = "残り%d分";
+"usage_data.compact_remaining_hours" = "残り%d時間%d分";
+"usage_data.compact_remaining_days" = "残り%d日%d時間";
+
+// MARK: - Extra Usage
+"extra_usage.not_enabled" = "未有効";
+"extra_usage.usage_amount" = "$%.0f/$%.0f";
+"extra_usage.remaining_amount" = "残り$%.0f";
+
+// MARK: - Loading Animation
+"loading_animation.rainbow" = "レインボーグラデーション";
+"loading_animation.dashed" = "破線回転";
+"loading_animation.pulse" = "パルス効果";
+"loading_animation.current" = "読み込みアニメーション: %@";

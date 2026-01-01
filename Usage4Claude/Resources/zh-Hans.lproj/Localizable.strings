@@ -13,6 +13,7 @@
 "menu.about" = "关于";
 "menu.web_usage" = "访问 Claude 用量";
 "menu.coffee" = "Buy Me A Coffee";
+"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "退出 Usage4Claude";
 
 // MARK: - Usage Detail View
@@ -70,22 +71,18 @@
 "settings.auth.step1" = "1. 在浏览器中访问 claude.ai 并登录";
 "settings.auth.step2" = "2. 打开浏览器开发者工具（F12 或 Cmd+Option+I）";
 "settings.auth.step3" = "3. 切换到 Network（网络）标签";
-"settings.auth.step4" = "4. 刷新页面，找到任意一个请求";
-"settings.auth.step5" = "5. 在 Headers 中找到：";
-"settings.auth.step6" = "   • Cookie 中的 sessionKey";
-"settings.auth.step7" = "   • URL 中的 Organization ID";
+"settings.auth.step4" = "4. 刷新页面，找到 usage 请求";
+"settings.auth.step5" = "5. 在 Headers 中的 Cookie 找到 sessionKey";
+"settings.auth.step6" = "6. 复制 sessionKey 的值并粘贴到上方";
 "settings.auth.open_browser" = "在浏览器中打开 Claude 用量页面";
-"settings.auth.org_id_label" = "Organization ID";
-"settings.auth.org_id_placeholder" = "粘贴 Organization ID";
-"settings.auth.org_id_hint" = "通常是一个类似 UUID 的字符串，例如：12345678-abcd-ef90-1234-567890abcdef";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "粘贴 Session Key";
 "settings.auth.session_key_hint" = "以 sk-ant-sid01- 开头的长字符串";
 "settings.auth.configured" = "认证信息已配置";
-"settings.auth.not_configured" = "请填写完整的认证信息";
+"settings.auth.not_configured" = "请填写 Session Key";
 "settings.auth.credentials_title" = "认证信息";
 "settings.auth.ready_to_use" = "可以开始使用应用了";
-"settings.auth.need_credentials" = "需要填写上方的 Organization ID 和 Session Key";
+"settings.auth.need_credentials" = "需要填写 Session Key";
 "settings.auth.show_password" = "显示";
 "settings.auth.hide_password" = "隐藏";
 
@@ -97,6 +94,7 @@
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "访问 GitHub 仓库";
 "settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 All Rights Reserved";
 
 // MARK: - Welcome View
@@ -133,6 +131,8 @@
 "display.percentage_only" = "仅显示百分比";
 "display.icon_only" = "仅显示图标";
 "display.both" = "图标和百分比";
+"display.show_icon" = "显示图标";
+"display.show_percentage" = "显示百分比";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "智能频率";
@@ -147,6 +147,7 @@
 "language.japanese" = "日本語";
 "language.chinese" = "中文（简体）";
 "language.chinese_traditional" = "中文（繁体）";
+"language.korean" = "한국어";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 设置";
@@ -170,6 +171,9 @@
 "error.no_credentials" = "请先在设置中配置认证信息";
 "error.network_failed" = "网络请求失败，请检查网络连接";
 "error.decoding_failed" = "解析响应数据失败，请检查认证信息是否正确";
+"error.no_organizations_found" = "未找到组织";
+"error.unauthorized" = "认证失败，请检查您的凭据";
+"error.rate_limited" = "请求过于频繁，请稍后再试";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "已启用";
@@ -234,3 +238,102 @@
 "diagnostic.suggestion_export_and_share" = "导出此诊断报告并在 GitHub Issues 上分享";
 "diagnostic.suggestion_contact_support" = "在 github.com/f-is-h/Usage4Claude/issues 联系开发者寻求帮助";
 "diagnostic.open_log_folder" = "打开日志文件夹";
+
+// MARK: - Limit Types (v2.0.0)
+"five_hour_limit" = "5小时限制";
+"seven_day_limit" = "7天限制";
+"opus_weekly_limit" = "7天Opus限制";
+"sonnet_weekly_limit" = "7天Sonnet限制";
+"extra_usage" = "额外用量";
+
+// MARK: - Display Options (v2.0.0)
+"display_options" = "显示选项";
+"smart_display" = "智能显示";
+"smart_display_description" = "自动显示所有有数据的限制类型";
+"custom_display" = "自定义显示";
+"custom_display_description" = "手动选择要显示的限制";
+"display_mode_label" = "显示模式";
+"select_limit_types" = "选择要显示的限制类型";
+"circular_icon_constraint" = "至少必须选择一个圆形图标（5小时或7天）";
+"colored_theme_unavailable" = "彩色主题仅在显示1-2个圆形图标且无其他类型时可用";
+
+// MARK: - Theme Selection (v2.0.0)
+"theme_selection" = "主题";
+"monochrome_theme" = "单色主题";
+"colored_theme" = "彩色主题";
+"colored_theme_unavailable_reason" = "不可用：仅在显示2个或更少圆形指示器时支持";
+
+// MARK: - Credentials Configuration (v2.0.0)
+"credentials" = "凭据";
+"session_key_hint" = "在浏览器开发者工具 → Application → Cookies → claude.ai 中查找";
+"session_key_help" = "您的 Session Key 将被安全地存储在 macOS 钥匙串中";
+"session_key_required" = "需要 Session Key";
+"fetching" = "获取中...";
+"refetch" = "重新获取";
+"configuring" = "配置中...";
+"credentials_saved" = "凭据保存成功";
+"save" = "保存";
+"back" = "返回";
+"continue" = "继续";
+
+// MARK: - Welcome Flow (v2.0.0)
+"welcome_credentials_title" = "配置 Claude 访问";
+"welcome_credentials_subtitle" = "输入您的 Session Key，我们会自动获取您的 Organization ID";
+"welcome_display_title" = "选择显示选项";
+"welcome_display_subtitle" = "选择在菜单栏中显示哪些使用限制";
+"preview" = "预览";
+"welcome.skip" = "跳过";
+"welcome.finish" = "完成";
+"welcome.authentication_setup" = "认证设置";
+"welcome.session_key" = "Session Key";
+"welcome.session_key_placeholder" = "在此粘贴您的 Session Key";
+"welcome.session_key_hint" = "以 sk-ant-sid01- 开头...";
+"welcome.valid_format" = "格式正确";
+"welcome.invalid_format" = "Session Key 长度应在 20-500 字符之间";
+"welcome.select_limits" = "选择限制";
+"welcome.smart_mode_recommended" = "智能模式（推荐）";
+"welcome.custom_selection" = "自定义选择";
+"welcome.display_title" = "显示选项";
+"welcome.display_subtitle" = "选择要显示的限制类型";
+"welcome.preview" = "预览";
+"welcome.back" = "返回";
+"welcome.continue" = "继续";
+"welcome.how_to_get_session_key" = "如何获取 Session Key？";
+"welcome.configuring" = "正在配置...";
+"welcome.fetch_org_id_failed" = "无法获取 Organization ID，请稍后在设置中重试";
+"welcome.menubar_icon_not_visible" = "看不见菜单栏图标？";
+
+// MARK: - Detail Window - Date/Time Formats (v2.0.0)
+"today" = "今天";
+"today_time" = "今天 %@";
+"month_day" = "%d月%d日";
+"extra_usage_format" = "$%d/$%d";
+
+// MARK: - Detail Window - Remaining Time (v2.0.0)
+"extra_usage_remaining" = "还可使用$%@";
+"remaining_days_hours" = "还剩%d天%d小时";
+"remaining_hours_minutes" = "还剩%d小时%d分钟";
+"remaining_minutes" = "还剩%d分钟";
+
+// MARK: - Settings Window (v2.0.0)
+"settings" = "设置";
+
+// MARK: - General (v2.0.0)
+"unknown" = "未知";
+
+// MARK: - Usage Data - Compact Remaining Formats
+"usage_data.compact_resetting_soon" = "即将重置";
+"usage_data.compact_remaining_minutes" = "还剩 %d分钟";
+"usage_data.compact_remaining_hours" = "还剩 %d小时%d分钟";
+"usage_data.compact_remaining_days" = "还剩 %d天%d小时";
+
+// MARK: - Extra Usage
+"extra_usage.not_enabled" = "未启用";
+"extra_usage.usage_amount" = "$%.0f/$%.0f";
+"extra_usage.remaining_amount" = "还可使用 $%.0f";
+
+// MARK: - Loading Animation
+"loading_animation.rainbow" = "彩虹渐变";
+"loading_animation.dashed" = "虚线旋转";
+"loading_animation.pulse" = "脉冲效果";
+"loading_animation.current" = "加载动画: %@";

@@ -67,8 +67,10 @@ struct AboutView: View {
                         Image(systemName: "link")
                         Text(L.SettingsAbout.github)
                     }
+                    .frame(minWidth: 200)
                 }
-                
+                .focusable(false)
+
                 Button(action: {
                     if let url = URL(string: "https://ko-fi.com/1atte") {
                         NSWorkspace.shared.open(url)
@@ -78,7 +80,22 @@ struct AboutView: View {
                         Image(systemName: "cup.and.saucer.fill")
                         Text(L.SettingsAbout.coffee)
                     }
+                    .frame(minWidth: 200)
                 }
+                .focusable(false)
+
+                Button(action: {
+                    if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "heart")
+                        Text(L.SettingsAbout.githubSponsor)
+                    }
+                    .frame(minWidth: 200)
+                }
+                .focusable(false)
             }
             
             // 版权信息

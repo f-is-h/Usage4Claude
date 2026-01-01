@@ -9,7 +9,7 @@
 import SwiftUI
 
 /// 认证设置页面
-/// 使用卡片式布局，用于配置 Organization ID 和 Session Key
+/// 使用卡片式布局，用于配置 Session Key
 struct AuthSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var showCopiedAlert = false
@@ -26,56 +26,6 @@ struct AuthSettingsView: View {
                     hint: ""
                 ) {
                     VStack(alignment: .leading, spacing: 16) {
-                        // Organization ID 区域
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "building.2.fill")
-                                    .foregroundColor(.purple)
-                                    .font(.subheadline)
-                                Text(L.SettingsAuth.orgIdLabel)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                            }
-                            
-                            TextField(L.SettingsAuth.orgIdPlaceholder, text: $settings.organizationId)
-                                .textFieldStyle(.roundedBorder)
-                                .font(.system(.body, design: .monospaced))
-
-                            // 验证状态提示
-                            if !settings.organizationId.isEmpty {
-                                if settings.isValidOrganizationId(settings.organizationId) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.caption2)
-                                            .foregroundColor(.green)
-                                        Text("格式正确")
-                                            .font(.caption)
-                                            .foregroundColor(.green)
-                                    }
-                                } else {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "exclamationmark.triangle.fill")
-                                            .font(.caption2)
-                                            .foregroundColor(.orange)
-                                        Text("Organization ID 应为 UUID 格式")
-                                            .font(.caption)
-                                            .foregroundColor(.orange)
-                                    }
-                                }
-                            }
-
-                            HStack(spacing: 4) {
-                                Image(systemName: "lightbulb.fill")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Text(L.SettingsAuth.orgIdHint)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        
-                        Divider()
-                        
                         // Session Key 区域
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 6) {
@@ -115,7 +65,7 @@ struct AuthSettingsView: View {
                                         Image(systemName: "checkmark.circle.fill")
                                             .font(.caption2)
                                             .foregroundColor(.green)
-                                        Text("格式正确")
+                                        Text(L.Welcome.validFormat)
                                             .font(.caption)
                                             .foregroundColor(.green)
                                     }
@@ -124,7 +74,7 @@ struct AuthSettingsView: View {
                                         Image(systemName: "exclamationmark.triangle.fill")
                                             .font(.caption2)
                                             .foregroundColor(.orange)
-                                        Text("Session Key 长度应在 20-500 字符之间")
+                                        Text(L.Welcome.invalidFormat)
                                             .font(.caption)
                                             .foregroundColor(.orange)
                                     }
@@ -140,9 +90,8 @@ struct AuthSettingsView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        
-                        Divider()
-                        
+
+
                         // 配置状态区域
                         HStack(spacing: 12) {
                             Image(systemName: settings.hasValidCredentials ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
@@ -192,8 +141,6 @@ struct AuthSettingsView: View {
                             .font(.subheadline)
                         Text(L.SettingsAuth.step6)
                             .font(.subheadline)
-                        Text(L.SettingsAuth.step7)
-                            .font(.subheadline)
                         
                         Button(action: {
                             if let url = URL(string: "https://claude.ai/settings/usage") {
@@ -230,6 +177,37 @@ struct AuthSettingsView: View {
                 }
             }
             .padding()
+        }
+        .onChange(of: settings.sessionKey) { newValue in
+            // 当 sessionKey 改变且有效时，自动获取 Organization ID
+            if settings.isValidSessionKey(newValue) {
+                // 延迟一小段时间以避免频繁请求
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    fetchOrganizationId()
+                }
+            }
+        }
+    }
+
+    // MARK: - Private Methods
+
+    /// 获取 Organization ID（后台自动执行，无UI反馈）
+    private func fetchOrganizationId() {
+        // 调用 API 获取 organizations
+        let apiService = ClaudeAPIService()
+        apiService.fetchOrganizations { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let organizations):
+                    if let firstOrg = organizations.first {
+                        // 使用第一个组织的 UUID 作为 Organization ID
+                        settings.organizationId = firstOrg.uuid
+                    }
+                case .failure:
+                    // 静默失败，不显示错误信息
+                    break
+                }
+            }
         }
     }
 }

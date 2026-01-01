@@ -137,6 +137,72 @@ enum MonitoringMode: String, Codable {
     }
 }
 
+// MARK: - Limit Types
+
+/// 限制类型
+enum LimitType: String, CaseIterable, Codable {
+    /// 5小时限制
+    case fiveHour = "five_hour"
+    /// 7天限制
+    case sevenDay = "seven_day"
+    /// Extra Usage 额外付费额度
+    case extraUsage = "extra_usage"
+    /// Opus 每周限制
+    case opusWeekly = "seven_day_opus"
+    /// Sonnet 每周限制
+    case sonnetWeekly = "seven_day_sonnet"
+
+    /// 是否为圆形图标（5小时和7天）
+    var isCircular: Bool {
+        return self == .fiveHour || self == .sevenDay
+    }
+
+    /// 是否为矩形图标（Opus和Sonnet）
+    var isRectangular: Bool {
+        return self == .opusWeekly || self == .sonnetWeekly
+    }
+
+    /// 是否为六边形图标（Extra Usage）
+    var isHexagonal: Bool {
+        return self == .extraUsage
+    }
+
+    /// 显示名称
+    var displayName: String {
+        switch self {
+        case .fiveHour:
+            return L.LimitTypes.fiveHour
+        case .sevenDay:
+            return L.LimitTypes.sevenDay
+        case .opusWeekly:
+            return L.LimitTypes.opusWeekly
+        case .sonnetWeekly:
+            return L.LimitTypes.sonnetWeekly
+        case .extraUsage:
+            return L.LimitTypes.extraUsage
+        }
+    }
+}
+
+// MARK: - Display Mode
+
+/// 显示模式（智能显示 vs 自定义显示）
+enum DisplayMode: String, CaseIterable, Codable {
+    /// 智能显示 - 自动显示有数据的限制类型
+    case smart = "smart"
+    /// 自定义显示 - 用户手动选择要显示的限制类型
+    case custom = "custom"
+
+    var localizedName: String {
+        switch self {
+        case .smart:
+            return L.DisplayOptions.smartDisplay
+        case .custom:
+            return L.DisplayOptions.customDisplay
+        }
+    }
+}
+
 /// 应用语言选项
 enum AppLanguage: String, CaseIterable, Codable {
     /// 英语
@@ -147,7 +213,9 @@ enum AppLanguage: String, CaseIterable, Codable {
     case chinese = "zh-Hans"
     /// 繁体中文
     case chineseTraditional = "zh-Hant"
-    
+    /// 韩语
+    case korean = "ko"
+
     var localizedName: String {
         switch self {
         case .english:
@@ -158,6 +226,8 @@ enum AppLanguage: String, CaseIterable, Codable {
             return L.Language.chinese
         case .chineseTraditional:
             return L.Language.chineseTraditional
+        case .korean:
+            return L.Language.korean
         }
     }
 }
@@ -174,6 +244,8 @@ extension AppLanguage {
             return Locale(identifier: "zh_CN")
         case .chineseTraditional:
             return Locale(identifier: "zh_TW")
+        case .korean:
+            return Locale(identifier: "ko_KR")
         }
     }
 }
@@ -196,18 +268,6 @@ class UserSettings: ObservableObject {
     private let keychain = KeychainManager.shared
     
     // MARK: - 敏感信息（存储在Keychain中）
-    
-    /// Claude Organization ID
-    /// 从浏览器开发者工具的网络请求中获取
-    @Published var organizationId: String {
-        didSet {
-            // 将Keychain写入操作移到后台线程，避免阻塞主线程
-            let value = organizationId
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                self?.keychain.saveOrganizationId(value)
-            }
-        }
-    }
 
     /// Claude Session Key
     /// 从浏览器 Cookie 中获取的 sessionKey 值
@@ -220,17 +280,22 @@ class UserSettings: ObservableObject {
             }
         }
     }
-    
+
     // MARK: - 非敏感设置（存储在UserDefaults中）
+
+    /// Claude Organization ID
+    /// 从 v2.0.0 开始存储在 UserDefaults 中（之前存储在 Keychain）
+    /// Organization ID 仅是标识符，不是敏感信息
+    @Published var organizationId: String {
+        didSet {
+            defaults.set(organizationId, forKey: "organizationId")
+        }
+    }
     
     /// 菜单栏图标显示模式
     @Published var iconDisplayMode: IconDisplayMode {
         didSet {
             defaults.set(iconDisplayMode.rawValue, forKey: "iconDisplayMode")
-            // 如果选择单色模式且当前不是"仅显示圆环"，自动切换为"仅显示圆环"
-            if iconStyleMode == .monochrome && iconDisplayMode != .percentageOnly {
-                iconDisplayMode = .percentageOnly
-            }
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -239,10 +304,6 @@ class UserSettings: ObservableObject {
     @Published var iconStyleMode: IconStyleMode {
         didSet {
             defaults.set(iconStyleMode.rawValue, forKey: "iconStyleMode")
-            // 如果切换到单色模式且当前不是"仅显示圆环"，自动切换为"仅显示圆环"
-            if iconStyleMode == .monochrome && iconDisplayMode != .percentageOnly {
-                iconDisplayMode = .percentageOnly
-            }
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -270,7 +331,24 @@ class UserSettings: ObservableObject {
             NotificationCenter.default.post(name: .languageChanged, object: nil)
         }
     }
-    
+
+    /// 显示模式（智能显示/自定义显示）
+    @Published var displayMode: DisplayMode {
+        didSet {
+            defaults.set(displayMode.rawValue, forKey: "displayMode")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 自定义显示的限制类型集合（仅在自定义模式下使用）
+    @Published var customDisplayTypes: Set<LimitType> {
+        didSet {
+            let rawValues = customDisplayTypes.map { $0.rawValue }
+            defaults.set(rawValues, forKey: "customDisplayTypes")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 是否为首次启动标记
     @Published var isFirstLaunch: Bool {
         didSet {
@@ -305,6 +383,7 @@ class UserSettings: ObservableObject {
     @Published var debugModeEnabled: Bool {
         didSet {
             defaults.set(debugModeEnabled, forKey: "debugModeEnabled")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
 
@@ -312,6 +391,7 @@ class UserSettings: ObservableObject {
     @Published var debugScenario: DebugScenario {
         didSet {
             defaults.set(debugScenario.rawValue, forKey: "debugScenario")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
 
@@ -319,6 +399,7 @@ class UserSettings: ObservableObject {
     @Published var debugFiveHourPercentage: Double {
         didSet {
             defaults.set(debugFiveHourPercentage, forKey: "debugFiveHourPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
 
@@ -326,6 +407,54 @@ class UserSettings: ObservableObject {
     @Published var debugSevenDayPercentage: Double {
         didSet {
             defaults.set(debugSevenDayPercentage, forKey: "debugSevenDayPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 调试用的 Opus 限制百分比（0-100）
+    @Published var debugOpusPercentage: Double {
+        didSet {
+            defaults.set(debugOpusPercentage, forKey: "debugOpusPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 调试用的 Sonnet 限制百分比（0-100）
+    @Published var debugSonnetPercentage: Double {
+        didSet {
+            defaults.set(debugSonnetPercentage, forKey: "debugSonnetPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 调试用的 Extra Usage 是否启用
+    @Published var debugExtraUsageEnabled: Bool {
+        didSet {
+            defaults.set(debugExtraUsageEnabled, forKey: "debugExtraUsageEnabled")
+        }
+    }
+
+    /// 调试用的 Extra Usage 已使用金额（美元）
+    @Published var debugExtraUsageUsed: Double {
+        didSet {
+            defaults.set(debugExtraUsageUsed, forKey: "debugExtraUsageUsed")
+        }
+    }
+
+    /// 调试用的 Extra Usage 总限额（美元）
+    @Published var debugExtraUsageLimit: Double {
+        didSet {
+            defaults.set(debugExtraUsageLimit, forKey: "debugExtraUsageLimit")
+        }
+    }
+
+    /// 调试用的 Extra Usage 百分比（0-100），会同步更新 used 值
+    @Published var debugExtraUsagePercentage: Double {
+        didSet {
+            defaults.set(debugExtraUsagePercentage, forKey: "debugExtraUsagePercentage")
+            // 同步更新 used 值
+            debugExtraUsageUsed = debugExtraUsageLimit * (debugExtraUsagePercentage / 100.0)
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
 
@@ -338,12 +467,28 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 是否在菜单栏单独显示所有形状图标（调试用，方便截图）
+    @Published var debugShowAllShapesIndividually: Bool {
+        didSet {
+            defaults.set(debugShowAllShapesIndividually, forKey: "debugShowAllShapesIndividually")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 是否保持详情窗口始终打开（调试用，方便录制动画）
+    @Published var debugKeepDetailWindowOpen: Bool {
+        didSet {
+            defaults.set(debugKeepDetailWindowOpen, forKey: "debugKeepDetailWindowOpen")
+        }
+    }
+
     /// 调试场景枚举
     enum DebugScenario: String, CaseIterable {
         case realData = "real"              // 真实API数据
         case fiveHourOnly = "five_hour"     // 仅5小时限制
         case sevenDayOnly = "seven_day"     // 仅7天限制
         case both = "both"                  // 同时有两种限制
+        case allFive = "all_five"           // 全部5种限制（v2.0测试）
 
         var displayName: String {
             switch self {
@@ -355,6 +500,8 @@ class UserSettings: ObservableObject {
                 return "仅7天限制"
             case .both:
                 return "双限制"
+            case .allFive:
+                return "全部5种限制"
             }
         }
     }
@@ -377,7 +524,7 @@ class UserSettings: ObservableObject {
     /// - Returns: 与系统语言最匹配的 AppLanguage
     private static func detectSystemLanguage() -> AppLanguage {
         let systemLanguage = Locale.preferredLanguages.first ?? "en"
-        
+
         // 根据系统语言前缀匹配应用支持的语言
         if systemLanguage.hasPrefix("zh-Hans") {
             return .chinese
@@ -385,6 +532,8 @@ class UserSettings: ObservableObject {
             return .chineseTraditional
         } else if systemLanguage.hasPrefix("ja") {
             return .japanese
+        } else if systemLanguage.hasPrefix("ko") {
+            return .korean
         } else {
             return .english  // 默认英语
         }
@@ -394,12 +543,29 @@ class UserSettings: ObservableObject {
     /// 从 Keychain 加载敏感信息，从 UserDefaults 加载其他设置
     private init() {
         // MARK: - 从Keychain加载敏感信息
-        
+
         // 从Keychain加载认证信息
-        self.organizationId = keychain.loadOrganizationId() ?? ""
         self.sessionKey = keychain.loadSessionKey() ?? ""
-        
+
+        // MARK: - 数据迁移（v1.x → v2.0.0）
+
+        // 检查是否需要迁移 Organization ID 从 Keychain 到 UserDefaults
+        if !defaults.bool(forKey: "organizationIdMigrated") {
+            if let oldOrgId = keychain.loadOrganizationId(), !oldOrgId.isEmpty {
+                // 迁移到 UserDefaults
+                defaults.set(oldOrgId, forKey: "organizationId")
+                // 从 Keychain 删除旧数据
+                keychain.deleteOrganizationId()
+                Logger.settings.notice("成功迁移 Organization ID 从 Keychain 到 UserDefaults")
+            }
+            // 标记迁移已完成，避免重复执行
+            defaults.set(true, forKey: "organizationIdMigrated")
+        }
+
         // MARK: - 从UserDefaults加载非敏感设置
+
+        // 加载 Organization ID
+        self.organizationId = defaults.string(forKey: "organizationId") ?? ""
         
         if let modeString = defaults.string(forKey: "iconDisplayMode"),
            let mode = IconDisplayMode(rawValue: modeString) {
@@ -433,7 +599,22 @@ class UserSettings: ObservableObject {
             // 首次启动时使用系统语言
             self.language = Self.detectSystemLanguage()
         }
-        
+
+        // 加载显示模式，默认为智能模式
+        if let modeString = defaults.string(forKey: "displayMode"),
+           let mode = DisplayMode(rawValue: modeString) {
+            self.displayMode = mode
+        } else {
+            self.displayMode = .smart
+        }
+
+        // 加载自定义显示类型，默认为 5 小时和 7 天限制
+        if let rawValues = defaults.array(forKey: "customDisplayTypes") as? [String] {
+            self.customDisplayTypes = Set(rawValues.compactMap { LimitType(rawValue: $0) })
+        } else {
+            self.customDisplayTypes = [.fiveHour, .sevenDay]
+        }
+
         // 检查是否首次启动（如果没有保存过认证信息，就是首次启动）
         if !defaults.bool(forKey: "hasLaunched") {
             self.isFirstLaunch = true
@@ -452,9 +633,17 @@ class UserSettings: ObservableObject {
         self.debugScenario = DebugScenario(
             rawValue: defaults.string(forKey: "debugScenario") ?? "real"
         ) ?? .realData
-        self.debugFiveHourPercentage = defaults.object(forKey: "debugFiveHourPercentage") as? Double ?? 65.0
-        self.debugSevenDayPercentage = defaults.object(forKey: "debugSevenDayPercentage") as? Double ?? 78.0
+        self.debugFiveHourPercentage = defaults.object(forKey: "debugFiveHourPercentage") as? Double ?? 55.0
+        self.debugSevenDayPercentage = defaults.object(forKey: "debugSevenDayPercentage") as? Double ?? 66.0
+        self.debugOpusPercentage = defaults.object(forKey: "debugOpusPercentage") as? Double ?? 77.0
+        self.debugSonnetPercentage = defaults.object(forKey: "debugSonnetPercentage") as? Double ?? 88.0
+        self.debugExtraUsageEnabled = defaults.object(forKey: "debugExtraUsageEnabled") as? Bool ?? true
+        self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 30.50
+        self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Double ?? 50.0
+        self.debugExtraUsagePercentage = defaults.object(forKey: "debugExtraUsagePercentage") as? Double ?? 61.0
         self.simulateUpdateAvailable = defaults.bool(forKey: "simulateUpdateAvailable")
+        self.debugShowAllShapesIndividually = defaults.bool(forKey: "debugShowAllShapesIndividually")
+        self.debugKeepDetailWindowOpen = defaults.bool(forKey: "debugKeepDetailWindowOpen")
         #endif
 
         // 同步系统实际状态
@@ -510,10 +699,13 @@ class UserSettings: ObservableObject {
     /// 只重置非敏感设置，不影响认证信息
     func resetToDefaults() {
         iconDisplayMode = .percentageOnly
+        iconStyleMode = .colorTranslucent
         refreshMode = .smart
         refreshInterval = 180  // 固定模式默认3分钟
-        language = .chinese
-        
+        language = Self.detectSystemLanguage()
+        displayMode = .smart
+        customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
+
         // 重置智能模式状态
         lastUtilization = nil
         unchangedCount = 0
@@ -706,6 +898,57 @@ class UserSettings: ObservableObject {
         }
 
         Logger.settings.debug("开机启动状态: \(String(describing: status))")
+    }
+
+    // MARK: - Display Logic Helper Methods (v2.0)
+
+    /// 获取当前应该显示的限制类型列表
+    /// - Parameter usageData: 用量数据
+    /// - Returns: 要显示的限制类型数组，按显示顺序排列
+    func getActiveDisplayTypes(usageData: UsageData?) -> [LimitType] {
+        switch displayMode {
+        case .smart:
+            // 智能模式：显示所有有数据的类型
+            guard let data = usageData else {
+                return []
+            }
+
+            var types: [LimitType] = []
+
+            // 按规范顺序: fiveHour → sevenDay → extraUsage → opus → sonnet
+            if data.fiveHour != nil {
+                types.append(.fiveHour)
+            }
+            if data.sevenDay != nil {
+                types.append(.sevenDay)
+            }
+            if data.extraUsage?.enabled == true {
+                types.append(.extraUsage)
+            }
+            if data.opus != nil {
+                types.append(.opusWeekly)
+            }
+            if data.sonnet != nil {
+                types.append(.sonnetWeekly)
+            }
+
+            return types
+
+        case .custom:
+            // 自定义模式：按用户选择排序，无论数据是否存在都显示
+            let orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
+            return orderedTypes.filter { customDisplayTypes.contains($0) }
+        }
+    }
+
+    /// 判断当前配置是否可以使用彩色主题
+    /// - Returns: true 表示可以使用彩色主题
+    func canUseColoredTheme(usageData: UsageData?) -> Bool {
+        let activeTypes = getActiveDisplayTypes(usageData: usageData)
+
+        // 现在所有限制类型都支持彩色显示
+        // 只要有图标就可以使用彩色主题
+        return !activeTypes.isEmpty
     }
 }
 

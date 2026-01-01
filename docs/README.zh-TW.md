@@ -1,6 +1,6 @@
 #  Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.kr.md)
 
 <div align="center">
 
@@ -27,9 +27,11 @@
 
 ### 🎯 核心功能
 
-- **📊 即時監控** - 在選單列即時顯示 Claude 訂閱的使用配額（5小時/7天）
-- **🎯 雙限制支援** - 同時顯示5小時和7天限制，雙圓環圖示清晰區分
-- **🎨 智慧色彩** - 根據使用率自動變色提醒（5小時：綠/橙/紅；7天：青色/藍紫/深紫）
+- **📊 即時監控** - 在選單列即時顯示 Claude 訂閱的使用配額
+- **🎯 多限制支援** - 同時顯示最多5種限制（5小時/7天/額外用量/7天Opus/7天Sonnet）
+- **🎨 智慧顯示模式** - 自動檢測並顯示所有有數據的限制類型
+- **⚙️ 自訂顯示** - 手動選擇要顯示的限制類型，支援任意組合
+- **🎨 智慧色彩** - 根據使用率自動變色提醒（5小時：綠/橙/紅；7天：紫色漸層）
 - **⏰ 精確計時** - 精確到分鐘的配額重置時間顯示
 - **🔄 智慧刷新系統** - 智惠4級自適應刷新或固定間隔（1/3/5/10分鐘）
 - **⚡ 手動重新整理** - 點擊重新整理按鈕後立即更新資料（並具有 10 秒防抖保護）
@@ -57,6 +59,7 @@
   - 日本語
   - 简体中文
   - 繁體中文
+  - 한국어
   - 更多語言適配中……
 
 ### 🔧 便捷功能
@@ -82,60 +85,53 @@
 
 ### 選單列顯示效果
 
-| 僅圖示 | 5小時 | 5小時+圖示 | 5小時+7天 | 5+7+圖示 | 單色(自適應) |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="images/bar.icon@2x.png" width="auto" height="32" style="min-width: 32px" alt="icon"> | <img src="images/bar.5.ring@2x.png" width="auto" height="32" style="min-width: 32px" alt="5h ring"> | <img src="images/bar.5.both@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+icon"> | <img src="images/bar.12.ring@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+7d"> | <img src="images/bar.12.both@2x.png" width="auto" height="32" style="min-width: 64px" alt="5+7+icon"> | <nobr><img src="images/bar.mono.b@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono black"> <img src="images/bar.mono.w@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono white"></nobr> |
+- 以下圖示與任一用量限制可自由組合顯示（至少顯示一個項目）
+- 圖形形狀與顏色雙重指示，保證在單色主題下仍容易識別
 
-**5小時限制模式 - 圓環顏色指示**：
+| 圖示 | 5小時 | 7天 | 額外用量 | 7天 Opus | 7天 Sonnet | 單色(自適應) |
+|:---:|:---:|:---:|:---:|:---:|:---:|-----|
+| <img src="images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
 
-🟢 **綠色**（0-69%）- 安全使用中
-🟠 **橙色**（70-89%）- 注意用量
-🔴 **紅色**（90-100%）- 接近限制
+**顏色指示**：
 
-**7天限制模式 - 圓環顏色指示**：
-
-🔵 **青色**（0-69%）- 安全使用中
-🟣 **藍紫色**（70-89%）- 注意用量
-🟪 **深紫色**（90-100%）- 接近限制
-
-**雙限制模式 - 雙圓環顯示**：
-
-當同時有5小時和7天限制時，選單列顯示雙圓環：
-
-- **內圈（5小時限制）**：🟢 綠色 → 🟠 橙色 → 🔴 紅色
-- **外圈（7天限制）**：🔵 青色 → 🟣 藍紫色 → 🟪 深紫色
+- **5小時用量限制（含詳情視窗）**：![macOS綠色](https://img.shields.io/badge/macOS綠色-34C759) → ![macOS橙色](https://img.shields.io/badge/macOS橙色-FF9500) → ![macOS紅色](https://img.shields.io/badge/macOS紅色-FF3B30)
+- **7天用量限制（含詳情視窗）**：![淺紫色](https://img.shields.io/badge/淺紫色-C084FC) → ![紫色](https://img.shields.io/badge/紫色-B450F0) → ![深紫色](https://img.shields.io/badge/深紫色-B41EA0)
+- **額外使用量**：![粉色](https://img.shields.io/badge/粉色-FF9ECD) → ![玫紅色](https://img.shields.io/badge/玫紅色-EC4899) → ![紫紅色](https://img.shields.io/badge/紫紅色-D946EF)
+- **7天 Opus 用量限制**：![淺橙色](https://img.shields.io/badge/淺橙色-FFC864) → ![琥珀色](https://img.shields.io/badge/琥珀色-FBBF24) → ![橙紅色](https://img.shields.io/badge/橙紅色-FF6432)
+- **7天 Sonnet 用量限制**：![淺藍色](https://img.shields.io/badge/淺藍色-64C8FF) → ![藍色](https://img.shields.io/badge/藍色-007AFF) → ![靛藍色](https://img.shields.io/badge/靛藍色-4F46E5)
 
 ### 詳情視窗
 
 <table border="0">
 <tr>
-<td align="center">
+<td align="top" valign="top">
 <img src="images/detail.5.zh-TW@2x.png" width="280" alt="5小時限制模式">
-<br/>
+<br/><br/><br/><br/>
 <sub><i>5小時限制模式</i></sub>
 </td>
-<td align="center">
-<img src="images/detail.7.zh-TW@2x.png" width="280" alt="7天限制模式">
+<td align="center" valign="top">
+<img src="images/detail.all.zh-TW@2x.png" width="280" alt="全部限制模式">
 <br/>
-<sub><i>7天限制模式</i></sub>
+<sub><i>全部限制模式（可任意自由組合顯示）</i></sub>
 </td>
-<td align="center">
-<img src="images/detail.12.zh-TW@2x.png" width="280" alt="雙限制模式">
+<td align="center" valign="top">
+<img src="images/detail@2x.gif" width="280" alt="切換動畫">
 <br/>
-<sub><i>雙限制模式</i></sub>
+<sub><i>剩餘時間切換動畫</i></sub>
 </td>
 </tr>
 </table>
 
 ### 設定介面
 
-**一般設定** - 自訂顯示、重新整理和語言選項  
-**認證資訊** - 設定 Claude 帳戶認證資訊  
+**一般設定** - 開機啟動、自訂顯示、主題設定、重新整理和語言選項
+**認證資訊** - 設定 Claude 帳戶認證資訊、連線診斷
 **關於** - 版本資訊和相關連結
 
 ### 歡迎畫面
 
-**設定認證資訊** - 立即前往認證資訊設定介面完成設定  
+**設定認證資訊** - Session Key，自動獲取Organization ID
+**設定顯示選項** - 顯示選項和主題設定，支援即時預覽
 **稍後設定** - 關閉歡迎視窗，稍後可在設定介面中進行設定
 
 ---
@@ -148,7 +144,7 @@
 2. 下載最新版本的 `.dmg` 檔案
 3. 雙擊開啟，將應用程式拖入「應用程式」資料夾
 4. 首次執行時，右鍵點擊應用程式選擇「開啟」（需要允許執行未簽署應用程式）
-5. 需要允許使用 Keychain 儲存認證資訊（版本更新後需要再次允許。授權視窗顯示兩次：組織 ID、Session Key）
+5. 需要允許使用 Keychain 儲存認證資訊（版本更新後需要再次允許。授權視窗顯示一次：Session Key）
 
 ### 方式二：從原始碼建置
 
@@ -182,18 +178,15 @@ open Usage4Claude.xcodeproj
 2. **設定認證資訊**  
    點擊「前往設定認證資訊」按鈕
 
-3. **取得必要資訊**  
+3. **取得 Session Key**
    - 點擊「在瀏覽器中開啟 Claude 用量頁面」
    - 開啟瀏覽器開發者工具（按 F12 或 Cmd + Option + I）
    - 切換到「網路」(Network) 分頁
    - 重新整理頁面
    - 找到名為 `usage` 的請求
-   - 查看請求標頭 (Headers)，找到：
-     - `Cookie` 中的 `sessionKey=sk-ant-...` 值
-     - URL 中的組織 ID（格式為 `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`）
+   - 查看請求標頭 (Headers)，找到 `Cookie` 中的 `sessionKey=sk-ant-...` 值
 
-4. **填寫資訊**  
-   - 將組織 ID 貼上到「Organization ID」輸入框
+4. **填寫資訊**
    - 將 Session Key 貼上到「Session Key」輸入框
    - 設定完成後會自動開始監控
 
@@ -275,9 +268,10 @@ A: 需要 macOS 13.0 (Ventura) 或更高版本。支援 Intel 和 Apple Silicon 
 <details>
 <summary><b>Q: 為什麼需要 Keychain 權限？</b></summary>
 
-A: 
+A:
 - Keychain 是 macOS 的系統級密碼管理工具
-- 您的 Session Key 和組織 ID 會被加密儲存在 Keychain 中
+- 您的 Session Key 會被加密儲存在 Keychain 中
+- Organization ID 儲存在本機設定中（非敏感標識符）
 - 這是 Apple 建議的最安全的敏感資訊儲存方式
 - 只有本應用程式可以存取這些資訊，其它應用程式無權查看
 
@@ -317,9 +311,9 @@ A:
 <details>
 <summary><b>Q: 是否支持 Claude Code / Desktop App / Mobile App?</b></summary>
 
-A: **是的，支持所有Claude平台！** 
+A: **是的，支持所有Claude平台！**
 
-由於所有Claude產品 (Web, Claude Code, Desktop App, Mobile App) 共享同一個5小時使用配額，Usage4Claude會監控您在所有平台上的總使用量。
+由於所有Claude產品 (Web, Claude Code, Desktop App, Mobile App) 共享同一個使用配額，Usage4Claude會監控您在所有平台上的總使用量。
 
 無論您是:
 - 在終端使用 `claude code` 編程
@@ -328,6 +322,23 @@ A: **是的，支持所有Claude平台！**
 - 使用手機應用程式
 
 您都能在選單列中看到即時的總使用量。無需特定平台的配置！
+
+</details>
+
+<details>
+<summary><b>Q: 選單列看不到圖示怎麼辦？</b></summary>
+
+A: macOS 系統或第三方軟體（如 Bartender、Hidden Bar 等）有時會自動隱藏選單列圖示。
+
+**解決方法：**
+1. 按住 **Command (⌘) 鍵**
+2. 用滑鼠拖曳選單列中的圖示
+3. 將 Usage4Claude 圖示拖到選單列右側可見區域
+4. 鬆開滑鼠即可
+
+**提示：**
+- macOS Sonoma (14.0+) 會自動隱藏不常用的圖示到「控制中心」
+- 您可以在「系統設定」→「控制中心」中調整選單列圖示顯示
 
 </details>
 
@@ -372,39 +383,43 @@ A: **是的，支持所有Claude平台！**
 - [x] 雙圓環選單列圖示
 - [x] 統一配色方案管理
 - [x] 除錯模式（假資料、模擬更新）
+- [x] 詳情視窗 移除Focus 狀態
+- [x] 多限制類型支援（5種）
+- [x] 智慧/自訂顯示模式
+- [x] 自動獲取 Organization ID
+- [x] 優化的歡迎流程
+- [x] 單色主題圖示顯示
+- [x] 韓語支援
 
 
 ### 短期計畫
 1. **開發者**
     - 🚧 GitHub Actions 檢查線上版本
 
+### 中期計畫
 2. **顯示最佳化**
     - 🚧 設定介面黑暗模式適配
 
-### 中期計畫
-3. **顯示最佳化**
-    - 詳情視窗 Focus 狀態
-
-5. **功能增加**
-    - 更多模式的7天使用量支援（OAuth・Opus）
+3. **功能增加**
     - 用量通知提醒
     - 更多語言本地化
 
 ### 長期願景
-5. **自動設定**
+4. **自動設定**
 
 - 瀏覽器擴充功能自動取得認證資訊
 - 認證資訊自動設定
 
-6. **更多顯示方式**
-   - 桌面小工具
-   - 瀏覽器擴充功能圖示用量顯示
+5. **更多顯示方式**
 
-7. **資料分析**
+- 桌面小工具
+- 瀏覽器擴充功能圖示用量顯示
+
+6. **資料分析**
    - 歷史使用記錄
    - 趨勢圖表展示
 
-8. **多平台支援**
+7. **多平台支援**
    - iOS / iPadOS 版本
    - Apple Watch 版本
    - Windows 版本
@@ -451,9 +466,9 @@ A: **是的，支持所有Claude平台！**
 ### ☕ 請我喝杯咖啡
 
 <!-- GitHub Sponsors -->
-<!-- <a href="https://github.com/sponsors/f-is-h">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a> -->
+</a>
 
 <!-- Ko-fi -->
 <a href="https://ko-fi.com/1attle">

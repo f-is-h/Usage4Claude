@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.kr.md)
 
 <div align="center">
 
@@ -27,8 +27,10 @@
 
 ### 🎯 核心功能
 
-- **📊 实时监控** - 在菜单栏实时显示 Claude 订阅的使用配额（5小时/7天）
-- **🎯 双限制支持** - 同时显示5小时和7天限制，双圆环图标清晰区分
+- **📊 实时监控** - 在菜单栏实时显示 Claude 订阅的使用配额
+- **🎯 多限制支持** - 同时显示最多5种限制（5小时/7天/额外用量/7天Opus/7天Sonnet）
+- **🎨 智能显示模式** - 自动检测并显示所有有数据的限制类型
+- **⚙️ 自定义显示** - 手动选择要显示的限制类型，支持任意组合
 - **🎨 智能色彩** - 根据使用率自动变色提醒（5小时：绿/橙/红；7天：青蓝/蓝紫/深紫）
 - **⏰ 精确计时** - 精确到分的配额重置时间显示
 - **🔄 智能刷新系统** - 智能4级自适应刷新或固定间隔（1/3/5/10分钟）
@@ -57,6 +59,7 @@
   - 日本語
   - 简体中文
   - 繁体中文
+  - 한국어
   - 更多语言适配中…
 
 ### 🔧 便捷功能
@@ -82,60 +85,55 @@
 
 ### 菜单栏显示效果
 
-| 仅图标 | 5小时 | 5小时+图标 | 5小时+7天 | 5+7+图标 | 单色(自适应) |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="images/bar.icon@2x.png" width="auto" height="32" style="min-width: 32px" alt="icon"> | <img src="images/bar.5.ring@2x.png" width="auto" height="32" style="min-width: 32px" alt="5h ring"> | <img src="images/bar.5.both@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+icon"> | <img src="images/bar.12.ring@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+7d"> | <img src="images/bar.12.both@2x.png" width="auto" height="32" style="min-width: 64px" alt="5+7+icon"> | <nobr><img src="images/bar.mono.b@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono black"> <img src="images/bar.mono.w@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono white"></nobr> |
+- 以下图标与任一用量限制可自由组合显示（至少显示一个项目）
+- 图形形状与颜色双重指示，保证在单色主题下仍容易识别
 
-**5小时限制模式 - 圆环颜色指示**：
+| 图标 | 5小时 | 7天 | 额外用量 | 7天 Opus | 7天 Sonnet | 单色(自适应) |
+|:---:|:---:|:---:|:---:|:---:|:---:|-----|
+| <img src="images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
 
-🟢 **绿色**（0-69%）- 安全使用中
-🟠 **橙色**（70-89%）- 注意用量
-🔴 **红色**（90-100%）- 接近限制
+**颜色指示**：
 
-**7天限制模式 - 圆环颜色指示**：
-
-🩵 **青色**（0-69%）- 安全使用中
-💙 **蓝紫色**（70-89%）- 注意用量
-💜 **深紫色**（90-100%）- 接近限制
-
-**双限制模式 - 双圆环显示**：
-
-当同时有5小时和7天限制时，菜单栏显示双圆环：
-
-- **内圈（5小时限制）**：🟢 绿色 → 🟠 橙色 → 🔴 红色
-- **外圈（7天限制）**：🩵 青色 → 💙 蓝紫色 → 💜 深紫色
+- **5小时用量限制（含详情窗口）**：![macOS绿色](https://img.shields.io/badge/macOS绿色-34C759) → ![macOS橙色](https://img.shields.io/badge/macOS橙色-FF9500) → ![macOS红色](https://img.shields.io/badge/macOS红色-FF3B30)
+- **7天用量限制（含详情窗口）**：![浅紫色](https://img.shields.io/badge/浅紫色-C084FC) → ![紫色](https://img.shields.io/badge/紫色-B450F0) → ![深紫色](https://img.shields.io/badge/深紫色-B41EA0)
+- **额外使用量**：![粉色](https://img.shields.io/badge/粉色-FF9ECD) → ![玫红色](https://img.shields.io/badge/玫红色-EC4899) → ![紫红色](https://img.shields.io/badge/紫红色-D946EF)
+- **7天 Opus 用量限制**：![浅橙色](https://img.shields.io/badge/浅橙色-FFC864) → ![琥珀色](https://img.shields.io/badge/琥珀色-FBBF24) → ![橙红色](https://img.shields.io/badge/橙红色-FF6432)
+- **7天 Sonnet 用量限制**：![浅蓝色](https://img.shields.io/badge/浅蓝色-64C8FF) → ![蓝色](https://img.shields.io/badge/蓝色-007AFF) → ![靛蓝色](https://img.shields.io/badge/靛蓝色-4F46E5)
 
 ### 详情窗口
 
 <table border="0">
 <tr>
-<td align="center">
+<td align="top" valign="top">
 <img src="images/detail.5.zh-CN@2x.png" width="280" alt="5小时限制模式">
-<br/>
+<br/><br/><br/><br/>
 <sub><i>5小时限制模式</i></sub>
 </td>
-<td align="center">
-<img src="images/detail.7.zh-CN@2x.png" width="280" alt="7天限制模式">
+<td align="center" valign="top">
+<img src="images/detail.all.zh-CN@2x.png" width="280" alt="全部限制模式">
 <br/>
-<sub><i>7天限制模式</i></sub>
+<sub><i>全部限制模式（可任意自由组合显示）</i></sub>
 </td>
-<td align="center">
-<img src="images/detail.12.zh-CN@2x.png" width="280" alt="双限制模式">
+<td align="center" valign="top">
+<img src="images/detail@2x.gif" width="280" alt="切换动画">
 <br/>
-<sub><i>双限制模式</i></sub>
+<sub><i>剩余时间切换动画</i></sub>
 </td>
 </tr>
 </table>
 
+
+
 ### 设置界面
 
-**通用设置** - 开机启动，自定义显示，刷新和语言选项  
-**认证信息** - 配置 Claude 账户认证信息  
+**通用设置** - 开机启动、显示选项、主题设置、刷新和语言选项
+**认证信息** - 配置 Claude 账户认证信息、连接诊断
 **关于** - 版本信息和相关链接
 
 ### 欢迎界面
 
-**设置认证信息** - 立即前往认证信息设置界面完成配置  
+**配置认证信息** - Session Key，自动获取Organization ID
+**显示选项配置** - 显示选项和主题设置，支持实时预览
 **稍后设置** - 关闭欢迎窗口，稍后可在设置界面中进行配置
 
 ---
@@ -148,7 +146,7 @@
 2. 下载最新版本的 `.dmg` 文件
 3. 双击打开，将应用拖入「应用程序」文件夹
 4. 首次运行时，右键点击应用选择「打开」（需要允许运行未签名应用）
-5. 需要允许使用 Keychain 存储认证信息（版本更新后需要再次允许。授权窗口显示两次: 组织 ID, Session Key ）
+5. 需要允许使用 Keychain 存储认证信息（版本更新后需要再次允许。授权窗口显示一次: Session Key）
 
 ### 方式二：从源码构建
 
@@ -176,24 +174,18 @@ open Usage4Claude.xcodeproj
 
 ### 首次配置
 
-1. **启动应用**  
+1. **启动应用**
    首次运行会显示欢迎界面
-
-2. **配置认证信息**  
+2. **配置认证信息**
    点击「去设置认证信息」按钮
-
-3. **获取必要信息**  
+3. **获取 Session Key**
    - 点击「在浏览器中打开 Claude 用量页面」
    - 打开浏览器开发者工具（按 F12 或 Cmd + Option + I）
    - 切换到「网络」(Network) 标签
    - 刷新页面
    - 找到名为 `usage` 的请求
-   - 查看请求头 (Headers)，找到：
-     - `Cookie` 中的 `sessionKey=sk-ant-...` 值
-     - URL 中的组织 ID（格式为 `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`）
-
-4. **填写信息**  
-   - 将组织 ID 粘贴到「Organization ID」输入框
+   - 查看请求头 (Headers)，找到 `Cookie` 中的 `sessionKey=sk-ant-...` 值
+4. **填写信息**
    - 将 Session Key 粘贴到「Session Key」输入框
    - 配置完成后会自动开始监控
 
@@ -275,9 +267,10 @@ A: 需要 macOS 13.0 (Ventura) 或更高版本。支持 Intel 和 Apple Silicon 
 <details>
 <summary><b>Q: 为什么需要 Keychain 权限？</b></summary>
 
-A: 
+A:
 - Keychain 是 macOS 的系统级密码管理器
-- 您的 Session Key 和 Organization ID 会被加密存储在 Keychain 中
+- 您的 Session Key 会被加密存储在 Keychain 中
+- Organization ID 存储在本地配置中（非敏感标识符）
 - 这是 Apple 推荐的最安全的敏感信息存储方式
 - 只有本应用可以访问这些信息，其它应用无权查看
 
@@ -286,7 +279,7 @@ A:
 <details>
 <summary><b>Q: 我的数据安全吗？隐私如何保护？</b></summary>
 
-**完全安全！** 
+**完全安全！**
 
 **数据存储：**
 - 所有数据**仅**存储在您本地 Mac 上
@@ -317,7 +310,7 @@ A:
 <details>
 <summary><b>Q: 是否支持 Claude Code / Desktop App / Mobile App?</b></summary>
 
-A: **是的，支持所有Claude平台！** 
+A: **是的，支持所有Claude平台！**
 
 由于所有Claude产品 (Web, Claude Code, Desktop App, Mobile App) 共享同一个5小时使用配额，Usage4Claude会监控您在所有平台上的总使用量。
 
@@ -328,6 +321,23 @@ A: **是的，支持所有Claude平台！**
 - 使用手机应用
 
 您都能在菜单栏中看到实时的总使用量。无需特定平台的配置！
+
+</details>
+
+<details>
+<summary><b>Q: 菜单栏看不到图标怎么办？</b></summary>
+
+A: macOS 系统或第三方软件（如 Bartender、Hidden Bar 等）有时会自动隐藏菜单栏图标。
+
+**解决方法：**
+1. 按住 **Command (⌘) 键**
+2. 用鼠标拖动菜单栏中的图标
+3. 将 Usage4Claude 图标拖到菜单栏右侧可见区域
+4. 松开鼠标即可
+
+**提示：**
+- macOS Sonoma (14.0+) 会自动隐藏不常用的图标到"控制中心"
+- 您可以在「系统设置」→「控制中心」中调整菜单栏图标显示
 
 </details>
 
@@ -361,7 +371,7 @@ A: **是的，支持所有Claude平台！**
 - [x] 首次启动引导
 - [x] 更新检查与视觉提醒
 - [x] 认证信息 Keychain 存储
-- [x] Shell 自动打包 DMG 
+- [x] Shell 自动打包 DMG
 - [x] GitHub Actions 自动发布
 - [x] 设置界面显示优化
 - [x] 开机启动选项
@@ -372,37 +382,42 @@ A: **是的，支持所有Claude平台！**
 - [x] 双圆环菜单栏图标
 - [x] 统一配色方案管理
 - [x] 调试模式（假数据、模拟更新）
+- [x] 详情窗口 去除Focus 状态
+- [x] 多限制类型支持（5种）
+- [x] 智能/自定义显示模式
+- [x] 自动获取 Organization ID
+- [x] 优化的欢迎流程
+- [x] 单色主题图标显示
+- [x] 韩语支持
 
 ### 短期计划
 1. **开发者体验**
     - 🚧 GitHub Actions 检查在线版本
 
-2. **显示优化**
-    - 🚧 设置界面暗黑模式适配
-
 ### 中期计划
-3. **显示优化**
-    - 详情窗口 Focus 状态
+2. **显示优化**
 
-5. **功能增加**
-    - 更多模式的7天使用量支持（OAuth・Opus）
+- 🚧 设置界面暗黑模式适配
+
+3. **功能增加**
     - 用量通知提醒
     - 更多语言本地化
 
 ### 长期愿景
-5. **自动设置**
-   - 浏览器插件自动获取认证信息
-   - 认证信息自动设置
+4. **自动设置**
 
-6. **更多显示方式**
+- 浏览器插件自动获取认证信息
+- 认证信息自动设置
+
+5. **更多显示方式**
    - 桌面小组件
    - 浏览器插件图标用量显示
 
-7. **数据分析**
+6. **数据分析**
    - 历史使用记录
    - 趋势图表展示
 
-8. **多平台支持**
+7. **多平台支持**
    - iOS / iPadOS 版本
    - Apple Watch 版本
    - Windows 版本
@@ -449,9 +464,9 @@ A: **是的，支持所有Claude平台！**
 ### ☕ 请我喝杯咖啡
 
 <!-- GitHub Sponsors -->
-<!-- <a href="https://github.com/sponsors/f-is-h">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a> -->
+</a>
 
 <!-- Ko-fi -->
 <a href="https://ko-fi.com/1attle">

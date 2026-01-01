@@ -13,6 +13,7 @@
 "menu.about" = "About";
 "menu.web_usage" = "View Claude Usage";
 "menu.coffee" = "Buy Me A Coffee";
+"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Quit Usage4Claude";
 
 // MARK: - Usage Detail View
@@ -70,22 +71,18 @@
 "settings.auth.step1" = "1. Visit claude.ai in your browser and log in";
 "settings.auth.step2" = "2. Open browser developer tools (F12 or Cmd+Option+I)";
 "settings.auth.step3" = "3. Switch to the Network tab";
-"settings.auth.step4" = "4. Refresh the page and find any request";
-"settings.auth.step5" = "5. Find in Headers:";
-"settings.auth.step6" = "   • sessionKey in Cookie";
-"settings.auth.step7" = "   • Organization ID in URL";
+"settings.auth.step4" = "4. Refresh the page and find the usage request";
+"settings.auth.step5" = "5. Find sessionKey in Cookie under Headers";
+"settings.auth.step6" = "6. Copy the sessionKey value and paste it above";
 "settings.auth.open_browser" = "Open Claude Usage Page in Browser";
-"settings.auth.org_id_label" = "Organization ID";
-"settings.auth.org_id_placeholder" = "Paste Organization ID";
-"settings.auth.org_id_hint" = "Usually a UUID-like string, e.g.: 12345678-abcd-ef90-1234-567890abcdef";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Paste Session Key";
 "settings.auth.session_key_hint" = "Long string starting with sk-ant-sid01-";
 "settings.auth.configured" = "Authentication configured";
-"settings.auth.not_configured" = "Please fill in complete authentication information";
+"settings.auth.not_configured" = "Please enter Session Key";
 "settings.auth.credentials_title" = "Authentication Credentials";
 "settings.auth.ready_to_use" = "Ready to use the app";
-"settings.auth.need_credentials" = "Please enter Organization ID and Session Key above";
+"settings.auth.need_credentials" = "Please enter Session Key";
 "settings.auth.show_password" = "Show";
 "settings.auth.hide_password" = "Hide";
 
@@ -97,6 +94,7 @@
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "Visit GitHub Repository";
 "settings.about.coffee" = "Buy Me A Coffee";
+"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 All Rights Reserved";
 
 // MARK: - Welcome View
@@ -133,6 +131,8 @@
 "display.percentage_only" = "Percentage Only";
 "display.icon_only" = "Icon Only";
 "display.both" = "Icon and Percentage";
+"display.show_icon" = "Show Icon";
+"display.show_percentage" = "Show Percentage";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "Smart Frequency";
@@ -147,6 +147,7 @@
 "language.japanese" = "日本語";
 "language.chinese" = "中文（简体）";
 "language.chinese_traditional" = "中文（繁體）";
+"language.korean" = "한국어";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude Settings";
@@ -170,6 +171,9 @@
 "error.no_credentials" = "Please configure authentication information in settings first";
 "error.network_failed" = "Network request failed. Please check your internet connection.";
 "error.decoding_failed" = "Failed to parse response data. Please check if your credentials are correct.";
+"error.no_organizations_found" = "No organizations found";
+"error.unauthorized" = "Authentication failed, please check your credentials";
+"error.rate_limited" = "Too many requests, please try again later";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Enabled";
@@ -234,3 +238,104 @@
 "diagnostic.suggestion_export_and_share" = "Export this diagnostic report and share it on GitHub Issues";
 "diagnostic.suggestion_contact_support" = "Contact developer for help at github.com/f-is-h/Usage4Claude/issues";
 "diagnostic.open_log_folder" = "Open Log Folder";
+
+// MARK: - Limit Types (v2.0.0)
+"five_hour_limit" = "5-Hour Limit";
+"seven_day_limit" = "7-Day Limit";
+"opus_weekly_limit" = "7D Opus Limit";
+"sonnet_weekly_limit" = "7D Sonnet Limit";
+"extra_usage" = "Extra Usage";
+
+// MARK: - Display Options (v2.0.0)
+"display_options" = "Display Options";
+"smart_display" = "Smart Display";
+"smart_display_description" = "Automatically display all limit types with data";
+"custom_display" = "Custom Display";
+"custom_display_description" = "Manually select which limits to display";
+"display_mode_label" = "Display Mode";
+"select_limit_types" = "Select Limit Types to Display";
+"circular_icon_constraint" = "At least one circular icon (5-hour or 7-day) must be selected";
+"colored_theme_unavailable" = "Colored themes are only available when showing 1-2 circular icons without other types";
+
+// MARK: - Theme Selection (v2.0.0)
+"theme_selection" = "Theme";
+"monochrome_theme" = "Monochrome Theme";
+"colored_theme" = "Colored Theme";
+"colored_theme_unavailable_reason" = "Unavailable: Only supported when displaying 2 or fewer circular indicators";
+
+// MARK: - Credentials Configuration (v2.0.0)
+"credentials" = "Credentials";
+"session_key_hint" = "Find in browser DevTools → Application → Cookies → claude.ai";
+"session_key_help" = "Your session key will be securely stored in macOS Keychain";
+"session_key_required" = "Session Key is required";
+"fetching" = "Fetching...";
+"refetch" = "Refetch";
+"configuring" = "Configuring...";
+"credentials_saved" = "Credentials saved successfully";
+"save" = "Save";
+"back" = "Back";
+"continue" = "Continue";
+
+// MARK: - Welcome Flow (v2.0.0)
+"welcome_credentials_title" = "Configure Claude Access";
+"welcome_credentials_subtitle" = "Enter your Session Key - we'll automatically fetch your Organization ID";
+"welcome_display_title" = "Choose Display Options";
+"welcome_display_subtitle" = "Select which usage limits to show in the menu bar";
+"preview" = "Preview";
+"welcome.skip" = "Skip";
+"welcome.finish" = "Finish";
+"welcome.authentication_setup" = "Authentication Setup";
+"welcome.session_key" = "Session Key";
+"welcome.session_key_placeholder" = "Paste your Session Key here";
+"welcome.session_key_hint" = "Starts with sk-ant-sid01-...";
+"welcome.valid_format" = "Valid format";
+"welcome.invalid_format" = "Session Key should be 20-500 characters";
+"welcome.select_limits" = "Select Limits";
+"welcome.smart_mode_recommended" = "Smart Mode (Recommended)";
+"welcome.custom_selection" = "Custom Selection";
+"welcome.display_title" = "Display Options";
+"welcome.display_subtitle" = "Choose which limit types to display";
+"welcome.preview" = "Preview";
+"welcome.back" = "Back";
+"welcome.skip" = "Skip";
+"welcome.continue" = "Continue";
+"welcome.finish" = "Finish";
+"welcome.how_to_get_session_key" = "How to get Session Key?";
+"welcome.configuring" = "Configuring...";
+"welcome.fetch_org_id_failed" = "Unable to fetch Organization ID, please retry in Settings later";
+"welcome.menubar_icon_not_visible" = "Menu bar icon not visible?";
+
+// MARK: - Detail Window - Date/Time Formats (v2.0.0)
+"today" = "Today";
+"today_time" = "Today %@";
+"month_day" = "%d/%d";
+"extra_usage_format" = "$%d/$%d";
+
+// MARK: - Detail Window - Remaining Time (v2.0.0)
+"extra_usage_remaining" = "Remaining $%@";
+"remaining_days_hours" = "%d days %d hours remaining";
+"remaining_hours_minutes" = "%d hours %d minutes remaining";
+"remaining_minutes" = "%d minutes remaining";
+
+// MARK: - Settings Window (v2.0.0)
+"settings" = "Settings";
+
+// MARK: - General (v2.0.0)
+"unknown" = "Unknown";
+
+// MARK: - Usage Data - Compact Remaining Formats
+"usage_data.compact_resetting_soon" = "Resetting soon";
+"usage_data.compact_remaining_minutes" = "%dm left";
+"usage_data.compact_remaining_hours" = "%dh %dm left";
+"usage_data.compact_remaining_days" = "%dd %dh left";
+
+// MARK: - Extra Usage
+"extra_usage.not_enabled" = "Not Enabled";
+"extra_usage.usage_amount" = "$%.0f/$%.0f";
+"extra_usage.remaining_amount" = "$%.0f remaining";
+
+// MARK: - Loading Animation
+"loading_animation.rainbow" = "Rainbow Gradient";
+"loading_animation.dashed" = "Dashed Rotation";
+"loading_animation.pulse" = "Pulse Effect";
+"loading_animation.current" = "Loading Animation: %@";

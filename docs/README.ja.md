@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.kr.md)
 
 <div align="center">
 
@@ -27,9 +27,11 @@
 
 ### 🎯 コア機能
 
-- **📊 リアルタイム監視** - Claude サブスクリプションの使用クォータ（5時間/7日間）をメニューバーに表示
-- **🎯 デュアル制限サポート** - 5時間と7日間の制限を同時表示、デュアルリングアイコンで明確に区別
-- **🎨 スマートカラー** - 使用率に応じた自動色変更（5時間：緑/オレンジ/赤；7日間：シアン/青紫/濃紫）
+- **📊 リアルタイム監視** - Claude サブスクリプションの使用クォータをメニューバーに表示
+- **🎯 マルチ制限サポート** - 最大5種類の制限を同時表示（5時間/7日間/追加使用量/7日間Opus/7日間Sonnet）
+- **🎨 スマート表示モード** - データのある制限タイプを自動検出して表示
+- **⚙️ カスタム表示** - 表示する制限タイプを手動で選択、任意の組み合わせをサポート
+- **🎨 スマートカラー** - 使用率に応じた自動色変更（5時間：緑/オレンジ/赤；7日間：紫グラデーション）
 - **⏰ 正確なタイミング** - 分単位でクォータリセット時間を表示
 - **🔄 スマートリフレッシュシステム** - インテリジェント4レベル適応型更新または固定間隔（1/3/5/10分）
 - **⚡ 手動リフレッシュ** - リフレッシュボタンをクリックしてデータを即座に更新（10秒デバウンス保護）
@@ -57,6 +59,7 @@
   - 日本語
   - 简体中文
   - 繁体中文
+  - 한국어
   - さらに多くの言語に対応予定...
 
 ### 🔧 便利な機能
@@ -82,60 +85,53 @@
 
 ### メニューバー表示
 
-| アイコンのみ | 5時間 | 5時間+アイコン | 5時間+7日間 | 5+7+アイコン | モノクロ(自動調整) |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="images/bar.icon@2x.png" width="auto" height="32" style="min-width: 32px" alt="icon"> | <img src="images/bar.5.ring@2x.png" width="auto" height="32" style="min-width: 32px" alt="5h ring"> | <img src="images/bar.5.both@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+icon"> | <img src="images/bar.12.ring@2x.png" width="auto" height="32" style="min-width: 48px" alt="5h+7d"> | <img src="images/bar.12.both@2x.png" width="auto" height="32" style="min-width: 64px" alt="5+7+icon"> | <nobr><img src="images/bar.mono.b@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono black"> <img src="images/bar.mono.w@2x.png" width="auto" height="42" style="min-width: 32px" alt="mono white"></nobr> |
+- アイコンと任意の使用量制限を自由に組み合わせて表示可能（最低1項目は表示が必要）
+- 形状と色の二重指示により、モノクロテーマでも識別しやすい
 
-**5時間制限モード - リングカラーインジケーター**：
+| アイコン | 5時間 | 7日間 | 追加使用量 | 7日間 Opus | 7日間 Sonnet | モノクロ(自動調整) |
+|:---:|:---:|:---:|:---:|:---:|:---:|-----|
+| <img src="images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
 
-🟢 **緑**（0-69%）- 安全に使用中
-🟠 **オレンジ**（70-89%）- 使用量に注意
-🔴 **赤**（90-100%）- 制限に近づいています
+**カラーインジケーター**：
 
-**7日間制限モード - リングカラーインジケーター**：
-
-🩵 **シアン**（0-69%）- 安全に使用中
-💙 **青紫**（70-89%）- 使用量に注意
-💜 **濃紫**（90-100%）- 制限に近づいています
-
-**デュアル制限モード - デュアルリング表示**：
-
-5時間と7日間の両方の制限がある場合、メニューバーにデュアルリングを表示：
-
-- **インナーリング（5時間制限）**：🟢 緑 → 🟠 オレンジ → 🔴 赤
-- **アウターリング（7日間制限）**：🩵 シアン → 💙 青紫 → 💜 濃紫
+- **5時間制限（詳細ウィンドウ含む）**：![macOS緑](https://img.shields.io/badge/macOS緑-34C759) → ![macOSオレンジ](https://img.shields.io/badge/macOSオレンジ-FF9500) → ![macOS赤](https://img.shields.io/badge/macOS赤-FF3B30)
+- **7日間制限（詳細ウィンドウ含む）**：![薄紫](https://img.shields.io/badge/薄紫-C084FC) → ![紫](https://img.shields.io/badge/紫-B450F0) → ![濃紫](https://img.shields.io/badge/濃紫-B41EA0)
+- **追加使用量**：![ピンク](https://img.shields.io/badge/ピンク-FF9ECD) → ![ローズ](https://img.shields.io/badge/ローズ-EC4899) → ![マゼンタ](https://img.shields.io/badge/マゼンタ-D946EF)
+- **7日間 Opus 制限**：![薄オレンジ](https://img.shields.io/badge/薄オレンジ-FFC864) → ![アンバー](https://img.shields.io/badge/アンバー-FBBF24) → ![オレンジレッド](https://img.shields.io/badge/オレンジレッド-FF6432)
+- **7日間 Sonnet 制限**：![薄青](https://img.shields.io/badge/薄青-64C8FF) → ![青](https://img.shields.io/badge/青-007AFF) → ![インディゴ](https://img.shields.io/badge/インディゴ-4F46E5)
 
 ### 詳細ウィンドウ
 
 <table border="0">
 <tr>
-<td align="center">
+<td align="top" valign="top">
 <img src="images/detail.5.ja@2x.png" width="280" alt="5時間制限モード">
-<br/>
+<br/><br/><br/><br/>
 <sub><i>5時間制限モード</i></sub>
 </td>
-<td align="center">
-<img src="images/detail.7.ja@2x.png" width="280" alt="7日間制限モード">
+<td align="center" valign="top">
+<img src="images/detail.all.ja@2x.png" width="280" alt="全制限モード">
 <br/>
-<sub><i>7日間制限モード</i></sub>
+<sub><i>全制限モード（任意の組み合わせ可能）</i></sub>
 </td>
-<td align="center">
-<img src="images/detail.12.ja@2x.png" width="280" alt="デュアル制限モード">
+<td align="center" valign="top">
+<img src="images/detail@2x.gif" width="280" alt="残り時間切り替えアニメーション">
 <br/>
-<sub><i>デュアル制限モード</i></sub>
+<sub><i>残り時間切り替えアニメーション</i></sub>
 </td>
 </tr>
 </table>
 
 ### 設定画面
 
-**一般** - 表示、更新、言語オプションをカスタマイズ  
-**認証情報** - Claude アカウント認証情報を設定  
+**一般** - ログイン時起動、表示、テーマ設定、更新、言語オプションをカスタマイズ
+**認証情報** - Claude アカウント認証情報を設定、接続診断
 **について** - バージョン情報と関連リンク
 
 ### ウェルカム画面
 
-**認証情報を設定** - 認証情報設定画面に直接移動して設定を完了  
+**認証情報の設定** - Session Key、Organization ID を自動取得
+**表示オプションの設定** - 表示オプションとテーマ設定、ライブプレビュー対応
 **後で設定** - ウェルカム画面を閉じて、後で設定画面で設定
 
 ---
@@ -148,7 +144,7 @@
 2. 最新バージョンの `.dmg` ファイルをダウンロード
 3. ダブルクリックして開き、アプリを「アプリケーション」フォルダにドラッグ
 4. 初回起動時は、アプリを右クリックして「開く」を選択（未署名アプリの許可）
-5. Keychain での認証情報保存を許可（バージョン更新後は再度許可が必要。認証プロンプトは2回表示：組織 ID、Session Key）
+5. Keychain での認証情報保存を許可（バージョン更新後は再度許可が必要。認証プロンプトは1回表示：Session Key）
 
 ### 方法2：ソースからビルド
 
@@ -182,18 +178,15 @@ open Usage4Claude.xcodeproj
 2. **認証情報を設定**  
    「認証情報の設定へ」ボタンをクリック
 
-3. **必要な情報を取得**  
+3. **Session Key を取得**
    - 「ブラウザで Claude 使用量ページを開く」をクリック
    - ブラウザの開発者ツールを開く（F12 または Cmd + Option + I）
    - 「ネットワーク」タブに切り替え
    - ページを更新
    - `usage` という名前のリクエストを見つける
-   - ヘッダーを表示し、以下を確認：
-     - `Cookie` 内の `sessionKey=sk-ant-...` 値
-     - URL 内の組織 ID（形式：`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`）
+   - ヘッダーを表示し、`Cookie` 内の `sessionKey=sk-ant-...` 値を確認
 
-4. **情報を入力**  
-   - 組織 ID を「Organization ID」フィールドに貼り付け
+4. **情報を入力**
    - Session Key を「Session Key」フィールドに貼り付け
    - 設定完了後、自動的に監視が開始されます
 
@@ -275,9 +268,10 @@ A: macOS 13.0 (Ventura) 以降が必要です。Intel と Apple Silicon（M1/M2/
 <details>
 <summary><b>Q: なぜ Keychain の許可が必要ですか？</b></summary>
 
-A: 
+A:
 - Keychain は macOS のシステムレベルパスワードマネージャー
-- Session Key と組織 ID は Keychain で暗号化されて保存されます
+- Session Key は Keychain で暗号化されて保存されます
+- Organization ID はローカル設定に保存（非機密識別子）
 - これは Apple が推奨する最も安全な機密情報保存方法
 - このアプリのみがこの情報にアクセス可能、他のアプリは閲覧不可
 
@@ -317,9 +311,9 @@ GitHub でソースコードを確認してこれらすべてを検証できま�
 <details>
 <summary><b>Q: Claude Code / Desktop App / Mobile App でも動作しますか?</b></summary>
 
-A: **はい、すべてのClaudeプラットフォームで動作します!** 
+A: **はい、すべてのClaudeプラットフォームで動作します!**
 
-すべてのClaude製品 (Web, Claude Code, Desktop App, Mobile App) は同じ5時間の使用量クォータを共有しているため、Usage4Claudeはすべてのプラットフォームでの総使用量を監視します。
+すべてのClaude製品 (Web, Claude Code, Desktop App, Mobile App) は同じ使用量クォータを共有しているため、Usage4Claudeはすべてのプラットフォームでの総使用量を監視します。
 
 以下のような場合でも:
 - ターミナルで `claude code` を使用してコーディング
@@ -328,6 +322,23 @@ A: **はい、すべてのClaudeプラットフォームで動作します!**
 - モバイルアプリを使用
 
 メニューバーでリアルタイムの総使用量を確認できます。プラットフォーム固有の設定は不要です!
+
+</details>
+
+<details>
+<summary><b>Q: メニューバーにアイコンが表示されない場合は？</b></summary>
+
+A: macOS システムまたはサードパーティソフトウェア（Bartender、Hidden Bar など）がメニューバーアイコンを自動的に非表示にすることがあります。
+
+**解決方法：**
+1. **Command (⌘) キー**を押したまま
+2. メニューバー内のアイコンをマウスでドラッグ
+3. Usage4Claude アイコンをメニューバー右側の可視エリアにドラッグ
+4. マウスを離す
+
+**ヒント：**
+- macOS Sonoma (14.0+) では、使用頻度の低いアイコンが自動的に「コントロールセンター」に非表示になります
+- 「システム設定」→「コントロールセンター」でメニューバーアイコンの表示を調整できます
 
 </details>
 
@@ -372,38 +383,42 @@ A: **はい、すべてのClaudeプラットフォームで動作します!**
 - [x] デュアルリングメニューバーアイコン
 - [x] 統一カラースキーム管理
 - [x] デバッグモード（偽データ、シミュレート更新）
+- [x] 詳細ウィンドウ Focus 状態削除
+- [x] マルチ制限タイプサポート（5種類）
+- [x] スマート/カスタム表示モード
+- [x] Organization ID 自動取得
+- [x] ウェルカムフロー最適化
+- [x] モノクロテーマアイコン表示
+- [x] 韓国語サポート
 
 ### 短期計画
 1. **開発者向け**
     - 🚧 GitHub Actions オンラインのバージョンチェック
 
+### 中期計画
 2. **表示の最適化**
     - 🚧 設定画面ダークモード対応
 
-### 中期計画
-3. **表示の最適化**
-    - 詳細ウィンドウ Focus 状態
-
-5. **機能追加**
-    - より多くの7日間使用量モードサポート（OAuth・Opus）
+3. **機能追加**
     - 使用量通知
     - より多くの言語ローカライゼーション
 
 ### 長期ビジョン
-5. **自動セットアップ**
+4. **自動セットアップ**
 
 - ブラウザ拡張機能による自動認証
 - 認証情報の自動設定
 
-6. **より多くの表示方法**
-   - デスクトップウィジェット
-   - ブラウザ拡張機能アイコン使用量表示
+5. **より多くの表示方法**
 
-7. **データ分析**
+- デスクトップウィジェット
+- ブラウザ拡張機能アイコン使用量表示
+
+6. **データ分析**
    - 使用履歴記録
    - トレンドグラフ
 
-8. **マルチプラットフォーム対応**
+7. **マルチプラットフォーム対応**
    - iOS / iPadOS バージョン
    - Apple Watch バージョン
    - Windows バージョン
@@ -450,9 +465,9 @@ A: **はい、すべてのClaudeプラットフォームで動作します!**
 ### ☕ コーヒーをおごる
 
 <!-- GitHub Sponsors -->
-<!-- <a href="https://github.com/sponsors/f-is-h">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a> -->
+</a>
 
 <!-- Ko-fi -->
 <a href="https://ko-fi.com/1attle">
