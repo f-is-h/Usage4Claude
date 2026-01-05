@@ -549,17 +549,33 @@ class UserSettings: ObservableObject {
 
         // MARK: - 数据迁移（v1.x → v2.0.0）
 
-        // 检查是否需要迁移 Organization ID 从 Keychain 到 UserDefaults
+        // 迁移 Organization ID 从 Keychain 到 UserDefaults
         if !defaults.bool(forKey: "organizationIdMigrated") {
             if let oldOrgId = keychain.loadOrganizationId(), !oldOrgId.isEmpty {
+                Logger.settings.notice("[Migration] Found Organization ID in Keychain, migrating to UserDefaults")
+                
+                // 清除 UserDefaults 中可能存在的旧值
+                defaults.removeObject(forKey: "organizationId")
+                
                 // 迁移到 UserDefaults
                 defaults.set(oldOrgId, forKey: "organizationId")
-                // 从 Keychain 删除旧数据
-                keychain.deleteOrganizationId()
-                Logger.settings.notice("成功迁移 Organization ID 从 Keychain 到 UserDefaults")
+                
+                // 验证写入是否成功
+                if let savedOrgId = defaults.string(forKey: "organizationId"), savedOrgId == oldOrgId {
+                    // 只有验证成功后才删除 Keychain 中的数据
+                    keychain.deleteOrganizationId()
+                    Logger.settings.notice("[Migration] Success")
+                    // 标记迁移已完成
+                    defaults.set(true, forKey: "organizationIdMigrated")
+                } else {
+                    Logger.settings.error("[Migration] Failed to write to UserDefaults, will retry on next launch")
+                    // 不标记迁移完成，下次启动时会重试
+                }
+            } else {
+                // 没有需要迁移的数据（全新安装或已迁移）
+                Logger.settings.notice("[Migration] No data in Keychain, marking complete")
+                defaults.set(true, forKey: "organizationIdMigrated")
             }
-            // 标记迁移已完成，避免重复执行
-            defaults.set(true, forKey: "organizationIdMigrated")
         }
 
         // MARK: - 从UserDefaults加载非敏感设置
