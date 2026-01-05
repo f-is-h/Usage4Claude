@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usage4Claude - Version 2 (Diagonal)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-center;
+      min-height: 100vh;
+      padding: 20px;
+      background: #000;
+    }
+
+    .container {
+      width: 1280px;
+      height: 640px;
+      position: relative;
+      background: linear-gradient(135deg, #FF9A76 0%, #F0E68C 100%);
+      overflow: hidden;
+    }
+
+    /* 对角线分割 */
+    .diagonal-split {
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      right: -100px;
+      bottom: -100px;
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(255, 255, 255, 0.95) 48%, 
+        transparent 48%, 
+        transparent 52%,
+        rgba(245, 243, 237, 0.95) 52%,
+        rgba(245, 243, 237, 0.95) 100%
+      );
+      transform: rotate(0deg);
+    }
+
+    /* 左上内容区 */
+    .content-area {
+      position: absolute;
+      left: 80px;
+      top: 70px;
+      z-index: 10;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-title {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .app-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .title {
+      font-size: 72px;
+      font-weight: 800;
+      color: #1F1F1F;
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+    }
+
+    .github-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #666;
+      text-decoration: none;
+      margin-bottom: 40px;
+      transition: color 0.2s;
+    }
+
+    .github-link:hover {
+      color: #CC785C;
+    }
+
+    .github-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tagline {
+      font-size: 18px;
+      line-height: 1.5;
+      color: #2D2D2D;
+      margin-bottom: 40px;
+      max-width: 500px;
+    }
+
+    .version-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .version {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, 
+        #FF9966 0%,    /* 暖橙 */
+        #FF8A5B 15%,   /* 珊瑚橙 */
+        #FF7A63 30%,   /* 珊瑚粉 */
+        #E86A6A 45%,   /* 粉橙 */
+        #D97356 60%,   /* 主橙 */
+        #CC785C 75%,   /* 深橙 */
+        #D68A5C 90%,   /* 金橙 */
+        #E89966 100%   /* 琥珀橙 */
+      );
+      color: white;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 
+        0 4px 16px rgba(255, 122, 99, 0.35),
+        0 2px 8px rgba(232, 106, 106, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .version::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        135deg, 
+        transparent 0%, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.4) 45%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        rgba(255, 255, 255, 0.4) 55%, 
+        transparent 70%, 
+        transparent 100%
+      );
+      border-radius: 100px;
+      pointer-events: none;
+    }
+
+    .release {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .tag {
+      padding: 8px 16px;
+      background: white;
+      border: 2px solid transparent;
+      background-image: 
+        linear-gradient(white, white),
+        linear-gradient(135deg, 
+          #FF9966 0%,
+          #FF8A5B 20%,
+          #FF7A63 40%,
+          #E86A6A 60%,
+          #D97356 80%,
+          #E89966 100%
+        );
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #CC785C;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .tag:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 122, 99, 0.25);
+    }
+
+    /* 右下界面展示 */
+    .interface-area {
+      position: absolute;
+      bottom: 80px;
+      right: 120px;
+      z-index: 10;
+    }
+
+    .interface-stack {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: -12px; /* 负值让主界面往上移更多，与菜单栏重叠 */
+    }
+
+    .menubar-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .menubar-image {
+      height: 42px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+    }
+
+    .popup-image {
+      width: 420px;
+      /* 图片本身已带阴影和透明边，不添加额外效果 */
+    }
+
+    /* 左下角装饰水印 */
+    .decorative-watermark {
+      position: absolute;
+      bottom: 35px;
+      left: 80px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.25);
+      font-weight: 500;
+      z-index: 5;
+      letter-spacing: 0.02em;
+    }
+
+    .heart-icon {
+      color: rgba(204, 120, 92, 0.4);
+      font-size: 14px;
+    }
+
+    /* 右下角统计数据 - 成就徽章样式 */
+    .stats-area {
+      position: absolute;
+      bottom: 30px;
+      right: 80px;
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .stat-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: white;
+      border: 2px solid #CC785C;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(204, 120, 92, 0.15);
+      transition: transform 0.2s;
+    }
+
+    .stat-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(204, 120, 92, 0.25);
+    }
+
+    .badge-icon {
+      width: 20px;
+      height: 20px;
+      color: #CC785C;
+      flex-shrink: 0;
+    }
+
+    .badge-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-number {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1F1F1F;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #666;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 对角线背景 -->
+    <div class="diagonal-split"></div>
+
+    <!-- 左上内容 -->
+    <div class="content-area">
+      <div class="logo-title">
+        <img src="icon@2x.png" alt="Usage4Claude" class="app-icon">
+        <h1 class="title">Usage<br>4Claude</h1>
+      </div>
+
+      <a href="https://github.com/f-is-h/Usage4Claude" class="github-link" target="_blank">
+        <svg class="github-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+        </svg>
+        github.com/f-is-h/Usage4Claude
+      </a>
+
+      <p class="tagline">
+        An elegant macOS menu bar app for real-time monitoring of your Claude AI usage
+      </p>
+
+      <div class="version-info">
+        <div class="version">v2.0 Multi-Limit</div>
+        <div class="release">Jan 1, 2026</div>
+      </div>
+
+      <div class="feature-tags">
+        <div class="tag">Multi-Limit Support</div>
+        <div class="tag">All Claude Platforms</div>
+        <div class="tag">Multilingual</div>
+        <div class="tag">Keychain Protected</div>
+        <div class="tag">Smart Refresh</div>
+        <div class="tag">Native Swift</div>
+      </div>
+    </div>
+
+    <!-- 右下界面展示 -->
+    <div class="interface-area">
+      <div class="interface-stack">
+        <div class="menubar-container">
+          <img src="bar.color.all@2x.png" alt="Menu Bar" class="menubar-image">
+        </div>
+        <img src="detail.all.en@2x.png" alt="Detail Popup" class="popup-image">
+      </div>
+    </div>
+
+    <!-- 装饰水印 -->
+    <div class="decorative-watermark">
+      <span>Made with</span>
+      <span class="heart-icon">❤️</span>
+      <span>in Tokyo</span>
+    </div>
+
+    <!-- 右下角成就徽章 -->
+    <div class="stats-area">
+      <div class="stat-badge">
+        <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 15l-3 3v-7a4 4 0 1 1 6 0v7l-3-3z"/>
+          <circle cx="12" cy="8" r="5"/>
+        </svg>
+        <div class="badge-content">
+          <span class="stat-number">600+</span>
+          <span class="stat-label">Downloads</span>
+        </div>
+      </div>
+      <div class="stat-badge">
+        <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M15.477 12.89l1.515 8.526-5.03-2.652-5.031 2.652 1.515-8.526"/>
+        </svg>
+        <div class="badge-content">
+          <span class="stat-number">Popular</span>
+          <span class="stat-label">Product Hunt & Reddit</span>
+        </div>
+      </div>
+      <div class="stat-badge">
+        <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <div class="badge-content">
+          <span class="stat-number">Open Source</span>
+          <span class="stat-label">MIT License</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
