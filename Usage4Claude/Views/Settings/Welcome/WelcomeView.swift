@@ -573,7 +573,7 @@ struct SetupStepView: View {
 
         case .korean:
             let anchor = section == .initialSetup ? "#초기-설정" : "#-자주-묻는-질문"
-            return "\(baseURL)/docs/README.kr.md\(anchor)"
+            return "\(baseURL)/docs/README.ko.md\(anchor)"
         }
     }
 }
