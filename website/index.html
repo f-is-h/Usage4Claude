@@ -13,6 +13,7 @@
   <link rel="alternate" hreflang="zh-CN" href="https://usage4claude.pages.dev/index.zh-cn.html">
   <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
   <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
+  <link rel="alternate" hreflang="ko" href="https://usage4claude.pages.dev/index.ko.html">
   <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
 
   <meta property="og:type" content="website">
@@ -43,7 +44,8 @@
         const langMap = {
           'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn',
           'ja': '/index.ja', 'ja-jp': '/index.ja',
-          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw'
+          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw',
+          'ko': '/index.ko', 'ko-kr': '/index.ko'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
         const currentPath = window.location.pathname;
@@ -73,6 +75,7 @@
       <div class="flex items-center space-x-3">
         <a href="/" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">EN</a>
         <a href="/index.ja" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">日本語</a>
+        <a href="/index.ko" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">한국어</a>
         <a href="/index.zh-cn" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
         <a href="/index.zh-tw" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
       </div>
@@ -83,6 +86,12 @@
     <div class="container mx-auto px-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="animate-fadeInUp">
+          <div class="inline-flex items-center gap-2 px-4 py-2 mb-4 bg-[#CC785C]/10 border border-[#CC785C]/30 rounded-full">
+            <svg class="w-5 h-5 text-[#CC785C]" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            <span class="text-sm font-semibold text-[#CC785C]">NEW v2.0 Released</span>
+          </div>
           <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             Real-time<br>Claude AI Usage Monitor
           </h1>
@@ -93,7 +102,7 @@
           <ul class="mb-8 space-y-3 text-lg text-gray-700">
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>Dual Limit Display - 5-hour + 7-day quotas at a glance</span>
+              <span>Multi-Limit Display - Support up to 5 usage limits simultaneously</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
@@ -115,8 +124,13 @@
           </div>
         </div>
 
-        <div class="animate-fadeInUp">
-          <img src="images/screenshots/detail-dual-en.png" alt="Usage4Claude Detail Window - Dual Limit Mode" class="rounded-2xl shadow-2xl">
+        <div class="animate-fadeInUp flex justify-center">
+          <div class="relative inline-block" style="width: 400px;">
+            <div class="bg-white/80 backdrop-blur-md rounded-lg px-3 py-1.5 shadow-sm border border-gray-200 flex justify-center mb-3" style="width: 400px;">
+              <img src="images/screenshots/bar.color.all@2x.png" alt="Menu Bar Icons" style="height: auto; transform: scale(0.85);">
+            </div>
+            <img src="images/screenshots/detail@2x.gif" alt="Usage4Claude - Time Remaining Toggle Animation" class="rounded-2xl shadow-2xl" style="width: 400px; height: auto;">
+          </div>
         </div>
       </div>
     </div>
@@ -134,7 +148,7 @@
           <div class="text-5xl mb-4">📊</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">Real-time Monitoring</h3>
           <p class="text-gray-600">
-            Menu bar displays usage quotas in real-time, supports 5-hour and 7-day dual limits, smart color alerts (green→orange→red / cyan→purple→deep purple)
+            Monitor up to 5 usage limits: 5-hour, 7-day, Extra, 7-day Opus, 7-day Sonnet. Smart color-coded progress rings with distinctive shapes for easy identification.
           </p>
         </div>
 
@@ -158,7 +172,7 @@
           <div class="text-5xl mb-4">🌍</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">Multi-Language Support</h3>
           <p class="text-gray-600">
-            Native support for English, Japanese, Simplified Chinese, Traditional Chinese, interface language auto-follows system or manual switch
+            Native support for 5 languages: English, Japanese, Korean, Simplified Chinese, Traditional Chinese. Auto-detects system language or switch manually.
           </p>
         </div>
 
@@ -166,7 +180,7 @@
           <div class="text-5xl mb-4">🎨</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">Personalization</h3>
           <p class="text-gray-600">
-            3 display modes (icon only/percentage only/icon+percentage), 3 themes (default/monochrome/color), satisfy different preferences
+            Smart Mode auto-detects available limits, or customize which limits to display. 3 themes (color translucent/color with background/monochrome) for personalization.
           </p>
         </div>
 
@@ -189,41 +203,74 @@
       </div>
 
       <div class="mb-16">
-        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">Menu Bar Display Styles</h3>
-        <div class="flex flex-wrap justify-center gap-8 items-center">
-          <div class="text-center">
-            <img src="images/screenshots/bar-icon.png" alt="Icon Only" class="h-12 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">Icon Only</p>
-          </div>
-          <div class="text-center">
-            <img src="images/screenshots/bar-5h-ring.png" alt="5-Hour Limit" class="h-12 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">5-Hour Limit</p>
-          </div>
-          <div class="text-center">
-            <img src="images/screenshots/bar-dual-ring.png" alt="Dual Limits" class="h-12 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">Dual Limits</p>
-          </div>
-          <div class="text-center">
-            <img src="images/screenshots/bar-dual-both.png" alt="Icon + Dual Limits" class="h-14 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">Icon + Dual Limits</p>
+        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">Menu Bar Display</h3>
+        <p class="text-center text-gray-600 mb-8">Icons and any limit type can be freely combined for display (at least one item must be shown)<br>Dual indicators through shape and color ensure easy identification even in monochrome themes</p>
+
+        <div class="overflow-x-auto">
+          <table class="mx-auto border-collapse">
+            <thead>
+              <tr class="border-b-2 border-gray-300">
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Icon</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">5-Hour</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7-Day</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Extra</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7-Day Opus</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7-Day Sonnet</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Monochrome</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.icon@2x.png" alt="Icon Only" class="inline-block" style="width: auto; height: 40px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.5h@2x.png" alt="5-Hour Limit" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7d@2x.png" alt="7-Day Limit" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.ex@2x.png" alt="Extra Usage" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7do@2x.png" alt="7-Day Opus" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7ds@2x.png" alt="7-Day Sonnet" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.mono.b@2x.png" alt="Monochrome Black" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <br>
+                  <img src="images/screenshots/bar.mono.w@2x.png" alt="Monochrome White" class="inline-block" style="height: 35px; width: auto;">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 text-center">
+          <p class="text-sm font-semibold text-gray-700 mb-4">Color Indicators:</p>
+          <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
+            <div><strong>5-Hour:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
+            <div><strong>7-Day:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
+            <div><strong>Extra:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
+            <div><strong>Opus:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
+            <div><strong>Sonnet:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
           </div>
         </div>
       </div>
 
       <div>
         <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">Detail Window</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div class="screenshot-card">
-            <img src="images/screenshots/detail-5h-en.png" alt="5-Hour Limit Mode" loading="lazy" class="w-full rounded-xl shadow-xl">
-            <p class="text-center mt-4 text-gray-600">5-Hour Limit Mode</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div class="screenshot-card text-center">
+            <img src="images/screenshots/detail.5.en@2x.png" alt="5-Hour Limit Mode" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">5-Hour Limit Mode</p>
           </div>
-          <div class="screenshot-card">
-            <img src="images/screenshots/detail-7d-en.png" alt="7-Day Limit Mode" loading="lazy" class="w-full rounded-xl shadow-xl">
-            <p class="text-center mt-4 text-gray-600">7-Day Limit Mode</p>
-          </div>
-          <div class="screenshot-card">
-            <img src="images/screenshots/detail-dual-en.png" alt="Dual Limit Mode" loading="lazy" class="w-full rounded-xl shadow-xl">
-            <p class="text-center mt-4 text-gray-600">Dual Limit Mode</p>
+          <div class="screenshot-card text-center">
+            <img src="images/screenshots/detail.all.en@2x.png" alt="All Limits Mode" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">All Limits Mode<br>(Any combination freely selectable)</p>
           </div>
         </div>
       </div>
@@ -241,7 +288,7 @@
 
       <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
         <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
-          Download Latest (v1.6.0)
+          Download Latest (v2.0.0)
         </a>
         <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
           ⭐ Star on GitHub
@@ -270,8 +317,8 @@
 
   <footer class="bg-gray-900 text-gray-300 py-12">
     <div class="container mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div class="col-span-1 md:col-span-2">
+      <div class="flex flex-wrap gap-8 md:gap-12 lg:gap-16">
+        <div class="flex-1 min-w-[200px] md:min-w-[250px]">
           <div class="flex items-center space-x-3 mb-4">
             <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
             <span class="text-xl font-semibold text-white">Usage4Claude</span>
@@ -279,7 +326,7 @@
           <p class="text-sm">Elegant macOS menu bar app for real-time Claude AI usage monitoring</p>
         </div>
 
-        <div>
+        <div class="min-w-[140px]">
           <h4 class="font-semibold text-white mb-4">Resources</h4>
           <ul class="space-y-2 text-sm">
             <li><a href="https://github.com/f-is-h/Usage4Claude" class="hover:text-white transition-colors">GitHub</a></li>
@@ -289,7 +336,7 @@
           </ul>
         </div>
 
-        <div>
+        <div class="min-w-[140px]">
           <h4 class="font-semibold text-white mb-4">Support</h4>
           <ul class="space-y-2 text-sm">
             <li><a href="https://github.com/sponsors/f-is-h?frequency=one-time" class="hover:text-white transition-colors flex items-center">
@@ -307,7 +354,7 @@
           </ul>
         </div>
 
-        <div>
+        <div class="min-w-[120px]">
           <h4 class="font-semibold text-white mb-4">Legal</h4>
           <ul class="space-y-2 text-sm">
             <li><a href="legal.html" class="hover:text-white transition-colors">Legal Notice</a></li>
@@ -318,7 +365,7 @@
       </div>
 
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-        <p>&copy; 2025 f-is-h. Licensed under MIT License.</p>
+        <p>&copy; 2026 f-is-h. Licensed under MIT License.</p>
         <p class="mt-2 text-gray-500">This project is not officially associated with Anthropic or Claude AI</p>
       </div>
     </div>

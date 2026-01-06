@@ -13,6 +13,7 @@
   <link rel="alternate" hreflang="zh-CN" href="https://usage4claude.pages.dev/index.zh-cn.html">
   <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
   <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
+  <link rel="alternate" hreflang="ko" href="https://usage4claude.pages.dev/index.ko.html">
   <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
 
   <meta property="og:type" content="website">
@@ -43,7 +44,8 @@
         const langMap = {
           'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn',
           'ja': '/index.ja', 'ja-jp': '/index.ja',
-          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw'
+          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw',
+          'ko': '/index.ko', 'ko-kr': '/index.ko'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
         const currentPath = window.location.pathname;
@@ -73,6 +75,7 @@
       <div class="flex items-center space-x-3">
         <a href="/" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">EN</a>
         <a href="/index.ja" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">日本語</a>
+        <a href="/index.ko" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">한국어</a>
         <a href="/index.zh-cn" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
         <a href="/index.zh-tw" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
       </div>
@@ -83,6 +86,12 @@
     <div class="container mx-auto px-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="animate-fadeInUp">
+          <div class="inline-flex items-center gap-2 px-4 py-2 mb-4 bg-[#CC785C]/10 border border-[#CC785C]/30 rounded-full">
+            <svg class="w-5 h-5 text-[#CC785C]" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            <span class="text-sm font-semibold text-[#CC785C]">新バージョン v2.0 リリース</span>
+          </div>
           <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             Claude AI 使用量を<br>リアルタイム監視
           </h1>
@@ -93,7 +102,7 @@
           <ul class="mb-8 space-y-3 text-lg text-gray-700">
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>二重制限表示 - 5時間 + 7日間のクォータを一目で確認</span>
+              <span>マルチ制限表示 - 最大 5 種類の使用量制限を同時表示</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
@@ -115,8 +124,13 @@
           </div>
         </div>
 
-        <div class="animate-fadeInUp">
-          <img src="images/screenshots/detail-dual-ja.png" alt="Usage4Claude 詳細ウィンドウ - 二重制限モード" class="rounded-2xl shadow-2xl">
+        <div class="animate-fadeInUp flex justify-center">
+          <div class="relative inline-block" style="width: 400px;">
+            <div class="bg-white/80 backdrop-blur-md rounded-lg px-3 py-1.5 shadow-sm border border-gray-200 flex justify-center mb-3" style="width: 400px;">
+              <img src="images/screenshots/bar.color.all@2x.png" alt="メニューバーアイコン" style="height: auto; transform: scale(0.85);">
+            </div>
+            <img src="images/screenshots/detail@2x.gif" alt="Usage4Claude - 残り時間切り替えアニメーション" class="rounded-2xl shadow-2xl" style="width: 400px; height: auto;">
+          </div>
         </div>
       </div>
     </div>
@@ -134,7 +148,7 @@
           <div class="text-5xl mb-4">📊</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">リアルタイム監視</h3>
           <p class="text-gray-600">
-            メニューバーで使用量クォータをリアルタイム表示、5時間・7日間の二重制限対応、スマートカラーアラート（緑→橙→赤 / シアン→紫→ディープパープル）
+            最大 5 種類の使用量制限を監視：5時間、7日間、追加使用量、7日間 Opus、7日間 Sonnet。区別しやすいように形状が異なるスマートなカラーコード付きプログレスリング。
           </p>
         </div>
 
@@ -158,7 +172,7 @@
           <div class="text-5xl mb-4">🌍</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">多言語対応</h3>
           <p class="text-gray-600">
-            英語、日本語、簡体字中国語、繁体字中国語をネイティブサポート、インターフェース言語はシステムに自動追従または手動切替可能
+            5つの言語をネイティブサポート：英語、日本語、韓国語、簡体字中国語、繁体字中国語。インターフェース言語はシステムに自動追従または手動切替可能
           </p>
         </div>
 
@@ -166,7 +180,7 @@
           <div class="text-5xl mb-4">🎨</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">パーソナライゼーション</h3>
           <p class="text-gray-600">
-            3つの表示モード（アイコンのみ/パーセンテージのみ/アイコン+パーセンテージ）、3つのテーマ（デフォルト/モノクロ/カラー）、さまざまな好みに対応
+            スマートモードで利用可能な制限を自動検出、またはカスタムで表示する制限を選択。3つのテーマ（カラー半透明/カラー背景付き/モノクロ）でパーソナライズ可能。
           </p>
         </div>
 
@@ -189,41 +203,74 @@
       </div>
 
       <div class="mb-16">
-        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">メニューバー表示スタイル</h3>
-        <div class="flex flex-wrap justify-center gap-8 items-center">
-          <div class="text-center">
-            <img src="images/screenshots/bar-icon.png" alt="アイコンのみ" class="h-12 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">アイコンのみ</p>
-          </div>
-          <div class="text-center">
-            <img src="images/screenshots/bar-5h-ring.png" alt="5時間制限" class="h-12 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">5時間制限</p>
-          </div>
-          <div class="text-center">
-            <img src="images/screenshots/bar-dual-ring.png" alt="二重制限" class="h-12 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">二重制限</p>
-          </div>
-          <div class="text-center">
-            <img src="images/screenshots/bar-dual-both.png" alt="アイコン + 二重制限" class="h-14 mx-auto mb-2 shadow-md rounded">
-            <p class="text-sm text-gray-600">アイコン + 二重制限</p>
+        <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">メニューバー表示</h3>
+        <p class="text-center text-gray-600 mb-8">アイコンと任意の制限タイプを自由に組み合わせ表示可能（最低1つは表示必須）<br>形状と色の二重指標により、モノクロテーマでも容易に識別可能</p>
+
+        <div class="overflow-x-auto">
+          <table class="mx-auto border-collapse">
+            <thead>
+              <tr class="border-b-2 border-gray-300">
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">アイコン</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">5時間</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7日間</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">追加</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7日間 Opus</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7日間 Sonnet</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">モノクロ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.icon@2x.png" alt="アイコンのみ" class="inline-block" style="width: auto; height: 40px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.5h@2x.png" alt="5時間制限" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7d@2x.png" alt="7日間制限" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.ex@2x.png" alt="追加使用量" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7do@2x.png" alt="7日間 Opus" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7ds@2x.png" alt="7日間 Sonnet" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.mono.b@2x.png" alt="モノクロ黒" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <br>
+                  <img src="images/screenshots/bar.mono.w@2x.png" alt="モノクロ白" class="inline-block" style="height: 35px; width: auto;">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 text-center">
+          <p class="text-sm font-semibold text-gray-700 mb-4">カラーインジケーター：</p>
+          <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
+            <div><strong>5時間：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
+            <div><strong>7日間：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
+            <div><strong>追加：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
+            <div><strong>Opus：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
+            <div><strong>Sonnet：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
           </div>
         </div>
       </div>
 
       <div>
         <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">詳細ウィンドウ</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div class="screenshot-card">
-            <img src="images/screenshots/detail-5h-ja.png" alt="5時間制限モード" loading="lazy" class="w-full rounded-xl shadow-xl">
-            <p class="text-center mt-4 text-gray-600">5時間制限モード</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div class="screenshot-card text-center">
+            <img src="images/screenshots/detail.5.ja@2x.png" alt="5時間制限モード" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">5時間制限モード</p>
           </div>
-          <div class="screenshot-card">
-            <img src="images/screenshots/detail-7d-ja.png" alt="7日間制限モード" loading="lazy" class="w-full rounded-xl shadow-xl">
-            <p class="text-center mt-4 text-gray-600">7日間制限モード</p>
-          </div>
-          <div class="screenshot-card">
-            <img src="images/screenshots/detail-dual-ja.png" alt="二重制限モード" loading="lazy" class="w-full rounded-xl shadow-xl">
-            <p class="text-center mt-4 text-gray-600">二重制限モード</p>
+          <div class="screenshot-card text-center">
+            <img src="images/screenshots/detail.all.ja@2x.png" alt="全制限モード" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">全制限モード<br>（任意の組み合わせを自由に選択可能）</p>
           </div>
         </div>
       </div>
@@ -241,7 +288,7 @@
 
       <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
         <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
-          最新版をダウンロード (v1.6.0)
+          最新版をダウンロード (v2.0.0)
         </a>
         <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
           ⭐ Star on GitHub
@@ -270,8 +317,8 @@
 
   <footer class="bg-gray-900 text-gray-300 py-12">
     <div class="container mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div class="col-span-1 md:col-span-2">
+      <div class="flex flex-wrap gap-8 md:gap-12 lg:gap-16">
+        <div class="flex-1 min-w-[200px] md:min-w-[250px]">
           <div class="flex items-center space-x-3 mb-4">
             <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
             <span class="text-xl font-semibold text-white">Usage4Claude</span>
@@ -279,7 +326,7 @@
           <p class="text-sm">エレガントな macOS メニューバーアプリで Claude AI 使用量をリアルタイム監視</p>
         </div>
 
-        <div>
+        <div class="min-w-[140px]">
           <h4 class="font-semibold text-white mb-4">リソース</h4>
           <ul class="space-y-2 text-sm">
             <li><a href="https://github.com/f-is-h/Usage4Claude" class="hover:text-white transition-colors">GitHub</a></li>
@@ -289,7 +336,7 @@
           </ul>
         </div>
 
-        <div>
+        <div class="min-w-[140px]">
           <h4 class="font-semibold text-white mb-4">サポート</h4>
           <ul class="space-y-2 text-sm">
             <li><a href="https://github.com/sponsors/f-is-h?frequency=one-time" class="hover:text-white transition-colors flex items-center">
@@ -307,7 +354,7 @@
           </ul>
         </div>
 
-        <div>
+        <div class="min-w-[120px]">
           <h4 class="font-semibold text-white mb-4">法的情報</h4>
           <ul class="space-y-2 text-sm">
             <li><a href="legal.html" class="hover:text-white transition-colors">特定商取引法に基づく表記</a></li>
@@ -318,7 +365,7 @@
       </div>
 
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-        <p>&copy; 2025 f-is-h. Licensed under MIT License.</p>
+        <p>&copy; 2026 f-is-h. Licensed under MIT License.</p>
         <p class="mt-2 text-gray-500">このプロジェクトは Anthropic または Claude AI と公式な関連はありません</p>
       </div>
     </div>
