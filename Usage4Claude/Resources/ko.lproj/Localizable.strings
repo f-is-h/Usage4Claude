@@ -337,3 +337,13 @@
 "loading_animation.dashed" = "점선 회전";
 "loading_animation.pulse" = "펄스 효과";
 "loading_animation.current" = "로딩 애니메이션: %@";
+
+// MARK: - Graph Type
+"graph_type.circular" = "원형";
+"graph_type.linear" = "선형";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "그래프 스타일";
+"graph_style.hint" = "사용량 표시 방식 선택";
+"graph_style.circular_description" = "사용량을 퍼센트 링으로 표시";
+"graph_style.linear_description" = "사용량을 타임라인과 속도 예측으로 표시";

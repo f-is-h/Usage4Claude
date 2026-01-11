@@ -160,6 +160,96 @@ extension UsageDetailView {
         }
     }
 
+    // MARK: - Graph View Selection
+
+    /// 根据用户设置选择圆形或线性图表
+    /// - Parameter data: 用量数据
+    /// - Returns: 对应类型的图表视图
+    @ViewBuilder
+    func usageGraphView(data: UsageData) -> some View {
+        switch UserSettings.shared.graphDisplayType {
+        case .circular:
+            circularGraphView(data: data)
+        case .linear:
+            LinearUsageGraphView(
+                usageData: data,
+                activeDisplayTypes: activeDisplayTypes,
+                isRefreshing: refreshState.isRefreshing
+            )
+        }
+    }
+
+    /// 圆形图表视图
+    @ViewBuilder
+    func circularGraphView(data: UsageData) -> some View {
+        ZStack {
+            // 根据用户选择的显示类型确定主要限制
+            let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
+
+            if let primary = primaryLimitData {
+                // 1. 主圆环背景（灰色）
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                    .frame(width: 100, height: 100)
+
+                if refreshState.isRefreshing {
+                    // 加载动画
+                    loadingAnimation()
+                } else {
+                    // 2. 主进度条（根据用户选择的限制类型）
+                    Circle()
+                        .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
+                        .stroke(
+                            colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes),
+                            style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                        )
+                        .frame(width: 100, height: 100)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut, value: primary.percentage)
+                }
+
+                // 3. 外层细圆环（仅在用户同时选择了5h和7d限制时显示）
+                if activeDisplayTypes.contains(.fiveHour) &&
+                   activeDisplayTypes.contains(.sevenDay) {
+                    // 在自定义模式下，即使数据为 nil 也显示占位圆环
+                    let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.displayMode == .custom ? 0 : nil)
+
+                    if let percentage = sevenDayPercentage {
+                        // 7天背景圆环（灰色）
+                        Circle()
+                            .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                            .frame(width: 114, height: 114)
+
+                        if refreshState.isRefreshing {
+                            // 刷新时显示对应类型的外侧圆环动画（逆时针旋转）
+                            outerLoadingAnimation()
+                        } else {
+                            // 7天进度条（紫色系）
+                            Circle()
+                                .trim(from: 0, to: CGFloat(percentage) / 100.0)
+                                .stroke(
+                                    colorForSevenDay(percentage),
+                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                )
+                                .frame(width: 114, height: 114)
+                                .rotationEffect(.degrees(-90))
+                                .animation(.easeInOut, value: percentage)
+                        }
+                    }
+                }
+
+                // 4. 中间显示区域：百分比（显示主要限制的百分比）
+                VStack(spacing: 2) {
+                    Text("\(Int(primary.percentage))%")
+                        .font(.system(size: 28, weight: .bold))
+                    Text(L.Usage.used)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+
     // MARK: - Primary Limit Selection
 
     /// 根据用户选择的显示类型确定主要限制数据

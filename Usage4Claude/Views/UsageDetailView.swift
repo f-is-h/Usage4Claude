@@ -66,7 +66,7 @@ struct UsageDetailView: View {
     // MARK: - Body
 
     /// 获取当前活动的显示类型
-    private var activeDisplayTypes: [LimitType] {
+    var activeDisplayTypes: [LimitType] {
         guard let data = usageData else { return [] }
         return UserSettings.shared.getActiveDisplayTypes(usageData: data)
     }
@@ -251,83 +251,19 @@ struct UsageDetailView: View {
             } else if let data = usageData {
                 // 使用数据
                 VStack(spacing: 15) {  // 双模式时两行文字的上间距
-                    // 圆形进度条
-                    ZStack {
-                        // 根据用户选择的显示类型确定主要限制
-                        let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
-
-                        if let primary = primaryLimitData {
-                            // 1. 主圆环背景（灰色）
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                                .frame(width: 100, height: 100)
-
-                            if refreshState.isRefreshing {
-                                // 加载动画
-                                loadingAnimation()
-                            } else {
-                                // 2. 主进度条（根据用户选择的限制类型）
-                                Circle()
-                                    .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
-                                    .stroke(
-                                        colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes),
-                                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                                    )
-                                    .frame(width: 100, height: 100)
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.easeInOut, value: primary.percentage)
-                            }
-
-                            // 3. 外层细圆环（仅在用户同时选择了5h和7d限制时显示）
-                            if activeDisplayTypes.contains(.fiveHour) &&
-                               activeDisplayTypes.contains(.sevenDay) {
-                                // 在自定义模式下，即使数据为 nil 也显示占位圆环
-                                let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.displayMode == .custom ? 0 : nil)
-
-                                if let percentage = sevenDayPercentage {
-                                    // 7天背景圆环（灰色）
-                                    Circle()
-                                        .stroke(Color.gray.opacity(0.15), lineWidth: 3)
-                                        .frame(width: 114, height: 114)
-
-                                    if refreshState.isRefreshing {
-                                        // 刷新时显示对应类型的外侧圆环动画（逆时针旋转）
-                                        outerLoadingAnimation()
-                                    } else {
-                                        // 7天进度条（紫色系）
-                                        Circle()
-                                            .trim(from: 0, to: CGFloat(percentage) / 100.0)
-                                            .stroke(
-                                                colorForSevenDay(percentage),
-                                                style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                                            )
-                                            .frame(width: 114, height: 114)
-                                            .rotationEffect(.degrees(-90))
-                                            .animation(.easeInOut, value: percentage)
-                                    }
-                                }
-                            }
-
-                            // 4. 中间显示区域：百分比（显示主要限制的百分比）
-                            VStack(spacing: 2) {
-                                Text("\(Int(primary.percentage))%")
-                                    .font(.system(size: 28, weight: .bold))
-                                Text(L.Usage.used)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
+                    // 根据用户设置选择圆形或线性图表
+                    usageGraphView(data: data)
                     .frame(height: 114)  // 固定高度，确保有无双圆环时高度一致
-                    .contentShape(Circle())  // 定义可点击区域为整个圆形
+                    .contentShape(Rectangle())  // 定义可点击区域
                     .onTapGesture {
-                        // 点击圆环刷新数据
+                        // 点击图表刷新数据
                         if refreshState.canRefresh && !refreshState.isRefreshing {
                             onMenuAction?(.refresh)
                         }
                     }
                     .onLongPressGesture(minimumDuration: 3.0) {
-                        // 长按圆环切换动画类型
+                        // 长按圆环切换动画类型（仅圆形模式有效）
+                        guard UserSettings.shared.graphDisplayType == .circular else { return }
                         let allTypes = LoadingAnimationType.allCases
                         let currentIndex = allTypes.firstIndex(of: animationType) ?? 0
                         let nextIndex = (currentIndex + 1) % allTypes.count
