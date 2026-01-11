@@ -342,3 +342,9 @@
 // MARK: - Graph Type
 "graph_type.circular" = "圓形";
 "graph_type.linear" = "線性";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "圖表樣式";
+"graph_style.hint" = "選擇使用量的顯示方式";
+"graph_style.circular_description" = "以百分比圓環顯示使用量";
+"graph_style.linear_description" = "以時間線和速度預測顯示使用量";

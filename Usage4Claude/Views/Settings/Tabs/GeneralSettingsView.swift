@@ -225,6 +225,39 @@ struct GeneralSettingsView: View {
                     }
                 }
 
+                // 图表样式卡片
+                SettingCard(
+                    icon: "chart.line.uptrend.xyaxis",
+                    iconColor: .cyan,
+                    title: L.GraphStyle.title,
+                    hint: L.GraphStyle.hint
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Picker("", selection: $settings.graphDisplayType) {
+                            ForEach(GraphDisplayType.allCases, id: \.self) { type in
+                                Text(type.localizedName).tag(type)
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                        .labelsHidden()
+                        .focusable(false)
+
+                        // 描述文字
+                        HStack(alignment: .top, spacing: 4) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                            Text(settings.graphDisplayType == .circular
+                                ? L.GraphStyle.circularDescription
+                                : L.GraphStyle.linearDescription)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.leading, 20)
+                    }
+                }
+
                 // 刷新设置卡片
                 SettingCard(
                     icon: "clock.arrow.trianglehead.2.counterclockwise.rotate.90",

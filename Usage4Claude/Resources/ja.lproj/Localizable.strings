@@ -342,3 +342,9 @@
 // MARK: - Graph Type
 "graph_type.circular" = "サークル";
 "graph_type.linear" = "ライン";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "グラフスタイル";
+"graph_style.hint" = "使用量の表示方法を選択";
+"graph_style.circular_description" = "使用量をパーセントリングで表示";
+"graph_style.linear_description" = "使用量をタイムラインとペース予測で表示";
