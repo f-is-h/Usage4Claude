@@ -387,6 +387,12 @@ enum L {
         }
     }
 
+    // MARK: - Graph Type
+    enum GraphType {
+        static var circular: String { localized("graph_type.circular") }
+        static var linear: String { localized("graph_type.linear") }
+    }
+
     // MARK: - Helper Methods
     
     /// 本地化字符串辅助方法

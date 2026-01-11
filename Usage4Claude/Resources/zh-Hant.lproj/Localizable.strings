@@ -338,3 +338,7 @@
 "loading_animation.dashed" = "虛線旋轉";
 "loading_animation.pulse" = "脈衝效果";
 "loading_animation.current" = "載入動畫: %@";
+
+// MARK: - Graph Type
+"graph_type.circular" = "圓形";
+"graph_type.linear" = "線性";

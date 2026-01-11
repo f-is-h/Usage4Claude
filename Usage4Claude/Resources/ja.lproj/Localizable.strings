@@ -338,3 +338,7 @@
 "loading_animation.dashed" = "破線回転";
 "loading_animation.pulse" = "パルス効果";
 "loading_animation.current" = "読み込みアニメーション: %@";
+
+// MARK: - Graph Type
+"graph_type.circular" = "サークル";
+"graph_type.linear" = "ライン";

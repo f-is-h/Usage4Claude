@@ -337,3 +337,7 @@
 "loading_animation.dashed" = "점선 회전";
 "loading_animation.pulse" = "펄스 효과";
 "loading_animation.current" = "로딩 애니메이션: %@";
+
+// MARK: - Graph Type
+"graph_type.circular" = "원형";
+"graph_type.linear" = "선형";

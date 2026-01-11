@@ -339,3 +339,7 @@
 "loading_animation.dashed" = "Dashed Rotation";
 "loading_animation.pulse" = "Pulse Effect";
 "loading_animation.current" = "Loading Animation: %@";
+
+// MARK: - Graph Type
+"graph_type.circular" = "Circular";
+"graph_type.linear" = "Linear";
