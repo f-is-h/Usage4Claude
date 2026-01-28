@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 import OSLog
+import WidgetKit
 
 /// 数据刷新管理器
 /// 负责管理所有数据刷新、定时器、更新检查和重置验证逻辑
@@ -97,6 +98,9 @@ class DataRefreshManager: ObservableObject {
                 case .success(let data):
                     self.usageData = data
                     self.errorMessage = nil
+
+                    // Save to App Group for widget
+                    self.syncDataToWidget(data)
 
                     // 智能模式：根据百分比变化调整刷新频率
                     self.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
@@ -394,6 +398,19 @@ class DataRefreshManager: ObservableObject {
     func checkForUpdatesManually() {
         // 手动检查更新（会弹出对话框）
         updateChecker.checkForUpdates(manually: true)
+    }
+
+    // MARK: - Widget Sync
+
+    /// Sync usage data to App Group for widget access
+    /// - Parameter data: The usage data to sync
+    private func syncDataToWidget(_ data: UsageData) {
+        let sharedData = SharedUsageData(from: data)
+        sharedData.save()
+
+        // Reload widget timeline
+        WidgetCenter.shared.reloadTimelines(ofKind: "Usage4ClaudeWidget")
+        Logger.menuBar.debug("Widget data synced and timeline reloaded")
     }
 
     // MARK: - Cleanup
