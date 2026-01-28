@@ -142,23 +142,36 @@ struct SharedUsageData: Codable {
     }
 }
 
-// MARK: - UserDefaults Storage
+// MARK: - File-based Storage (Local Development without App Groups)
 
 extension SharedUsageData {
-    private static let storageKey = "SharedUsageData"
+    private static let fileName = "SharedUsageData.json"
 
-    /// Save to App Group UserDefaults
+    /// Get shared storage URL accessible by both app and widget
+    /// Uses a file in the user's home directory
+    private static var storageURL: URL? {
+        // Use a shared location in user's home directory
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser
+        let sharedDir = homeDir.appendingPathComponent(".Usage4Claude")
+
+        // Create directory if needed
+        try? FileManager.default.createDirectory(at: sharedDir, withIntermediateDirectories: true)
+
+        return sharedDir.appendingPathComponent(fileName)
+    }
+
+    /// Save to shared file
     func save() {
-        guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return }
+        guard let url = Self.storageURL else { return }
         if let encoded = try? JSONEncoder().encode(self) {
-            defaults.set(encoded, forKey: Self.storageKey)
+            try? encoded.write(to: url)
         }
     }
 
-    /// Load from App Group UserDefaults
+    /// Load from shared file
     static func load() -> SharedUsageData? {
-        guard let defaults = UserDefaults(suiteName: appGroupIdentifier),
-              let data = defaults.data(forKey: storageKey),
+        guard let url = storageURL,
+              let data = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode(SharedUsageData.self, from: data) else {
             return nil
         }
