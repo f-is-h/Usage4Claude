@@ -262,6 +262,37 @@ struct GeneralSettingsView: View {
                     }
                 }
                 
+                // 时间格式设置卡片
+                SettingCard(
+                    icon: "clock",
+                    iconColor: .cyan,
+                    title: L.SettingsGeneralTimeFormat.section,
+                    hint: L.SettingsGeneralTimeFormat.hint
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Picker("", selection: $settings.timeFormatPreference) {
+                            ForEach(TimeFormatPreference.allCases, id: \.self) { format in
+                                Text(format.localizedName).tag(format)
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                        .labelsHidden()
+                        .focusable(false)
+
+                        // 当前时间预览
+                        HStack(spacing: 4) {
+                            Text(L.SettingsGeneralTimeFormat.preview + ":")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(timePreviewString)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.leading, 20)
+                    }
+                }
+
                 // 语言设置卡片
                 SettingCard(
                     icon: "globe",
@@ -497,7 +528,13 @@ struct GeneralSettingsView: View {
     }
     
     // MARK: - Computed Properties
-    
+
+    /// 时间预览字符串
+    private var timePreviewString: String {
+        let now = Date()
+        return TimeFormatHelper.formatTimeOnly(now)
+    }
+
     /// 状态图标
     private var statusIcon: String {
         switch settings.launchAtLoginStatus {

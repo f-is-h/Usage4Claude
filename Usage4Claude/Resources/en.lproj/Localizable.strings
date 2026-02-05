@@ -339,3 +339,11 @@
 "loading_animation.dashed" = "Dashed Rotation";
 "loading_animation.pulse" = "Pulse Effect";
 "loading_animation.current" = "Loading Animation: %@";
+
+// MARK: - Time Format
+"time_format.system" = "Follow System";
+"time_format.twelve_hour" = "12-Hour (2:30 PM)";
+"time_format.twenty_four_hour" = "24-Hour (14:30)";
+"settings.general.time_format_section" = "Time Format";
+"settings.general.time_format_hint" = "Choose how time is displayed throughout the app";
+"settings.general.time_format_preview" = "Preview";

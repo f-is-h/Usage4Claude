@@ -338,3 +338,11 @@
 "loading_animation.dashed" = "破線回転";
 "loading_animation.pulse" = "パルス効果";
 "loading_animation.current" = "読み込みアニメーション: %@";
+
+// MARK: - Time Format
+"time_format.system" = "システムに従う";
+"time_format.twelve_hour" = "12時間制（午後 2:30）";
+"time_format.twenty_four_hour" = "24時間制（14:30）";
+"settings.general.time_format_section" = "時刻形式";
+"settings.general.time_format_hint" = "アプリ内の時刻表示形式を選択";
+"settings.general.time_format_preview" = "プレビュー";

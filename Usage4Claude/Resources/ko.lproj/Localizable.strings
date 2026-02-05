@@ -337,3 +337,11 @@
 "loading_animation.dashed" = "점선 회전";
 "loading_animation.pulse" = "펄스 효과";
 "loading_animation.current" = "로딩 애니메이션: %@";
+
+// MARK: - Time Format
+"time_format.system" = "시스템 설정 따르기";
+"time_format.twelve_hour" = "12시간제 (오후 2:30)";
+"time_format.twenty_four_hour" = "24시간제 (14:30)";
+"settings.general.time_format_section" = "시간 형식";
+"settings.general.time_format_hint" = "앱 전체에서 시간 표시 형식 선택";
+"settings.general.time_format_preview" = "미리보기";

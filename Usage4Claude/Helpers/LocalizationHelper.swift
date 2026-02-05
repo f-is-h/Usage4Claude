@@ -387,6 +387,20 @@ enum L {
         }
     }
 
+    // MARK: - Time Format
+    enum TimeFormat {
+        static var system: String { localized("time_format.system") }
+        static var twelveHour: String { localized("time_format.twelve_hour") }
+        static var twentyFourHour: String { localized("time_format.twenty_four_hour") }
+    }
+
+    // MARK: - Settings General (Time Format)
+    enum SettingsGeneralTimeFormat {
+        static var section: String { localized("settings.general.time_format_section") }
+        static var hint: String { localized("settings.general.time_format_hint") }
+        static var preview: String { localized("settings.general.time_format_preview") }
+    }
+
     // MARK: - Helper Methods
     
     /// 本地化字符串辅助方法

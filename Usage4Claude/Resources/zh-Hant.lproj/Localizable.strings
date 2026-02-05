@@ -338,3 +338,11 @@
 "loading_animation.dashed" = "虛線旋轉";
 "loading_animation.pulse" = "脈衝效果";
 "loading_animation.current" = "載入動畫: %@";
+
+// MARK: - Time Format
+"time_format.system" = "跟隨系統";
+"time_format.twelve_hour" = "12 小時制（下午 2:30）";
+"time_format.twenty_four_hour" = "24 小時制（14:30）";
+"settings.general.time_format_section" = "時間格式";
+"settings.general.time_format_hint" = "選擇應用程式中時間的顯示格式";
+"settings.general.time_format_preview" = "預覽";
