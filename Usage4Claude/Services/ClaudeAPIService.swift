@@ -725,38 +725,27 @@ struct UsageData: Sendable {
                 return L.UsageData.unknown
             }
 
-            let formatter = DateFormatter()
-            formatter.locale = UserSettings.shared.appLocale
-            formatter.timeZone = TimeZone.current
-            formatter.dateFormat = "HH:mm"
-
             var calendar = Calendar.current
             calendar.locale = UserSettings.shared.appLocale
-            let timeString = formatter.string(from: resetsAt)
+            let timeString = TimeFormatHelper.formatTimeOnly(resetsAt)
 
             if calendar.isDateInToday(resetsAt) {
                 return "\(L.UsageData.today) \(timeString)"
             } else if calendar.isDateInTomorrow(resetsAt) {
                 return "\(L.UsageData.tomorrow) \(timeString)"
             } else {
-                formatter.setLocalizedDateFormatFromTemplate("Md HH:mm")
-                return formatter.string(from: resetsAt)
+                return TimeFormatHelper.formatDateTime(resetsAt, dateTemplate: "Md")
             }
         }
 
         /// 格式化的重置时间字符串（长格式，用于7天限制）
-        /// - Returns: 本地化的重置日期描述（如 "11月29日 下午2时" (中文) 或 "Nov 29 2 PM" (英文)）
+        /// - Returns: 本地化的重置日期描述（如 "11月29日 14时" 或 "Nov 29 2 PM"）
         var formattedResetDateLong: String {
             guard let resetsAt = resetsAt else {
                 return L.UsageData.unknown
             }
 
-            let formatter = DateFormatter()
-            formatter.locale = UserSettings.shared.appLocale
-            formatter.timeZone = TimeZone.current
-            formatter.setLocalizedDateFormatFromTemplate("MMMd ha")
-
-            return formatter.string(from: resetsAt)
+            return TimeFormatHelper.formatDateHour(resetsAt, dateTemplate: "MMMd")
         }
 
         // MARK: - 极简格式化方法（用于双模式两行显示）
@@ -796,7 +785,7 @@ struct UsageData: Sendable {
         }
 
         /// 格式化的重置时间（用于5小时限制）
-        /// - 示例: "Today 15:07", "Tomorrow 09:30"
+        /// - 示例: "Today 15:07" / "Today 3:07 PM", "Tomorrow 09:30" / "Tomorrow 9:30 AM"
         var formattedCompactResetTime: String {
             guard let resetsAt = resetsAt else {
                 return "-"
@@ -827,44 +816,19 @@ struct UsageData: Sendable {
                 prefix = formatter.string(from: resetsAt)
             }
 
-            let timeFormatter = DateFormatter()
-            timeFormatter.locale = UserSettings.shared.appLocale
-            timeFormatter.timeZone = TimeZone.current
-            timeFormatter.dateFormat = "HH:mm"
+            let timeString = TimeFormatHelper.formatTimeOnly(resetsAt)
 
-            return "\(prefix) \(timeFormatter.string(from: resetsAt))"
+            return "\(prefix) \(timeString)"
         }
 
         /// 格式化的重置日期（用于7天限制，精确到小时）
-        /// - 示例: "Dec 16 3PM" (英文), "12月16日 15时" (中文)
+        /// - 示例: "Dec 16 15:00" / "Dec 16 3 PM" (英文), "12月16日 15时" (中文)
         var formattedCompactResetDate: String {
             guard let resetsAt = resetsAt else {
                 return "-"
             }
 
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = UserSettings.shared.appLocale
-            dateFormatter.timeZone = TimeZone.current
-            // 根据语言使用不同的日期格式
-            let langCode = UserSettings.shared.appLocale.identifier
-            if langCode.hasPrefix("zh") || langCode.hasPrefix("ja") {
-                dateFormatter.dateFormat = "M月d日"  // 中文/日语：12月16日
-            } else if langCode.hasPrefix("ko") {
-                dateFormatter.dateFormat = "M월d일"  // 韩语：12월16일
-            } else {
-                dateFormatter.dateFormat = "MMM d"   // 英文：Dec 16
-            }
-
-            let timeFormatter = DateFormatter()
-            timeFormatter.locale = UserSettings.shared.appLocale
-            timeFormatter.timeZone = TimeZone.current
-            // 使用本地化模板自动选择合适的时间格式（包含AM/PM或"时"等后缀）
-            timeFormatter.setLocalizedDateFormatFromTemplate("j")
-
-            let dateString = dateFormatter.string(from: resetsAt)
-            let timeString = timeFormatter.string(from: resetsAt)
-
-            return "\(dateString) \(timeString)"
+            return TimeFormatHelper.formatDateHour(resetsAt, dateTemplate: "MMMd")
         }
     }
 

@@ -337,3 +337,11 @@
 "loading_animation.dashed" = "虚线旋转";
 "loading_animation.pulse" = "脉冲效果";
 "loading_animation.current" = "加载动画: %@";
+
+// MARK: - Time Format
+"time_format.system" = "跟随系统";
+"time_format.twelve_hour" = "12 小时制（下午 2:30）";
+"time_format.twenty_four_hour" = "24 小时制（14:30）";
+"settings.general.time_format_section" = "时间格式";
+"settings.general.time_format_hint" = "选择应用中时间的显示格式";
+"settings.general.time_format_preview" = "预览";

@@ -203,6 +203,27 @@ enum DisplayMode: String, CaseIterable, Codable {
     }
 }
 
+/// 时间格式偏好
+enum TimeFormatPreference: String, CaseIterable, Codable {
+    /// 跟随系统
+    case system = "system"
+    /// 12 小时制
+    case twelveHour = "twelve_hour"
+    /// 24 小时制
+    case twentyFourHour = "twenty_four_hour"
+
+    var localizedName: String {
+        switch self {
+        case .system:
+            return L.TimeFormat.system
+        case .twelveHour:
+            return L.TimeFormat.twelveHour
+        case .twentyFourHour:
+            return L.TimeFormat.twentyFourHour
+        }
+    }
+}
+
 /// 应用语言选项
 enum AppLanguage: String, CaseIterable, Codable {
     /// 英语
@@ -329,6 +350,14 @@ class UserSettings: ObservableObject {
         didSet {
             defaults.set(language.rawValue, forKey: "language")
             NotificationCenter.default.post(name: .languageChanged, object: nil)
+        }
+    }
+
+    /// 时间格式偏好
+    @Published var timeFormatPreference: TimeFormatPreference {
+        didSet {
+            defaults.set(timeFormatPreference.rawValue, forKey: "timeFormatPreference")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
 
@@ -616,6 +645,14 @@ class UserSettings: ObservableObject {
             self.language = Self.detectSystemLanguage()
         }
 
+        // 加载时间格式偏好，默认跟随系统
+        if let timeFormatString = defaults.string(forKey: "timeFormatPreference"),
+           let timeFormat = TimeFormatPreference(rawValue: timeFormatString) {
+            self.timeFormatPreference = timeFormat
+        } else {
+            self.timeFormatPreference = .system
+        }
+
         // 加载显示模式，默认为智能模式
         if let modeString = defaults.string(forKey: "displayMode"),
            let mode = DisplayMode(rawValue: modeString) {
@@ -719,6 +756,7 @@ class UserSettings: ObservableObject {
         refreshMode = .smart
         refreshInterval = 180  // 固定模式默认3分钟
         language = Self.detectSystemLanguage()
+        timeFormatPreference = .system
         displayMode = .smart
         customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
 
