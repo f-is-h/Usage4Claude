@@ -87,20 +87,32 @@ struct AuthSettingsView: View {
                 }
 
                 // 添加账户按钮
-                Button(action: {
-                    withAnimation {
-                        isAddingAccount = true
-                        newSessionKey = ""
-                        newAlias = ""
-                        validationError = nil
+                HStack(spacing: 10) {
+                    Button(action: {
+                        WebLoginWindowManager.shared.showLoginWindow()
+                    }) {
+                        HStack {
+                            Image(systemName: "globe")
+                            Text(L.WebLogin.browserLogin)
+                        }
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text(L.Account.addAccount)
+                    .buttonStyle(.borderedProminent)
+
+                    Button(action: {
+                        withAnimation {
+                            isAddingAccount = true
+                            newSessionKey = ""
+                            newAlias = ""
+                            validationError = nil
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "keyboard")
+                            Text(L.WebLogin.manualInput)
+                        }
                     }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.borderedProminent)
                 .padding(.top, 8)
             }
         }

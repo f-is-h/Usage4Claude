@@ -368,3 +368,16 @@
 "account.delete" = "刪除";
 "account.cancel" = "取消";
 "account.validate_and_add" = "驗證並新增";
+
+// MARK: - Web Login (v2.2.0)
+"weblogin.window_title" = "登入 Claude";
+"weblogin.browser_login" = "瀏覽器登入";
+"weblogin.browser_login_recommended" = "透過瀏覽器登入（推薦）";
+"weblogin.manual_input" = "手動輸入";
+"weblogin.or_manual_input" = "或手動輸入 Session Key";
+"weblogin.loading" = "正在載入登入頁面...";
+"weblogin.waiting_for_login" = "請登入您的 Claude 帳戶";
+"weblogin.validating" = "正在驗證憑證...";
+"weblogin.success" = "已成功新增帳戶：%@";
+"weblogin.cloudflare_blocked" = "如果頁面無法載入，請使用手動輸入方式。";
+"weblogin.privacy_notice" = "您的登入資訊僅在本機使用，並安全儲存於系統 Keychain 中。";

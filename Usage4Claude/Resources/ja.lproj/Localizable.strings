@@ -368,3 +368,16 @@
 "account.delete" = "削除";
 "account.cancel" = "キャンセル";
 "account.validate_and_add" = "検証して追加";
+
+// MARK: - Web Login (v2.2.0)
+"weblogin.window_title" = "Claude にサインイン";
+"weblogin.browser_login" = "ブラウザログイン";
+"weblogin.browser_login_recommended" = "ブラウザでログイン（推奨）";
+"weblogin.manual_input" = "手動入力";
+"weblogin.or_manual_input" = "または Session Key を手動入力";
+"weblogin.loading" = "ログインページを読み込み中...";
+"weblogin.waiting_for_login" = "Claude アカウントにサインインしてください";
+"weblogin.validating" = "認証情報を確認中...";
+"weblogin.success" = "アカウントを追加しました：%@";
+"weblogin.cloudflare_blocked" = "ページが読み込めない場合は、手動入力をご利用ください。";
+"weblogin.privacy_notice" = "ログイン情報はローカルでのみ使用され、システムの Keychain に安全に保存されます。";

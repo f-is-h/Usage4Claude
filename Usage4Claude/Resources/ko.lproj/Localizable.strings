@@ -367,3 +367,16 @@
 "account.delete" = "삭제";
 "account.cancel" = "취소";
 "account.validate_and_add" = "검증 후 추가";
+
+// MARK: - Web Login (v2.2.0)
+"weblogin.window_title" = "Claude 로그인";
+"weblogin.browser_login" = "브라우저 로그인";
+"weblogin.browser_login_recommended" = "브라우저로 로그인 (권장)";
+"weblogin.manual_input" = "수동 입력";
+"weblogin.or_manual_input" = "또는 Session Key 수동 입력";
+"weblogin.loading" = "로그인 페이지 로딩 중...";
+"weblogin.waiting_for_login" = "Claude 계정에 로그인해 주세요";
+"weblogin.validating" = "인증 정보 확인 중...";
+"weblogin.success" = "계정이 추가되었습니다: %@";
+"weblogin.cloudflare_blocked" = "페이지를 로드할 수 없는 경우 수동 입력을 사용해 주세요.";
+"weblogin.privacy_notice" = "로그인 정보는 로컬에서만 사용되며 시스템 Keychain에 안전하게 저장됩니다.";
