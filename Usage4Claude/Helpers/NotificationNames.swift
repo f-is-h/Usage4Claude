@@ -26,6 +26,10 @@ extension Notification.Name {
     /// 当用户切换应用语言时发送，触发 UI 重新渲染
     static let languageChanged = Notification.Name("languageChanged")
 
+    /// 账户已更改通知（v2.1.0）
+    /// 当用户切换账户时发送，触发数据刷新
+    static let accountChanged = Notification.Name("accountChanged")
+
     // MARK: - Window Related
 
     /// 打开设置窗口通知

@@ -15,6 +15,8 @@
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claudeを終了";
+"menu.account" = "アカウント";
+"menu.account_prefix" = "アカウント:";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude使用状況";
@@ -346,3 +348,22 @@
 "settings.general.time_format_section" = "時刻形式";
 "settings.general.time_format_hint" = "アプリ内の時刻表示形式を選択";
 "settings.general.time_format_preview" = "プレビュー";
+
+// MARK: - Account Management
+"account.list_title" = "アカウント一覧";
+"account.no_accounts" = "アカウントが設定されていません\nアカウントを追加して開始してください";
+"account.add_account" = "アカウントを追加";
+"account.add_new_account" = "新しいアカウントを追加";
+"account.current_account" = "現在のアカウント";
+"account.alias" = "エイリアス";
+"account.alias_optional" = "エイリアス（任意）";
+"account.alias_placeholder" = "例: パーソナルPro、仕事チーム";
+"account.clear_alias" = "エイリアスをクリア";
+"account.organization_id" = "Organization ID";
+"account.copy_org_id" = "Organization IDをコピー";
+"account.delete_account" = "このアカウントを削除";
+"account.delete_confirm_title" = "アカウントを削除";
+"account.delete_confirm_message" = "このアカウントを削除してもよろしいですか？この操作は元に戻せません。";
+"account.delete" = "削除";
+"account.cancel" = "キャンセル";
+"account.validate_and_add" = "検証して追加";

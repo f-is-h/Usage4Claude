@@ -15,6 +15,8 @@
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claude 종료";
+"menu.account" = "계정";
+"menu.account_prefix" = "계정:";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude 사용 현황";
@@ -345,3 +347,22 @@
 "settings.general.time_format_section" = "시간 형식";
 "settings.general.time_format_hint" = "앱 전체에서 시간 표시 형식 선택";
 "settings.general.time_format_preview" = "미리보기";
+
+// MARK: - Account Management
+"account.list_title" = "계정 목록";
+"account.no_accounts" = "구성된 계정이 없습니다\n시작하려면 계정을 추가하세요";
+"account.add_account" = "계정 추가";
+"account.add_new_account" = "새 계정 추가";
+"account.current_account" = "현재 계정";
+"account.alias" = "별명";
+"account.alias_optional" = "별명 (선택사항)";
+"account.alias_placeholder" = "예: 개인 Pro, 회사 팀";
+"account.clear_alias" = "별명 삭제";
+"account.organization_id" = "Organization ID";
+"account.copy_org_id" = "Organization ID 복사";
+"account.delete_account" = "이 계정 삭제";
+"account.delete_confirm_title" = "계정 삭제";
+"account.delete_confirm_message" = "이 계정을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.";
+"account.delete" = "삭제";
+"account.cancel" = "취소";
+"account.validate_and_add" = "검증 후 추가";

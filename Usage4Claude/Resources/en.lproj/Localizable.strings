@@ -15,6 +15,8 @@
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Quit Usage4Claude";
+"menu.account" = "Account";
+"menu.account_prefix" = "Account:";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude Usage";
@@ -347,3 +349,22 @@
 "settings.general.time_format_section" = "Time Format";
 "settings.general.time_format_hint" = "Choose how time is displayed throughout the app";
 "settings.general.time_format_preview" = "Preview";
+
+// MARK: - Account Management (v2.1.0)
+"account.list_title" = "Accounts";
+"account.no_accounts" = "No accounts configured. Add an account to get started.";
+"account.add_account" = "Add Account";
+"account.add_new_account" = "Add New Account";
+"account.current_account" = "Current Account";
+"account.alias" = "Alias";
+"account.alias_optional" = "Alias (Optional)";
+"account.alias_placeholder" = "e.g., Personal Pro, Work Team";
+"account.clear_alias" = "Clear Alias";
+"account.organization_id" = "Organization ID";
+"account.copy_org_id" = "Copy Organization ID";
+"account.delete_account" = "Delete This Account";
+"account.delete_confirm_title" = "Delete Account";
+"account.delete_confirm_message" = "Are you sure you want to delete this account? This action cannot be undone.";
+"account.delete" = "Delete";
+"account.cancel" = "Cancel";
+"account.validate_and_add" = "Validate & Add";

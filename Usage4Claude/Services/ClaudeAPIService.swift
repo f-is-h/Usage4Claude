@@ -484,7 +484,7 @@ class ClaudeAPIService {
 
 /// Organization 组织信息模型
 /// 对应 Claude API /api/organizations 返回的组织信息
-nonisolated struct Organization: Codable, Sendable {
+nonisolated struct Organization: Codable, Sendable, Identifiable, Equatable {
     /// 组织数字 ID
     let id: Int
     /// 组织 UUID（用于 API 调用）
@@ -497,6 +497,12 @@ nonisolated struct Organization: Codable, Sendable {
     let updated_at: String?
     /// 组织权限列表
     let capabilities: [String]?
+
+    // MARK: - Equatable
+
+    static func == (lhs: Organization, rhs: Organization) -> Bool {
+        return lhs.uuid == rhs.uuid
+    }
 }
 
 /// API 响应数据模型

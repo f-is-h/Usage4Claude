@@ -159,7 +159,92 @@ class KeychainManager {
     func deleteCredentials() -> Bool {
         return deleteAll()
     }
-    
+
+    // MARK: - 账户列表存储（v2.1.0 多账户支持）
+
+    #if DEBUG
+    /// 保存账户列表到 UserDefaults（Debug 模式）
+    /// - Parameter accounts: 账户列表
+    /// - Returns: 是否保存成功
+    @discardableResult
+    func saveAccounts(_ accounts: [Account]) -> Bool {
+        let encoder = JSONEncoder()
+        guard let data = try? encoder.encode(accounts) else {
+            Logger.keychain.error("[Debug] 账户列表编码失败")
+            return false
+        }
+        UserDefaults.standard.set(data, forKey: debugKeyPrefix + "accounts")
+        Logger.keychain.debug("[Debug] 保存 \(accounts.count) 个账户到 UserDefaults")
+        return true
+    }
+
+    /// 从 UserDefaults 读取账户列表（Debug 模式）
+    /// - Returns: 账户列表，如果不存在返回 nil
+    func loadAccounts() -> [Account]? {
+        guard let data = UserDefaults.standard.data(forKey: debugKeyPrefix + "accounts") else {
+            Logger.keychain.debug("[Debug] 账户列表不存在")
+            return nil
+        }
+        let decoder = JSONDecoder()
+        guard let accounts = try? decoder.decode([Account].self, from: data) else {
+            Logger.keychain.error("[Debug] 账户列表解码失败")
+            return nil
+        }
+        Logger.keychain.debug("[Debug] 读取 \(accounts.count) 个账户")
+        return accounts
+    }
+
+    /// 从 UserDefaults 删除账户列表（Debug 模式）
+    /// - Returns: 是否删除成功
+    @discardableResult
+    func deleteAccounts() -> Bool {
+        UserDefaults.standard.removeObject(forKey: debugKeyPrefix + "accounts")
+        Logger.keychain.debug("[Debug] 删除账户列表")
+        return true
+    }
+    #else
+    /// 保存账户列表到 Keychain（Release 模式）
+    /// - Parameter accounts: 账户列表
+    /// - Returns: 是否保存成功
+    @discardableResult
+    func saveAccounts(_ accounts: [Account]) -> Bool {
+        let encoder = JSONEncoder()
+        guard let jsonData = try? encoder.encode(accounts),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            Logger.keychain.error("账户列表编码失败")
+            return false
+        }
+        let result = save(key: "accounts", value: jsonString)
+        if result {
+            Logger.keychain.debug("保存 \(accounts.count) 个账户到 Keychain")
+        }
+        return result
+    }
+
+    /// 从 Keychain 读取账户列表（Release 模式）
+    /// - Returns: 账户列表，如果不存在返回 nil
+    func loadAccounts() -> [Account]? {
+        guard let jsonString = load(key: "accounts"),
+              let jsonData = jsonString.data(using: .utf8) else {
+            return nil
+        }
+        let decoder = JSONDecoder()
+        guard let accounts = try? decoder.decode([Account].self, from: jsonData) else {
+            Logger.keychain.error("账户列表解码失败")
+            return nil
+        }
+        Logger.keychain.debug("读取 \(accounts.count) 个账户")
+        return accounts
+    }
+
+    /// 从 Keychain 删除账户列表（Release 模式）
+    /// - Returns: 是否删除成功
+    @discardableResult
+    func deleteAccounts() -> Bool {
+        return delete(key: "accounts")
+    }
+    #endif
+
     #if !DEBUG
     // MARK: - 通用 Keychain 操作（仅 Release 模式）
     

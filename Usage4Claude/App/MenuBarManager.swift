@@ -225,6 +225,20 @@ class MenuBarManager: ObservableObject {
                 self?.openSettingsWindow(tab: tab)
             }
             .store(in: &cancellables)
+
+        // 监听账户变更通知
+        NotificationCenter.default.publisher(for: .accountChanged)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                Logger.menuBar.notice("账户已切换，刷新数据")
+                // 清除图标缓存，确保新数据到达时重新渲染
+                self.ui.clearIconCache()
+                // 立即刷新数据
+                self.dataManager.fetchUsage()
+                // 更新菜单栏图标
+                self.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Popover Management
@@ -346,6 +360,17 @@ class MenuBarManager: ObservableObject {
         if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    /// 切换账户
+    /// - Parameter sender: 发送菜单项，representedObject 包含 Account 对象
+    @objc func switchAccount(_ sender: NSMenuItem) {
+        guard let account = sender.representedObject as? Account else {
+            Logger.menuBar.error("切换账户失败：无法获取账户信息")
+            return
+        }
+
+        settings.switchToAccount(account)
     }
 
     @objc func checkForUpdates() {

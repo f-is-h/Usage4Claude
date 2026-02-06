@@ -499,6 +499,7 @@ struct GeneralSettingsView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+
                     }
                 }
                 #endif

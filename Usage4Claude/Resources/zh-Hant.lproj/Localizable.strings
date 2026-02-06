@@ -15,6 +15,8 @@
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "結束 Usage4Claude";
+"menu.account" = "帳戶";
+"menu.account_prefix" = "帳戶:";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude 使用狀況";
@@ -346,3 +348,22 @@
 "settings.general.time_format_section" = "時間格式";
 "settings.general.time_format_hint" = "選擇應用程式中時間的顯示格式";
 "settings.general.time_format_preview" = "預覽";
+
+// MARK: - Account Management
+"account.list_title" = "帳戶列表";
+"account.no_accounts" = "尚未配置帳戶\n請新增帳戶以開始使用";
+"account.add_account" = "新增帳戶";
+"account.add_new_account" = "新增帳戶";
+"account.current_account" = "目前帳戶";
+"account.alias" = "別名";
+"account.alias_optional" = "別名（選填）";
+"account.alias_placeholder" = "例如：個人 Pro、工作團隊";
+"account.clear_alias" = "清除別名";
+"account.organization_id" = "Organization ID";
+"account.copy_org_id" = "複製 Organization ID";
+"account.delete_account" = "刪除此帳戶";
+"account.delete_confirm_title" = "刪除帳戶";
+"account.delete_confirm_message" = "確定要刪除此帳戶嗎？此操作無法復原。";
+"account.delete" = "刪除";
+"account.cancel" = "取消";
+"account.validate_and_add" = "驗證並新增";

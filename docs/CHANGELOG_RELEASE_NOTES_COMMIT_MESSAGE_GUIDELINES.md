@@ -84,3 +84,4 @@ Improved window management:
 
 - 不要使用任何的Emoji
 - 不要在结尾添加与 Generated with [Claude Code]  类似的任何文字
+- 不要在结尾添加与 Co-Authored-By: Claude 类似的任何文字

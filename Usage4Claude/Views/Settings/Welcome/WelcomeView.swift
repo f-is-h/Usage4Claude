@@ -106,14 +106,8 @@ struct WelcomeView: View {
         isFetchingOrgId = true
         fetchError = nil
 
-        // 先保存到 Keychain（同步）
-        _ = KeychainManager.shared.saveSessionKey(trimmedKey)
-
-        // 更新 UserSettings
-        settings.sessionKey = trimmedKey
-
-        // 获取 Organization ID
-        fetchOrganizationId { success in
+        // 获取 Organization ID 并创建账户
+        fetchOrganizationAndCreateAccount(sessionKey: trimmedKey) { success in
             DispatchQueue.main.async {
                 isFetchingOrgId = false
 
@@ -141,16 +135,25 @@ struct WelcomeView: View {
         }
     }
 
-    /// 获取 Organization ID
-    /// - Parameter completion: 完成回调，返回是否成功
-    private func fetchOrganizationId(completion: @escaping (Bool) -> Void) {
+    /// 获取 Organization 并创建账户
+    /// - Parameters:
+    ///   - sessionKey: Session Key
+    ///   - completion: 完成回调，返回是否成功
+    private func fetchOrganizationAndCreateAccount(sessionKey: String, completion: @escaping (Bool) -> Void) {
         let apiService = ClaudeAPIService()
-        apiService.fetchOrganizations { result in
+        apiService.fetchOrganizations(sessionKey: sessionKey) { result in
             switch result {
             case .success(let organizations):
                 if let firstOrg = organizations.first {
                     DispatchQueue.main.async {
-                        settings.organizationId = firstOrg.uuid
+                        // 创建新账户
+                        let newAccount = Account(
+                            sessionKey: sessionKey,
+                            organizationId: firstOrg.uuid,
+                            organizationName: firstOrg.name,
+                            alias: nil
+                        )
+                        settings.addAccount(newAccount)
                     }
                     completion(true)
                 } else {

@@ -23,6 +23,29 @@ enum L {
         static var coffee: String { localized("menu.coffee") }
         static var githubSponsor: String { localized("menu.github_sponsor") }
         static var quit: String { localized("menu.quit") }
+        static var account: String { localized("menu.account") }
+        static var accountPrefix: String { localized("menu.account_prefix") }
+    }
+
+    // MARK: - Account Management
+    enum Account {
+        static var listTitle: String { localized("account.list_title") }
+        static var noAccounts: String { localized("account.no_accounts") }
+        static var addAccount: String { localized("account.add_account") }
+        static var addNewAccount: String { localized("account.add_new_account") }
+        static var currentAccount: String { localized("account.current_account") }
+        static var alias: String { localized("account.alias") }
+        static var aliasOptional: String { localized("account.alias_optional") }
+        static var aliasPlaceholder: String { localized("account.alias_placeholder") }
+        static var clearAlias: String { localized("account.clear_alias") }
+        static var organizationId: String { localized("account.organization_id") }
+        static var copyOrgId: String { localized("account.copy_org_id") }
+        static var deleteAccount: String { localized("account.delete_account") }
+        static var deleteConfirmTitle: String { localized("account.delete_confirm_title") }
+        static var deleteConfirmMessage: String { localized("account.delete_confirm_message") }
+        static var delete: String { localized("account.delete") }
+        static var cancel: String { localized("account.cancel") }
+        static var validateAndAdd: String { localized("account.validate_and_add") }
     }
     
     // MARK: - Usage Detail View

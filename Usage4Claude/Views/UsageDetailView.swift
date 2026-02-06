@@ -140,6 +140,29 @@ struct UsageDetailView: View {
                 // 三点菜单按钮（右侧） + 徽章
                 ZStack(alignment: .topTrailing) {
                     Menu {
+                        // 账户切换子菜单（仅当有多个账户时显示）
+                        if UserSettings.shared.accounts.count > 1 {
+                            Menu {
+                                ForEach(UserSettings.shared.accounts) { account in
+                                    Button(action: {
+                                        UserSettings.shared.switchToAccount(account)
+                                    }) {
+                                        HStack {
+                                            Text(account.displayName)
+                                            if account.id == UserSettings.shared.currentAccountId {
+                                                Spacer()
+                                                Image(systemName: "checkmark")
+                                            }
+                                        }
+                                    }
+                                }
+                            } label: {
+                                let name = UserSettings.shared.currentAccountName ?? L.Menu.account
+                                Label("\(L.Menu.accountPrefix) \(name)", systemImage: "person.2")
+                            }
+                            Divider()
+                        }
+
                         Button(action: { onMenuAction?(.generalSettings) }) {
                             Label(L.Menu.generalSettings, systemImage: "gearshape")
                         }

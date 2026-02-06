@@ -15,6 +15,8 @@
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "退出 Usage4Claude";
+"menu.account" = "账户";
+"menu.account_prefix" = "账户:";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude 使用情况";
@@ -345,3 +347,22 @@
 "settings.general.time_format_section" = "时间格式";
 "settings.general.time_format_hint" = "选择应用中时间的显示格式";
 "settings.general.time_format_preview" = "预览";
+
+// MARK: - Account Management (v2.1.0)
+"account.list_title" = "账户列表";
+"account.no_accounts" = "还没有配置账户。添加一个账户开始使用。";
+"account.add_account" = "添加账户";
+"account.add_new_account" = "添加新账户";
+"account.current_account" = "当前账户";
+"account.alias" = "别名";
+"account.alias_optional" = "别名（可选）";
+"account.alias_placeholder" = "例如：个人 Pro、工作团队";
+"account.clear_alias" = "清除别名";
+"account.organization_id" = "组织 ID";
+"account.copy_org_id" = "复制组织 ID";
+"account.delete_account" = "删除此账户";
+"account.delete_confirm_title" = "删除账户";
+"account.delete_confirm_message" = "确定要删除此账户吗？此操作无法撤销。";
+"account.delete" = "删除";
+"account.cancel" = "取消";
+"account.validate_and_add" = "验证并添加";

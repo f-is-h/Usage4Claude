@@ -232,6 +232,23 @@ class MenuBarUI {
     func createStandardMenu(hasUpdate: Bool, shouldShowBadge: Bool, target: AnyObject?) -> NSMenu {
         let menu = NSMenu()
 
+        // 账户选择子菜单（仅当有多个账户时显示）
+        if settings.accounts.count > 1 {
+            let accountSubmenu = createAccountSubmenu(target: target)
+            let currentAccountName = settings.currentAccountName ?? L.Menu.account
+            let menuTitle = "\(L.Menu.accountPrefix) \(currentAccountName)"
+
+            let accountItem = NSMenuItem(
+                title: menuTitle,
+                action: nil,
+                keyEquivalent: ""
+            )
+            accountItem.submenu = accountSubmenu
+            setMenuItemIcon(accountItem, systemName: "person.2")
+            menu.addItem(accountItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
         // 通用设置
         let generalItem = NSMenuItem(
             title: L.Menu.generalSettings,
@@ -359,6 +376,32 @@ class MenuBarUI {
             image.isTemplate = true
             item.image = image
         }
+    }
+
+    /// 创建账户选择子菜单
+    /// - Parameter target: 菜单项目标对象
+    /// - Returns: 账户选择子菜单
+    private func createAccountSubmenu(target: AnyObject?) -> NSMenu {
+        let submenu = NSMenu()
+
+        for account in settings.accounts {
+            let item = NSMenuItem(
+                title: account.displayName,
+                action: #selector(MenuBarManager.switchAccount(_:)),
+                keyEquivalent: ""
+            )
+            item.target = target
+            item.representedObject = account
+
+            // 当前选中的账户显示勾选标记
+            if account.id == settings.currentAccountId {
+                item.state = .on
+            }
+
+            submenu.addItem(item)
+        }
+
+        return submenu
     }
 
     /// 创建彩虹文字 NSAttributedString

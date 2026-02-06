@@ -288,28 +288,59 @@ class UserSettings: ObservableObject {
     private let defaults = UserDefaults.standard
     private let keychain = KeychainManager.shared
     
-    // MARK: - 敏感信息（存储在Keychain中）
+    // MARK: - 多账户支持（v2.1.0）
 
-    /// Claude Session Key
-    /// 从浏览器 Cookie 中获取的 sessionKey 值
-    @Published var sessionKey: String {
+    /// 账户列表（存储在 Keychain 中）
+    @Published var accounts: [Account] = [] {
         didSet {
-            // 将Keychain写入操作移到后台线程，避免阻塞主线程
-            let value = sessionKey
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                self?.keychain.saveSessionKey(value)
+            saveAccounts()
+        }
+    }
+
+    /// 当前激活账户的 ID（存储在 UserDefaults 中）
+    @Published var currentAccountId: UUID? {
+        didSet {
+            if let id = currentAccountId {
+                defaults.set(id.uuidString, forKey: "currentAccountId")
+            } else {
+                defaults.removeObject(forKey: "currentAccountId")
             }
+        }
+    }
+
+    /// 当前激活的账户
+    var currentAccount: Account? {
+        guard let id = currentAccountId else { return accounts.first }
+        return accounts.first { $0.id == id }
+    }
+
+    /// Claude Session Key（计算属性，指向当前账户）
+    var sessionKey: String {
+        get { currentAccount?.sessionKey ?? "" }
+        set {
+            guard let id = currentAccountId,
+                  let index = accounts.firstIndex(where: { $0.id == id }) else { return }
+            accounts[index].sessionKey = newValue
+        }
+    }
+
+    /// Claude Organization ID（计算属性，指向当前账户）
+    var organizationId: String {
+        get { currentAccount?.organizationId ?? "" }
+        set {
+            guard let id = currentAccountId,
+                  let index = accounts.firstIndex(where: { $0.id == id }) else { return }
+            accounts[index].organizationId = newValue
         }
     }
 
     // MARK: - 非敏感设置（存储在UserDefaults中）
 
-    /// Claude Organization ID
-    /// 从 v2.0.0 开始存储在 UserDefaults 中（之前存储在 Keychain）
-    /// Organization ID 仅是标识符，不是敏感信息
-    @Published var organizationId: String {
+    /// 组织列表（保留用于向后兼容，现已废弃）
+    /// 从 v2.1.0 开始，组织信息包含在 Account 中
+    @Published var organizations: [Organization] = [] {
         didSet {
-            defaults.set(organizationId, forKey: "organizationId")
+            saveOrganizations()
         }
     }
     
@@ -571,46 +602,74 @@ class UserSettings: ObservableObject {
     /// 私有初始化方法（单例模式）
     /// 从 Keychain 加载敏感信息，从 UserDefaults 加载其他设置
     private init() {
-        // MARK: - 从Keychain加载敏感信息
+        // MARK: - 加载多账户数据（v2.1.0）
 
-        // 从Keychain加载认证信息
-        self.sessionKey = keychain.loadSessionKey() ?? ""
+        // 从 Keychain 加载账户列表（使用局部变量避免初始化顺序问题）
+        var loadedAccounts = keychain.loadAccounts() ?? []
+        var loadedCurrentAccountId: UUID? = nil
 
-        // MARK: - 数据迁移（v1.x → v2.0.0）
+        // 加载当前账户 ID
+        if let idString = defaults.string(forKey: "currentAccountId"),
+           let id = UUID(uuidString: idString) {
+            loadedCurrentAccountId = id
+        } else if let firstAccount = loadedAccounts.first {
+            // 如果没有保存当前账户 ID，默认使用第一个账户
+            loadedCurrentAccountId = firstAccount.id
+        }
 
-        // 迁移 Organization ID 从 Keychain 到 UserDefaults
+        // MARK: - 数据迁移（v2.0.x → v2.1.0 多账户）
+
+        // 检查是否需要从单账户迁移到多账户
+        if loadedAccounts.isEmpty && !defaults.bool(forKey: "multiAccountMigrated") {
+            // 尝试从旧的单账户数据迁移
+            let oldSessionKey = keychain.loadSessionKey() ?? ""
+            let oldOrgId = defaults.string(forKey: "organizationId") ?? ""
+
+            if !oldSessionKey.isEmpty && !oldOrgId.isEmpty {
+                Logger.settings.notice("[Migration] Migrating single account to multi-account system")
+
+                // 获取组织名称（如果有缓存）
+                let cachedOrgs = Self.loadOrganizations(from: defaults)
+                let orgName = cachedOrgs.first { $0.uuid == oldOrgId }?.name ?? "Account 1"
+
+                // 创建第一个账户
+                let migratedAccount = Account(
+                    sessionKey: oldSessionKey,
+                    organizationId: oldOrgId,
+                    organizationName: orgName
+                )
+                loadedAccounts = [migratedAccount]
+                loadedCurrentAccountId = migratedAccount.id
+
+                // 清理旧的单账户数据
+                keychain.deleteSessionKey()
+                defaults.removeObject(forKey: "organizationId")
+
+                Logger.settings.notice("[Migration] Multi-account migration completed")
+            }
+
+            defaults.set(true, forKey: "multiAccountMigrated")
+        }
+
+        // 设置 accounts 和 currentAccountId
+        self.accounts = loadedAccounts
+        self.currentAccountId = loadedCurrentAccountId
+
+        // MARK: - 旧版迁移（v1.x → v2.0.0，保留向后兼容）
+
+        // 迁移 Organization ID 从 Keychain 到 UserDefaults（旧版迁移，现已包含在上面的多账户迁移中）
         if !defaults.bool(forKey: "organizationIdMigrated") {
             if let oldOrgId = keychain.loadOrganizationId(), !oldOrgId.isEmpty {
-                Logger.settings.notice("[Migration] Found Organization ID in Keychain, migrating to UserDefaults")
-                
-                // 清除 UserDefaults 中可能存在的旧值
-                defaults.removeObject(forKey: "organizationId")
-                
-                // 迁移到 UserDefaults
-                defaults.set(oldOrgId, forKey: "organizationId")
-                
-                // 验证写入是否成功
-                if let savedOrgId = defaults.string(forKey: "organizationId"), savedOrgId == oldOrgId {
-                    // 只有验证成功后才删除 Keychain 中的数据
-                    keychain.deleteOrganizationId()
-                    Logger.settings.notice("[Migration] Success")
-                    // 标记迁移已完成
-                    defaults.set(true, forKey: "organizationIdMigrated")
-                } else {
-                    Logger.settings.error("[Migration] Failed to write to UserDefaults, will retry on next launch")
-                    // 不标记迁移完成，下次启动时会重试
-                }
-            } else {
-                // 没有需要迁移的数据（全新安装或已迁移）
-                Logger.settings.notice("[Migration] No data in Keychain, marking complete")
-                defaults.set(true, forKey: "organizationIdMigrated")
+                Logger.settings.notice("[Migration] Found Organization ID in old Keychain location")
+                keychain.deleteOrganizationId()
             }
+            defaults.set(true, forKey: "organizationIdMigrated")
         }
 
         // MARK: - 从UserDefaults加载非敏感设置
 
-        // 加载 Organization ID
-        self.organizationId = defaults.string(forKey: "organizationId") ?? ""
+        // 加载缓存的组织列表（保留向后兼容）
+        self.organizations = Self.loadOrganizations(from: defaults)
         
         if let modeString = defaults.string(forKey: "iconDisplayMode"),
            let mode = IconDisplayMode(rawValue: modeString) {
@@ -866,7 +925,102 @@ class UserSettings: ObservableObject {
         unchangedCount = 0
         currentMonitoringMode = .active
     }
-    
+
+    // MARK: - Account Management (v2.1.0)
+
+    /// 保存账户列表到 Keychain
+    private func saveAccounts() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            self.keychain.saveAccounts(self.accounts)
+        }
+    }
+
+    /// 添加新账户
+    /// - Parameter account: 要添加的账户
+    func addAccount(_ account: Account) {
+        accounts.append(account)
+        // 如果是第一个账户，自动设为当前账户
+        if accounts.count == 1 {
+            currentAccountId = account.id
+        }
+        Logger.settings.notice("添加账户: \(account.displayName)")
+    }
+
+    /// 删除账户
+    /// - Parameter account: 要删除的账户
+    func removeAccount(_ account: Account) {
+        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else { return }
+
+        let wasCurrentAccount = (currentAccountId == account.id)
+        accounts.remove(at: index)
+
+        // 如果删除的是当前账户，切换到第一个账户
+        if wasCurrentAccount {
+            currentAccountId = accounts.first?.id
+            // 发送账户变更通知
+            NotificationCenter.default.post(name: .accountChanged, object: nil)
+        }
+
+        Logger.settings.notice("删除账户: \(account.displayName)")
+    }
+
+    /// 切换到指定账户
+    /// - Parameter account: 要切换到的账户
+    func switchToAccount(_ account: Account) {
+        guard account.id != currentAccountId else { return }
+        guard accounts.contains(where: { $0.id == account.id }) else { return }
+
+        currentAccountId = account.id
+        Logger.settings.notice("切换到账户: \(account.displayName)")
+
+        // 发送账户变更通知
+        NotificationCenter.default.post(name: .accountChanged, object: nil)
+    }
+
+    /// 更新账户信息
+    /// - Parameters:
+    ///   - account: 要更新的账户
+    ///   - alias: 新的别名（可选）
+    func updateAccount(_ account: Account, alias: String?) {
+        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else { return }
+        accounts[index].alias = alias
+        let displayName = accounts[index].displayName
+        Logger.settings.notice("更新账户别名: \(displayName)")
+    }
+
+    /// 用于显示的账户列表
+    /// - Returns: 账户列表
+    var displayAccounts: [Account] {
+        return accounts
+    }
+
+    /// 当前账户的显示名称
+    var currentAccountName: String? {
+        return currentAccount?.displayName
+    }
+
+    // MARK: - Organization Management (保留向后兼容)
+
+    /// 保存组织列表到 UserDefaults（保留向后兼容）
+    private func saveOrganizations() {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(organizations) {
+            defaults.set(data, forKey: "cachedOrganizations")
+        }
+    }
+
+    /// 从 UserDefaults 加载组织列表（保留向后兼容）
+    /// - Parameter defaults: UserDefaults 实例
+    /// - Returns: 组织列表，如果加载失败则返回空数组
+    private static func loadOrganizations(from defaults: UserDefaults) -> [Organization] {
+        guard let data = defaults.data(forKey: "cachedOrganizations") else {
+            return []
+        }
+        let decoder = JSONDecoder()
+        return (try? decoder.decode([Organization].self, from: data)) ?? []
+    }
+
     // MARK: - Launch at Login Management
     
     /// 启用开机启动
