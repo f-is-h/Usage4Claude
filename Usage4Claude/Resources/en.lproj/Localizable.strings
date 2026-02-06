@@ -306,6 +306,7 @@
 "welcome.configuring" = "Configuring...";
 "welcome.fetch_org_id_failed" = "Unable to fetch Organization ID, please retry in Settings later";
 "welcome.menubar_icon_not_visible" = "Menu bar icon not visible?";
+"welcome.multi_account_hint" = "Need multiple accounts? You can add more in Settings after setup.";
 
 // MARK: - Detail Window - Date/Time Formats (v2.0.0)
 "today" = "Today";

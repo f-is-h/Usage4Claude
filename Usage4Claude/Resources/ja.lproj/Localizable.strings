@@ -305,6 +305,7 @@
 "welcome.how_to_get_session_key" = "Session Key の取得方法は？";
 "welcome.fetch_org_id_failed" = "Organization ID を取得できませんでした。後で設定で再試行してください";
 "welcome.menubar_icon_not_visible" = "メニューバーアイコンが見えませんか？";
+"welcome.multi_account_hint" = "複数アカウントが必要ですか？セットアップ後、設定で追加できます。";
 
 // MARK: - Detail Window - Date/Time Formats (v2.0.0)
 "today" = "今日";

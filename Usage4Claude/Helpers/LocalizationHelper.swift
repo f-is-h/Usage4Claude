@@ -165,6 +165,7 @@ enum L {
         static var configuring: String { localized("welcome.configuring") }
         static var fetchOrgIdFailed: String { localized("welcome.fetch_org_id_failed") }
         static var menubarIconNotVisible: String { localized("welcome.menubar_icon_not_visible") }
+        static var multiAccountHint: String { localized("welcome.multi_account_hint") }
     }
     
     // MARK: - Update Checker

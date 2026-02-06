@@ -331,6 +331,15 @@ struct SetupStepView: View {
                                 Text(L.Welcome.sessionKeyHint)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+
+                                HStack(alignment: .top, spacing: 4) {
+                                    Image(systemName: "person.2.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text(L.Welcome.multiAccountHint)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
                     }

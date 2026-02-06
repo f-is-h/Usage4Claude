@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-06
+
+### Added
+- **Multi-account management**: Support for multiple Claude accounts
+  - Account data model with UUID, session key, organization ID, and alias
+  - Account list storage with JSON-encoded Keychain
+  - Automatic migration from single-account to multi-account on first launch
+- **Account management UI**: Full account lifecycle in Authentication settings
+  - Account list with add, delete, and alias editing
+  - API validation before adding new accounts
+  - Account switching from menu bar right-click menu and popover three-dot
+menu
+  - Multi-account hint in Welcome view authentication setup
+- **Unified time format preference**: Consistent time display across the app
+  - TimeFormatPreference setting (System / 12-hour / 24-hour)
+  - TimeFormatHelper for centralized time formatting
+  - Time format setting in General Settings
+
+
 ## [2.0.0] - 2026-01-01
 
 ### Added
@@ -357,6 +376,7 @@ Key, Organization ID)
 
 ---
 
+[2.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.0
 [2.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.0.0
 [1.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.6.0
 [1.5.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.5.1

@@ -304,6 +304,7 @@
 "welcome.configuring" = "正在配置...";
 "welcome.fetch_org_id_failed" = "无法获取 Organization ID，请稍后在设置中重试";
 "welcome.menubar_icon_not_visible" = "看不见菜单栏图标？";
+"welcome.multi_account_hint" = "需要多账户？完成设置后可在设置页面中添加更多账户。";
 
 // MARK: - Detail Window - Date/Time Formats (v2.0.0)
 "today" = "今天";

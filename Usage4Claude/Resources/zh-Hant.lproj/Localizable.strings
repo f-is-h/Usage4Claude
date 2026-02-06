@@ -305,6 +305,7 @@
 "welcome.how_to_get_session_key" = "如何取得 Session Key？";
 "welcome.fetch_org_id_failed" = "無法取得 Organization ID，請稍後在設定中重試";
 "welcome.menubar_icon_not_visible" = "看不見選單列圖示？";
+"welcome.multi_account_hint" = "需要多帳戶？完成設定後可在設定頁面中新增更多帳戶。";
 
 // MARK: - Detail Window - Date/Time Formats (v2.0.0)
 "today" = "今天";

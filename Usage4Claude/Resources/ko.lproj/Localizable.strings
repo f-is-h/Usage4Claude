@@ -304,6 +304,7 @@
 "welcome.configuring" = "설정 중...";
 "welcome.fetch_org_id_failed" = "Organization ID를 가져올 수 없습니다. 나중에 설정에서 다시 시도하세요";
 "welcome.menubar_icon_not_visible" = "메뉴바 아이콘이 보이지 않나요?";
+"welcome.multi_account_hint" = "여러 계정이 필요하신가요? 설정 완료 후 설정에서 추가할 수 있습니다.";
 
 // MARK: - Detail Window - Date/Time Formats (v2.0.0)
 "today" = "오늘";
