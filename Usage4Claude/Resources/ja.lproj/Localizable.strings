@@ -368,3 +368,4 @@
 "account.delete" = "削除";
 "account.cancel" = "キャンセル";
 "account.validate_and_add" = "検証して追加";
+"account.multi_org_added" = "%d 個の組織が見つかりました。各組織のアカウントが自動作成されました。アカウント詳細でエイリアスを設定できます。";

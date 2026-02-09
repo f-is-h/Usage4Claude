@@ -144,16 +144,17 @@ struct WelcomeView: View {
         apiService.fetchOrganizations(sessionKey: sessionKey) { result in
             switch result {
             case .success(let organizations):
-                if let firstOrg = organizations.first {
+                if !organizations.isEmpty {
                     DispatchQueue.main.async {
-                        // 创建新账户
-                        let newAccount = Account(
-                            sessionKey: sessionKey,
-                            organizationId: firstOrg.uuid,
-                            organizationName: firstOrg.name,
-                            alias: nil
-                        )
-                        settings.addAccount(newAccount)
+                        for org in organizations {
+                            let newAccount = Account(
+                                sessionKey: sessionKey,
+                                organizationId: org.uuid,
+                                organizationName: org.name,
+                                alias: nil
+                            )
+                            settings.addAccount(newAccount)
+                        }
                     }
                     completion(true)
                 } else {

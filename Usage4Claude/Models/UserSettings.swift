@@ -939,6 +939,11 @@ class UserSettings: ObservableObject {
     /// 添加新账户
     /// - Parameter account: 要添加的账户
     func addAccount(_ account: Account) {
+        // 检查是否已存在相同 organizationId 的账户
+        if accounts.contains(where: { $0.organizationId == account.organizationId }) {
+            Logger.settings.notice("账户已存在，跳过: \(account.displayName)")
+            return
+        }
         accounts.append(account)
         // 如果是第一个账户，自动设为当前账户
         if accounts.count == 1 {

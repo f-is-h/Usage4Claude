@@ -368,3 +368,4 @@
 "account.delete" = "刪除";
 "account.cancel" = "取消";
 "account.validate_and_add" = "驗證並新增";
+"account.multi_org_added" = "發現 %d 個組織，已自動為每個組織建立帳戶。可在帳戶詳情中設定別名。";

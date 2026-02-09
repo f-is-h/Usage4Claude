@@ -367,3 +367,4 @@
 "account.delete" = "删除";
 "account.cancel" = "取消";
 "account.validate_and_add" = "验证并添加";
+"account.multi_org_added" = "发现 %d 个组织，已自动为每个组织创建账户。可在账户详情中设置别名。";

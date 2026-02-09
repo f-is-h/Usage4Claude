@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-02-09
+
+### Improved
+- **Multi-organization support per Session Key**: Automatically create accounts for all organizations under a single Session Key
+  - WelcomeView and AuthSettings iterate all returned organizations instead of only the first
+  - Duplicate organization ID detection to prevent repeated account creation
+  - Info banner when multiple organizations are detected, guiding users to set aliases in account details
+  - Alias input ignored for multi-organization additions to avoid ambiguity
+
 ## [2.1.0] - 2026-02-06
 
 ### Added
@@ -376,6 +385,7 @@ Key, Organization ID)
 
 ---
 
+[2.1.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.1
 [2.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.0
 [2.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.0.0
 [1.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.6.0

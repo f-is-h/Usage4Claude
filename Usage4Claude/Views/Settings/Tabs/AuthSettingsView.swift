@@ -20,6 +20,7 @@ struct AuthSettingsView: View {
     @State private var isShowingPassword = false
     @State private var showDeleteConfirmation = false
     @State private var accountToDelete: Account?
+    @State private var successMessage: String?
 
     var body: some View {
         ScrollView {
@@ -28,6 +29,26 @@ struct AuthSettingsView: View {
                     // 添加账户视图
                     addAccountView
                 } else {
+                    // 多组织添加成功提示
+                    if let message = successMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "info.circle.fill")
+                                .foregroundColor(.blue)
+                            Text(message)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button(action: { successMessage = nil }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(12)
+                        .background(Color.blue.opacity(0.08))
+                        .cornerRadius(8)
+                    }
+
                     // 账户列表视图
                     accountListView
 
@@ -481,19 +502,25 @@ struct AuthSettingsView: View {
 
                 switch result {
                 case .success(let organizations):
-                    if let firstOrg = organizations.first {
-                        // 创建新账户
-                        let newAccount = Account(
-                            sessionKey: newSessionKey,
-                            organizationId: firstOrg.uuid,
-                            organizationName: firstOrg.name,
-                            alias: newAlias.isEmpty ? nil : newAlias
-                        )
-                        settings.addAccount(newAccount)
-
-                        // 自动切换到新账户
-                        settings.switchToAccount(newAccount)
-
+                    if !organizations.isEmpty {
+                        let useAlias = organizations.count == 1
+                        for (index, org) in organizations.enumerated() {
+                            let newAccount = Account(
+                                sessionKey: newSessionKey,
+                                organizationId: org.uuid,
+                                organizationName: org.name,
+                                alias: (useAlias && !newAlias.isEmpty) ? newAlias : nil
+                            )
+                            settings.addAccount(newAccount)
+                            // 切换到第一个新添加的账户
+                            if index == 0 {
+                                settings.switchToAccount(newAccount)
+                            }
+                        }
+                        // 多组织时显示提示
+                        if organizations.count > 1 {
+                            successMessage = String(format: L.Account.multiOrgAdded, organizations.count)
+                        }
                         // 关闭添加界面
                         withAnimation {
                             isAddingAccount = false

@@ -46,6 +46,7 @@ enum L {
         static var delete: String { localized("account.delete") }
         static var cancel: String { localized("account.cancel") }
         static var validateAndAdd: String { localized("account.validate_and_add") }
+        static var multiOrgAdded: String { localized("account.multi_org_added") }
     }
     
     // MARK: - Usage Detail View

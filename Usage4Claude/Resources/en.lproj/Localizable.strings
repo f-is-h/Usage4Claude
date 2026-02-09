@@ -369,3 +369,4 @@
 "account.delete" = "Delete";
 "account.cancel" = "Cancel";
 "account.validate_and_add" = "Validate & Add";
+"account.multi_org_added" = "Found %d organizations. Accounts have been created for each. You can set aliases in account details.";

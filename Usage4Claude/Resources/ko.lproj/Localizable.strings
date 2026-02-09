@@ -367,3 +367,4 @@
 "account.delete" = "삭제";
 "account.cancel" = "취소";
 "account.validate_and_add" = "검증 후 추가";
+"account.multi_org_added" = "%d개 조직이 발견되었습니다. 각 조직에 대한 계정이 자동으로 생성되었습니다. 계정 상세에서 별칭을 설정할 수 있습니다.";
