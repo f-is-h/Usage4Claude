@@ -101,6 +101,18 @@ class MenuBarUI {
         // 激活应用，使 popover 能够正确响应焦点变化
         NSApp.activate(ignoringOtherApps: true)
 
+        // Popover 挂在系统状态栏上，继承状态栏外观而非 NSApp.appearance
+        // 需要在每次打开时显式设置，确保与用户偏好同步
+        switch settings.appearance {
+        case .system:
+            let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+            popover.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
+        case .light:
+            popover.appearance = NSAppearance(named: .aqua)
+        case .dark:
+            popover.appearance = NSAppearance(named: .darkAqua)
+        }
+
         // 显示 popover
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
 

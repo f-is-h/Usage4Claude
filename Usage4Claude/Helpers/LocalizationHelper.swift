@@ -419,6 +419,19 @@ enum L {
         static var twentyFourHour: String { localized("time_format.twenty_four_hour") }
     }
 
+    // MARK: - Appearance
+    enum Appearance {
+        static var system: String { localized("appearance.system") }
+        static var light: String { localized("appearance.light") }
+        static var dark: String { localized("appearance.dark") }
+    }
+
+    // MARK: - Settings General (Appearance)
+    enum SettingsGeneralAppearance {
+        static var section: String { localized("settings.general.appearance_section") }
+        static var hint: String { localized("settings.general.appearance_hint") }
+    }
+
     // MARK: - Settings General (Time Format)
     enum SettingsGeneralTimeFormat {
         static var section: String { localized("settings.general.time_format_section") }

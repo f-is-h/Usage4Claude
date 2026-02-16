@@ -403,7 +403,7 @@ class MenuBarManager: ObservableObject {
             settingsWindow?.title = L.Window.settingsTitle
             settingsWindow?.styleMask = [.titled, .closable, .miniaturizable]
             settingsWindow?.setFrameAutosaveName("Usage4Claude.SettingsWindow")
-            
+
             // 移除旧的观察者（如果存在）
             if let observer = windowCloseObserver {
                 NotificationCenter.default.removeObserver(observer)

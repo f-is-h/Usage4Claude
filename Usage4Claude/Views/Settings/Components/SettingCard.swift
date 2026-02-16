@@ -75,7 +75,7 @@ struct SettingCard<Content: View>: View {
                 .fill(Color(NSColor.controlBackgroundColor))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.black.opacity(0.03))
+                        .fill(Color.primary.opacity(0.03))
                 )
         )
         .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)

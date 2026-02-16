@@ -224,6 +224,39 @@ enum TimeFormatPreference: String, CaseIterable, Codable {
     }
 }
 
+/// 应用外观模式
+enum AppAppearance: String, CaseIterable, Codable {
+    /// 跟随系统
+    case system = "system"
+    /// 浅色
+    case light = "light"
+    /// 深色
+    case dark = "dark"
+
+    var localizedName: String {
+        switch self {
+        case .system:
+            return L.Appearance.system
+        case .light:
+            return L.Appearance.light
+        case .dark:
+            return L.Appearance.dark
+        }
+    }
+
+    /// 对应的 SwiftUI ColorScheme（system 返回 nil，表示跟随系统）
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system:
+            return nil
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        }
+    }
+}
+
 /// 应用语言选项
 enum AppLanguage: String, CaseIterable, Codable {
     /// 英语
@@ -381,6 +414,15 @@ class UserSettings: ObservableObject {
         didSet {
             defaults.set(language.rawValue, forKey: "language")
             NotificationCenter.default.post(name: .languageChanged, object: nil)
+        }
+    }
+
+    /// 应用外观模式
+    @Published var appearance: AppAppearance {
+        didSet {
+            defaults.set(appearance.rawValue, forKey: "appearance")
+            applyAppearance()
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
 
@@ -704,6 +746,14 @@ class UserSettings: ObservableObject {
             self.language = Self.detectSystemLanguage()
         }
 
+        // 加载外观模式，默认跟随系统
+        if let appearanceString = defaults.string(forKey: "appearance"),
+           let loadedAppearance = AppAppearance(rawValue: appearanceString) {
+            self.appearance = loadedAppearance
+        } else {
+            self.appearance = .system
+        }
+
         // 加载时间格式偏好，默认跟随系统
         if let timeFormatString = defaults.string(forKey: "timeFormatPreference"),
            let timeFormat = TimeFormatPreference(rawValue: timeFormatString) {
@@ -760,6 +810,19 @@ class UserSettings: ObservableObject {
 
         // 同步系统实际状态
         syncLaunchAtLoginStatus()
+
+        // 应用外观设置到 NSApp
+        applyAppearance()
+
+        // 监听系统外观变化，「跟随系统」模式下自动更新
+        DistributedNotificationCenter.default().addObserver(
+            forName: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self, self.appearance == .system else { return }
+            self.applyAppearance()
+        }
     }
     
     // MARK: - Computed Properties
@@ -807,9 +870,27 @@ class UserSettings: ObservableObject {
     
     // MARK: - Public Methods
     
+    /// 将当前外观设置应用到 NSApp，全局生效
+    /// 注意：对于菜单栏应用（accessory 激活策略），NSApp.appearance = nil 不能可靠地跟随系统外观
+    /// 因此「跟随系统」模式下主动读取系统外观并显式设置
+    func applyAppearance() {
+        DispatchQueue.main.async {
+            switch self.appearance {
+            case .system:
+                let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+                NSApp.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
+            case .light:
+                NSApp.appearance = NSAppearance(named: .aqua)
+            case .dark:
+                NSApp.appearance = NSAppearance(named: .darkAqua)
+            }
+        }
+    }
+
     /// 重置为默认设置
     /// 只重置非敏感设置，不影响认证信息
     func resetToDefaults() {
+        appearance = .system
         iconDisplayMode = .percentageOnly
         iconStyleMode = .colorTranslucent
         refreshMode = .smart

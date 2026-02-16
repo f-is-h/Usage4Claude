@@ -350,6 +350,13 @@
 "settings.general.time_format_hint" = "選擇應用程式中時間的顯示格式";
 "settings.general.time_format_preview" = "預覽";
 
+// MARK: - Appearance
+"appearance.system" = "跟隨系統";
+"appearance.light" = "淺色";
+"appearance.dark" = "深色";
+"settings.general.appearance_section" = "外觀";
+"settings.general.appearance_hint" = "選擇應用程式的配色方案，或跟隨系統設定";
+
 // MARK: - Account Management
 "account.list_title" = "帳戶列表";
 "account.no_accounts" = "尚未配置帳戶\n請新增帳戶以開始使用";

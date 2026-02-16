@@ -349,6 +349,13 @@
 "settings.general.time_format_hint" = "选择应用中时间的显示格式";
 "settings.general.time_format_preview" = "预览";
 
+// MARK: - Appearance
+"appearance.system" = "跟随系统";
+"appearance.light" = "浅色";
+"appearance.dark" = "深色";
+"settings.general.appearance_section" = "外观";
+"settings.general.appearance_hint" = "选择应用的配色方案，或跟随系统设置";
+
 // MARK: - Account Management (v2.1.0)
 "account.list_title" = "账户列表";
 "account.no_accounts" = "还没有配置账户。添加一个账户开始使用。";

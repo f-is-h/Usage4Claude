@@ -20,19 +20,16 @@ enum UsageColorScheme {
     /// - Parameter statusButton: 可选的状态栏按钮，用于获取外观信息
     /// - Returns: true 表示深色模式，false 表示浅色模式
     static func isDarkMode(for statusButton: NSStatusBarButton? = nil) -> Bool {
-        // 方法1: 使用状态栏按钮的外观
+        // 方法1: 使用状态栏按钮的外观（最准确，反映系统菜单栏的真实外观）
         if let button = statusButton,
            let appearance = button.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) {
             return appearance == .darkAqua
         }
 
-        // 方法2: 使用应用的 effectiveAppearance
-        if let appearance = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) {
-            return appearance == .darkAqua
-        }
-
-        // 最终降级
-        return true
+        // 方法2: 直接读取系统外观设置（不受 NSApp.appearance 影响）
+        // 当用户设置了应用外观偏好时，NSApp.effectiveAppearance 会反映应用设置而非系统设置
+        // 菜单栏图标渲染需要始终跟随系统外观，所以这里检测系统真实状态
+        return UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
     }
 
     /// 检测当前是否为深色模式（便捷属性）

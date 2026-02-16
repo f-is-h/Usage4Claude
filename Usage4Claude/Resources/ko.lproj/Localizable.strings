@@ -349,6 +349,13 @@
 "settings.general.time_format_hint" = "앱 전체에서 시간 표시 형식 선택";
 "settings.general.time_format_preview" = "미리보기";
 
+// MARK: - Appearance
+"appearance.system" = "시스템 설정";
+"appearance.light" = "라이트";
+"appearance.dark" = "다크";
+"settings.general.appearance_section" = "외관";
+"settings.general.appearance_hint" = "앱의 색상 테마를 선택하거나 시스템 설정을 따릅니다";
+
 // MARK: - Account Management
 "account.list_title" = "계정 목록";
 "account.no_accounts" = "구성된 계정이 없습니다\n시작하려면 계정을 추가하세요";

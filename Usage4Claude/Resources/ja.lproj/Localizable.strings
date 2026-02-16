@@ -350,6 +350,13 @@
 "settings.general.time_format_hint" = "アプリ内の時刻表示形式を選択";
 "settings.general.time_format_preview" = "プレビュー";
 
+// MARK: - Appearance
+"appearance.system" = "システムに従う";
+"appearance.light" = "ライト";
+"appearance.dark" = "ダーク";
+"settings.general.appearance_section" = "外観";
+"settings.general.appearance_hint" = "アプリの配色を選択、またはシステム設定に従います";
+
 // MARK: - Account Management
 "account.list_title" = "アカウント一覧";
 "account.no_accounts" = "アカウントが設定されていません\nアカウントを追加して開始してください";

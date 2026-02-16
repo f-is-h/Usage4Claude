@@ -351,6 +351,13 @@
 "settings.general.time_format_hint" = "Choose how time is displayed throughout the app";
 "settings.general.time_format_preview" = "Preview";
 
+// MARK: - Appearance
+"appearance.system" = "System";
+"appearance.light" = "Light";
+"appearance.dark" = "Dark";
+"settings.general.appearance_section" = "Appearance";
+"settings.general.appearance_hint" = "Choose the app's color scheme, or follow system settings";
+
 // MARK: - Account Management (v2.1.0)
 "account.list_title" = "Accounts";
 "account.no_accounts" = "No accounts configured. Add an account to get started.";
