@@ -36,10 +36,16 @@ class TimerManager {
         repeats: Bool = true,
         block: @escaping () -> Void
     ) {
-        // 先取消同标识符的旧定时器
-        invalidate(identifier)
+        // 同步取消旧定时器并创建新定时器，避免竞态条件
+        queue.sync(flags: .barrier) {
+            // 取消同标识符的旧定时器
+            if let oldTimer = self.timers[identifier] {
+                oldTimer.invalidate()
+                self.timers.removeValue(forKey: identifier)
+            }
+        }
 
-        // 创建新定时器
+        // 在主线程创建定时器（Timer.scheduledTimer 需要 RunLoop）
         let timer = Timer.scheduledTimer(
             withTimeInterval: interval,
             repeats: repeats
@@ -47,7 +53,7 @@ class TimerManager {
             block()
         }
 
-        // 线程安全地保存定时器
+        // 保存新定时器
         queue.async(flags: .barrier) {
             self.timers[identifier] = timer
         }
@@ -58,7 +64,7 @@ class TimerManager {
     /// 取消指定定时器
     /// - Parameter identifier: 定时器标识符
     func invalidate(_ identifier: String) {
-        queue.async(flags: .barrier) {
+        queue.sync(flags: .barrier) {
             if let timer = self.timers[identifier] {
                 timer.invalidate()
                 self.timers.removeValue(forKey: identifier)
@@ -70,7 +76,7 @@ class TimerManager {
     /// 取消所有定时器
     /// - Note: 通常在应用退出或重大状态变更时调用
     func invalidateAll() {
-        queue.async(flags: .barrier) {
+        queue.sync(flags: .barrier) {
             let count = self.timers.count
             self.timers.values.forEach { $0.invalidate() }
             self.timers.removeAll()

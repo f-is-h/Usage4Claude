@@ -54,6 +54,8 @@ class DataRefreshManager: ObservableObject {
     private let minimumAnimationDuration: TimeInterval = 1.0
     /// 上次检查更新时间
     private var lastUpdateCheckTime: Date?
+    /// App Nap 防护活动令牌
+    private var refreshActivity: NSObjectProtocol?
 
     // MARK: - Timer Identifiers
 
@@ -129,6 +131,7 @@ class DataRefreshManager: ObservableObject {
     /// 开始数据刷新
     /// 立即获取一次数据并启动定时器
     func startRefreshing() {
+        beginRefreshActivity()
         fetchUsage()
         restartTimer()
 
@@ -143,6 +146,7 @@ class DataRefreshManager: ObservableObject {
     /// 停止数据刷新
     func stopRefreshing() {
         timerManager.invalidate(TimerID.mainRefresh)
+        endRefreshActivity()
     }
 
     /// 启动 Popover 刷新定时器
@@ -166,6 +170,25 @@ class DataRefreshManager: ObservableObject {
         let interval = TimeInterval(settings.effectiveRefreshInterval)
         timerManager.schedule(TimerID.mainRefresh, interval: interval, repeats: true) { [weak self] in
             self?.fetchUsage()
+        }
+    }
+
+    // MARK: - App Nap Prevention
+
+    /// 开始后台活动声明，防止 macOS App Nap 冻结定时器
+    private func beginRefreshActivity() {
+        guard refreshActivity == nil else { return }
+        refreshActivity = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiatedAllowingIdleSystemSleep,
+            reason: "Periodic usage data refresh"
+        )
+    }
+
+    /// 结束后台活动声明
+    private func endRefreshActivity() {
+        if let activity = refreshActivity {
+            ProcessInfo.processInfo.endActivity(activity)
+            refreshActivity = nil
         }
     }
 
@@ -401,6 +424,7 @@ class DataRefreshManager: ObservableObject {
     /// 清理所有资源
     func cleanup() {
         timerManager.invalidateAll()
+        endRefreshActivity()
     }
 
     deinit {
