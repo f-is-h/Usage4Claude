@@ -19,55 +19,6 @@ struct GeneralSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // 开机启动设置卡片
-                SettingCard(
-                    icon: "power",
-                    iconColor: .orange,
-                    title: L.SettingsGeneral.launchSection,
-                    hint: L.SettingsGeneral.launchHint
-                ) {
-                    HStack {
-                        // 开关在左侧
-                        Toggle("", isOn: $settings.launchAtLogin)
-                            .toggleStyle(.switch)
-                            .controlSize(.mini)   // 使用最小尺寸
-                            .focusable(false)     // 移除默认 Focus
-                            .labelsHidden()       // 隐藏默认标签
-                        
-                        // 文字标签
-                        Text(L.SettingsGeneral.launchAtLogin)
-                        
-                        Spacer()
-                        
-                        // 状态指示器
-                        HStack(spacing: 4) {
-                            Image(systemName: statusIcon)
-                                .foregroundColor(statusColor)
-                                .font(.caption)
-                            Text(statusText)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                
-                // 外观设置卡片
-                SettingCard(
-                    icon: "circle.lefthalf.filled",
-                    iconColor: .indigo,
-                    title: L.SettingsGeneralAppearance.section,
-                    hint: L.SettingsGeneralAppearance.hint
-                ) {
-                    Picker("", selection: $settings.appearance) {
-                        ForEach(AppAppearance.allCases, id: \.self) { mode in
-                            Text(mode.localizedName).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
-                    .labelsHidden()
-                    .focusable(false)
-                }
-
                 // 显示设置卡片
                 SettingCard(
                     icon: "gauge.with.dots.needle.0percent",
@@ -279,6 +230,23 @@ struct GeneralSettingsView: View {
                     }
                 }
                 
+                // 外观设置卡片
+                SettingCard(
+                    icon: "circle.lefthalf.filled",
+                    iconColor: .indigo,
+                    title: L.SettingsGeneralAppearance.section,
+                    hint: L.SettingsGeneralAppearance.hint
+                ) {
+                    Picker("", selection: $settings.appearance) {
+                        ForEach(AppAppearance.allCases, id: \.self) { mode in
+                            Text(mode.localizedName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.radioGroup)
+                    .labelsHidden()
+                    .focusable(false)
+                }
+
                 // 时间格式设置卡片
                 SettingCard(
                     icon: "clock",
@@ -326,7 +294,36 @@ struct GeneralSettingsView: View {
                     .labelsHidden()
                     .focusable(false)
                 }
-                
+
+                // 开机启动设置卡片
+                SettingCard(
+                    icon: "power",
+                    iconColor: .orange,
+                    title: L.SettingsGeneral.launchSection,
+                    hint: L.SettingsGeneral.launchHint
+                ) {
+                    HStack {
+                        Toggle("", isOn: $settings.launchAtLogin)
+                            .toggleStyle(.switch)
+                            .controlSize(.mini)
+                            .focusable(false)
+                            .labelsHidden()
+
+                        Text(L.SettingsGeneral.launchAtLogin)
+
+                        Spacer()
+
+                        HStack(spacing: 4) {
+                            Image(systemName: statusIcon)
+                                .foregroundColor(statusColor)
+                                .font(.caption)
+                            Text(statusText)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
                 // 重置按钮
                 HStack {
                     Spacer()
