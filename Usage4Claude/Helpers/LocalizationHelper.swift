@@ -432,6 +432,23 @@ enum L {
         static var hint: String { localized("settings.general.appearance_hint") }
     }
 
+    // MARK: - Web Login
+    enum WebLogin {
+        static var windowTitle: String { localized("weblogin.window_title") }
+        static var browserLogin: String { localized("weblogin.browser_login") }
+        static var browserLoginRecommended: String { localized("weblogin.browser_login_recommended") }
+        static var manualInput: String { localized("weblogin.manual_input") }
+        static var orManualInput: String { localized("weblogin.or_manual_input") }
+        static var loading: String { localized("weblogin.loading") }
+        static var waitingForLogin: String { localized("weblogin.waiting_for_login") }
+        static var validating: String { localized("weblogin.validating") }
+        static func success(_ name: String) -> String {
+            String(format: localized("weblogin.success"), name)
+        }
+        static var cloudflareBlocked: String { localized("weblogin.cloudflare_blocked") }
+        static var privacyNotice: String { localized("weblogin.privacy_notice") }
+    }
+
     // MARK: - Settings General (Time Format)
     enum SettingsGeneralTimeFormat {
         static var section: String { localized("settings.general.time_format_section") }

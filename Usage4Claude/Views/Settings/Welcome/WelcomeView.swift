@@ -260,7 +260,7 @@ struct SetupStepView: View {
 
                 // 主设置区域
                 VStack(alignment: .leading, spacing: 20) {
-                    // SessionKey 设置 - 横向布局
+                    // SessionKey 设置
                     VStack(alignment: .leading, spacing: 12) {
                         // 标题
                         HStack(spacing: 8) {
@@ -272,20 +272,44 @@ struct SetupStepView: View {
 
                             Spacer()
 
-                            // 帮助按钮
-                            Button(action: {
-                                if let url = URL(string: getGitHubReadmeURL(section: .initialSetup)) {
-                                    NSWorkspace.shared.open(url)
-                                }
-                            }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "questionmark.circle")
-                                    Text(L.Welcome.howToGetSessionKey)
-                                        .font(.caption)
-                                }
-                                .foregroundColor(.blue)
+                            HStack(alignment: .top, spacing: 4) {
+                                Image(systemName: "person.2.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(L.Welcome.multiAccountHint)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
-                            .buttonStyle(.plain)
+                        }
+
+                        // 浏览器登录按钮（推荐）
+                        Button(action: {
+                            WebLoginWindowManager.shared.showLoginWindow { account in
+                                // 登录成功后自动填充 sessionKey
+                                sessionKey = account.sessionKey
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "globe")
+                                Text(L.WebLogin.browserLoginRecommended)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+
+                        // 分隔线
+                        HStack {
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.3))
+                                .frame(height: 1)
+                            Text(L.WebLogin.orManualInput)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .layoutPriority(1)
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.3))
+                                .frame(height: 1)
                         }
 
                         // Session Key输入 - 横向
@@ -333,14 +357,20 @@ struct SetupStepView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
 
-                                HStack(alignment: .top, spacing: 4) {
-                                    Image(systemName: "person.2.fill")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Text(L.Welcome.multiAccountHint)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                // 帮助按钮
+                                Button(action: {
+                                    if let url = URL(string: getGitHubReadmeURL(section: .initialSetup)) {
+                                        NSWorkspace.shared.open(url)
+                                    }
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "questionmark.circle")
+                                        Text(L.Welcome.howToGetSessionKey)
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.blue)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                     }

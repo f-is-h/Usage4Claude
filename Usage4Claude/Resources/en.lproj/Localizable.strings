@@ -377,3 +377,16 @@
 "account.cancel" = "Cancel";
 "account.validate_and_add" = "Validate & Add";
 "account.multi_org_added" = "Found %d organizations. Accounts have been created for each. You can set aliases in account details.";
+
+// MARK: - Web Login (v2.2.0)
+"weblogin.window_title" = "Sign in to Claude";
+"weblogin.browser_login" = "Browser Login";
+"weblogin.browser_login_recommended" = "Sign in via Browser (Recommended)";
+"weblogin.manual_input" = "Manual Input";
+"weblogin.or_manual_input" = "or enter Session Key manually";
+"weblogin.loading" = "Loading login page...";
+"weblogin.waiting_for_login" = "Please sign in to your Claude account";
+"weblogin.validating" = "Verifying credentials...";
+"weblogin.success" = "Successfully added account: %@";
+"weblogin.cloudflare_blocked" = "If the page won't load, please use manual input instead.";
+"weblogin.privacy_notice" = "Your credentials are only used locally and stored securely in the system Keychain.";
