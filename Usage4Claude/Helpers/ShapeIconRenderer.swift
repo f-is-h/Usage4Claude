@@ -149,8 +149,9 @@ class ShapeIconRenderer {
 
         // 3. 绘制百分比文字
         let percentageText = "\(Int(percentage))"
+        let percentageFontSize: CGFloat = percentage >= 100 ? 5.0 : 7.2
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 7.2, weight: .semibold),
+            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
         ]
         let textSize = percentageText.size(withAttributes: attributes)
@@ -331,8 +332,9 @@ class ShapeIconRenderer {
 
         // 3. 绘制百分比文字（与Opus完全一致）
         let percentageText = "\(Int(percentage))"
+        let percentageFontSize: CGFloat = percentage >= 100 ? 5.0 : 7.2
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 7.2, weight: .semibold),
+            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
         ]
         let textSize = percentageText.size(withAttributes: attributes)
@@ -452,8 +454,9 @@ class ShapeIconRenderer {
 
         // 3. 绘制百分比文字
         let percentageText = "\(Int(percentage))"
+        let percentageFontSize: CGFloat = percentage >= 100 ? 5.0 : 7.2
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 7.2, weight: .semibold),
+            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
         ]
         let textSize = percentageText.size(withAttributes: attributes)
