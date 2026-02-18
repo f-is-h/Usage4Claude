@@ -61,6 +61,7 @@ struct UsageDetailView: View {
     // 显示更新通知
     @State private var showUpdateNotification = false
     // 显示模式切换（false: 重置时间, true: 剩余时间）
+    @AppStorage("showRemainingMode") private var savedRemainingMode = false
     @State private var showRemainingMode = false
     
     // MARK: - Body
@@ -388,6 +389,7 @@ struct UsageDetailView: View {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     showRemainingMode.toggle()
                                 }
+                                savedRemainingMode = showRemainingMode
                             }
                         } else if activeTypes.count == 2 {
                             // 场景2：用户选择了2种限制，使用统一行显示
@@ -405,6 +407,7 @@ struct UsageDetailView: View {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     showRemainingMode.toggle()
                                 }
+                                savedRemainingMode = showRemainingMode
                             }
                         } else if activeTypes.count == 1 {
                             // 场景1：用户只选择了1种限制，使用大圆环+2行信息显示
@@ -513,6 +516,8 @@ struct UsageDetailView: View {
         .frame(width: 290, height: dynamicHeight)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
+            // 恢复上次保存的显示模式
+            showRemainingMode = savedRemainingMode
             // 如果有更新通知消息，显示通知
             if refreshState.notificationMessage != nil {
                 withAnimation {
@@ -547,8 +552,6 @@ struct UsageDetailView: View {
         .onDisappear {
             // 视图消失时清理定时器和重置状态
             stopRotationAnimation()
-            // 重置显示模式为默认（重置时间模式）
-            showRemainingMode = false
         }
         #if DEBUG
         .background(
