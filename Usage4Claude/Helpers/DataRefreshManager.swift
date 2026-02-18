@@ -97,8 +97,14 @@ class DataRefreshManager: ObservableObject {
 
                 switch result {
                 case .success(let data):
+                    let previousData = self.usageData
                     self.usageData = data
                     self.errorMessage = nil
+
+                    // 检查是否需要发送用量通知
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
+                    }
 
                     // 智能模式：根据百分比变化调整刷新频率
                     self.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)

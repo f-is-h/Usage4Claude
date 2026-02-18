@@ -377,6 +377,16 @@
 "account.validate_and_add" = "驗證並新增";
 "account.multi_org_added" = "發現 %d 個組織，已自動為每個組織建立帳戶。可在帳戶詳情中設定別名。";
 
+// MARK: - Usage Notifications
+"notification.section" = "通知";
+"notification.hint" = "用量達到閾值或重設時發送通知";
+"notification.enable" = "啟用用量通知";
+"notification.description" = "當任意限制達到 90%%，或用量重設時，發送系統通知。";
+"notification.warning_title" = "用量警告";
+"notification.warning_body" = "%@ 已達到 %d%% 用量";
+"notification.reset_title" = "用量已重設";
+"notification.reset_body" = "%@ 用量已重設";
+
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "登入 Claude";
 "weblogin.browser_login" = "瀏覽器登入";

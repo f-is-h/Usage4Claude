@@ -48,6 +48,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
+        // 请求通知权限
+        NotificationManager.shared.requestPermission()
+
         menuBarManager = MenuBarManager()
 
         if settings.isFirstLaunch || !settings.hasValidCredentials {

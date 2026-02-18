@@ -378,6 +378,16 @@
 "account.validate_and_add" = "Validate & Add";
 "account.multi_org_added" = "Found %d organizations. Accounts have been created for each. You can set aliases in account details.";
 
+// MARK: - Usage Notifications
+"notification.section" = "Notifications";
+"notification.hint" = "Get notified when usage reaches threshold or resets";
+"notification.enable" = "Enable Usage Notifications";
+"notification.description" = "Receive a notification when any limit reaches 90%%, or when usage resets.";
+"notification.warning_title" = "Usage Warning";
+"notification.warning_body" = "%@ has reached %d%% usage";
+"notification.reset_title" = "Usage Reset";
+"notification.reset_body" = "%@ usage has been reset";
+
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Sign in to Claude";
 "weblogin.browser_login" = "Browser Login";

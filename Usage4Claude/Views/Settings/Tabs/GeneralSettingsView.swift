@@ -230,6 +230,35 @@ struct GeneralSettingsView: View {
                     }
                 }
                 
+                // 通知设置卡片
+                SettingCard(
+                    icon: "bell.badge",
+                    iconColor: .red,
+                    title: L.SettingsNotification.section,
+                    hint: L.SettingsNotification.hint
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Toggle("", isOn: $settings.notificationsEnabled)
+                                .toggleStyle(.switch)
+                                .controlSize(.mini)
+                                .focusable(false)
+                                .labelsHidden()
+                            Text(L.SettingsNotification.enable)
+                            Spacer()
+                        }
+                        HStack(alignment: .top, spacing: 4) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                            Text(L.SettingsNotification.description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+
                 // 外观设置卡片
                 SettingCard(
                     icon: "circle.lefthalf.filled",

@@ -376,6 +376,16 @@
 "account.validate_and_add" = "검증 후 추가";
 "account.multi_org_added" = "%d개 조직이 발견되었습니다. 각 조직에 대한 계정이 자동으로 생성되었습니다. 계정 상세에서 별칭을 설정할 수 있습니다.";
 
+// MARK: - Usage Notifications
+"notification.section" = "알림";
+"notification.hint" = "사용량이 임계값에 도달하거나 재설정될 때 알림";
+"notification.enable" = "사용량 알림 활성화";
+"notification.description" = "제한이 90%%에 도달하거나 사용량이 재설정될 때 시스템 알림을 보냅니다.";
+"notification.warning_title" = "사용량 경고";
+"notification.warning_body" = "%@이(가) %d%% 사용량에 도달했습니다";
+"notification.reset_title" = "사용량 재설정";
+"notification.reset_body" = "%@ 사용량이 재설정되었습니다";
+
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Claude 로그인";
 "weblogin.browser_login" = "브라우저 로그인";

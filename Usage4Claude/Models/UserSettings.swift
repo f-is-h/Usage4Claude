@@ -458,6 +458,13 @@ class UserSettings: ObservableObject {
         }
     }
     
+    /// 是否启用用量通知
+    @Published var notificationsEnabled: Bool {
+        didSet {
+            defaults.set(notificationsEnabled, forKey: "notificationsEnabled")
+        }
+    }
+
     /// 开机启动设置
     @Published var launchAtLogin: Bool {
         didSet {
@@ -785,6 +792,9 @@ class UserSettings: ObservableObject {
             self.isFirstLaunch = false
         }
         
+        // 加载通知设置，默认开启
+        self.notificationsEnabled = defaults.object(forKey: "notificationsEnabled") as? Bool ?? true
+
         // 初始化开机启动设置
         self.launchAtLogin = defaults.bool(forKey: "launchAtLogin")
 
@@ -899,6 +909,7 @@ class UserSettings: ObservableObject {
         timeFormatPreference = .system
         displayMode = .smart
         customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
+        notificationsEnabled = true
 
         // 重置智能模式状态
         lastUtilization = nil

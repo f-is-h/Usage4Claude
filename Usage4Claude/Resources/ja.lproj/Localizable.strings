@@ -377,6 +377,16 @@
 "account.validate_and_add" = "検証して追加";
 "account.multi_org_added" = "%d 個の組織が見つかりました。各組織のアカウントが自動作成されました。アカウント詳細でエイリアスを設定できます。";
 
+// MARK: - Usage Notifications
+"notification.section" = "通知";
+"notification.hint" = "使用量がしきい値に達した時やリセット時に通知";
+"notification.enable" = "使用量通知を有効にする";
+"notification.description" = "いずれかの制限が90%%に達した時、または使用量がリセットされた時にシステム通知を送信します。";
+"notification.warning_title" = "使用量警告";
+"notification.warning_body" = "%@が%d%%の使用量に達しました";
+"notification.reset_title" = "使用量リセット";
+"notification.reset_body" = "%@の使用量がリセットされました";
+
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Claude にサインイン";
 "weblogin.browser_login" = "ブラウザログイン";

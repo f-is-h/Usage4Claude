@@ -449,6 +449,26 @@ enum L {
         static var privacyNotice: String { localized("weblogin.privacy_notice") }
     }
 
+    // MARK: - Settings Notification
+    enum SettingsNotification {
+        static var section: String { localized("notification.section") }
+        static var hint: String { localized("notification.hint") }
+        static var enable: String { localized("notification.enable") }
+        static var description: String { localized("notification.description") }
+    }
+
+    // MARK: - Usage Notification
+    enum UsageNotification {
+        static var warningTitle: String { localized("notification.warning_title") }
+        static func warningBody(_ type: String, _ percentage: Int) -> String {
+            String(format: localized("notification.warning_body"), type, percentage)
+        }
+        static var resetTitle: String { localized("notification.reset_title") }
+        static func resetBody(_ type: String) -> String {
+            String(format: localized("notification.reset_body"), type)
+        }
+    }
+
     // MARK: - Settings General (Time Format)
     enum SettingsGeneralTimeFormat {
         static var section: String { localized("settings.general.time_format_section") }
