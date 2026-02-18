@@ -206,8 +206,8 @@ class MenuBarIconRenderer {
         progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
         progressPath.stroke()
 
-        let fontSize: CGFloat = size.width * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
+        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
+        let font = NSFont.systemFont(ofSize: fontSize, weight: percentage >= 100 ? .bold : .semibold)
         let text = "\(Int(percentage))"
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
@@ -274,8 +274,8 @@ class MenuBarIconRenderer {
         progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
         progressPath.stroke()
 
-        let fontSize: CGFloat = size.width * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
+        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
+        let font = NSFont.systemFont(ofSize: fontSize, weight: percentage >= 100 ? .bold : .semibold)
         let text = "\(Int(percentage))"
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
