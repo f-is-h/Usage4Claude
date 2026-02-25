@@ -15,7 +15,7 @@
 
 **An elegant macOS menu bar app for real-time monitoring of your Claude AI usage.**
 
-✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App** ✨
+✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
 
 [Features](#-features) • [Installation](#-installation) • [User Guide](#-user-guide) • [FAQ](#-faq) • [Support](#-support)
 
@@ -27,11 +27,16 @@
 
 ### 🎯 Core Features
 
-- **📊 Real-time Monitoring** - Display Claude subscription's usage quota in menu bar
+- **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar
 - **🎯 Multi-Limit Support** - Show up to 5 limits simultaneously (5-hour/7-day/Extra/7-day Opus/7-day Sonnet)
 - **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
 - **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
-- **🎨 Smart Colors** - Automatic color changes based on usage (5-hour: green/orange/red; 7-day: purple gradient)
+- **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
+- **🔔 Usage Notifications** - Warning notification at 90% usage, reset notification when quota resets
+- **👥 Multi-Account Management** - Support multiple accounts / multiple organizations per account, quick switching
+- **🌐 Built-in Browser Login** - Built-in browser login to automatically extract Session Key, no manual copying needed
+- **🎨 Appearance Settings** - Support system default / light / dark appearance modes
+- **🕐 Time Format** - Support system default / 12-hour / 24-hour format
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
 - **🔄 Smart Refresh System** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
 - **⚡ Manual Refresh** - Click refresh button to update data instantly (10-second debounce protection)
@@ -44,6 +49,7 @@ Works seamlessly with all Claude products:
 - 💻 **Claude Code** (CLI tool for developers)
 - 🖥️ **Desktop App** (macOS/Windows)
 - 📱 **Mobile App** (iOS/Android)
+- 🤝 **Cowork** (AI Agent)
 
 All platforms share the same usage quota, monitored in one place!
 
@@ -70,6 +76,7 @@ All platforms share the same usage quota, monitored in one place!
 - **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R, ⌘,, ⌘Q)
 - **👋 Friendly Onboarding** - Detailed setup wizard on first launch
 - **… Menu Display** - Multiple menu access methods, detail view and right-click
+- **🔔 Usage Notifications** - Usage warning and reset notifications, configurable in settings
 - **🛠️ Debug Mode** - Developer options: fake data testing, simulated updates, instant refresh
 
 ### 🔒 Security & Privacy
@@ -124,14 +131,14 @@ All platforms share the same usage quota, monitored in one place!
 
 ### Settings
 
-**General** - Launch at login, customize display, theme settings, refresh, and language options
-**Authentication** - Configure Claude account authentication, connection diagnostics
+**General** - Display options, menu bar theme, notification settings, appearance (system/light/dark), refresh mode, time format, language options, launch at login
+**Authentication** - Multi-account management (add/delete/switch/alias editing), built-in browser login, manual input, connection diagnostics
 **About** - Version info and related links
 
 ### Welcome Screen
 
-**Configure Authentication** - Session Key, auto-retrieve Organization ID
-**Configure Display Options** - Display options and theme settings with live preview
+**Configure Authentication** - Built-in browser one-click login (recommended) or manual Session Key input, auto-retrieve Organization ID, auto-create multiple organizations under same Session Key
+**Configure Display Options** - Menu bar theme, display content, display mode (smart/custom) selection with live preview
 **Set Up Later** - Close welcome screen, configure later in settings
 
 ---
@@ -172,30 +179,27 @@ open Usage4Claude.xcodeproj
 
 ### Initial Setup
 
-1. **Launch App**  
+1. **Launch App**
    Welcome screen will appear on first run
 
-2. **Configure Authentication**  
-   Click "Go to Authentication Settings" button
-
-3. **Get Session Key**
-   - Click "Open Claude Usage Page in Browser"
-   - Open browser developer tools (press F12 or Cmd + Option + I)
-   - Switch to "Network" tab
-   - Refresh the page
-   - Find request named `usage`
-   - View Headers, find `sessionKey=sk-ant-...` value in `Cookie`
-
-4. **Enter Information**
-   - Paste Session Key into "Session Key" field
-   - Monitoring will start automatically after configuration
+2. **Configure Authentication**
+   - **Option 1: Browser Login (Recommended)**
+     - Click the "Browser Login" button
+     - Log in to your Claude account in the built-in browser
+     - Session Key will be automatically extracted after successful login
+   - **Option 2: Manual Input**
+     - Open browser and visit the Claude usage page
+     - Open developer tools (F12 or Cmd + Option + I)
+     - Switch to "Network" tab, refresh the page
+     - Find the `usage` request, extract `sessionKey=sk-ant-...` from Cookie
+     - Paste into the input field
 
 ### Daily Usage
 
-- **Default Display** - Menu bar shows usage percentage
-- **View Details** - Click menu bar icon or percentage
-- **Manual Refresh** - Click refresh button in detail window or use shortcut ⌘R
-- **Show Menu** - Click "…" icon in detail window or right-click menu bar icon
+- **Default Display** - Menu bar icon shows usage percentage
+- **View Details** - Click menu bar icon to view details
+- **Manual Refresh** - Click refresh button in detail window or use shortcut ⌘R (data also auto-refreshes when opening the main window)
+- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon to select account
 - **Keyboard Shortcuts**
   - ⌘R - Manual refresh data
   - ⌘, - Open General Settings
@@ -228,8 +232,8 @@ open Usage4Claude.xcodeproj
 
 A: Session Keys expire periodically (usually weeks to months), need to re-obtain:
 1. Open Settings → Authentication
-2. Follow configuration guide to get new Session Key
-3. Paste new Session Key
+2. Click "Browser Login" to log in again (recommended), or manually re-obtain Session Key
+3. Done, monitoring will resume
 
 </details>
 
@@ -313,13 +317,14 @@ You can verify all of this by reviewing the source code on GitHub!
 
 A: **Yes, it works with all Claude platforms!**
 
-Since all Claude products (Web, Claude Code, Desktop App, Mobile App) share the same usage quota, Usage4Claude monitors your combined usage across all platforms.
+Since all Claude products (Web, Claude Code, Desktop App, Mobile App, Cowork) share the same usage quota, Usage4Claude monitors your combined usage across all platforms.
 
 Whether you're:
 - Coding in terminal with `claude code`
 - Chatting on claude.ai
 - Using the desktop app
 - Using mobile apps
+- Using Cowork agents
 
 You'll see your real-time total usage in the menu bar. No platform-specific configuration needed!
 
@@ -339,6 +344,27 @@ A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may a
 **Note:**
 - macOS Sonoma (14.0+) automatically hides infrequently used icons to "Control Center"
 - You can adjust menu bar icon display in "System Settings" → "Control Center"
+
+</details>
+
+<details>
+<summary><b>Q: How to manage multiple accounts?</b></summary>
+
+A: Usage4Claude supports multi-account and multi-organization management:
+- **Add Account** - Click add button in Settings → Authentication, via browser login or manual input
+- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon, select the account to switch to
+- **Edit Alias** - Set easily recognizable aliases for each account
+- **Delete Account** - Swipe left or use edit mode to remove unwanted accounts
+
+</details>
+
+<details>
+<summary><b>Q: How to enable usage notifications?</b></summary>
+
+A: Toggle usage notifications in Settings → General:
+- **Usage Warning** - System notification when usage reaches 90%
+- **Reset Notification** - Notification when quota resets
+- macOS notification permission required on first enable
 
 </details>
 
@@ -390,36 +416,29 @@ Built with modern macOS native technologies:
 - [x] Optimized welcome flow
 - [x] Monochrome theme icon display
 - [x] Korean language support
-
-### Short-term Plans
-1. **Developer Experience**
-    - 🚧 GitHub Actions check online version
+- [x] GitHub Actions check online version
+- [x] Appearance settings (system/light/dark)
+- [x] Built-in browser auto-authentication
+- [x] Automatic credential configuration
+- [x] Usage notifications
+- [x] Multi-account management
+- [x] Unified time format settings
+- [x] Settings interface dark mode adaptation
 
 ### Mid-term Plans
-2. **Display Optimization**
-
-- 🚧 Settings interface dark mode adaptation
-
-3. **Feature Addition**
-    - Usage notifications
+1. **Feature Addition**
     - More language localizations
 
 ### Long-term Vision
-4. **Auto Setup**
+2. **More Display Methods**
+   - Desktop widgets
+   - Browser extension icon usage display
 
-- Browser extension for auto-authentication
-- Automatic credential configuration
-
-5. **More Display Methods**
-
-- Desktop widgets
-- Browser extension icon usage display
-
-6. **Data Analysis**
+3. **Data Analysis**
    - Usage history records
    - Trend charts
 
-7. **Multi-platform Support**
+4. **Multi-platform Support**
    - iOS / iPadOS version
    - Apple Watch version
    - Windows version

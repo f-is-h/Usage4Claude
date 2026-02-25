@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-02-25
+
+### Added
+- **Built-in browser login**: Embedded WKWebView for in-app Claude sign-in
+  - Auto-detect sessionKey cookie and validate via API to create account
+  - Non-persistent WebView data store for clean session isolation
+  - Safari UA and domain whitelist for Cloudflare compatibility
+  - Floating login window with progress bar and status indicators
+  - Browser login entry points in AuthSettings and WelcomeView
+  - Manual SessionKey input preserved as fallback option
+- **Appearance settings**: System / light / dark appearance modes for all UI
+windows
+  - Apply NSApp.appearance for settings window and welcome window
+  - Set popover.appearance explicitly on each open
+  - Listen for AppleInterfaceThemeChangedNotification to sync "follow system"
+mode
+  - Fix isDarkMode to read system AppleInterfaceStyle directly
+- **Usage notification system**: Native macOS notifications for usage
+monitoring
+  - Warning notification when usage crosses 90%
+  - Reset notification when quota resets (percentage drop or resetsAt change)
+  - Each limit type (5-hour, 7-day, opus, sonnet, extra) tracked independently
+  - Notification toggle in general settings
+
+### Fixed
+- **Potential background timer stall**: Fix an issue where macOS could suspend
+  background refresh timers, causing data to stop updating
+- **TimerManager race condition**: Use synchronous barrier dispatch for timer
+invalidation
+- **SettingCard dark mode**: Fix hardcoded Color.black to Color.primary for
+proper dark mode adaptation
+
+### Changed
+- **General settings layout**: Reorder settings cards by importance (display
+settings at top, launch at login at bottom)
+
 ## [2.1.1] - 2026-02-09
 
 ### Improved
@@ -385,6 +421,7 @@ Key, Organization ID)
 
 ---
 
+[2.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.5.0
 [2.1.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.1
 [2.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.0
 [2.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.0.0

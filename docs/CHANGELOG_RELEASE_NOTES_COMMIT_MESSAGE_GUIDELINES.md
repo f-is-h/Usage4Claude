@@ -2,21 +2,20 @@
 
 ## 注意事项
 以下注意事项适用于CHANGELOG，RELEASE NOTES和Commit Message的生成
-- 如果一个功能是新增的（Added），那么对这个新功能的所有修改、调整、优化、bug修复都应该被视为该新功能开发过程的一部分，而不应该单独列在 Improved 或 Fixed 部分
+- 如果一个功能是新增的（Added），那么对这个新功能的所有修改、调整、优化、bug修复都应该被视为该新功能的一部分，所以不应该单独在 Improved 或 Fixed 部分列出
+- 生成英文内容的同时，请给出中文翻译
+- 简洁不赘述
+- 每个变更点使用一条说明文字
+- 不同变更点只出现一次
 
 
 
 ## CHANGELOG
 
 参照项目根目录下 CHANGELOG.md 文件，编写最新版本的 CHANGELOG 说明。
-提醒需要更新最下方处链接，如 [1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0
+输出后提醒需要更新最下方处链接，如 [1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0
 
 ## RELEASE NOTES
-
-**要求**: 
-- 简洁不赘述
-- 每个变更点使用一条说明文字
-- 不同变更点只出现一次
 
 **示例**:
 
