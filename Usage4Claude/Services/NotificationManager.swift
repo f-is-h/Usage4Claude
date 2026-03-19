@@ -22,6 +22,9 @@ class NotificationManager {
     /// 用量警告阈值（90%）
     private let warningThreshold: Double = 90.0
 
+    /// 7天限制的早期警告阈值（75%）
+    private let sevenDayEarlyWarningThreshold: Double = 75.0
+
     /// 重置检测阈值：百分比骤降超过此值视为重置
     private let resetDropThreshold: Double = 30.0
 
@@ -113,13 +116,24 @@ class NotificationManager {
         ) {
             sendResetNotification(limitType: type)
             notifiedWarnings.removeValue(forKey: type.rawValue)
+            notifiedWarnings.removeValue(forKey: "\(type.rawValue)_75")
             return
         }
 
-        // 检测是否跨越 90% 阈值
         let previousPct = previous ?? 0
-        let alreadyNotified = notifiedWarnings[type.rawValue] ?? false
 
+        // 7天限制额外检查 75% 阈值
+        if type == .sevenDay {
+            let earlyKey = "\(type.rawValue)_75"
+            let alreadyNotifiedEarly = notifiedWarnings[earlyKey] ?? false
+            if !alreadyNotifiedEarly && previousPct < sevenDayEarlyWarningThreshold && currentPct >= sevenDayEarlyWarningThreshold {
+                sendUsageWarning(limitType: type, percentage: currentPct)
+                notifiedWarnings[earlyKey] = true
+            }
+        }
+
+        // 检测是否跨越 90% 阈值
+        let alreadyNotified = notifiedWarnings[type.rawValue] ?? false
         if !alreadyNotified && previousPct < warningThreshold && currentPct >= warningThreshold {
             sendUsageWarning(limitType: type, percentage: currentPct)
             notifiedWarnings[type.rawValue] = true
