@@ -197,36 +197,23 @@ extension SharedUsageData {
     }
 }
 
-// MARK: - File-based Storage (Local Development without App Groups)
+// MARK: - App Group Storage
 
 extension SharedUsageData {
-    private static let fileName = "SharedUsageData.json"
+    private static let userDefaultsKey = "SharedUsageData"
 
-    /// Get shared storage URL accessible by both app and widget
-    /// Uses a file in the user's Application Support directory
-    private static var storageURL: URL? {
-        // Use a shared location in user's home directory
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser
-        let sharedDir = homeDir.appendingPathComponent(".Usage4Claude")
-
-        // Create directory if needed
-        try? FileManager.default.createDirectory(at: sharedDir, withIntermediateDirectories: true)
-
-        return sharedDir.appendingPathComponent(fileName)
-    }
-
-    /// Save to shared file
+    /// Save to App Group UserDefaults
     func save() {
-        guard let url = Self.storageURL else { return }
+        guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else { return }
         if let encoded = try? JSONEncoder().encode(self) {
-            try? encoded.write(to: url)
+            defaults.set(encoded, forKey: Self.userDefaultsKey)
         }
     }
 
-    /// Load from shared file
+    /// Load from App Group UserDefaults
     static func load() -> SharedUsageData? {
-        guard let url = storageURL,
-              let data = try? Data(contentsOf: url),
+        guard let defaults = UserDefaults(suiteName: appGroupIdentifier),
+              let data = defaults.data(forKey: userDefaultsKey),
               let decoded = try? JSONDecoder().decode(SharedUsageData.self, from: data) else {
             return nil
         }

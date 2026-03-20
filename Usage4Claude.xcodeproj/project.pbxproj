@@ -7,29 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		WIDGET001 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WIDGET000 /* WidgetKit.framework */; };
-		WIDGET002 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WIDGET003 /* SwiftUI.framework */; };
-		WIDGET004 /* Usage4ClaudeWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WIDGETPROD /* Usage4ClaudeWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		851F88B1F6CCE36B8296DBF6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 334DEEC8C0AF87D7AE76764D /* WidgetKit.framework */; };
+		554B23CF9491AD6219F536A2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A87739911B7B81D7B91F6F3 /* SwiftUI.framework */; };
+		E22FCD122AD18CF56501A4A2 /* Usage4ClaudeWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 068039FD2F82B5A332FAC8C7 /* Usage4ClaudeWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		WIDGETPROXY /* PBXContainerItemProxy */ = {
+		776710D32DDD1B75B1513839 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8873E4C72E9F61C700ACFF5C /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = WIDGETTARGET;
+			remoteGlobalIDString = AC785F8C97E63874BBA3DA5A;
 			remoteInfo = Usage4ClaudeWidgetExtension;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		WIDGETEMBED /* Embed Foundation Extensions */ = {
+		EDF27352ADEFCA2E8F4DD6F3 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				WIDGET004 /* Usage4ClaudeWidgetExtension.appex in Embed Foundation Extensions */,
+				E22FCD122AD18CF56501A4A2 /* Usage4ClaudeWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -38,9 +38,9 @@
 
 /* Begin PBXFileReference section */
 		8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Usage4Claude.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		WIDGET000 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		WIDGET003 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		WIDGETPROD /* Usage4ClaudeWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Usage4ClaudeWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		334DEEC8C0AF87D7AE76764D /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		7A87739911B7B81D7B91F6F3 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		068039FD2F82B5A332FAC8C7 /* Usage4ClaudeWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Usage4ClaudeWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -49,7 +49,7 @@
 			path = Usage4Claude;
 			sourceTree = "<group>";
 		};
-		WIDGETGRP /* Usage4ClaudeWidget */ = {
+		E13350EACE2EC0906F5703CB /* Usage4ClaudeWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Usage4ClaudeWidget;
 			sourceTree = "<group>";
@@ -64,12 +64,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		WIDGETFWK /* Frameworks */ = {
+		C7DFE2691DD0776179DE5342 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				WIDGET002 /* SwiftUI.framework in Frameworks */,
-				WIDGET001 /* WidgetKit.framework in Frameworks */,
+				554B23CF9491AD6219F536A2 /* SwiftUI.framework in Frameworks */,
+				851F88B1F6CCE36B8296DBF6 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,8 +80,8 @@
 			isa = PBXGroup;
 			children = (
 				8873E4D12E9F61C700ACFF5C /* Usage4Claude */,
-				WIDGETGRP /* Usage4ClaudeWidget */,
-				FWKGROUP /* Frameworks */,
+				E13350EACE2EC0906F5703CB /* Usage4ClaudeWidget */,
+				857E8F82DC96DD5A2D5BF4DC /* Frameworks */,
 				8873E4D02E9F61C700ACFF5C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,16 +90,16 @@
 			isa = PBXGroup;
 			children = (
 				8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */,
-				WIDGETPROD /* Usage4ClaudeWidgetExtension.appex */,
+				068039FD2F82B5A332FAC8C7 /* Usage4ClaudeWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		FWKGROUP /* Frameworks */ = {
+		857E8F82DC96DD5A2D5BF4DC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				WIDGET000 /* WidgetKit.framework */,
-				WIDGET003 /* SwiftUI.framework */,
+				334DEEC8C0AF87D7AE76764D /* WidgetKit.framework */,
+				7A87739911B7B81D7B91F6F3 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -114,12 +114,12 @@
 				8873E4CB2E9F61C700ACFF5C /* Sources */,
 				8873E4CC2E9F61C700ACFF5C /* Frameworks */,
 				8873E4CD2E9F61C700ACFF5C /* Resources */,
-				WIDGETEMBED /* Embed Foundation Extensions */,
+				EDF27352ADEFCA2E8F4DD6F3 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				WIDGETDEP /* PBXTargetDependency */,
+				7B5534E8B7E893AFDAAC2865 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8873E4D12E9F61C700ACFF5C /* Usage4Claude */,
@@ -131,26 +131,26 @@
 			productReference = 8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */;
 			productType = "com.apple.product-type.application";
 		};
-		WIDGETTARGET /* Usage4ClaudeWidgetExtension */ = {
+		AC785F8C97E63874BBA3DA5A /* Usage4ClaudeWidgetExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = WIDGETCFGLIST /* Build configuration list for PBXNativeTarget "Usage4ClaudeWidgetExtension" */;
+			buildConfigurationList = 33E59AEB0BA46DD3E4735F70 /* Build configuration list for PBXNativeTarget "Usage4ClaudeWidgetExtension" */;
 			buildPhases = (
-				WIDGETSRC /* Sources */,
-				WIDGETFWK /* Frameworks */,
-				WIDGETRES /* Resources */,
+				17F20B7601A9B790253FDF5D /* Sources */,
+				C7DFE2691DD0776179DE5342 /* Frameworks */,
+				B4698622C34BA37D25D24614 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				WIDGETGRP /* Usage4ClaudeWidget */,
+				E13350EACE2EC0906F5703CB /* Usage4ClaudeWidget */,
 			);
 			name = Usage4ClaudeWidgetExtension;
 			packageProductDependencies = (
 			);
 			productName = Usage4ClaudeWidgetExtension;
-			productReference = WIDGETPROD /* Usage4ClaudeWidgetExtension.appex */;
+			productReference = 068039FD2F82B5A332FAC8C7 /* Usage4ClaudeWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -167,7 +167,7 @@
 						CreatedOnToolsVersion = 26.0.1;
 						LastSwiftMigration = 2600;
 					};
-					WIDGETTARGET = {
+					AC785F8C97E63874BBA3DA5A = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -191,7 +191,7 @@
 			projectRoot = "";
 			targets = (
 				8873E4CE2E9F61C700ACFF5C /* Usage4Claude */,
-				WIDGETTARGET /* Usage4ClaudeWidgetExtension */,
+				AC785F8C97E63874BBA3DA5A /* Usage4ClaudeWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -204,7 +204,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		WIDGETRES /* Resources */ = {
+		B4698622C34BA37D25D24614 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -221,7 +221,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		WIDGETSRC /* Sources */ = {
+		17F20B7601A9B790253FDF5D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -231,10 +231,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		WIDGETDEP /* PBXTargetDependency */ = {
+		7B5534E8B7E893AFDAAC2865 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = WIDGETTARGET /* Usage4ClaudeWidgetExtension */;
-			targetProxy = WIDGETPROXY /* PBXContainerItemProxy */;
+			target = AC785F8C97E63874BBA3DA5A /* Usage4ClaudeWidgetExtension */;
+			targetProxy = 776710D32DDD1B75B1513839 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -372,14 +372,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Usage4Claude/Usage4Claude.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Usage4Claude-CodeSigning";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Usage4Claude-CodeSigning";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
@@ -400,7 +400,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = xyz.fi5h.Usage4Claude;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -424,14 +424,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Usage4Claude/Usage4Claude.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Usage4Claude-CodeSigning";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Usage4Claude-CodeSigning";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
@@ -452,7 +452,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = xyz.fi5h.Usage4Claude;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -468,20 +468,20 @@
 			};
 			name = Release;
 		};
-		WIDGETCFGDEBUG /* Debug */ = {
+		41C5C227479EA406FC751007 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Usage4ClaudeWidget/Usage4ClaudeWidget.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Usage4Claude-CodeSigning";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Usage4Claude-CodeSigning";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "";
@@ -508,20 +508,20 @@
 			};
 			name = Debug;
 		};
-		WIDGETCFGRELEASE /* Release */ = {
+		EEFAEB934F1F424994C35C21 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Usage4ClaudeWidget/Usage4ClaudeWidget.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Usage4Claude-CodeSigning";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Usage4Claude-CodeSigning";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "";
@@ -568,11 +568,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		WIDGETCFGLIST /* Build configuration list for PBXNativeTarget "Usage4ClaudeWidgetExtension" */ = {
+		33E59AEB0BA46DD3E4735F70 /* Build configuration list for PBXNativeTarget "Usage4ClaudeWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				WIDGETCFGDEBUG /* Debug */,
-				WIDGETCFGRELEASE /* Release */,
+				41C5C227479EA406FC751007 /* Debug */,
+				EEFAEB934F1F424994C35C21 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
