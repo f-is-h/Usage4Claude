@@ -610,37 +610,53 @@ nonisolated struct UsageResponse: Codable, Sendable {
 /// Extra Usage API 响应模型
 /// 用于解析 /api/organizations/{id}/overage_spend_limit 接口返回的数据
 nonisolated struct ExtraUsageResponse: Codable, Sendable {
-    /// 类型标识
-    let type: String
-    /// 货币单位（如 "usd"）
-    let spend_limit_currency: String
-    /// 限额（单位：分）
-    let spend_limit_amount_cents: Int?
+    /// 限制类型（如 "organization"）
+    let limit_type: String?
+    /// 是否启用
+    let is_enabled: Bool?
+    /// 每月额度上限（单位：分）
+    let monthly_credit_limit: Int?
+    /// 货币单位（如 "EUR", "USD"）
+    let currency: String?
     /// 已使用金额（单位：分）
+    let used_credits: Int?
+    /// 信用额度耗尽
+    let out_of_credits: Bool?
+
+    // MARK: - Legacy fields (backwards compatibility)
+    let type: String?
+    let spend_limit_currency: String?
+    let spend_limit_amount_cents: Int?
     let balance_cents: Int?
 
     /// 转换为 ExtraUsageData
     /// - Returns: 转换后的 ExtraUsageData，如果数据无效则返回 nil
     func toExtraUsageData() -> ExtraUsageData? {
-        // 如果没有限额，说明 Extra Usage 未启用
-        guard let limitCents = spend_limit_amount_cents, limitCents > 0 else {
+        // 优先使用新 API 字段，回退到旧字段
+        let resolvedCurrency = (currency ?? spend_limit_currency ?? "USD").uppercased()
+        let limitCents = monthly_credit_limit ?? spend_limit_amount_cents
+        let usedCents = used_credits ?? balance_cents
+
+        // 使用 is_enabled 字段判断，回退到限额检查
+        let enabled = is_enabled ?? (limitCents.map { $0 > 0 } ?? false)
+
+        guard enabled, let limitCents = limitCents, limitCents > 0 else {
             return ExtraUsageData(
                 enabled: false,
                 used: nil,
                 limit: nil,
-                currency: spend_limit_currency.uppercased()
+                currency: resolvedCurrency
             )
         }
 
-        // 转换为美元（或其他货币单位）
         let limit = Double(limitCents) / 100.0
-        let used = balance_cents.map { Double($0) / 100.0 } ?? 0.0
+        let used = usedCents.map { Double($0) / 100.0 } ?? 0.0
 
         return ExtraUsageData(
             enabled: true,
             used: used,
             limit: limit,
-            currency: spend_limit_currency.uppercased()
+            currency: resolvedCurrency
         )
     }
 }
