@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-03-24
+
+### Added
+- **Percentage display in detail view mini icons**: Each usage row in the
+  detail popover now shows the current percentage number inside the limit
+  type icon, consistent with menu bar icon style
+- **75% early warning for 7-day usage**: Warning indicator when 7-day
+  usage reaches 75% threshold(Align with official behavior)
+
+### Fixed
+- **ExtraUsage API schema mismatch**: Update ExtraUsageResponse model to
+  match current API response format
+- **Time display mode not persisted**: Remaining/reset time toggle
+  preference now persists across popover sessions
+- **Percentage text overflow at 100%**: Fix gauge icon text overflowing
+  the shape boundary at full usage
+
 ## [2.5.0] - 2026-02-25
 
 ### Added
@@ -421,6 +438,7 @@ Key, Organization ID)
 
 ---
 
+[2.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.0
 [2.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.5.0
 [2.1.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.1
 [2.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.0
