@@ -1,0 +1,403 @@
+/*
+  Localizable.strings (French)
+  Usage4Claude
+
+  French localization contributed via GitHub.
+  Copyright © 2025 f-is-h. All rights reserved.
+*/
+
+// MARK: - Menu Items
+"menu.general_settings" = "Réglages généraux";
+"menu.auth_settings" = "Réglages d'authentification";
+"menu.check_updates" = "Vérifier les mises à jour";
+"menu.about" = "À propos";
+"menu.web_usage" = "Voir l'utilisation de Claude";
+"menu.coffee" = "Offrir un café";
+"menu.github_sponsor" = "Sponsor GitHub";
+"menu.quit" = "Quitter Usage4Claude";
+"menu.account" = "Compte";
+"menu.account_prefix" = "Compte :";
+
+// MARK: - Usage Detail View
+"usage.title" = "Utilisation de Claude";
+"usage.not_started" = "S'affichera après le début de l'utilisation";
+"usage.reset_in" = "Réinitialisation dans";
+"usage.remaining" = "Restant";
+"usage.loading" = "Chargement…";
+"usage.not_configured" = "Authentification non configurée";
+"usage.go_to_settings" = "Aller aux réglages";
+"usage.reset_time" = "Heure de réinitialisation";
+"usage.used" = "Utilisé";
+"usage.five_hour_limit" = "Limite 5 heures";
+"usage.seven_day_limit" = "Limite 7 jours";
+"usage.five_hour_limit_short" = "5h";
+"usage.seven_day_limit_short" = "7j";
+"usage.reset_date" = "Date de réinitialisation";
+"usage.refresh" = "Actualiser";
+"usage.refresh_cooldown" = "Veuillez patienter un instant";
+"usage.run_diagnostic" = "Lancer le diagnostic";
+
+// MARK: - Settings - Tabs
+"settings.tab.general" = "Général";
+"settings.tab.auth" = "Authentification";
+"settings.tab.about" = "À propos";
+
+// MARK: - Settings - General
+"settings.general.launch_section" = "Lancement au démarrage";
+"settings.general.launch_at_login" = "Démarrer automatiquement à la connexion";
+"settings.general.launch_hint" = "Lorsque cette option est activée, l'application se lancera automatiquement à la connexion au système";
+"settings.general.display_section" = "Réglages d'affichage";
+"settings.general.menubar_icon" = "Icône de la barre des menus";
+"settings.general.menubar_hint" = "Choisir ce qui s'affiche dans la barre des menus";
+"settings.general.menubar_theme" = "Thème de la barre des menus";
+"settings.general.display_content" = "Contenu affiché";
+"settings.general.monochrome_no_icon_hint" = "L'affichage de l'icône n'est pas disponible avec le thème monochrome";
+"settings.general.refresh_section" = "Réglages d'actualisation";
+"settings.general.refresh_mode" = "Mode d'actualisation";
+"settings.general.refresh_interval" = "Intervalle d'actualisation fixe";
+"settings.general.refresh_hint_smart" = "Ajuste automatiquement la fréquence d'actualisation selon l'utilisation (1 min en activité, jusqu'à 10 min au repos)";
+"settings.general.refresh_hint_fixed" = "Actualiser les données à intervalles fixes";
+"settings.general.language_section" = "Réglages de langue";
+"settings.general.interface_language" = "Langue de l'interface";
+"settings.general.language_hint" = "Changer la langue d'affichage de l'interface";
+"settings.general.reset_button" = "Réinitialiser par défaut";
+"icon_style.color_translucent" = "Couleur translucide";
+"icon_style.color_with_background" = "Couleur avec fond";
+"icon_style.monochrome" = "Monochrome";
+"icon_style.color_translucent_desc" = "Anneaux colorés sur fond transparent, adapté à la plupart des styles de barre des menus";
+"icon_style.color_with_background_desc" = "Anneaux colorés sur fond blanc translucide, idéal lorsque le mode translucide rend mal sur les fonds sombres";
+"icon_style.monochrome_desc" = "S'adapte automatiquement au style de la barre des menus, sobre et élégant";
+
+// MARK: - Settings - Authentication
+"settings.auth.how_to_title" = "Comment obtenir les informations d'authentification";
+"settings.auth.step1" = "1. Rendez-vous sur claude.ai dans votre navigateur et connectez-vous";
+"settings.auth.step2" = "2. Ouvrez les outils de développement (F12 ou Cmd+Option+I)";
+"settings.auth.step3" = "3. Allez dans l'onglet Réseau (Network)";
+"settings.auth.step4" = "4. Rechargez la page et trouvez la requête usage";
+"settings.auth.step5" = "5. Trouvez sessionKey dans les Cookies sous Headers";
+"settings.auth.step6" = "6. Copiez la valeur de sessionKey et collez-la ci-dessus";
+"settings.auth.open_browser" = "Ouvrir la page d'utilisation de Claude dans le navigateur";
+"settings.auth.session_key_label" = "Clé de session";
+"settings.auth.session_key_placeholder" = "Collez la clé de session";
+"settings.auth.session_key_hint" = "Longue chaîne commençant par sk-ant-sid01-";
+"settings.auth.configured" = "Authentification configurée";
+"settings.auth.not_configured" = "Veuillez saisir la clé de session";
+"settings.auth.credentials_title" = "Identifiants d'authentification";
+"settings.auth.ready_to_use" = "Prêt à utiliser l'application";
+"settings.auth.need_credentials" = "Veuillez saisir la clé de session";
+"settings.auth.show_password" = "Afficher";
+"settings.auth.hide_password" = "Masquer";
+
+// MARK: - Settings - About
+"settings.about.version" = "Version %@";
+"settings.about.description" = "Suivre la limite d'utilisation de 5 heures de Claude AI";
+"settings.about.developer" = "Développeur";
+"settings.about.license" = "Licence";
+"settings.about.license_value" = "Licence MIT";
+"settings.about.github" = "Visiter le dépôt GitHub";
+"settings.about.coffee" = "Offrir un café";
+"settings.about.github_sponsor" = "Sponsor GitHub";
+"settings.about.copyright" = "© 2025 Tous droits réservés";
+
+// MARK: - Welcome View
+"welcome.title" = "Bienvenue dans Usage4Claude";
+"welcome.subtitle" = "Veuillez configurer vos informations d'authentification avant de commencer";
+"welcome.setup_button" = "Configurer l'authentification";
+"welcome.later_button" = "Configurer plus tard";
+
+// MARK: - Update Checker
+"update.new_version_title" = "Nouvelle version disponible";
+"update.latest_version" = "Dernière version";
+"update.current_version" = "Version actuelle";
+"update.view_details_hint" = "Cliquez sur [Voir les détails] pour consulter le contenu complet de la mise à jour";
+"update.view_release_page" = "Voir le contenu complet de la mise à jour sur la page Release";
+"update.download_button" = "Télécharger la mise à jour";
+"update.remind_later_button" = "Rappeler plus tard";
+"update.view_details_button" = "Voir les détails";
+"update.up_to_date_title" = "À jour";
+"update.up_to_date_message" = "La version actuelle %@ est à jour.";
+"update.ok_button" = "OK";
+"update.check_failed_title" = "Échec de la vérification";
+"update.confirm_button" = "Confirmer";
+"update.error.invalid_url" = "URL invalide";
+"update.error.network" = "Erreur réseau. Veuillez vérifier votre connexion Internet.";
+"update.error.no_data" = "Impossible de récupérer les données";
+"update.error.parse_failed" = "Échec de l'analyse des informations de mise à jour.";
+
+// MARK: - Update Notification
+"update.notification.available" = "Nouvelle version disponible !";
+"update.notification.badge_menu" = "🎉 Nouvelle version disponible !";
+"update.notification.badge_short" = "🎉 Nouveau !";
+
+// MARK: - Icon Display Mode
+"display.percentage_only" = "Pourcentage uniquement";
+"display.icon_only" = "Icône uniquement";
+"display.both" = "Icône et pourcentage";
+"display.show_icon" = "Afficher l'icône";
+"display.show_percentage" = "Afficher le pourcentage";
+
+// MARK: - Refresh Interval
+"refresh.smart_mode" = "Fréquence intelligente";
+"refresh.fixed_mode" = "Fréquence fixe";
+"refresh.1_minute" = "1 minute";
+"refresh.3_minutes" = "3 minutes";
+"refresh.5_minutes" = "5 minutes";
+"refresh.10_minutes" = "10 minutes";
+
+// MARK: - Language Names
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "中文（简体）";
+"language.chinese_traditional" = "中文（繁體）";
+"language.korean" = "한국어";
+"language.french" = "Français";
+
+// MARK: - Window Titles
+"window.settings_title" = "Réglages Usage4Claude";
+"window.welcome_title" = "Bienvenue";
+
+// MARK: - Usage Data Formatting
+"usage_data.not_started_reset" = "L'heure de réinitialisation s'affichera après le début de l'utilisation";
+"usage_data.resetting_soon" = "Réinitialisation imminente";
+"usage_data.resets_in_hours" = "Environ %dh %dmin restantes";
+"usage_data.resets_in_minutes" = "Environ %dmin restantes";
+"usage_data.resets_in_days" = "Environ %dj %dh restantes";
+"usage_data.unknown" = "Inconnu";
+"usage_data.today" = "Aujourd'hui";
+"usage_data.tomorrow" = "Demain";
+
+// MARK: - Error Messages
+"error.invalid_url" = "URL invalide";
+"error.no_data" = "Aucune donnée reçue";
+"error.session_expired" = "Session expirée, veuillez reconfigurer dans les réglages";
+"error.cloudflare_blocked" = "Requête bloquée par le système de sécurité. Veuillez visiter claude.ai dans votre navigateur pour confirmer que vous n'êtes pas un robot, puis réessayez.";
+"error.no_credentials" = "Veuillez d'abord configurer les informations d'authentification dans les réglages";
+"error.network_failed" = "Échec de la requête réseau. Veuillez vérifier votre connexion Internet.";
+"error.decoding_failed" = "Échec de l'analyse des données de réponse. Veuillez vérifier si vos identifiants sont corrects.";
+"error.no_organizations_found" = "Aucune organisation trouvée";
+"error.unauthorized" = "Échec de l'authentification, veuillez vérifier vos identifiants";
+"error.rate_limited" = "Trop de requêtes, veuillez réessayer plus tard";
+
+// MARK: - Launch at Login
+"launch.status.enabled" = "Activé";
+"launch.status.disabled" = "Désactivé";
+"launch.status.requires_approval" = "En attente d'autorisation";
+"launch.status.not_found" = "Introuvable";
+"launch.error.title" = "Erreur de lancement au démarrage";
+"launch.error.enable" = "Impossible d'activer le lancement au démarrage";
+"launch.error.disable" = "Impossible de désactiver le lancement au démarrage";
+
+// MARK: - Diagnostics
+"diagnostic.section_title" = "Diagnostic de connexion";
+"diagnostic.section_description" = "Testez votre connexion à l'API Claude et diagnostiquez les problèmes. Toutes les informations sensibles sont automatiquement masquées dans les rapports.";
+"diagnostic.test_button" = "Tester la connexion";
+"diagnostic.view_details_button" = "Voir les détails";
+"diagnostic.export_button" = "Exporter le rapport";
+"diagnostic.testing_connection" = "Test de connexion en cours…";
+"diagnostic.test_completed" = "Test terminé";
+"diagnostic.test_success" = "Test de connexion réussi";
+"diagnostic.test_failed" = "Échec du test de connexion";
+"diagnostic.result_success" = "Connexion réussie";
+"diagnostic.result_failed" = "Échec de la connexion";
+"diagnostic.http_status" = "Statut HTTP";
+"diagnostic.response_time" = "Temps de réponse";
+"diagnostic.response_type" = "Type de réponse";
+"diagnostic.cloudflare_detected" = "Défi Cloudflare détecté";
+"diagnostic.diagnosis" = "Diagnostic";
+"diagnostic.suggestions" = "Suggestions";
+"diagnostic.privacy_notice" = "Toutes les données sensibles sont automatiquement masquées pour la confidentialité";
+"diagnostic.detailed_report_title" = "Rapport de diagnostic détaillé";
+"diagnostic.no_report_available" = "Aucun rapport disponible. Veuillez d'abord lancer un test.";
+"diagnostic.copy_to_clipboard" = "Copier dans le presse-papiers";
+"diagnostic.export_title" = "Exporter le rapport de diagnostic";
+"diagnostic.export_message" = "Ce rapport ne contient aucune information sensible et peut être partagé en toute sécurité.";
+"diagnostic.export_success_title" = "Export réussi";
+"diagnostic.export_success_message" = "Le rapport de diagnostic a été enregistré dans :";
+"diagnostic.export_error_title" = "Échec de l'export";
+
+// Diagnosis messages
+"diagnostic.diagnosis_success" = "La connexion fonctionne correctement. L'API a renvoyé des données d'utilisation valides.";
+"diagnostic.diagnosis_cloudflare" = "La requête a été bloquée par le système de sécurité Cloudflare. Cela peut être dû à la réputation de l'IP ou à la configuration réseau.";
+"diagnostic.diagnosis_decoding" = "Le serveur a renvoyé des données mais elles n'ont pas pu être analysées. Cela signifie généralement que les identifiants sont incorrects ou ne correspondent pas.";
+"diagnostic.diagnosis_network" = "Échec de la connexion réseau. Veuillez vérifier votre connexion Internet.";
+"diagnostic.diagnosis_no_credentials" = "Les identifiants d'authentification ne sont pas configurés.";
+"diagnostic.diagnosis_invalid_url" = "Format de l'identifiant d'organisation invalide.";
+"diagnostic.diagnosis_unknown" = "Une erreur inconnue s'est produite. Veuillez exporter et partager ce rapport avec les développeurs.";
+
+// Suggestion messages
+"diagnostic.suggestion_success" = "Tout fonctionne correctement. Aucune action requise.";
+"diagnostic.suggestion_visit_browser" = "Rendez-vous sur claude.ai dans votre navigateur et complétez les défis de sécurité";
+"diagnostic.suggestion_wait_and_retry" = "Attendez 5 à 10 minutes et réessayez";
+"diagnostic.suggestion_check_vpn" = "Vérifiez si un VPN ou un proxy affecte la connexion";
+"diagnostic.suggestion_use_smart_mode" = "Utilisez le mode d'actualisation intelligent pour réduire la fréquence des requêtes";
+"diagnostic.suggestion_verify_credentials" = "Vérifiez que l'identifiant d'organisation et la clé de session sont corrects";
+"diagnostic.suggestion_update_session_key" = "Votre clé de session a peut-être expiré. Veuillez la mettre à jour depuis le navigateur";
+"diagnostic.suggestion_check_browser" = "Vérifiez que vous pouvez accéder à claude.ai/settings/usage dans le navigateur";
+"diagnostic.suggestion_check_internet" = "Vérifiez votre connexion Internet";
+"diagnostic.suggestion_check_firewall" = "Vérifiez les réglages du pare-feu ou de l'antivirus";
+"diagnostic.suggestion_retry_later" = "Réessayez plus tard";
+"diagnostic.suggestion_configure_auth" = "Veuillez configurer l'identifiant d'organisation et la clé de session dans les champs ci-dessus";
+"diagnostic.suggestion_check_org_id" = "Vérifiez que le format de l'identifiant d'organisation est correct (doit être un UUID)";
+"diagnostic.suggestion_export_and_share" = "Exportez ce rapport de diagnostic et partagez-le sur GitHub Issues";
+"diagnostic.suggestion_contact_support" = "Contactez le développeur pour obtenir de l'aide sur github.com/f-is-h/Usage4Claude/issues";
+"diagnostic.open_log_folder" = "Ouvrir le dossier des journaux";
+
+// MARK: - Limit Types (v2.0.0)
+"five_hour_limit" = "Limite 5 heures";
+"seven_day_limit" = "Limite 7 jours";
+"opus_weekly_limit" = "Limite Opus 7j";
+"sonnet_weekly_limit" = "Limite Sonnet 7j";
+"extra_usage" = "Utilisation supplémentaire";
+
+// MARK: - Display Options (v2.0.0)
+"display_options" = "Options d'affichage";
+"smart_display" = "Affichage intelligent";
+"smart_display_description" = "Afficher automatiquement tous les types de limites avec des données";
+"custom_display" = "Affichage personnalisé";
+"custom_display_description" = "Sélectionner manuellement les limites à afficher";
+"display_mode_label" = "Mode d'affichage";
+"select_limit_types" = "Sélectionner les types de limites à afficher";
+"circular_icon_constraint" = "Au moins une icône circulaire (5 heures ou 7 jours) doit être sélectionnée";
+"colored_theme_unavailable" = "Les thèmes colorés ne sont disponibles qu'avec 1 à 2 icônes circulaires sans autre type";
+
+// MARK: - Theme Selection (v2.0.0)
+"theme_selection" = "Thème";
+"monochrome_theme" = "Thème monochrome";
+"colored_theme" = "Thème coloré";
+"colored_theme_unavailable_reason" = "Non disponible : uniquement avec 2 indicateurs circulaires ou moins";
+
+// MARK: - Credentials Configuration (v2.0.0)
+"credentials" = "Identifiants";
+"session_key_hint" = "Trouvez dans DevTools du navigateur → Application → Cookies → claude.ai";
+"session_key_help" = "Votre clé de session sera stockée de manière sécurisée dans le trousseau macOS";
+"session_key_required" = "La clé de session est requise";
+"fetching" = "Récupération…";
+"refetch" = "Récupérer à nouveau";
+"configuring" = "Configuration…";
+"credentials_saved" = "Identifiants enregistrés avec succès";
+"save" = "Enregistrer";
+"back" = "Retour";
+"continue" = "Continuer";
+
+// MARK: - Welcome Flow (v2.0.0)
+"welcome_credentials_title" = "Configurer l'accès à Claude";
+"welcome_credentials_subtitle" = "Saisissez votre clé de session — nous récupérerons automatiquement votre identifiant d'organisation";
+"welcome_display_title" = "Choisir les options d'affichage";
+"welcome_display_subtitle" = "Sélectionnez les limites d'utilisation à afficher dans la barre des menus";
+"preview" = "Aperçu";
+"welcome.skip" = "Passer";
+"welcome.finish" = "Terminer";
+"welcome.authentication_setup" = "Configuration de l'authentification";
+"welcome.session_key" = "Clé de session";
+"welcome.session_key_placeholder" = "Collez votre clé de session ici";
+"welcome.session_key_hint" = "Commence par sk-ant-sid01-…";
+"welcome.valid_format" = "Format valide";
+"welcome.invalid_format" = "La clé de session doit contenir entre 20 et 500 caractères";
+"welcome.select_limits" = "Sélectionner les limites";
+"welcome.smart_mode_recommended" = "Mode intelligent (recommandé)";
+"welcome.custom_selection" = "Sélection personnalisée";
+"welcome.display_title" = "Options d'affichage";
+"welcome.display_subtitle" = "Choisissez les types de limites à afficher";
+"welcome.preview" = "Aperçu";
+"welcome.back" = "Retour";
+"welcome.skip" = "Passer";
+"welcome.continue" = "Continuer";
+"welcome.finish" = "Terminer";
+"welcome.how_to_get_session_key" = "Comment obtenir la clé de session ?";
+"welcome.configuring" = "Configuration…";
+"welcome.fetch_org_id_failed" = "Impossible de récupérer l'identifiant d'organisation, veuillez réessayer dans les Réglages";
+"welcome.menubar_icon_not_visible" = "L'icône de la barre des menus n'est pas visible ?";
+"welcome.multi_account_hint" = "Besoin de plusieurs comptes ? Vous pourrez en ajouter d'autres dans les Réglages après la configuration.";
+
+// MARK: - Detail Window - Date/Time Formats (v2.0.0)
+"today" = "Aujourd'hui";
+"today_time" = "Aujourd'hui %@";
+"month_day" = "%d/%d";
+"extra_usage_format" = "%d $/%d $";
+
+// MARK: - Detail Window - Remaining Time (v2.0.0)
+"extra_usage_remaining" = "%@ $ restants";
+"remaining_days_hours" = "%d jours %d heures restants";
+"remaining_hours_minutes" = "%d heures %d minutes restantes";
+"remaining_minutes" = "%d minutes restantes";
+
+// MARK: - Settings Window (v2.0.0)
+"settings" = "Réglages";
+
+// MARK: - General (v2.0.0)
+"unknown" = "Inconnu";
+
+// MARK: - Usage Data - Compact Remaining Formats
+"usage_data.compact_resetting_soon" = "Bientôt";
+"usage_data.compact_remaining_minutes" = "%dmin";
+"usage_data.compact_remaining_hours" = "%dh %dmin";
+"usage_data.compact_remaining_days" = "%dj %dh";
+
+// MARK: - Extra Usage
+"extra_usage.not_enabled" = "Non activé";
+"extra_usage.usage_amount" = "%.0f $/%.0f $";
+"extra_usage.remaining_amount" = "%.0f $ restants";
+
+// MARK: - Loading Animation
+"loading_animation.rainbow" = "Dégradé arc-en-ciel";
+"loading_animation.dashed" = "Rotation en pointillés";
+"loading_animation.pulse" = "Effet de pulsation";
+"loading_animation.current" = "Animation de chargement : %@";
+
+// MARK: - Time Format
+"time_format.system" = "Suivre le système";
+"time_format.twelve_hour" = "12 heures (2:30 PM)";
+"time_format.twenty_four_hour" = "24 heures (14:30)";
+"settings.general.time_format_section" = "Format de l'heure";
+"settings.general.time_format_hint" = "Choisir le format d'affichage de l'heure dans l'application";
+"settings.general.time_format_preview" = "Aperçu";
+
+// MARK: - Appearance
+"appearance.system" = "Système";
+"appearance.light" = "Clair";
+"appearance.dark" = "Sombre";
+"settings.general.appearance_section" = "Apparence";
+"settings.general.appearance_hint" = "Choisir le thème de couleur de l'application, ou suivre les réglages système";
+
+// MARK: - Account Management (v2.1.0)
+"account.list_title" = "Comptes";
+"account.no_accounts" = "Aucun compte configuré. Ajoutez un compte pour commencer.";
+"account.add_account" = "Ajouter un compte";
+"account.add_new_account" = "Ajouter un nouveau compte";
+"account.current_account" = "Compte actuel";
+"account.alias" = "Alias";
+"account.alias_optional" = "Alias (facultatif)";
+"account.alias_placeholder" = "ex. Pro perso, Équipe travail";
+"account.clear_alias" = "Effacer l'alias";
+"account.organization_id" = "Identifiant d'organisation";
+"account.copy_org_id" = "Copier l'identifiant d'organisation";
+"account.delete_account" = "Supprimer ce compte";
+"account.delete_confirm_title" = "Supprimer le compte";
+"account.delete_confirm_message" = "Êtes-vous sûr de vouloir supprimer ce compte ? Cette action est irréversible.";
+"account.delete" = "Supprimer";
+"account.cancel" = "Annuler";
+"account.validate_and_add" = "Valider et ajouter";
+"account.multi_org_added" = "%d organisations trouvées. Des comptes ont été créés pour chacune. Vous pouvez définir des alias dans les détails du compte.";
+
+// MARK: - Usage Notifications
+"notification.section" = "Notifications";
+"notification.hint" = "Être notifié lorsque l'utilisation atteint un seuil ou est réinitialisée";
+"notification.enable" = "Activer les notifications d'utilisation";
+"notification.description" = "Recevoir une notification lorsqu'une limite atteint 90 %%, ou lorsque l'utilisation est réinitialisée.";
+"notification.warning_title" = "Avertissement d'utilisation";
+"notification.warning_body" = "%@ a atteint %d %% d'utilisation";
+"notification.reset_title" = "Réinitialisation de l'utilisation";
+"notification.reset_body" = "L'utilisation de %@ a été réinitialisée";
+
+// MARK: - Web Login (v2.2.0)
+"weblogin.window_title" = "Se connecter à Claude";
+"weblogin.browser_login" = "Connexion via le navigateur";
+"weblogin.browser_login_recommended" = "Se connecter via le navigateur (recommandé)";
+"weblogin.manual_input" = "Saisie manuelle";
+"weblogin.or_manual_input" = "ou saisir la clé de session manuellement";
+"weblogin.loading" = "Chargement de la page de connexion…";
+"weblogin.waiting_for_login" = "Veuillez vous connecter à votre compte Claude";
+"weblogin.validating" = "Vérification des identifiants…";
+"weblogin.success" = "Compte ajouté avec succès : %@";
+"weblogin.cloudflare_blocked" = "Si la page ne se charge pas, veuillez utiliser la saisie manuelle.";
+"weblogin.privacy_notice" = "Vos identifiants sont utilisés uniquement en local et stockés de manière sécurisée dans le trousseau système.";

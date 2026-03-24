@@ -150,6 +150,7 @@
 "language.english" = "English";
 "language.japanese" = "日本語";
 "language.korean" = "한국어";
+"language.french" = "Français";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 設定";

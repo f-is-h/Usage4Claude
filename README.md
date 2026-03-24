@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [한국어](docs/README.ko.md)
+[English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [한국어](docs/README.ko.md) | [Français](docs/README.fr.md)
 
 <div align="center">
 
@@ -66,6 +66,7 @@ All platforms share the same usage quota, monitored in one place!
   - 简体中文
   - 繁体中文
   - 한국어
+  - Français
   - More languages coming soon...
 
 ### 🔧 Convenient Features
