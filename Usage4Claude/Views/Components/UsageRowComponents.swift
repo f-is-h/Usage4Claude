@@ -10,35 +10,30 @@ import SwiftUI
 
 // MARK: - Mini Progress Icon Component
 
-/// 迷你进度环图标（与菜单栏图标样式一致）
+/// 迷你进度图标（带百分比数字和进度弧，与菜单栏图标风格一致）
 struct MiniProgressIcon: View {
     let type: LimitType
     let color: Color
-    let size: CGFloat = 14
+    let percentage: Double
+    let size: CGFloat = 22
 
     var body: some View {
         Canvas { context, canvasSize in
-            let lineWidth: CGFloat = 1.8
+            let lineWidth: CGFloat = 2.2
+            let rect = CGRect(origin: .zero, size: canvasSize)
+            let fullPath = IconShapePaths.pathForLimitType(type, in: rect)
 
-            // 绘制背景边框
-            context.stroke(
-                shapePath(in: CGRect(origin: .zero, size: canvasSize)),
-                with: .color(Color.gray.opacity(0.3)),
-                lineWidth: lineWidth
-            )
+            // 1. 形状边框（彩色）
+            context.stroke(fullPath, with: .color(color), lineWidth: lineWidth)
 
-            // 绘制满进度环（100%）
-            context.stroke(
-                shapePath(in: CGRect(origin: .zero, size: canvasSize)),
-                with: .color(color),
-                lineWidth: lineWidth
-            )
+            // 2. 百分比数字（居中）
+            let fontSize = percentage >= 100 ? canvasSize.width * 0.28 : canvasSize.width * 0.38
+            let text = Text("\(Int(percentage))")
+                .font(.system(size: fontSize, weight: .bold))
+                .foregroundColor(color)
+            context.draw(text, at: CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2))
         }
         .frame(width: size, height: size)
-    }
-
-    private func shapePath(in rect: CGRect) -> Path {
-        return IconShapePaths.pathForLimitType(type, in: rect)
     }
 }
 
@@ -51,9 +46,9 @@ struct UnifiedLimitRow: View {
     let showRemainingMode: Bool
 
     var body: some View {
-        HStack(spacing: 6) {
-            // 图标
-            MiniProgressIcon(type: type, color: iconColor)
+        HStack(spacing: 8) {
+            // 图标（含百分比数字和进度弧）
+            MiniProgressIcon(type: type, color: iconColor, percentage: percentageValue ?? 0)
 
             // 限制类型名称
             Text(limitName)
@@ -72,7 +67,7 @@ struct UnifiedLimitRow: View {
                     removal: .move(edge: .bottom).combined(with: .opacity)
                 ))
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 2)
         .padding(.horizontal, 12)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(8)
@@ -107,6 +102,16 @@ struct UnifiedLimitRow: View {
             return .blue  // 7天Sonnet用蓝色
         case .extraUsage:
             return .pink
+        }
+    }
+
+    private var percentageValue: Double? {
+        switch type {
+        case .fiveHour:   return data.fiveHour?.percentage
+        case .sevenDay:   return data.sevenDay?.percentage
+        case .opusWeekly: return data.opus?.percentage
+        case .sonnetWeekly: return data.sonnet?.percentage
+        case .extraUsage: return data.extraUsage?.percentage
         }
     }
 

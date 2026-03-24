@@ -15,104 +15,86 @@ struct IconShapePaths {
 
     // MARK: - SwiftUI Path Methods
 
-    /// 创建圆形路径
+    /// 创建圆形路径（从12点钟位置顺时针绘制，支持 trimmedPath 进度弧）
     /// - Parameter rect: 绘制区域
     /// - Returns: 圆形路径
     static func circlePath(in rect: CGRect) -> Path {
-        Path { path in
-            path.addEllipse(in: rect.insetBy(dx: 2, dy: 2))
+        let inset = rect.insetBy(dx: 3, dy: 3)
+        let center = CGPoint(x: inset.midX, y: inset.midY)
+        let radius = min(inset.width, inset.height) / 2
+        return Path { path in
+            // 从12点钟位置（-90°）顺时针绘制整圆
+            path.addArc(center: center, radius: radius,
+                        startAngle: .degrees(-90), endAngle: .degrees(270),
+                        clockwise: false)
         }
     }
 
-    /// 创建圆角正方形路径（Opus）
+    /// 创建圆角正方形路径（Opus，从顶部中点顺时针绘制，随 rect 动态缩放）
     /// - Parameter rect: 绘制区域
     /// - Returns: 圆角正方形路径
     static func roundedSquarePath(in rect: CGRect) -> Path {
-        Path { path in
-            let center = CGPoint(x: rect.midX, y: rect.midY)
-            let squareSize: CGFloat = 10
-            let customRect = CGRect(
-                x: center.x - squareSize / 2,
-                y: center.y - squareSize / 2,
-                width: squareSize,
-                height: squareSize
-            )
-            path.addRoundedRect(in: customRect, cornerSize: CGSize(width: 2, height: 2))
-        }
-    }
-
-    /// 创建右上角斜切的圆角正方形路径（Sonnet）
-    /// - Parameter rect: 绘制区域
-    /// - Returns: 斜切圆角正方形路径
-    static func chamferedSquarePath(in rect: CGRect) -> Path {
-        Path { path in
-            let center = CGPoint(x: rect.midX, y: rect.midY)
-            let squareSize: CGFloat = 10
-            let customRect = CGRect(
-                x: center.x - squareSize / 2,
-                y: center.y - squareSize / 2,
-                width: squareSize,
-                height: squareSize
-            )
-            let cornerRadius: CGFloat = 2.0
-            let cutSize: CGFloat = 2.5  // 右上角斜切大小
-
-            // 从左下角开始
-            path.move(to: CGPoint(x: customRect.minX, y: customRect.maxY - cornerRadius))
-
-            // 左下圆角
-            path.addArc(
-                center: CGPoint(x: customRect.minX + cornerRadius, y: customRect.maxY - cornerRadius),
-                radius: cornerRadius,
-                startAngle: .init(degrees: 180),
-                endAngle: .init(degrees: 90),
-                clockwise: true
-            )
-
-            // 底边到右下角
-            path.addLine(to: CGPoint(x: customRect.maxX - cornerRadius, y: customRect.maxY))
-
-            // 右下圆角
-            path.addArc(
-                center: CGPoint(x: customRect.maxX - cornerRadius, y: customRect.maxY - cornerRadius),
-                radius: cornerRadius,
-                startAngle: .init(degrees: 90),
-                endAngle: .init(degrees: 0),
-                clockwise: true
-            )
-
-            // 右边到斜切位置（向上到右上角斜切点）
-            path.addLine(to: CGPoint(x: customRect.maxX, y: customRect.minY + cutSize))
-
-            // 斜切线（从右上斜切到左边）
-            path.addLine(to: CGPoint(x: customRect.maxX - cutSize, y: customRect.minY))
-
-            // 顶边到左上角
-            path.addLine(to: CGPoint(x: customRect.minX + cornerRadius, y: customRect.minY))
-
-            // 左上圆角
-            path.addArc(
-                center: CGPoint(x: customRect.minX + cornerRadius, y: customRect.minY + cornerRadius),
-                radius: cornerRadius,
-                startAngle: .init(degrees: 270),
-                endAngle: .init(degrees: 180),
-                clockwise: true
-            )
-
-            // 回到起点
+        let s = (min(rect.width, rect.height) - 8) / 2  // 半边长（留 4pt inset 避免笔画被裁剪）
+        let cx = rect.midX, cy = rect.midY
+        let r = s * 0.4  // 圆角半径（与原始 2/10 比例一致）
+        return Path { path in
+            // 从顶部中点顺时针绘制
+            path.move(to: CGPoint(x: cx, y: cy - s))
+            path.addLine(to: CGPoint(x: cx + s - r, y: cy - s))
+            path.addArc(center: CGPoint(x: cx + s - r, y: cy - s + r),
+                        radius: r, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+            path.addLine(to: CGPoint(x: cx + s, y: cy + s - r))
+            path.addArc(center: CGPoint(x: cx + s - r, y: cy + s - r),
+                        radius: r, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+            path.addLine(to: CGPoint(x: cx - s + r, y: cy + s))
+            path.addArc(center: CGPoint(x: cx - s + r, y: cy + s - r),
+                        radius: r, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+            path.addLine(to: CGPoint(x: cx - s, y: cy - s + r))
+            path.addArc(center: CGPoint(x: cx - s + r, y: cy - s + r),
+                        radius: r, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+            path.addLine(to: CGPoint(x: cx, y: cy - s))
             path.closeSubpath()
         }
     }
 
-    /// 创建平顶六边形路径（Extra Usage）
+    /// 创建右上角斜切的圆角正方形路径（Sonnet，从顶部中点顺时针绘制，随 rect 动态缩放）
+    /// - Parameter rect: 绘制区域
+    /// - Returns: 斜切圆角正方形路径
+    static func chamferedSquarePath(in rect: CGRect) -> Path {
+        let s = (min(rect.width, rect.height) - 8) / 2  // 半边长（留 4pt inset 避免笔画被裁剪）
+        let cx = rect.midX, cy = rect.midY
+        let r = s * 0.4    // 圆角半径
+        let cut = s * 0.5  // 右上角斜切大小（与原始 2.5/5 比例一致）
+        return Path { path in
+            // 从顶部中点顺时针绘制
+            path.move(to: CGPoint(x: cx, y: cy - s))
+            path.addLine(to: CGPoint(x: cx + s - cut, y: cy - s))  // 顶边到斜切起点
+            path.addLine(to: CGPoint(x: cx + s, y: cy - s + cut))  // 斜切
+            path.addLine(to: CGPoint(x: cx + s, y: cy + s - r))    // 右边
+            path.addArc(center: CGPoint(x: cx + s - r, y: cy + s - r),
+                        radius: r, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+            path.addLine(to: CGPoint(x: cx - s + r, y: cy + s))
+            path.addArc(center: CGPoint(x: cx - s + r, y: cy + s - r),
+                        radius: r, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+            path.addLine(to: CGPoint(x: cx - s, y: cy - s + r))
+            path.addArc(center: CGPoint(x: cx - s + r, y: cy - s + r),
+                        radius: r, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+            path.addLine(to: CGPoint(x: cx, y: cy - s))
+            path.closeSubpath()
+        }
+    }
+
+    /// 创建平顶六边形路径（Extra Usage，从右上顶点顺时针绘制）
     /// - Parameters:
     ///   - center: 六边形中心点
     ///   - radius: 六边形半径
     /// - Returns: 六边形路径
     static func hexagonPath(center: CGPoint, radius: CGFloat) -> Path {
         Path { path in
+            // 从右上顶点（-60°，最接近12点钟方向）顺时针绘制
             for i in 0..<6 {
-                let angle = CGFloat(i) * .pi / 3.0
+                let angleDeg: CGFloat = -60 + CGFloat(i) * 60
+                let angle = angleDeg * .pi / 180
                 let x = center.x + radius * cos(angle)
                 let y = center.y + radius * sin(angle)
                 if i == 0 {
@@ -125,13 +107,15 @@ struct IconShapePaths {
         }
     }
 
-    /// 根据限制类型获取对应的形状路径
+    /// 根据限制类型获取对应的形状路径（动态随 rect 缩放）
     /// - Parameters:
     ///   - type: 限制类型
     ///   - rect: 绘制区域
     /// - Returns: 对应的形状路径
     static func pathForLimitType(_ type: LimitType, in rect: CGRect) -> Path {
         let center = CGPoint(x: rect.midX, y: rect.midY)
+        // 六边形半径：留 3pt inset 保证笔画不被裁剪
+        let hexRadius = min(rect.width, rect.height) / 2 - 3
 
         switch type {
         case .fiveHour, .sevenDay:
@@ -144,7 +128,7 @@ struct IconShapePaths {
             return chamferedSquarePath(in: rect)
 
         case .extraUsage:
-            return hexagonPath(center: center, radius: 6)
+            return hexagonPath(center: center, radius: hexRadius)
         }
     }
 
