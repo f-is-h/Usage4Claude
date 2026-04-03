@@ -398,3 +398,6 @@
 "weblogin.success" = "已成功添加账户：%@";
 "weblogin.cloudflare_blocked" = "如果页面无法加载，请使用手动输入方式。";
 "weblogin.privacy_notice" = "您的登录信息仅在本地使用，并安全存储于系统 Keychain 中。";
+// MARK: - Graph Type
+"graph_type.circular" = "圆形";
+"graph_type.linear" = "线性";

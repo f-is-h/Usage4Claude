@@ -398,3 +398,6 @@
 "weblogin.success" = "계정이 추가되었습니다: %@";
 "weblogin.cloudflare_blocked" = "페이지를 로드할 수 없는 경우 수동 입력을 사용해 주세요.";
 "weblogin.privacy_notice" = "로그인 정보는 로컬에서만 사용되며 시스템 Keychain에 안전하게 저장됩니다.";
+// MARK: - Graph Type
+"graph_type.circular" = "원형";
+"graph_type.linear" = "선형";

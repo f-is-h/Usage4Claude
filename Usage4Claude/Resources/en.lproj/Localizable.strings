@@ -400,3 +400,6 @@
 "weblogin.success" = "Successfully added account: %@";
 "weblogin.cloudflare_blocked" = "If the page won't load, please use manual input instead.";
 "weblogin.privacy_notice" = "Your credentials are only used locally and stored securely in the system Keychain.";
+// MARK: - Graph Type
+"graph_type.circular" = "Circular";
+"graph_type.linear" = "Linear";

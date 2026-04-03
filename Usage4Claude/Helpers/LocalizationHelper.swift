@@ -474,6 +474,10 @@ enum L {
         static var section: String { localized("settings.general.time_format_section") }
         static var hint: String { localized("settings.general.time_format_hint") }
         static var preview: String { localized("settings.general.time_format_preview") }
+    // MARK: - Graph Type
+    enum GraphType {
+        static var circular: String { localized("graph_type.circular") }
+        static var linear: String { localized("graph_type.linear") }
     }
 
     // MARK: - Helper Methods

@@ -399,3 +399,6 @@
 "weblogin.success" = "已成功新增帳戶：%@";
 "weblogin.cloudflare_blocked" = "如果頁面無法載入，請使用手動輸入方式。";
 "weblogin.privacy_notice" = "您的登入資訊僅在本機使用，並安全儲存於系統 Keychain 中。";
+// MARK: - Graph Type
+"graph_type.circular" = "圓形";
+"graph_type.linear" = "線性";

@@ -399,3 +399,6 @@
 "weblogin.success" = "アカウントを追加しました：%@";
 "weblogin.cloudflare_blocked" = "ページが読み込めない場合は、手動入力をご利用ください。";
 "weblogin.privacy_notice" = "ログイン情報はローカルでのみ使用され、システムの Keychain に安全に保存されます。";
+// MARK: - Graph Type
+"graph_type.circular" = "サークル";
+"graph_type.linear" = "ライン";
