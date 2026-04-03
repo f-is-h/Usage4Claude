@@ -18,8 +18,9 @@ struct LinearUsageGraphView: View {
 
     // MARK: - Constants
 
-    private let graphSize: CGFloat = 114
-    private let padding: CGFloat = 8
+    private let graphWidth: CGFloat = 262
+    private let graphHeight: CGFloat = 100
+    private let padding: CGFloat = 4
     private let gridLineWidth: CGFloat = 0.5
     private let paceLineWidth: CGFloat = 1.5
     private let dotRadius: CGFloat = 5
@@ -47,21 +48,12 @@ struct LinearUsageGraphView: View {
                     // 3. Draw limit points
                     drawLimitPoints(context: context, in: drawArea, data: data)
                 }
-                .frame(width: graphSize, height: graphSize)
-
-                // Center text showing projected usage
-                VStack(spacing: 2) {
-                    Text(projectedUsageText(data: data))
-                        .font(.system(size: 16, weight: .bold))
-                    Text(L.Usage.used)
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                }
+                .frame(width: graphWidth, height: graphHeight)
             } else {
                 // Loading or no data state
-                Circle()
+                RoundedRectangle(cornerRadius: 4)
                     .stroke(Color.gray.opacity(0.2), lineWidth: 2)
-                    .frame(width: graphSize - padding * 2, height: graphSize - padding * 2)
+                    .frame(width: graphWidth - padding * 2, height: graphHeight - padding * 2)
 
                 if isRefreshing {
                     ProgressView()
@@ -73,7 +65,7 @@ struct LinearUsageGraphView: View {
                 }
             }
         }
-        .frame(width: graphSize, height: graphSize)
+        .frame(width: graphWidth, height: graphHeight)
     }
 
     // MARK: - Drawing Methods
@@ -125,10 +117,11 @@ struct LinearUsageGraphView: View {
         context.stroke(path, with: .color(Color.gray.opacity(0.5)), style: dashStyle)
     }
 
-    /// Draw colored dots for each active limit type
+    /// Draw colored dots for each active limit type with percentage labels
     private func drawLimitPoints(context: GraphicsContext, in rect: CGRect, data: UsageData) {
         for limitType in activeDisplayTypes {
-            guard let point = calculatePoint(for: limitType, data: data, in: rect) else {
+            guard let point = calculatePoint(for: limitType, data: data, in: rect),
+                  let limitData = getLimitData(for: limitType, data: data) else {
                 continue
             }
 
@@ -150,7 +143,44 @@ struct LinearUsageGraphView: View {
                 with: .color(.white.opacity(0.8)),
                 lineWidth: 1
             )
+
+            // Draw percentage label next to dot
+            drawPercentageLabel(
+                context: context,
+                at: point,
+                percentage: limitData.percentage,
+                in: rect
+            )
         }
+    }
+
+    /// Draw percentage label near a data point
+    private func drawPercentageLabel(
+        context: GraphicsContext,
+        at point: CGPoint,
+        percentage: Double,
+        in rect: CGRect
+    ) {
+        let label = Text("\(Int(percentage))%")
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundColor(.primary)
+
+        // Position: top-right of dot by default
+        var labelX = point.x + dotRadius + 4
+        var labelY = point.y - dotRadius - 2
+
+        // Boundary check: if too close to right edge, flip to left
+        let labelWidth: CGFloat = 28  // Approximate width of "100%"
+        if labelX + labelWidth > rect.maxX {
+            labelX = point.x - dotRadius - labelWidth - 2
+        }
+
+        // If too close to top, move below dot
+        if labelY < rect.minY + 8 {
+            labelY = point.y + dotRadius + 10
+        }
+
+        context.draw(label, at: CGPoint(x: labelX, y: labelY))
     }
 
     // MARK: - Calculation Methods
@@ -245,37 +275,6 @@ struct LinearUsageGraphView: View {
             }
         }
         return .gray
-    }
-
-    /// Calculate projected usage at reset time based on current pace
-    private func projectedUsageText(data: UsageData) -> String {
-        // Find the primary active limit for projection
-        for limitType in activeDisplayTypes {
-            if let projection = calculateProjectedUsage(for: limitType, data: data) {
-                return "Proj: \(Int(min(projection, 999)))%"
-            }
-        }
-        return "--%"
-    }
-
-    /// Calculate projected usage at reset time for a limit type
-    private func calculateProjectedUsage(for limitType: LimitType, data: UsageData) -> Double? {
-        guard let limitData = getLimitData(for: limitType, data: data),
-              let resetsAt = limitData.resetsAt else {
-            return nil
-        }
-
-        let percentage = limitData.percentage
-        let elapsedRatio = calculateElapsedTimeRatio(for: limitType, resetsAt: resetsAt)
-
-        // Avoid division by zero
-        guard elapsedRatio > 0.01 else {
-            return percentage
-        }
-
-        // Project: if we used X% in Y time, we'll use X/Y * 1.0 at reset
-        let projected = percentage / Double(elapsedRatio)
-        return projected
     }
 }
 
