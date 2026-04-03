@@ -253,6 +253,9 @@ enum AppAppearance: String, CaseIterable, Codable {
             return .light
         case .dark:
             return .dark
+        }
+    }
+}
 /// 图表显示类型（圆形 vs 线性）
 enum GraphDisplayType: String, CaseIterable, Codable {
     /// 圆形图表 - 当前百分比环形显示
