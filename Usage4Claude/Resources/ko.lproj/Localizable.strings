@@ -332,8 +332,8 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "활성화되지 않음";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "$%.0f 더 사용 가능";
+"extra_usage.usage_amount" = "%@%.0f/%@%.0f";
+"extra_usage.remaining_amount" = "%@%.0f 더 사용 가능";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "무지개 그라데이션";

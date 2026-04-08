@@ -939,13 +939,21 @@ struct ExtraUsageData: Sendable {
 
     // MARK: - Formatting Methods
 
+    var currencySymbol: String {
+        switch currency {
+        case "EUR": return "€"
+        case "GBP": return "£"
+        default: return "$"
+        }
+    }
+
     /// 格式化的使用金额/总额度字符串（默认模式）
     /// - Returns: 如 "$12.50 / $50.00"
     var formattedUsageAmount: String {
         guard enabled, let used = used, let limit = limit else {
             return L.ExtraUsage.notEnabled
         }
-        return L.ExtraUsage.usageAmount(used, limit)
+        return L.ExtraUsage.usageAmount(used, limit, symbol: currencySymbol)
     }
 
     /// 格式化的剩余金额字符串（剩余模式）
@@ -955,7 +963,7 @@ struct ExtraUsageData: Sendable {
             return L.ExtraUsage.notEnabled
         }
         let remaining = max(0, limit - used)
-        return L.ExtraUsage.remainingAmount(remaining)
+        return L.ExtraUsage.remainingAmount(remaining, symbol: currencySymbol)
     }
 
     /// 极简格式化的使用金额（用于列表显示）
@@ -964,7 +972,8 @@ struct ExtraUsageData: Sendable {
         guard enabled, let used = used, let limit = limit else {
             return "-"
         }
-        return String(format: "$%.0f/$%.0f", used, limit)
+        let sym = currencySymbol
+        return String(format: "%@%.0f/%@%.0f", sym, used, sym, limit)
     }
 }
 

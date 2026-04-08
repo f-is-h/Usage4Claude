@@ -332,8 +332,8 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "未启用";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "还可使用 $%.0f";
+"extra_usage.usage_amount" = "%@%.0f/%@%.0f";
+"extra_usage.remaining_amount" = "还可使用 %@%.0f";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "彩虹渐变";

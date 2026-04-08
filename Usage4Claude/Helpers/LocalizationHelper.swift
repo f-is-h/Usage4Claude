@@ -394,11 +394,11 @@ enum L {
     // MARK: - Extra Usage
     enum ExtraUsage {
         static var notEnabled: String { localized("extra_usage.not_enabled") }
-        static func usageAmount(_ used: Double, _ limit: Double) -> String {
-            String(format: localized("extra_usage.usage_amount"), used, limit)
+        static func usageAmount(_ used: Double, _ limit: Double, symbol: String = "$") -> String {
+            String(format: localized("extra_usage.usage_amount"), symbol, used, symbol, limit)
         }
-        static func remainingAmount(_ remaining: Double) -> String {
-            String(format: localized("extra_usage.remaining_amount"), remaining)
+        static func remainingAmount(_ remaining: Double, symbol: String = "$") -> String {
+            String(format: localized("extra_usage.remaining_amount"), symbol, remaining)
         }
     }
 
