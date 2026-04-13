@@ -543,15 +543,15 @@ class UserSettings: ObservableObject {
         }
     }
 
-    /// 调试用的 Extra Usage 已使用金额（美元）
+    /// 调试用的 Extra Usage 已使用金额（美分），与真实 API used_credits 单位一致
     @Published var debugExtraUsageUsed: Double {
         didSet {
             defaults.set(debugExtraUsageUsed, forKey: "debugExtraUsageUsed")
         }
     }
 
-    /// 调试用的 Extra Usage 总限额（美元）
-    @Published var debugExtraUsageLimit: Double {
+    /// 调试用的 Extra Usage 总限额（美分），与真实 API monthly_limit 单位一致，只能为整数
+    @Published var debugExtraUsageLimit: Int {
         didSet {
             defaults.set(debugExtraUsageLimit, forKey: "debugExtraUsageLimit")
         }
@@ -561,8 +561,8 @@ class UserSettings: ObservableObject {
     @Published var debugExtraUsagePercentage: Double {
         didSet {
             defaults.set(debugExtraUsagePercentage, forKey: "debugExtraUsagePercentage")
-            // 同步更新 used 值
-            debugExtraUsageUsed = debugExtraUsageLimit * (debugExtraUsagePercentage / 100.0)
+            // 同步更新 used 值（美分）
+            debugExtraUsageUsed = Double(debugExtraUsageLimit) * (debugExtraUsagePercentage / 100.0)
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -810,8 +810,8 @@ class UserSettings: ObservableObject {
         self.debugOpusPercentage = defaults.object(forKey: "debugOpusPercentage") as? Double ?? 77.0
         self.debugSonnetPercentage = defaults.object(forKey: "debugSonnetPercentage") as? Double ?? 88.0
         self.debugExtraUsageEnabled = defaults.object(forKey: "debugExtraUsageEnabled") as? Bool ?? true
-        self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 30.50
-        self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Double ?? 50.0
+        self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 3050.0
+        self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Int ?? 5000
         self.debugExtraUsagePercentage = defaults.object(forKey: "debugExtraUsagePercentage") as? Double ?? 61.0
         self.simulateUpdateAvailable = defaults.bool(forKey: "simulateUpdateAvailable")
         self.debugShowAllShapesIndividually = defaults.bool(forKey: "debugShowAllShapesIndividually")
