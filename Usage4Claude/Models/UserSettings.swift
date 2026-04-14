@@ -256,6 +256,22 @@ enum AppAppearance: String, CaseIterable, Codable {
         }
     }
 }
+/// 图表显示类型（圆形 vs 线性）
+enum GraphDisplayType: String, CaseIterable, Codable {
+    /// 圆形图表 - 当前百分比环形显示
+    case circular = "circular"
+    /// 线性图表 - 时间轴与用量预测显示
+    case linear = "linear"
+
+    var localizedName: String {
+        switch self {
+        case .circular:
+            return L.GraphType.circular
+        case .linear:
+            return L.GraphType.linear
+        }
+    }
+}
 
 /// 应用语言选项
 enum AppLanguage: String, CaseIterable, Codable {
@@ -447,6 +463,14 @@ class UserSettings: ObservableObject {
         didSet {
             let rawValues = customDisplayTypes.map { $0.rawValue }
             defaults.set(rawValues, forKey: "customDisplayTypes")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 图表显示类型（圆形/线性）
+    @Published var graphDisplayType: GraphDisplayType {
+        didSet {
+            defaults.set(graphDisplayType.rawValue, forKey: "graphDisplayType")
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -784,6 +808,14 @@ class UserSettings: ObservableObject {
             self.customDisplayTypes = [.fiveHour, .sevenDay]
         }
 
+        // 加载图表显示类型，默认为圆形
+        if let typeString = defaults.string(forKey: "graphDisplayType"),
+           let type = GraphDisplayType(rawValue: typeString) {
+            self.graphDisplayType = type
+        } else {
+            self.graphDisplayType = .circular
+        }
+
         // 检查是否首次启动（如果没有保存过认证信息，就是首次启动）
         if !defaults.bool(forKey: "hasLaunched") {
             self.isFirstLaunch = true
@@ -910,6 +942,7 @@ class UserSettings: ObservableObject {
         displayMode = .smart
         customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
         notificationsEnabled = true
+        graphDisplayType = .circular
 
         // 重置智能模式状态
         lastUtilization = nil

@@ -475,6 +475,19 @@ enum L {
         static var hint: String { localized("settings.general.time_format_hint") }
         static var preview: String { localized("settings.general.time_format_preview") }
     }
+    // MARK: - Graph Type
+    enum GraphType {
+        static var circular: String { localized("graph_type.circular") }
+        static var linear: String { localized("graph_type.linear") }
+    }
+
+    // MARK: - Graph Style Settings
+    enum GraphStyle {
+        static var title: String { localized("graph_style.title") }
+        static var hint: String { localized("graph_style.hint") }
+        static var circularDescription: String { localized("graph_style.circular_description") }
+        static var linearDescription: String { localized("graph_style.linear_description") }
+    }
 
     // MARK: - Helper Methods
     

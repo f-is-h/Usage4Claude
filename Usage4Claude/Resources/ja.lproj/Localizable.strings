@@ -399,3 +399,12 @@
 "weblogin.success" = "アカウントを追加しました：%@";
 "weblogin.cloudflare_blocked" = "ページが読み込めない場合は、手動入力をご利用ください。";
 "weblogin.privacy_notice" = "ログイン情報はローカルでのみ使用され、システムの Keychain に安全に保存されます。";
+// MARK: - Graph Type
+"graph_type.circular" = "サークル";
+"graph_type.linear" = "ライン";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "グラフスタイル";
+"graph_style.hint" = "使用量の表示方法を選択";
+"graph_style.circular_description" = "使用量をパーセントリングで表示";
+"graph_style.linear_description" = "使用量をタイムラインとペース予測で表示";
