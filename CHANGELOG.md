@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] - 2026-04-14
+
+### Fixed
+- **HTTP/3 disabled to prevent proxy bypass**: Disable HTTP/3 on all network
+  sessions to ensure UDP traffic routes through the proxy correctly
+- **Extra usage currency symbol**: Display the correct currency symbol for
+  extra usage amounts based on locale
+- **Extra usage cents precision**: Show extra usage amounts with cents
+  precision instead of rounding to whole numbers
+
 ## [2.6.0] - 2026-03-24
 
 ### Added
@@ -438,6 +448,7 @@ Key, Organization ID)
 
 ---
 
+[2.6.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.1
 [2.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.0
 [2.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.5.0
 [2.1.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.1.1

@@ -334,8 +334,8 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "Not Enabled";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "$%.0f remaining";
+"extra_usage.usage_amount" = "%@%.2f/%@%.0f";
+"extra_usage.remaining_amount" = "%@%.2f remaining";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "Rainbow Gradient";
