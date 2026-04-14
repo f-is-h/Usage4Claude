@@ -927,11 +927,11 @@ struct UsageData: Sendable {
 struct ExtraUsageData: Sendable {
     /// 是否启用 Extra Usage
     let enabled: Bool
-    /// 已使用金额（美元）
+    /// 已使用金额
     let used: Double?
-    /// 总限额（美元）
+    /// 总限额
     let limit: Double?
-    /// 货币单位
+    /// 货币代码（ISO 4217，如 USD、EUR、GBP）
     let currency: String
 
     /// 使用百分比（用于统一显示）
@@ -942,6 +942,21 @@ struct ExtraUsageData: Sendable {
         return (used / limit) * 100.0
     }
 
+    /// 货币符号（根据 ISO 4217 货币代码映射）
+    var currencySymbol: String {
+        switch currency.uppercased() {
+        case "USD": return "$"
+        case "EUR": return "€"
+        case "GBP": return "£"
+        case "JPY": return "¥"
+        case "CAD": return "CA$"
+        case "AUD": return "A$"
+        case "BRL": return "R$"
+        case "INR": return "₹"
+        default: return currency
+        }
+    }
+
     // MARK: - Formatting Methods
 
     /// 格式化的使用金额/总额度字符串（默认模式）
@@ -950,7 +965,7 @@ struct ExtraUsageData: Sendable {
         guard enabled, let used = used, let limit = limit else {
             return L.ExtraUsage.notEnabled
         }
-        return L.ExtraUsage.usageAmount(used, limit)
+        return L.ExtraUsage.usageAmount(used, limit, symbol: currencySymbol)
     }
 
     /// 格式化的剩余金额字符串（剩余模式）
@@ -960,7 +975,7 @@ struct ExtraUsageData: Sendable {
             return L.ExtraUsage.notEnabled
         }
         let remaining = max(0, limit - used)
-        return L.ExtraUsage.remainingAmount(remaining)
+        return L.ExtraUsage.remainingAmount(remaining, symbol: currencySymbol)
     }
 
     /// 极简格式化的使用金额（用于列表显示）
@@ -969,7 +984,8 @@ struct ExtraUsageData: Sendable {
         guard enabled, let used = used, let limit = limit else {
             return "-"
         }
-        return String(format: "$%.2f/$%.0f", used, limit)
+        let sym = currencySymbol
+        return String(format: "%@%.2f/%@%.0f", sym, used, sym, limit)
     }
 }
 
