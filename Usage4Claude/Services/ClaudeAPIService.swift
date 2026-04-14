@@ -139,6 +139,7 @@ class ClaudeAPIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
 
         // 使用统一的 Header 构建器添加完整的浏览器 Headers 以绕过 Cloudflare
         ClaudeAPIHeaderBuilder.applyHeaders(
@@ -241,6 +242,7 @@ class ClaudeAPIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
 
         // 使用统一的 Header 构建器，仅需要 sessionKey
         // 如果提供了 sessionKey 参数则使用它，否则使用 settings.sessionKey
@@ -336,6 +338,7 @@ class ClaudeAPIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
 
         // 使用统一的 Header 构建器添加完整的浏览器 Headers
         ClaudeAPIHeaderBuilder.applyHeaders(

@@ -77,9 +77,10 @@ class UpdateChecker {
         }
         
         var request = URLRequest(url: url)
+        request.assumesHTTP3Capable = false
         request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
         request.setValue("Usage4Claude/\(currentVersion)", forHTTPHeaderField: "User-Agent")
-        
+
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else {
                 completion(false, nil)
@@ -126,9 +127,10 @@ class UpdateChecker {
         }
         
         var request = URLRequest(url: url)
+        request.assumesHTTP3Capable = false
         request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
         request.setValue("Usage4Claude/\(currentVersion)", forHTTPHeaderField: "User-Agent")
-        
+
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else { return }
             
