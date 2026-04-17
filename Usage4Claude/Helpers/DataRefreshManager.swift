@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 import OSLog
+import AppKit
 
 /// 数据刷新管理器
 /// 负责管理所有数据刷新、定时器、更新检查和重置验证逻辑
@@ -56,6 +57,8 @@ class DataRefreshManager: ObservableObject {
     private var lastUpdateCheckTime: Date?
     /// App Nap 防护活动令牌
     private var refreshActivity: NSObjectProtocol?
+    /// 系统唤醒观察者令牌
+    private var wakeObserver: NSObjectProtocol?
 
     // MARK: - Timer Identifiers
 
@@ -73,6 +76,7 @@ class DataRefreshManager: ObservableObject {
 
     init() {
         scheduleDailyUpdateCheck()
+        setupWakeObserver()
     }
 
     // MARK: - Data Fetching
@@ -198,6 +202,22 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
+    /// 注册系统唤醒监听
+    /// 系统从睡眠唤醒后立即刷新数据，防止定时器在睡眠期间暂停导致长时间不更新
+    private func setupWakeObserver() {
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Logger.menuBar.debug("系统从睡眠唤醒，立即刷新数据")
+            // 延迟 3 秒等待网络恢复后再请求
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                self?.fetchUsage()
+            }
+        }
+    }
+
     // MARK: - Smart Refresh
 
     /// 打开Popover时的智能刷新
@@ -207,9 +227,17 @@ class DataRefreshManager: ObservableObject {
 
         // 用户打开详细界面，强制切换到活跃模式（1分钟刷新）
         if settings.refreshMode == .smart {
+            let wasIdle = settings.currentMonitoringMode != .active
             settings.currentMonitoringMode = .active
             settings.unchangedCount = 0
-            Logger.menuBar.debug("用户打开界面，切换到活跃模式")
+            // 如果之前处于空闲模式，需要重启定时器以应用新间隔
+            // 否则 updateSmartMonitoringMode 的 switchToActiveMode() 会因 guard 直接返回，导致定时器仍以旧间隔运行
+            if wasIdle {
+                restartTimer()
+                Logger.menuBar.debug("用户打开界面，从空闲模式切换到活跃模式，重启定时器")
+            } else {
+                Logger.menuBar.debug("用户打开界面，已在活跃模式")
+            }
         }
 
         // 如果距离上次刷新 < 30秒，跳过
@@ -236,9 +264,16 @@ class DataRefreshManager: ObservableObject {
 
         // 用户主动刷新，强制切换到活跃模式（1分钟刷新）
         if settings.refreshMode == .smart {
+            let wasIdle = settings.currentMonitoringMode != .active
             settings.currentMonitoringMode = .active
             settings.unchangedCount = 0
-            Logger.menuBar.debug("用户主动刷新，切换到活跃模式")
+            // 同 refreshOnPopoverOpen：若之前是空闲模式，需要重启定时器
+            if wasIdle {
+                restartTimer()
+                Logger.menuBar.debug("用户主动刷新，从空闲模式切换到活跃模式，重启定时器")
+            } else {
+                Logger.menuBar.debug("用户主动刷新，已在活跃模式")
+            }
         }
 
         // 更新状态
@@ -431,6 +466,10 @@ class DataRefreshManager: ObservableObject {
     func cleanup() {
         timerManager.invalidateAll()
         endRefreshActivity()
+        if let observer = wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            wakeObserver = nil
+        }
     }
 
     deinit {
