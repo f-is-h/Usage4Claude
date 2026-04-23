@@ -1221,12 +1221,9 @@ class UserSettings: ObservableObject {
             var types: [LimitType] = []
 
             // 按规范顺序: fiveHour → sevenDay → extraUsage → opus → sonnet
-            if data.fiveHour != nil {
-                types.append(.fiveHour)
-            }
-            if data.sevenDay != nil {
-                types.append(.sevenDay)
-            }
+            // 5小时和7天限制始终显示，因为所有账号均受这两项限制约束
+            types.append(.fiveHour)
+            types.append(.sevenDay)
             if data.extraUsage?.enabled == true {
                 types.append(.extraUsage)
             }
