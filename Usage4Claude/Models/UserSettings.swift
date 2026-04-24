@@ -333,10 +333,15 @@ class UserSettings: ObservableObject {
     /// 当前激活账户的 ID（存储在 UserDefaults 中）
     @Published var currentAccountId: UUID? {
         didSet {
+            #if DEBUG
+            let key = "DEBUG_currentAccountId"
+            #else
+            let key = "currentAccountId"
+            #endif
             if let id = currentAccountId {
-                defaults.set(id.uuidString, forKey: "currentAccountId")
+                defaults.set(id.uuidString, forKey: key)
             } else {
-                defaults.removeObject(forKey: "currentAccountId")
+                defaults.removeObject(forKey: key)
             }
         }
     }
@@ -344,7 +349,7 @@ class UserSettings: ObservableObject {
     /// 当前激活的账户
     var currentAccount: Account? {
         guard let id = currentAccountId else { return accounts.first }
-        return accounts.first { $0.id == id }
+        return accounts.first { $0.id == id } ?? accounts.first
     }
 
     /// Claude Session Key（计算属性，指向当前账户）
@@ -658,7 +663,12 @@ class UserSettings: ObservableObject {
         var loadedCurrentAccountId: UUID? = nil
 
         // 加载当前账户 ID
-        if let idString = defaults.string(forKey: "currentAccountId"),
+        #if DEBUG
+        let currentAccountIdKey = "DEBUG_currentAccountId"
+        #else
+        let currentAccountIdKey = "currentAccountId"
+        #endif
+        if let idString = defaults.string(forKey: currentAccountIdKey),
            let id = UUID(uuidString: idString) {
             loadedCurrentAccountId = id
         } else if let firstAccount = loadedAccounts.first {
