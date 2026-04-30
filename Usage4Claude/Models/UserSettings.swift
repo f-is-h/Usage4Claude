@@ -1188,12 +1188,17 @@ class UserSettings: ObservableObject {
             Logger.settings.notice("账户已存在，跳过: \(account.displayName)")
             return
         }
+        let wasFirstClaudeAccount = accounts.isEmpty
         accounts.append(account)
         // 如果是第一个账户，自动设为当前账户
         if accounts.count == 1 {
             currentAccountId = account.id
         }
         Logger.settings.notice("添加账户: \(account.displayName)")
+
+        if wasFirstClaudeAccount {
+            NotificationCenter.default.post(name: .accountChanged, object: nil)
+        }
     }
 
     /// 删除账户

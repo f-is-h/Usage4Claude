@@ -538,14 +538,11 @@ nonisolated struct UsageResponse: Codable, Sendable {
         // 解析5小时限制数据
         let fiveHourData = parseLimitData(five_hour)
 
-        // 解析7天限制数据（仅当存在且有效时）
-        let sevenDayData: UsageData.LimitData? = {
+        // 解析7天限制数据。所有 Claude 账号都有 7 天限制；
+        // 未开始使用时 API 可能返回 0 且无 resets_at，仍保留为 0% 占位。
+        let sevenDayData: UsageData.LimitData = {
             guard let sevenDay = seven_day else {
-                return nil
-            }
-            // 如果utilization为0且resets_at为空，视为无数据
-            if sevenDay.utilization == 0 && sevenDay.resets_at == nil {
-                return nil
+                return UsageData.LimitData(percentage: 0, resetsAt: nil)
             }
             let parsed = parseLimitData(sevenDay)
             return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
