@@ -80,7 +80,7 @@
 "settings.auth.open_browser" = "在浏览器中打开 Claude 用量页面";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "粘贴 Session Key";
-"settings.auth.session_key_hint" = "以 sk-ant-sid01- 开头的长字符串";
+"settings.auth.session_key_hint" = "粘贴完整的 sessionKey Cookie 值（通常以 sk-ant-sid 开头）";
 "settings.auth.configured" = "认证信息已配置";
 "settings.auth.not_configured" = "请填写 Session Key";
 "settings.auth.credentials_title" = "认证信息";
@@ -296,7 +296,7 @@
 "welcome.authentication_setup" = "认证设置";
 "welcome.session_key" = "Session Key";
 "welcome.session_key_placeholder" = "在此粘贴您的 Session Key";
-"welcome.session_key_hint" = "以 sk-ant-sid01- 开头...";
+"welcome.session_key_hint" = "粘贴完整的 sessionKey Cookie 值";
 "welcome.valid_format" = "格式正确";
 "welcome.invalid_format" = "Session Key 长度应在 20-500 字符之间";
 "welcome.select_limits" = "选择限制";

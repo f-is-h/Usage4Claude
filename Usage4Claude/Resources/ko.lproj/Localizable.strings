@@ -80,7 +80,7 @@
 "settings.auth.open_browser" = "브라우저에서 Claude 사용량 페이지 열기";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Session Key 붙여넣기";
-"settings.auth.session_key_hint" = "sk-ant-sid01-로 시작하는 긴 문자열";
+"settings.auth.session_key_hint" = "전체 sessionKey Cookie 값을 붙여넣기 (보통 sk-ant-sid로 시작)";
 "settings.auth.configured" = "인증 정보가 설정되었습니다";
 "settings.auth.not_configured" = "Session Key를 입력하세요";
 "settings.auth.credentials_title" = "인증 정보";
@@ -296,7 +296,7 @@
 "welcome.authentication_setup" = "인증 설정";
 "welcome.session_key" = "Session Key";
 "welcome.session_key_placeholder" = "여기에 Session Key를 붙여넣으세요";
-"welcome.session_key_hint" = "sk-ant-sid01-로 시작...";
+"welcome.session_key_hint" = "전체 sessionKey Cookie 값을 붙여넣으세요";
 "welcome.valid_format" = "형식이 올바릅니다";
 "welcome.invalid_format" = "Session Key 길이는 20-500자 사이여야 합니다";
 "welcome.select_limits" = "제한 선택";

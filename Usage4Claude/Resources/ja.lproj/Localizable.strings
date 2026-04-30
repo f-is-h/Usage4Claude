@@ -80,7 +80,7 @@
 "settings.auth.open_browser" = "ブラウザでClaude使用状況ページを開く";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Session Keyを貼り付け";
-"settings.auth.session_key_hint" = "sk-ant-sid01-で始まる長い文字列";
+"settings.auth.session_key_hint" = "完全な sessionKey Cookie 値を貼り付け（通常は sk-ant-sid で始まります）";
 "settings.auth.configured" = "認証情報が設定済み";
 "settings.auth.not_configured" = "Session Keyを入力してください";
 "settings.auth.credentials_title" = "認証情報";
@@ -296,7 +296,7 @@
 "welcome.authentication_setup" = "認証設定";
 "welcome.session_key" = "セッションキー";
 "welcome.session_key_placeholder" = "セッションキーをここに貼り付けてください";
-"welcome.session_key_hint" = "sk-ant-sid01-で始まります...";
+"welcome.session_key_hint" = "完全な sessionKey Cookie 値を貼り付けてください";
 "welcome.valid_format" = "形式が正しい";
 "welcome.invalid_format" = "セッションキーは20〜500文字である必要があります";
 "welcome.select_limits" = "制限を選択";

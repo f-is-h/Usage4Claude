@@ -80,7 +80,7 @@
 "settings.auth.open_browser" = "Open Claude Usage Page in Browser";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Paste Session Key";
-"settings.auth.session_key_hint" = "Long string starting with sk-ant-sid01-";
+"settings.auth.session_key_hint" = "Paste the full sessionKey cookie value (usually starts with sk-ant-sid)";
 "settings.auth.configured" = "Authentication configured";
 "settings.auth.not_configured" = "Please enter Session Key";
 "settings.auth.credentials_title" = "Authentication Credentials";
@@ -296,7 +296,7 @@
 "welcome.authentication_setup" = "Authentication Setup";
 "welcome.session_key" = "Session Key";
 "welcome.session_key_placeholder" = "Paste your Session Key here";
-"welcome.session_key_hint" = "Starts with sk-ant-sid01-...";
+"welcome.session_key_hint" = "Paste the full sessionKey cookie value";
 "welcome.valid_format" = "Valid format";
 "welcome.invalid_format" = "Session Key should be 20-500 characters";
 "welcome.select_limits" = "Select Limits";

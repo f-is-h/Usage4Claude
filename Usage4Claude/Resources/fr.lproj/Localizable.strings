@@ -80,7 +80,7 @@
 "settings.auth.open_browser" = "Ouvrir la page d'utilisation de Claude dans le navigateur";
 "settings.auth.session_key_label" = "Clé de session";
 "settings.auth.session_key_placeholder" = "Collez la clé de session";
-"settings.auth.session_key_hint" = "Longue chaîne commençant par sk-ant-sid01-";
+"settings.auth.session_key_hint" = "Collez la valeur complète du cookie sessionKey (commence généralement par sk-ant-sid)";
 "settings.auth.configured" = "Authentification configurée";
 "settings.auth.not_configured" = "Veuillez saisir la clé de session";
 "settings.auth.credentials_title" = "Identifiants d'authentification";
@@ -296,7 +296,7 @@
 "welcome.authentication_setup" = "Configuration de l'authentification";
 "welcome.session_key" = "Clé de session";
 "welcome.session_key_placeholder" = "Collez votre clé de session ici";
-"welcome.session_key_hint" = "Commence par sk-ant-sid01-…";
+"welcome.session_key_hint" = "Collez la valeur complète du cookie sessionKey";
 "welcome.valid_format" = "Format valide";
 "welcome.invalid_format" = "La clé de session doit contenir entre 20 et 500 caractères";
 "welcome.select_limits" = "Sélectionner les limites";
