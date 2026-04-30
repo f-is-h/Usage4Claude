@@ -13,7 +13,7 @@
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
 [![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
-**Une application macOS elegante dans la barre des menus pour surveiller en temps reel votre utilisation de Claude AI.**
+**Suivez vos quotas d'abonnement Claude (et Codex en option) avec elegance, directement dans la barre des menus.**
 
 ✨ **Surveille toutes les plateformes Claude : Web • Claude Code • Desktop • App Mobile • Cowork** ✨
 
@@ -34,6 +34,7 @@
 - **🎨 Couleurs intelligentes** - Changement automatique des couleurs selon l'utilisation, chaque type de limite a son propre schema
 - **🔔 Notifications d'utilisation** - Avertissement a 90 % d'utilisation, notification lors de la reinitialisation du quota
 - **👥 Gestion multi-comptes** - Support de plusieurs comptes / plusieurs organisations par compte, changement rapide
+- **✨ Support Codex** - Surveillance optionnelle des quotas Codex aux cotes de Claude, avec une vue a deux colonnes lorsque les deux fournisseurs sont configures
 - **🌐 Connexion via navigateur integre** - Navigateur integre pour extraire automatiquement la Session Key, sans copie manuelle
 - **🎨 Reglages d'apparence** - Support du mode systeme / clair / sombre
 - **🕐 Format horaire** - Support du format systeme / 12h / 24h
@@ -66,7 +67,7 @@ Toutes les plateformes partagent le meme quota d'utilisation, surveille en un se
   - 简体中文
   - 繁体中文
   - 한국어
-  - Francais
+  - Français
   - D'autres langues a venir...
 
 ### 🔒 Securite et confidentialite
@@ -128,11 +129,16 @@ open Usage4Claude.xcodeproj
      - Allez dans l'onglet « Reseau », rechargez la page
      - Trouvez la requete `usage`, extrayez `sessionKey=sk-ant-...` depuis le Cookie
      - Collez dans le champ de saisie
+   - **Compte Codex (facultatif)**
+     - Ouvrez Reglages → Authentification
+     - Cliquez sur « Ajouter un compte Codex »
+     - Connectez-vous a votre compte ChatGPT dans la fenetre integree
 
 ### Utilisation quotidienne
 
 - **Affichage par defaut** - L'icone de la barre des menus affiche le pourcentage d'utilisation
 - **Voir les details** - Cliquez sur l'icone de la barre des menus
+- **Vue Claude + Codex** - Si des comptes Claude et Codex sont configures, la fenetre de detail affiche les deux fournisseurs cote a cote
 - **Actualisation manuelle** - Cliquez sur le bouton d'actualisation ou utilisez le raccourci ⌘R
 - **Changer de compte** - Menu « … » dans la fenetre de detail ou clic droit sur l'icone
 - **Raccourcis clavier**
@@ -207,7 +213,7 @@ R :
 **Stockage des donnees :**
 - Toutes les donnees sont stockees **uniquement** sur votre Mac local
 - Aucune collecte, aucun suivi, aucune statistique
-- Aucune requete reseau en dehors des appels a l'API Claude
+- Aucune requete reseau en dehors des appels aux API Claude et Codex
 - Aucun service tiers utilise
 
 **Securite de l'authentification :**
@@ -250,7 +256,7 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](../LICENSE) pour plus
 
 ## ⚖️ Avertissement
 
-Ce projet est un outil tiers independant sans affiliation officielle avec Anthropic ou Claude AI. Veuillez respecter les conditions d'utilisation de Claude AI lors de l'utilisation de ce logiciel.
+Ce projet est un outil tiers independant sans affiliation officielle avec Anthropic, Claude AI, OpenAI ou Codex. Veuillez respecter les conditions d'utilisation des services concernes lors de l'utilisation de ce logiciel.
 
 ---
 

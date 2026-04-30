@@ -763,6 +763,8 @@ class UserSettings: ObservableObject {
             return .japanese
         } else if systemLanguage.hasPrefix("ko") {
             return .korean
+        } else if systemLanguage.hasPrefix("fr") {
+            return .french
         } else {
             return .english  // 默认英语
         }
