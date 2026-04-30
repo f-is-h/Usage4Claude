@@ -245,6 +245,7 @@ enum L {
         static var chinese: String { localized("language.chinese") }
         static var chineseTraditional: String { localized("language.chinese_traditional") }
         static var korean: String { localized("language.korean") }
+        static var french: String { localized("language.french") }
     }
     
     // MARK: - Window Titles

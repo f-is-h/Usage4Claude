@@ -300,6 +300,8 @@ enum AppLanguage: String, CaseIterable, Codable {
     case chineseTraditional = "zh-Hant"
     /// 韩语
     case korean = "ko"
+    /// 法语
+    case french = "fr"
 
     var localizedName: String {
         switch self {
@@ -313,6 +315,8 @@ enum AppLanguage: String, CaseIterable, Codable {
             return L.Language.chineseTraditional
         case .korean:
             return L.Language.korean
+        case .french:
+            return L.Language.french
         }
     }
 }
@@ -331,6 +335,8 @@ extension AppLanguage {
             return Locale(identifier: "zh_TW")
         case .korean:
             return Locale(identifier: "ko_KR")
+        case .french:
+            return Locale(identifier: "fr_FR")
         }
     }
 }
