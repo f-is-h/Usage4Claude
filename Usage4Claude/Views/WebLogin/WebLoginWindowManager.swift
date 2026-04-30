@@ -15,6 +15,7 @@ final class WebLoginWindowManager {
     static let shared = WebLoginWindowManager()
 
     private var loginWindow: NSWindow?
+    private var codexLoginWindow: NSWindow?
 
     private init() {}
 
@@ -55,5 +56,42 @@ final class WebLoginWindowManager {
     func closeLoginWindow() {
         loginWindow?.close()
         loginWindow = nil
+    }
+
+    /// 显示 Codex 登录窗口
+    func showCodexLoginWindow(onAccountCreated: ((Account) -> Void)? = nil) {
+        if let window = codexLoginWindow, window.isVisible {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let loginView = CodexWebLoginView(onAccountCreated: onAccountCreated)
+        let hostingView = NSHostingView(rootView: loginView)
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 700),
+            styleMask: [.titled, .closable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.contentView = hostingView
+        window.title = L.WebLogin.codexWindowTitle
+        window.minSize = NSSize(width: 600, height: 500)
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+
+        self.codexLoginWindow = window
+
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// 关闭 Codex 登录窗口
+    func closeCodexLoginWindow() {
+        codexLoginWindow?.close()
+        codexLoginWindow = nil
     }
 }

@@ -13,7 +13,7 @@
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
 [![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
-**一个优雅的 macOS 菜单栏应用，实时监控您的 Claude AI 使用情况。**
+**在菜单栏中优雅地追踪您的 Claude（以及可选的 Codex）订阅用量。**
 
 ✨ **支持监控所有Claude平台: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
 
@@ -34,6 +34,7 @@
 - **🎨 智能色彩** - 根据使用率自动变色提醒，不同限制类型拥有各自的色彩方案
 - **🔔 用量通知** - 用量达到 90% 时发送警告通知，配额重置时发送重置通知
 - **👥 多账户管理** - 支持多账户 / 同一账户多组织，快速切换
+- **✨ Codex 支持** - 可选的 Codex 用量监控，与 Claude 并列显示为双栏视图（在设置中添加 Codex 账户即可启用）
 - **🌐 内置浏览器登录** - 内置浏览器登录自动提取 Session Key，无需手动复制
 - **🎨 外观设置** - 支持跟随系统 / 浅色 / 深色三种外观模式
 - **🕐 时间格式** - 支持系统默认 / 12小时制 / 24小时制

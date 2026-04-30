@@ -79,8 +79,7 @@ struct GeneralSettingsView: View {
                                         } else if showPercentage {
                                             settings.iconDisplayMode = .percentageOnly
                                         } else {
-                                            // 至少保留一个
-                                            settings.iconDisplayMode = .percentageOnly
+                                            settings.iconDisplayMode = .none
                                         }
                                     }
                                 )) {
@@ -100,8 +99,7 @@ struct GeneralSettingsView: View {
                                         } else if showIcon {
                                             settings.iconDisplayMode = .iconOnly
                                         } else {
-                                            // 至少保留一个
-                                            settings.iconDisplayMode = .iconOnly
+                                            settings.iconDisplayMode = .none
                                         }
                                     }
                                 )) {
@@ -476,6 +474,62 @@ struct GeneralSettingsView: View {
                                     Slider(value: $settings.debugSonnetPercentage, in: 0...100, step: 1)
                                         .tint(.blue)
                                 }
+
+                                Divider()
+                                    .padding(.vertical, 2)
+
+                                Text("Codex")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+
+                                // Codex 5小时窗口
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Codex 5小时百分比：")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("\(Int(settings.debugCodexPrimaryPercentage))%")
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0))
+                                    }
+                                    Slider(value: $settings.debugCodexPrimaryPercentage, in: 0...100, step: 1)
+                                        .tint(Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0))
+                                }
+
+                                // Codex 7天窗口
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Codex 7天百分比：")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("\(Int(settings.debugCodexSecondaryPercentage))%")
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0))
+                                    }
+                                    Slider(value: $settings.debugCodexSecondaryPercentage, in: 0...100, step: 1)
+                                        .tint(Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0))
+                                }
+
+                                // Codex Extra Usage
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Codex Extra Usage 百分比：")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("\(Int(settings.debugCodexExtraUsagePercentage))%")
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
+                                    }
+                                    Slider(value: $settings.debugCodexExtraUsagePercentage, in: 0...100, step: 1)
+                                        .tint(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
+                                }
                             }
                             .padding(.leading, 20)
                         }
@@ -649,7 +703,7 @@ struct GeneralSettingsView: View {
 
     /// 判断是否只剩一个圆形图标
     private var hasOnlyOneCircularIcon: Bool {
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay]
+        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
         let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
         return selectedCircular.count == 1
     }
@@ -670,7 +724,7 @@ struct GeneralSettingsView: View {
         }
         #endif
 
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay]
+        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
 
         // 如果这是最后一个选中的圆形图标，则禁用
         if circularTypes.contains(limitType) {
@@ -727,7 +781,7 @@ struct LimitTypeCheckbox: View {
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
-        .help(isDisabled ? "At least one circular icon must be selected" : "")
+        .help(isDisabled ? L.DisplayOptions.circularIconConstraint : "")
         .fixedSize()
     }
 
@@ -758,6 +812,9 @@ struct LimitTypeCheckbox: View {
         case .extraUsage: return .pink
         case .opusWeekly: return .orange
         case .sonnetWeekly: return .blue
+        case .codexPrimary:  return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
+        case .codexSecondary: return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0)
+        case .codexExtraUsage: return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
         }
     }
 }

@@ -37,6 +37,46 @@ enum ImageHelper {
         return iconCopy
     }
 
+    // MARK: - Codex Icon
+
+    static func createCodexIcon(size: CGFloat) -> NSImage? {
+        createSquareIcon(named: "CodexIcon", size: size, isTemplate: false, sourceInset: 2)
+    }
+
+    /// 从资源中创建正方形图标。部分透明 PNG 的边缘 RGB 不是透明白，
+    /// 直接缩放时会被 AppKit 采样成细暗线，因此这里先居中裁方并略微内收。
+    static func createSquareIcon(named name: String, size: CGFloat, isTemplate: Bool, sourceInset: CGFloat = 0) -> NSImage? {
+        guard let source = NSImage(named: name) else { return nil }
+        let targetSize = NSSize(width: size, height: size)
+        let image = NSImage(size: targetSize)
+
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSRect(origin: .zero, size: targetSize).fill()
+
+        let sourceSize = source.size
+        let side = min(sourceSize.width, sourceSize.height) - sourceInset * 2
+        let cropRect = NSRect(
+            x: (sourceSize.width - side) / 2,
+            y: (sourceSize.height - side) / 2,
+            width: side,
+            height: side
+        )
+
+        NSGraphicsContext.current?.imageInterpolation = .high
+        source.draw(
+            in: NSRect(origin: .zero, size: targetSize),
+            from: cropRect,
+            operation: .sourceOver,
+            fraction: 1.0,
+            respectFlipped: false,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+        image.unlockFocus()
+        image.isTemplate = isTemplate
+        return image
+    }
+
     // MARK: - System Images
 
     /// 创建系统符号图像

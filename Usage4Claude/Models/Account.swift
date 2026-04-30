@@ -8,24 +8,15 @@
 
 import Foundation
 
-/// 账户数据模型
-/// 存储用户的 Claude 账户信息，包括认证凭据和显示名称
-/// 一个账户对应一组 Session Key 和 Organization ID
 struct Account: Codable, Identifiable, Equatable {
-    /// 唯一标识符
     let id: UUID
-    /// Claude Session Key
     var sessionKey: String
-    /// Organization ID（从 API 获取）
     var organizationId: String
-    /// API 返回的组织名称（如 "xxx's Organization"）
     var organizationName: String
-    /// 用户自定义别名（可选）
     var alias: String?
-    /// 创建时间
     let createdAt: Date
+    var provider: ProviderType
 
-    /// 显示名称：优先使用别名，否则使用 API 返回的名称
     var displayName: String {
         if let alias = alias, !alias.isEmpty {
             return alias
@@ -33,19 +24,34 @@ struct Account: Codable, Identifiable, Equatable {
         return organizationName
     }
 
+    // MARK: - CodingKeys
+
+    private enum CodingKeys: String, CodingKey {
+        case id, sessionKey, organizationId, organizationName, alias, createdAt, provider
+    }
+
+    // MARK: - Codable
+
+    // 自定义解码：旧版 JSON 不含 provider 字段时默认为 .claude，确保旧账号数据零迁移
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        sessionKey = try container.decode(String.self, forKey: .sessionKey)
+        organizationId = try container.decode(String.self, forKey: .organizationId)
+        organizationName = try container.decode(String.self, forKey: .organizationName)
+        alias = try container.decodeIfPresent(String.self, forKey: .alias)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        provider = try container.decodeIfPresent(ProviderType.self, forKey: .provider) ?? .claude
+    }
+
     // MARK: - Initialization
 
-    /// 创建新账户
-    /// - Parameters:
-    ///   - sessionKey: Claude Session Key
-    ///   - organizationId: Organization ID
-    ///   - organizationName: 组织名称
-    ///   - alias: 用户自定义别名（可选）
     init(
         sessionKey: String,
         organizationId: String,
         organizationName: String,
-        alias: String? = nil
+        alias: String? = nil,
+        provider: ProviderType = .claude
     ) {
         self.id = UUID()
         self.sessionKey = sessionKey
@@ -53,16 +59,17 @@ struct Account: Codable, Identifiable, Equatable {
         self.organizationName = organizationName
         self.alias = alias
         self.createdAt = Date()
+        self.provider = provider
     }
 
-    /// 用于从存储中解码的完整初始化方法
     init(
         id: UUID,
         sessionKey: String,
         organizationId: String,
         organizationName: String,
         alias: String?,
-        createdAt: Date
+        createdAt: Date,
+        provider: ProviderType = .claude
     ) {
         self.id = id
         self.sessionKey = sessionKey
@@ -70,6 +77,7 @@ struct Account: Codable, Identifiable, Equatable {
         self.organizationName = organizationName
         self.alias = alias
         self.createdAt = createdAt
+        self.provider = provider
     }
 
     // MARK: - Equatable

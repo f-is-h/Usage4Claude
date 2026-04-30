@@ -13,7 +13,7 @@
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
 [![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
-**Claude AI の使用状況をリアルタイムで監視するエレガントな macOS メニューバーアプリ。**
+**Claude（およびオプションの Codex）のサブスクリプション使用量を、メニューバーで美しく追跡。**
 
 ✨ **すべてのClaudeプラットフォームに対応: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
 
@@ -34,6 +34,7 @@
 - **🎨 スマートカラー** - 使用率に応じた自動色変更、制限タイプごとに独自のカラースキーム
 - **🔔 使用量通知** - 使用率90%で警告通知、クォータリセット時にリセット通知を送信
 - **👥 マルチアカウント管理** - 複数アカウント / 同一アカウント複数組織をサポート、素早く切り替え
+- **✨ Codex サポート** - オプションの Codex 使用量監視、Claude と並列表示のデュアルカラムビュー（設定で Codex アカウントを追加すると有効化）
 - **🌐 内蔵ブラウザログイン** - 内蔵ブラウザログインで Session Key を自動抽出、手動コピー不要
 - **🎨 外観設定** - システム設定に従う / ライト / ダークの3つの外観モードをサポート
 - **🕐 時刻形式** - システムデフォルト / 12時間制 / 24時間制をサポート

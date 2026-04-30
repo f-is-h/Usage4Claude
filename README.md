@@ -13,7 +13,7 @@
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
 [![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
-**An elegant macOS menu bar app for real-time monitoring of your Claude AI usage.**
+**Track your Claude (and optional Codex) subscription quota — beautifully, in your menu bar.**
 
 ✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
 
@@ -34,6 +34,7 @@
 - **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
 - **🔔 Usage Notifications** - Warning notification at 90% usage, reset notification when quota resets
 - **👥 Multi-Account Management** - Support multiple accounts / multiple organizations per account, quick switching
+- **✨ Codex Support** - Optional Codex quota monitoring alongside Claude; both providers shown as equals in a dual-column view (add a Codex account in settings to enable)
 - **🌐 Built-in Browser Login** - Built-in browser login to automatically extract Session Key, no manual copying needed
 - **🎨 Appearance Settings** - Support system default / light / dark appearance modes
 - **🕐 Time Format** - Support system default / 12-hour / 24-hour format

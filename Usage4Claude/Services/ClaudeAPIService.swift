@@ -1043,3 +1043,9 @@ enum UsageError: LocalizedError {
         }
     }
 }
+
+// MARK: - UsageProvider
+
+extension ClaudeAPIService: UsageProvider {
+    var providerType: ProviderType { .claude }
+}

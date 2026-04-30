@@ -350,7 +350,7 @@ class ShapeIconRenderer {
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮（用于获取颜色）
     ///   - removeBackground: 是否移除背景填充
-    static func drawHexagonWithPercentage(center: NSPoint, size: CGFloat, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
+    static func drawHexagonWithPercentage(center: NSPoint, size: CGFloat, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) {
         let radius = size / 2
         let borderWidth: CGFloat = 1.5
         let progressWidth: CGFloat = 2.5  // 进度线条加粗
@@ -446,6 +446,8 @@ class ShapeIconRenderer {
             if isMonochrome {
                 let opacity = monochromeOpacity(for: percentage)
                 NSColor.controlTextColor.withAlphaComponent(opacity).setStroke()
+            } else if let colorOverride {
+                colorOverride.setStroke()
             } else {
                 UsageColorScheme.extraUsageColorAdaptive(percentage, for: button).setStroke()
             }
@@ -513,13 +515,13 @@ class ShapeIconRenderer {
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景（默认false）
     /// - Returns: 图标图像 (18×18)
-    static func createHexagonIcon(percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+    static func createHexagonIcon(percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size)
         image.lockFocus()
 
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
-        drawHexagonWithPercentage(center: center, size: 16, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+        drawHexagonWithPercentage(center: center, size: 16, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: colorOverride)
 
         image.unlockFocus()
         image.isTemplate = isMonochrome

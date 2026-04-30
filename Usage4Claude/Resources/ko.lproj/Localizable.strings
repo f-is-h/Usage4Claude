@@ -36,6 +36,7 @@
 "usage.refresh" = "새로고침";
 "usage.refresh_cooldown" = "잠시 후 다시 시도하세요";
 "usage.run_diagnostic" = "진단 실행";
+"usage.codex_title" = "Codex 사용 현황";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "일반";
@@ -69,7 +70,7 @@
 "icon_style.monochrome_desc" = "시스템 메뉴바 스타일에 자동 적응, 간결하고 우아함";
 
 // MARK: - Settings - Authentication
-"settings.auth.how_to_title" = "인증 정보 얻는 방법";
+"settings.auth.how_to_title" = "Claude 인증 정보 얻는 방법";
 "settings.auth.step1" = "1. 브라우저에서 claude.ai에 접속하여 로그인";
 "settings.auth.step2" = "2. 브라우저 개발자 도구 열기(F12 또는 Cmd+Option+I)";
 "settings.auth.step3" = "3. Network(네트워크) 탭으로 전환";
@@ -87,6 +88,7 @@
 "settings.auth.need_credentials" = "Session Key를 입력해야 합니다";
 "settings.auth.show_password" = "표시";
 "settings.auth.hide_password" = "숨기기";
+"settings.auth.manual_input_claude_only_help" = "Claude 전용: Codex는 Session Key 수동 입력을 지원하지 않습니다.";
 
 // MARK: - Settings - About
 "settings.about.version" = "버전 %@";
@@ -133,6 +135,7 @@
 "display.percentage_only" = "백분율만 표시";
 "display.icon_only" = "아이콘만 표시";
 "display.both" = "아이콘과 백분율";
+"display.none" = "표시 안 함";
 "display.show_icon" = "아이콘 표시";
 "display.show_percentage" = "백분율 표시";
 
@@ -247,6 +250,9 @@
 "opus_weekly_limit" = "7일 Opus 제한";
 "sonnet_weekly_limit" = "7일 Sonnet 제한";
 "extra_usage" = "추가 사용량";
+"codex_primary_limit" = "Codex 5시간 제한";
+"codex_secondary_limit" = "Codex 7일 제한";
+"codex_extra_usage" = "Codex 추가 사용량";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "표시 옵션";
@@ -256,7 +262,7 @@
 "custom_display_description" = "표시할 제한을 수동으로 선택";
 "display_mode_label" = "표시 모드";
 "select_limit_types" = "표시할 제한 유형 선택";
-"circular_icon_constraint" = "최소한 하나의 원형 아이콘(5시간 또는 7일)을 선택해야 합니다";
+"circular_icon_constraint" = "최소한 하나의 원형 제한을 선택해야 합니다";
 "colored_theme_unavailable" = "컬러 테마는 1-2개의 원형 아이콘과 다른 유형이 없을 때만 사용할 수 있습니다";
 
 // MARK: - Theme Selection (v2.0.0)
@@ -332,8 +338,12 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "활성화되지 않음";
+"extra_usage.unlimited" = "무제한";
+"extra_usage.limit_reached" = "한도 도달";
 "extra_usage.usage_amount" = "%@%.2f/%@%.0f";
 "extra_usage.remaining_amount" = "%@%.2f 더 사용 가능";
+"extra_usage.credits_balance" = "잔액 %d 크레딧";
+"extra_usage.credits_remaining" = "%d 크레딧 남음";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "무지개 그라데이션";
@@ -361,7 +371,7 @@
 "account.no_accounts" = "구성된 계정이 없습니다\n시작하려면 계정을 추가하세요";
 "account.add_account" = "계정 추가";
 "account.add_new_account" = "새 계정 추가";
-"account.current_account" = "현재 계정";
+"account.current_account" = "현재 Claude 계정";
 "account.alias" = "별명";
 "account.alias_optional" = "별명 (선택사항)";
 "account.alias_placeholder" = "예: 개인 Pro, 회사 팀";
@@ -398,3 +408,11 @@
 "weblogin.success" = "계정이 추가되었습니다: %@";
 "weblogin.cloudflare_blocked" = "페이지를 로드할 수 없는 경우 수동 입력을 사용해 주세요.";
 "weblogin.privacy_notice" = "로그인 정보는 로컬에서만 사용되며 시스템 Keychain에 안전하게 저장됩니다.";
+"weblogin.codex_window_title" = "Codex에 로그인";
+"weblogin.codex_waiting_for_login" = "ChatGPT 계정에 로그인해 주세요";
+
+// MARK: - Codex Account (v2.7.0)
+"account.claude_accounts" = "Claude 계정";
+"account.codex_accounts" = "Codex 계정";
+"account.add_codex_account" = "Codex 계정 추가";
+"account.codex_current_account" = "현재 Codex 계정";

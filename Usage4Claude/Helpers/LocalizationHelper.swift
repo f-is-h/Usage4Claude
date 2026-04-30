@@ -47,6 +47,10 @@ enum L {
         static var cancel: String { localized("account.cancel") }
         static var validateAndAdd: String { localized("account.validate_and_add") }
         static var multiOrgAdded: String { localized("account.multi_org_added") }
+        static var claudeAccounts: String { localized("account.claude_accounts") }
+        static var codexAccounts: String { localized("account.codex_accounts") }
+        static var addCodexAccount: String { localized("account.add_codex_account") }
+        static var codexCurrentAccount: String { localized("account.codex_current_account") }
     }
     
     // MARK: - Usage Detail View
@@ -68,6 +72,7 @@ enum L {
         static var refresh: String { localized("usage.refresh") }
         static var refreshCooldown: String { localized("usage.refresh_cooldown") }
         static var runDiagnostic: String { localized("usage.run_diagnostic") }
+        static var codexTitle: String { localized("usage.codex_title") }
     }
     
     // MARK: - Settings Tabs
@@ -119,6 +124,7 @@ enum L {
         static var needCredentials: String { localized("settings.auth.need_credentials") }
         static var showPassword: String { localized("settings.auth.show_password") }
         static var hidePassword: String { localized("settings.auth.hide_password") }
+        static var manualInputClaudeOnlyHelp: String { localized("settings.auth.manual_input_claude_only_help") }
     }
     
     // MARK: - Settings About
@@ -207,6 +213,7 @@ enum L {
         static var percentageOnly: String { localized("display.percentage_only") }
         static var iconOnly: String { localized("display.icon_only") }
         static var both: String { localized("display.both") }
+        static var none: String { localized("display.none") }
         static var showIcon: String { localized("display.show_icon") }
         static var showPercentage: String { localized("display.show_percentage") }
     }
@@ -253,6 +260,9 @@ enum L {
         static var opusWeekly: String { localized("opus_weekly_limit") }
         static var sonnetWeekly: String { localized("sonnet_weekly_limit") }
         static var extraUsage: String { localized("extra_usage") }
+        static var codexPrimary: String { localized("codex_primary_limit") }
+        static var codexSecondary: String { localized("codex_secondary_limit") }
+        static var codexExtraUsage: String { localized("codex_extra_usage") }
     }
 
     // MARK: - Usage Data Formatting
@@ -365,6 +375,9 @@ enum L {
         static var opusWeekly: String { localized("opus_weekly_limit") }
         static var sonnetWeekly: String { localized("sonnet_weekly_limit") }
         static var extraUsage: String { localized("extra_usage") }
+        static var codexPrimary: String { localized("codex_primary_limit") }
+        static var codexSecondary: String { localized("codex_secondary_limit") }
+        static var codexExtraUsage: String { localized("codex_extra_usage") }
     }
 
     // MARK: - Display Options (v2.0.0)
@@ -394,11 +407,23 @@ enum L {
     // MARK: - Extra Usage
     enum ExtraUsage {
         static var notEnabled: String { localized("extra_usage.not_enabled") }
+        static var unlimited: String { localized("extra_usage.unlimited") }
+        static var limitReached: String { localized("extra_usage.limit_reached") }
         static func usageAmount(_ used: Double, _ limit: Double, symbol: String = "$") -> String {
             String(format: localized("extra_usage.usage_amount"), symbol, used, symbol, limit)
         }
         static func remainingAmount(_ remaining: Double, symbol: String = "$") -> String {
             String(format: localized("extra_usage.remaining_amount"), symbol, remaining)
+        }
+        static func creditsBalance(_ balance: Double) -> String {
+            return String(format: localized("extra_usage.credits_balance"), displayCredits(balance))
+        }
+        static func creditsRemaining(_ balance: Double) -> String {
+            return String(format: localized("extra_usage.credits_remaining"), displayCredits(balance))
+        }
+
+        private static func displayCredits(_ balance: Double) -> Int {
+            max(0, Int(balance.rounded(.down)))
         }
     }
 
@@ -435,12 +460,14 @@ enum L {
     // MARK: - Web Login
     enum WebLogin {
         static var windowTitle: String { localized("weblogin.window_title") }
+        static var codexWindowTitle: String { localized("weblogin.codex_window_title") }
         static var browserLogin: String { localized("weblogin.browser_login") }
         static var browserLoginRecommended: String { localized("weblogin.browser_login_recommended") }
         static var manualInput: String { localized("weblogin.manual_input") }
         static var orManualInput: String { localized("weblogin.or_manual_input") }
         static var loading: String { localized("weblogin.loading") }
         static var waitingForLogin: String { localized("weblogin.waiting_for_login") }
+        static var codexWaitingForLogin: String { localized("weblogin.codex_waiting_for_login") }
         static var validating: String { localized("weblogin.validating") }
         static func success(_ name: String) -> String {
             String(format: localized("weblogin.success"), name)

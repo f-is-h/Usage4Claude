@@ -245,6 +245,76 @@ class KeychainManager {
     }
     #endif
 
+    // MARK: - Codex 账户列表存储
+
+    #if DEBUG
+    @discardableResult
+    func saveCodexAccounts(_ accounts: [Account]) -> Bool {
+        let encoder = JSONEncoder()
+        guard let data = try? encoder.encode(accounts) else {
+            Logger.keychain.error("[Debug] Codex 账户列表编码失败")
+            return false
+        }
+        UserDefaults.standard.set(data, forKey: debugKeyPrefix + "accounts_codex")
+        Logger.keychain.debug("[Debug] 保存 \(accounts.count) 个 Codex 账户到 UserDefaults")
+        return true
+    }
+
+    func loadCodexAccounts() -> [Account]? {
+        guard let data = UserDefaults.standard.data(forKey: debugKeyPrefix + "accounts_codex") else {
+            return nil
+        }
+        let decoder = JSONDecoder()
+        guard let accounts = try? decoder.decode([Account].self, from: data) else {
+            Logger.keychain.error("[Debug] Codex 账户列表解码失败")
+            return nil
+        }
+        Logger.keychain.debug("[Debug] 读取 \(accounts.count) 个 Codex 账户")
+        return accounts
+    }
+
+    @discardableResult
+    func deleteCodexAccounts() -> Bool {
+        UserDefaults.standard.removeObject(forKey: debugKeyPrefix + "accounts_codex")
+        Logger.keychain.debug("[Debug] 删除 Codex 账户列表")
+        return true
+    }
+    #else
+    @discardableResult
+    func saveCodexAccounts(_ accounts: [Account]) -> Bool {
+        let encoder = JSONEncoder()
+        guard let jsonData = try? encoder.encode(accounts),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            Logger.keychain.error("Codex 账户列表编码失败")
+            return false
+        }
+        let result = save(key: "accounts_codex", value: jsonString)
+        if result {
+            Logger.keychain.debug("保存 \(accounts.count) 个 Codex 账户到 Keychain")
+        }
+        return result
+    }
+
+    func loadCodexAccounts() -> [Account]? {
+        guard let jsonString = load(key: "accounts_codex"),
+              let jsonData = jsonString.data(using: .utf8) else {
+            return nil
+        }
+        let decoder = JSONDecoder()
+        guard let accounts = try? decoder.decode([Account].self, from: jsonData) else {
+            Logger.keychain.error("Codex 账户列表解码失败")
+            return nil
+        }
+        Logger.keychain.debug("读取 \(accounts.count) 个 Codex 账户")
+        return accounts
+    }
+
+    @discardableResult
+    func deleteCodexAccounts() -> Bool {
+        return delete(key: "accounts_codex")
+    }
+    #endif
+
     #if !DEBUG
     // MARK: - 通用 Keychain 操作（仅 Release 模式）
     

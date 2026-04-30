@@ -215,6 +215,112 @@ enum UsageColorScheme {
         }
     }
 
+    // MARK: - Codex Primary 配色（亮松石 → 深松石 → 红，圆形）
+
+    /// 根据 Codex primary 使用百分比返回 NSColor
+    /// - Note: 0-70% 亮松石(安全), 70-90% 深松石(警告), 90-100% 红色(危险)
+    static func codexPrimaryColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 45/255.0, green: 212/255.0, blue: 191/255.0, alpha: 1.0)  // #2DD4BF 亮松石
+        } else if percentage < 90 {
+            return NSColor(red: 13/255.0, green: 148/255.0, blue: 136/255.0, alpha: 1.0)  // #0D9488 深松石
+        } else {
+            return NSColor.systemRed
+        }
+    }
+
+    /// 根据 Codex primary 使用百分比返回 SwiftUI Color
+    static func codexPrimaryColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0).opacity(opacity)   // #2DD4BF
+        } else if percentage < 90 {
+            return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0).opacity(opacity)   // #0D9488
+        } else {
+            return .red.opacity(opacity)
+        }
+    }
+
+    /// 根据 Codex primary 使用百分比返回自适应 NSColor
+    static func codexPrimaryColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = codexPrimaryColor(percentage)
+        if isDarkMode(for: statusButton) {
+            return baseColor.adjustedForDarkMode()
+        } else {
+            return baseColor
+        }
+    }
+
+    // MARK: - Codex Secondary 配色（深松石 → 更深松石 → 红，虚线圆形）
+
+    /// 根据 Codex secondary 使用百分比返回 NSColor
+    /// - Note: 0-70% 深松石(安全), 70-90% 暗松石(警告), 90-100% 红色(危险)
+    ///         起始色比 primary 更深，以区分两个指标
+    static func codexSecondaryColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 13/255.0, green: 148/255.0, blue: 136/255.0, alpha: 1.0)   // #0D9488 深松石
+        } else if percentage < 90 {
+            return NSColor(red: 15/255.0, green: 118/255.0, blue: 110/255.0, alpha: 1.0)   // #0F766E 暗松石
+        } else {
+            return NSColor.systemRed
+        }
+    }
+
+    /// 根据 Codex secondary 使用百分比返回 SwiftUI Color
+    static func codexSecondaryColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0).opacity(opacity)  // #0D9488
+        } else if percentage < 90 {
+            return Color(red: 15/255.0, green: 118/255.0, blue: 110/255.0).opacity(opacity)  // #0F766E
+        } else {
+            return .red.opacity(opacity)
+        }
+    }
+
+    /// 根据 Codex secondary 使用百分比返回自适应 NSColor
+    static func codexSecondaryColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = codexSecondaryColor(percentage)
+        if isDarkMode(for: statusButton) {
+            return baseColor.adjustedForDarkMode()
+        } else {
+            return baseColor
+        }
+    }
+
+    // MARK: - Codex Extra Usage 配色（金色 credits → 深金色 → 红，六边形）
+
+    /// 根据 Codex Extra Usage 使用百分比返回 NSColor
+    /// - Note: Codex credits 的真实 API 只有余额/触顶状态；调试模式会使用百分比驱动视觉预览。
+    static func codexExtraUsageColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 245/255.0, green: 158/255.0, blue: 11/255.0, alpha: 1.0)  // #F59E0B
+        } else if percentage < 90 {
+            return NSColor(red: 217/255.0, green: 119/255.0, blue: 6/255.0, alpha: 1.0)   // #D97706
+        } else {
+            return NSColor.systemRed
+        }
+    }
+
+    /// 根据 Codex Extra Usage 使用百分比返回 SwiftUI Color
+    static func codexExtraUsageColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0).opacity(opacity)
+        } else if percentage < 90 {
+            return Color(red: 217/255.0, green: 119/255.0, blue: 6/255.0).opacity(opacity)
+        } else {
+            return .red.opacity(opacity)
+        }
+    }
+
+    /// 根据 Codex Extra Usage 使用百分比返回自适应 NSColor
+    static func codexExtraUsageColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = codexExtraUsageColor(percentage)
+        if isDarkMode(for: statusButton) {
+            return baseColor.adjustedForDarkMode()
+        } else {
+            return baseColor
+        }
+    }
+
     // MARK: - 备选配色方案（注释保留，方便切换测试）
 
     /*

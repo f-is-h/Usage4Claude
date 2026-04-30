@@ -23,6 +23,8 @@ class MenuBarUI {
     private(set) var popover: NSPopover!
     /// 弹出窗口关闭监听器 - 监听鼠标点击事件
     private var popoverCloseObserver: Any?
+    /// 多 Provider 弹窗居中用的透明锚点窗口
+    private var popoverAnchorWindow: NSWindow?
     /// 应用失焦观察者 - 用于在应用失去焦点时关闭 popover
     private var appResignActiveObserver: NSObjectProtocol?
 
@@ -93,6 +95,11 @@ class MenuBarUI {
         popover.contentViewController = hostingController
     }
 
+    /// 设置 popover 内容尺寸，确保 AppKit 在定位箭头前拿到真实宽高
+    func setPopoverContentSize(_ size: NSSize) {
+        popover.contentSize = size
+    }
+
     // MARK: - Popover Control
 
     /// 打开弹出窗口
@@ -113,15 +120,66 @@ class MenuBarUI {
             popover.appearance = NSAppearance(named: .darkAqua)
         }
 
-        // 显示 popover
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        // 宽弹窗用透明锚点窗口居中，避免 source rect 被状态栏按钮范围裁剪
+        if popover.contentSize.width > 300 {
+            showMultiProviderPopover(relativeTo: button)
+        } else {
+            closePopoverAnchorWindow()
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
 
-        // 配置 popover 窗口
+        // 配置 popover 窗口属性
         configurePopoverWindow()
 
         // 设置监听器
         setupPopoverCloseObserver()
         setupAppResignActiveObserver()
+    }
+
+    /// 使用透明 1pt 锚点窗口显示多 Provider popover，使宽弹窗的箭头保持居中
+    private func showMultiProviderPopover(relativeTo button: NSStatusBarButton) {
+        guard let buttonWindow = button.window,
+              let screen = buttonWindow.screen ?? NSScreen.main else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            return
+        }
+
+        closePopoverAnchorWindow()
+
+        let popoverWidth = max(popover.contentSize.width, 580)
+        let buttonRectInWindow = button.convert(button.bounds, to: nil)
+        let buttonScreenRect = buttonWindow.convertToScreen(buttonRectInWindow)
+
+        let visibleFrame = screen.visibleFrame
+        let arrowX = min(max(buttonScreenRect.midX, visibleFrame.minX + popoverWidth / 2),
+                         visibleFrame.maxX - popoverWidth / 2)
+
+        let anchorRect = NSRect(
+            x: arrowX - 0.5,
+            y: buttonScreenRect.minY,
+            width: 1,
+            height: buttonScreenRect.height
+        )
+
+        let anchorWindow = NSWindow(
+            contentRect: anchorRect,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        anchorWindow.backgroundColor = .clear
+        anchorWindow.isOpaque = false
+        anchorWindow.hasShadow = false
+        anchorWindow.ignoresMouseEvents = true
+        anchorWindow.level = .statusBar
+        anchorWindow.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+
+        let anchorView = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: buttonScreenRect.height))
+        anchorWindow.contentView = anchorView
+        anchorWindow.orderFrontRegardless()
+        popoverAnchorWindow = anchorWindow
+
+        popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: .minY)
     }
 
     /// 配置 popover 窗口属性
@@ -164,10 +222,16 @@ class MenuBarUI {
         if popover.isShown {
             popover.performClose(nil)
         }
+        closePopoverAnchorWindow()
 
         // 移除事件监听器
         removePopoverCloseObserver()
         removeAppResignActiveObserver()
+    }
+
+    private func closePopoverAnchorWindow() {
+        popoverAnchorWindow?.orderOut(nil)
+        popoverAnchorWindow = nil
     }
 
     /// 设置弹出窗口外部点击监听
@@ -244,20 +308,38 @@ class MenuBarUI {
     func createStandardMenu(hasUpdate: Bool, shouldShowBadge: Bool, target: AnyObject?) -> NSMenu {
         let menu = NSMenu()
 
-        // 账户选择子菜单（仅当有多个账户时显示）
+        // 账户选择子菜单（多账户时显示）
+        var hasAccountMenuItems = false
+
         if settings.accounts.count > 1 {
             let accountSubmenu = createAccountSubmenu(target: target)
             let currentAccountName = settings.currentAccountName ?? L.Menu.account
-            let menuTitle = "\(L.Menu.accountPrefix) \(currentAccountName)"
-
             let accountItem = NSMenuItem(
-                title: menuTitle,
+                title: "\(L.Menu.accountPrefix) \(currentAccountName)",
                 action: nil,
                 keyEquivalent: ""
             )
             accountItem.submenu = accountSubmenu
             setMenuItemIcon(accountItem, systemName: "person.2")
             menu.addItem(accountItem)
+            hasAccountMenuItems = true
+        }
+
+        if settings.codexAccounts.count > 1 {
+            let codexSubmenu = createCodexAccountSubmenu(target: target)
+            let currentCodexName = settings.currentCodexAccount?.displayName ?? "Codex"
+            let codexItem = NSMenuItem(
+                title: "Codex: \(currentCodexName)",
+                action: nil,
+                keyEquivalent: ""
+            )
+            codexItem.submenu = codexSubmenu
+            setMenuItemIcon(codexItem, systemName: "person.2.fill")
+            menu.addItem(codexItem)
+            hasAccountMenuItems = true
+        }
+
+        if hasAccountMenuItems {
             menu.addItem(NSMenuItem.separator())
         }
 
@@ -416,6 +498,29 @@ class MenuBarUI {
         return submenu
     }
 
+    /// 创建 Codex 账户选择子菜单
+    private func createCodexAccountSubmenu(target: AnyObject?) -> NSMenu {
+        let submenu = NSMenu()
+
+        for account in settings.codexAccounts {
+            let item = NSMenuItem(
+                title: account.displayName,
+                action: #selector(MenuBarManager.switchCodexAccount(_:)),
+                keyEquivalent: ""
+            )
+            item.target = target
+            item.representedObject = account
+
+            if account.id == settings.currentCodexAccountId {
+                item.state = .on
+            }
+
+            submenu.addItem(item)
+        }
+
+        return submenu
+    }
+
     /// 创建彩虹文字 NSAttributedString
     /// - Parameters:
     ///   - text: 完整文本
@@ -483,17 +588,18 @@ class MenuBarUI {
 
     /// 更新菜单栏图标
     /// - Parameters:
-    ///   - usageData: 用量数据
+    ///   - usageData: Claude 用量数据
+    ///   - codexUsageData: Codex 用量数据
     ///   - hasUpdate: 是否有可用更新
     ///   - shouldShowBadge: 是否显示更新徽章
-    func updateMenuBarIcon(usageData: UsageData?, hasUpdate: Bool, shouldShowBadge: Bool) {
+    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
         guard let button = statusItem.button else { return }
 
         // 确定是否实际显示徽章
         let showBadge = hasUpdate && shouldShowBadge
 
         // 生成缓存键
-        let cacheKey = generateCacheKey(usageData: usageData, hasUpdate: showBadge)
+        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: showBadge)
 
         // 尝试从缓存获取
         if let cachedImage = iconCache[cacheKey] {
@@ -504,6 +610,7 @@ class MenuBarUI {
         // 缓存未命中，使用 IconRenderer 创建新图标
         let icon = iconRenderer.createIcon(
             usageData: usageData,
+            codexUsageData: codexUsageData,
             hasUpdate: showBadge,
             button: button
         )
@@ -524,17 +631,52 @@ class MenuBarUI {
 
     /// 生成图标缓存键
     /// - Parameters:
-    ///   - usageData: 用量数据
+    ///   - usageData: Claude 用量数据
+    ///   - codexUsageData: Codex 用量数据
     ///   - hasUpdate: 是否有更新徽章
     /// - Returns: 缓存键字符串
-    private func generateCacheKey(usageData: UsageData?, hasUpdate: Bool) -> String {
+    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
+        let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
-            return "no_data_\(settings.iconStyleMode.rawValue)_\(hasUpdate)"
+            var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)"
+            if let codex = codexUsageData {
+                let activeTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
+                    .map(\.rawValue)
+                    .sorted()
+                    .joined(separator: ",")
+                key += "_types\(activeTypes)"
+
+                if let primary = codex.primary {
+                    key += "_cxp\(Int(primary.percentage))"
+                } else {
+                    key += "_cxpnil"
+                }
+
+                if let secondary = codex.secondary {
+                    key += "_cxs\(Int(secondary.percentage))"
+                } else {
+                    key += "_cxsnil"
+                }
+
+                if let extraUsage = codex.extraUsage {
+                    key += "_cxe\(extraUsage.enabled ? 1 : 0)"
+                    if let percentage = extraUsage.percentage {
+                        key += "_\(Int(percentage))"
+                    }
+                } else {
+                    key += "_cxenil"
+                }
+            }
+
+            if hasUpdate {
+                key += "_badge"
+            }
+
+            return key
         }
 
-        var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)"
+        var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_mp\(isMulti)"
 
-        // 包含所有限制类型的百分比，确保形状图标也能正确缓存
         if let fiveHour = data.fiveHour {
             key += "_5h\(Int(fiveHour.percentage))"
         }
@@ -549,6 +691,12 @@ class MenuBarUI {
         }
         if let extraUsage = data.extraUsage, extraUsage.enabled, let percentage = extraUsage.percentage {
             key += "_extra\(Int(percentage))"
+        }
+
+        if let codex = codexUsageData {
+            if let p = codex.primary { key += "_cxp\(Int(p.percentage))" }
+            if let s = codex.secondary { key += "_cxs\(Int(s.percentage))" }
+            if let e = codex.extraUsage?.percentage { key += "_cxe\(Int(e))" }
         }
 
         if hasUpdate {
@@ -589,6 +737,7 @@ class MenuBarUI {
         if popover.isShown {
             popover.performClose(nil)
         }
+        closePopoverAnchorWindow()
     }
 
     deinit {
