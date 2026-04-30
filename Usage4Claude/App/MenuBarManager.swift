@@ -501,7 +501,9 @@ class MenuBarManager: ObservableObject {
                 NSApp.setActivationPolicy(.accessory)
 
                 self?.settingsWindow = nil
-                if self?.settings.hasValidCredentials == true && self?.usageData == nil {
+                if self?.settings.hasAnyValidCredentials == true
+                    && self?.usageData == nil
+                    && self?.codexUsageData == nil {
                     self?.startRefreshing()
                 }
             }

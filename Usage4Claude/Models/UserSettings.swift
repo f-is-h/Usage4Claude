@@ -995,6 +995,11 @@ class UserSettings: ObservableObject {
         return !organizationId.isEmpty && !sessionKey.isEmpty
     }
 
+    /// 检查任一 Provider 的认证信息是否已配置
+    var hasAnyValidCredentials: Bool {
+        return hasValidCredentials || hasValidCodexCredentials
+    }
+
     /// 验证 Organization ID 格式
     /// - Parameter id: 要验证的 Organization ID
     /// - Returns: 如果格式有效（UUID 格式）返回 true
