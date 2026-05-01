@@ -163,8 +163,13 @@ class DataRefreshManager: ObservableObject {
             if fetchCodex {
                 switch codexResult {
                 case .success(let codex):
+                    let previousCodexData = self.codexUsageData
                     self.codexUsageData = codex
                     self.errorMessage = nil
+
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(codexUsageData: codex, previousData: previousCodexData)
+                    }
 
                     let newCodexResetsAt = codex.primary?.resetsAt
                     let codexResetChanged = self.hasResetTimeChanged(from: self.lastCodexResetsAt, to: newCodexResetsAt)
@@ -486,8 +491,12 @@ class DataRefreshManager: ObservableObject {
                 self.endRefreshAnimationWithMinimumDuration { }
 
                 if case .success(let data) = result {
+                    let previousCodexData = self.codexUsageData
                     self.codexUsageData = data
                     self.errorMessage = nil
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
+                    }
                     let newCodexResetsAt = data.primary?.resetsAt
                     if self.hasResetTimeChanged(from: self.lastCodexResetsAt, to: newCodexResetsAt) {
                         self.cancelCodexResetVerification()

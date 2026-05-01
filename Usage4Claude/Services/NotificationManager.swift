@@ -95,6 +95,34 @@ class NotificationManager {
         )
     }
 
+    /// 检查 Codex 用量数据并在需要时发送通知
+    /// - Parameters:
+    ///   - codexUsageData: 最新的 Codex 用量数据
+    ///   - previousData: 上一次的 Codex 用量数据（用于对比变化）
+    func checkAndNotify(codexUsageData: CodexUsageData, previousData: CodexUsageData?) {
+        checkLimit(
+            type: .codexPrimary,
+            current: codexUsageData.primary?.percentage,
+            previous: previousData?.primary?.percentage,
+            currentResetsAt: codexUsageData.primary?.resetsAt,
+            previousResetsAt: previousData?.primary?.resetsAt
+        )
+        checkLimit(
+            type: .codexSecondary,
+            current: codexUsageData.secondary?.percentage,
+            previous: previousData?.secondary?.percentage,
+            currentResetsAt: codexUsageData.secondary?.resetsAt,
+            previousResetsAt: previousData?.secondary?.resetsAt
+        )
+        checkLimit(
+            type: .codexExtraUsage,
+            current: codexUsageData.extraUsage?.percentage,
+            previous: previousData?.extraUsage?.percentage,
+            currentResetsAt: nil,
+            previousResetsAt: nil
+        )
+    }
+
     // MARK: - Private Methods
 
     /// 检查单个限制类型的用量变化
@@ -123,7 +151,7 @@ class NotificationManager {
         let previousPct = previous ?? 0
 
         // 7天限制额外检查 75% 阈值
-        if type == .sevenDay {
+        if type == .sevenDay || type == .codexSecondary {
             let earlyKey = "\(type.rawValue)_75"
             let alreadyNotifiedEarly = notifiedWarnings[earlyKey] ?? false
             if !alreadyNotifiedEarly && previousPct < sevenDayEarlyWarningThreshold && currentPct >= sevenDayEarlyWarningThreshold {
