@@ -127,10 +127,13 @@ struct CodexColumnView: View {
         }
     }
 
-    // MARK: - Loading Animations (Teal 色系，与 Claude 加载动画逻辑一致)
+    // MARK: - Loading Animations
 
-    private let tealColor = Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
-    private let tealDark  = Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0)
+    private let codexPrimaryColor = Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
+    private let codexPrimaryDark = Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0)
+    private let codexSecondaryColor = Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)
+    private let codexSecondaryDark = Color(red: 37/255.0, green: 99/255.0, blue: 235/255.0)
+    private let codexSecondaryDeep = Color(red: 30/255.0, green: 58/255.0, blue: 138/255.0)
 
     @ViewBuilder
     private func codexLoadingAnimation() -> some View {
@@ -140,7 +143,7 @@ struct CodexColumnView: View {
                 .trim(from: 0, to: 0.7)
                 .stroke(
                     AngularGradient(
-                        gradient: Gradient(colors: [tealColor, tealDark, .cyan, tealColor]),
+                        gradient: Gradient(colors: [codexPrimaryColor, codexPrimaryDark, .cyan, codexPrimaryColor]),
                         center: .center
                     ),
                     style: StrokeStyle(lineWidth: 10, lineCap: .round)
@@ -150,19 +153,19 @@ struct CodexColumnView: View {
         case .dashed:
             Circle()
                 .trim(from: 0, to: 1)
-                .stroke(tealColor, style: StrokeStyle(lineWidth: 10, lineCap: .round, dash: [10, 8]))
+                .stroke(codexPrimaryColor, style: StrokeStyle(lineWidth: 10, lineCap: .round, dash: [10, 8]))
                 .frame(width: 100, height: 100)
                 .rotationEffect(.degrees(rotationAngle))
         case .pulse:
             ZStack {
                 Circle()
                     .trim(from: 0, to: 0.6)
-                    .stroke(tealColor.opacity(0.8), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .stroke(codexPrimaryColor.opacity(0.8), style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     .frame(width: 90, height: 90)
                     .rotationEffect(.degrees(rotationAngle))
                 Circle()
                     .trim(from: 0, to: 0.4)
-                    .stroke(tealColor.opacity(0.4), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .stroke(codexPrimaryColor.opacity(0.4), style: StrokeStyle(lineWidth: 6, lineCap: .round))
                     .frame(width: 100, height: 100)
                     .rotationEffect(.degrees(-rotationAngle * 0.7))
             }
@@ -177,7 +180,7 @@ struct CodexColumnView: View {
                 .trim(from: 0, to: 0.7)
                 .stroke(
                     AngularGradient(
-                        gradient: Gradient(colors: [tealColor, tealDark, .cyan, tealColor]),
+                        gradient: Gradient(colors: [codexSecondaryColor, codexSecondaryDark, codexSecondaryDeep, codexSecondaryColor]),
                         center: .center
                     ),
                     style: StrokeStyle(lineWidth: 3, lineCap: .round)
@@ -187,13 +190,13 @@ struct CodexColumnView: View {
         case .dashed:
             Circle()
                 .trim(from: 0, to: 1)
-                .stroke(tealDark, style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 6]))
+                .stroke(codexSecondaryDark, style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 6]))
                 .frame(width: 114, height: 114)
                 .rotationEffect(.degrees(-rotationAngle))
         case .pulse:
             Circle()
                 .trim(from: 0, to: 0.4)
-                .stroke(tealDark.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(codexSecondaryDark.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .frame(width: 114, height: 114)
                 .rotationEffect(.degrees(-rotationAngle * 0.7))
         }

@@ -160,7 +160,7 @@ struct UnifiedLimitRow: View {
         case .codexPrimary:
             return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)   // #2DD4BF
         case .codexSecondary:
-            return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0)   // #0D9488
+            return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
         case .codexExtraUsage:
             return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)    // #F59E0B
         }

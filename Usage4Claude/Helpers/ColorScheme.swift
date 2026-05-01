@@ -215,17 +215,17 @@ enum UsageColorScheme {
         }
     }
 
-    // MARK: - Codex Primary 配色（亮松石 → 深松石 → 红，圆形）
+    // MARK: - Codex Primary 配色（亮松石 → 深松石 → 最深松石，圆形）
 
     /// 根据 Codex primary 使用百分比返回 NSColor
-    /// - Note: 0-70% 亮松石(安全), 70-90% 深松石(警告), 90-100% 红色(危险)
+    /// - Note: 0-70% 亮松石(安全), 70-90% 深松石(警告), 90-100% 最深松石(危险)
     static func codexPrimaryColor(_ percentage: Double) -> NSColor {
         if percentage < 70 {
             return NSColor(red: 45/255.0, green: 212/255.0, blue: 191/255.0, alpha: 1.0)  // #2DD4BF 亮松石
         } else if percentage < 90 {
             return NSColor(red: 13/255.0, green: 148/255.0, blue: 136/255.0, alpha: 1.0)  // #0D9488 深松石
         } else {
-            return NSColor.systemRed
+            return NSColor(red: 19/255.0, green: 78/255.0, blue: 74/255.0, alpha: 1.0)    // #134E4A 最深松石
         }
     }
 
@@ -236,7 +236,7 @@ enum UsageColorScheme {
         } else if percentage < 90 {
             return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0).opacity(opacity)   // #0D9488
         } else {
-            return .red.opacity(opacity)
+            return Color(red: 19/255.0, green: 78/255.0, blue: 74/255.0).opacity(opacity)     // #134E4A
         }
     }
 
@@ -250,29 +250,29 @@ enum UsageColorScheme {
         }
     }
 
-    // MARK: - Codex Secondary 配色（深松石 → 更深松石 → 红，虚线圆形）
+    // MARK: - Codex Secondary 配色（天空蓝 → 蓝 → 深蓝，虚线圆形）
 
     /// 根据 Codex secondary 使用百分比返回 NSColor
-    /// - Note: 0-70% 深松石(安全), 70-90% 暗松石(警告), 90-100% 红色(危险)
-    ///         起始色比 primary 更深，以区分两个指标
+    /// - Note: 0-70% 天空蓝(安全), 70-90% 蓝色(警告), 90-100% 深蓝(危险)
+    ///         与 primary 的松石色系区分，避免两个圆环过于接近
     static func codexSecondaryColor(_ percentage: Double) -> NSColor {
         if percentage < 70 {
-            return NSColor(red: 13/255.0, green: 148/255.0, blue: 136/255.0, alpha: 1.0)   // #0D9488 深松石
+            return NSColor(red: 96/255.0, green: 165/255.0, blue: 250/255.0, alpha: 1.0)   // #60A5FA 天空蓝
         } else if percentage < 90 {
-            return NSColor(red: 15/255.0, green: 118/255.0, blue: 110/255.0, alpha: 1.0)   // #0F766E 暗松石
+            return NSColor(red: 37/255.0, green: 99/255.0, blue: 235/255.0, alpha: 1.0)    // #2563EB 蓝色
         } else {
-            return NSColor.systemRed
+            return NSColor(red: 30/255.0, green: 58/255.0, blue: 138/255.0, alpha: 1.0)    // #1E3A8A 深蓝
         }
     }
 
     /// 根据 Codex secondary 使用百分比返回 SwiftUI Color
     static func codexSecondaryColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
         if percentage < 70 {
-            return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0).opacity(opacity)  // #0D9488
+            return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0).opacity(opacity)  // #60A5FA
         } else if percentage < 90 {
-            return Color(red: 15/255.0, green: 118/255.0, blue: 110/255.0).opacity(opacity)  // #0F766E
+            return Color(red: 37/255.0, green: 99/255.0, blue: 235/255.0).opacity(opacity)   // #2563EB
         } else {
-            return .red.opacity(opacity)
+            return Color(red: 30/255.0, green: 58/255.0, blue: 138/255.0).opacity(opacity)   // #1E3A8A
         }
     }
 
@@ -286,7 +286,7 @@ enum UsageColorScheme {
         }
     }
 
-    // MARK: - Codex Extra Usage 配色（金色 credits → 深金色 → 红，六边形）
+    // MARK: - Codex Extra Usage 配色（金色 credits → 深金色 → 最深琥珀，六边形）
 
     /// 根据 Codex Extra Usage 使用百分比返回 NSColor
     /// - Note: Codex credits 的真实 API 只有余额/触顶状态；调试模式会使用百分比驱动视觉预览。
@@ -296,7 +296,7 @@ enum UsageColorScheme {
         } else if percentage < 90 {
             return NSColor(red: 217/255.0, green: 119/255.0, blue: 6/255.0, alpha: 1.0)   // #D97706
         } else {
-            return NSColor.systemRed
+            return NSColor(red: 120/255.0, green: 53/255.0, blue: 15/255.0, alpha: 1.0)   // #78350F 最深琥珀
         }
     }
 
@@ -307,7 +307,7 @@ enum UsageColorScheme {
         } else if percentage < 90 {
             return Color(red: 217/255.0, green: 119/255.0, blue: 6/255.0).opacity(opacity)
         } else {
-            return .red.opacity(opacity)
+            return Color(red: 120/255.0, green: 53/255.0, blue: 15/255.0).opacity(opacity)
         }
     }
 

@@ -509,10 +509,10 @@ struct GeneralSettingsView: View {
                                         Text("\(Int(settings.debugCodexSecondaryPercentage))%")
                                             .font(.caption)
                                             .fontWeight(.medium)
-                                            .foregroundColor(Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0))
+                                            .foregroundColor(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
                                     }
                                     Slider(value: $settings.debugCodexSecondaryPercentage, in: 0...100, step: 1)
-                                        .tint(Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0))
+                                        .tint(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
                                 }
 
                                 // Codex Extra Usage
@@ -813,7 +813,7 @@ struct LimitTypeCheckbox: View {
         case .opusWeekly: return .orange
         case .sonnetWeekly: return .blue
         case .codexPrimary:  return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
-        case .codexSecondary: return Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0)
+        case .codexSecondary: return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)
         case .codexExtraUsage: return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
         }
     }
