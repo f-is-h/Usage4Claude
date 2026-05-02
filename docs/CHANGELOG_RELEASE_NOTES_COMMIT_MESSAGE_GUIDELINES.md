@@ -53,6 +53,7 @@ This release brings a refined user interface and improved window management for 
    
    <body>
    ```
+- Git commit message 只写英文，不要把中文翻译实际放入 commit message 中
 - Type 类型：
    - feat: 新功能
    - fix: Bug 修复
@@ -82,5 +83,6 @@ Improved window management:
 **注意**:
 
 - 不要使用任何的Emoji
+- 不要出现多余的空行
 - 不要在结尾添加与 Generated with [Claude Code]  类似的任何文字
 - 不要在结尾添加与 Co-Authored-By: Claude 类似的任何文字
