@@ -266,6 +266,28 @@ enum L {
         static var codexExtraUsage: String { localized("codex_extra_usage") }
     }
 
+    // MARK: - Detail Rows
+    enum DetailRow {
+        static var fiveHour: String { localized("detail_row.five_hour_limit") }
+        static var sevenDay: String { localized("detail_row.seven_day_limit") }
+        static var opusWeekly: String { localized("detail_row.opus_weekly_limit") }
+        static var sonnetWeekly: String { localized("detail_row.sonnet_weekly_limit") }
+        static var extraUsage: String { localized("detail_row.extra_usage") }
+        static var today: String { localized("usage_data.detail_today") }
+
+        static func creditsBalance(_ balance: Double) -> String {
+            return String(format: localized("extra_usage.detail_credits_balance"), displayCredits(balance))
+        }
+
+        static func creditsRemaining(_ balance: Double) -> String {
+            return String(format: localized("extra_usage.detail_credits_remaining"), displayCredits(balance))
+        }
+
+        private static func displayCredits(_ balance: Double) -> Int {
+            max(0, Int(balance.rounded(.down)))
+        }
+    }
+
     // MARK: - Usage Data Formatting
     enum UsageData {
         static var notStartedReset: String { localized("usage_data.not_started_reset") }

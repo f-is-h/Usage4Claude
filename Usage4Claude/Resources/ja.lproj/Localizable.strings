@@ -167,6 +167,7 @@
 "usage_data.resets_in_days" = "残り約%d日%d時間";
 "usage_data.unknown" = "不明";
 "usage_data.today" = "今日";
+"usage_data.detail_today" = "今日";
 "usage_data.tomorrow" = "明日";
 
 // MARK: - Error Messages
@@ -254,6 +255,13 @@
 "codex_primary_limit" = "Codex 5時間制限";
 "codex_secondary_limit" = "Codex 7日制限";
 "codex_extra_usage" = "Codex 追加使用量";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "5時間制限";
+"detail_row.seven_day_limit" = "7日制限";
+"detail_row.opus_weekly_limit" = "Opus 7日制限";
+"detail_row.sonnet_weekly_limit" = "Sonnet 7日制限";
+"detail_row.extra_usage" = "追加使用量";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "表示オプション";
@@ -347,6 +355,8 @@
 "extra_usage.remaining_amount" = "残り%@%.2f";
 "extra_usage.credits_balance" = "残高 %d クレジット";
 "extra_usage.credits_remaining" = "残り %d クレジット";
+"extra_usage.detail_credits_balance" = "%d クレジット";
+"extra_usage.detail_credits_remaining" = "残り %d クレジット";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "レインボーグラデーション";

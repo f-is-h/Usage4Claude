@@ -167,6 +167,7 @@
 "usage_data.resets_in_days" = "약 %d일 %d시간 남음";
 "usage_data.unknown" = "알 수 없음";
 "usage_data.today" = "오늘";
+"usage_data.detail_today" = "오늘";
 "usage_data.tomorrow" = "내일";
 
 // MARK: - Error Messages
@@ -254,6 +255,13 @@
 "codex_primary_limit" = "Codex 5시간 제한";
 "codex_secondary_limit" = "Codex 7일 제한";
 "codex_extra_usage" = "Codex 추가 사용량";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "5시간 제한";
+"detail_row.seven_day_limit" = "7일 제한";
+"detail_row.opus_weekly_limit" = "Opus 7일 제한";
+"detail_row.sonnet_weekly_limit" = "Sonnet 7일 제한";
+"detail_row.extra_usage" = "추가 사용량";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "표시 옵션";
@@ -345,6 +353,8 @@
 "extra_usage.remaining_amount" = "%@%.2f 더 사용 가능";
 "extra_usage.credits_balance" = "잔액 %d 크레딧";
 "extra_usage.credits_remaining" = "%d 크레딧 남음";
+"extra_usage.detail_credits_balance" = "%d 크레딧";
+"extra_usage.detail_credits_remaining" = "%d 크레딧 남음";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "무지개 그라데이션";

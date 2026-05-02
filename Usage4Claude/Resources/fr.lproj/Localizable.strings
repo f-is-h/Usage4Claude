@@ -167,6 +167,7 @@
 "usage_data.resets_in_days" = "Environ %dj %dh restantes";
 "usage_data.unknown" = "Inconnu";
 "usage_data.today" = "Aujourd'hui";
+"usage_data.detail_today" = "Auj.";
 "usage_data.tomorrow" = "Demain";
 
 // MARK: - Error Messages
@@ -254,6 +255,13 @@
 "codex_primary_limit" = "Limite Codex 5 heures";
 "codex_secondary_limit" = "Limite Codex 7 jours";
 "codex_extra_usage" = "Utilisation supplémentaire Codex";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "Limite 5 h";
+"detail_row.seven_day_limit" = "Limite 7 j";
+"detail_row.opus_weekly_limit" = "Limite Opus 7 j";
+"detail_row.sonnet_weekly_limit" = "Limite Sonnet 7 j";
+"detail_row.extra_usage" = "Usage en plus";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "Options d'affichage";
@@ -347,6 +355,8 @@
 "extra_usage.remaining_amount" = "%@%.2f restants";
 "extra_usage.credits_balance" = "Solde %d crédits";
 "extra_usage.credits_remaining" = "%d crédits restants";
+"extra_usage.detail_credits_balance" = "%d crédits";
+"extra_usage.detail_credits_remaining" = "%d crédits restants";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "Dégradé arc-en-ciel";

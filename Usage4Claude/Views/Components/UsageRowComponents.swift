@@ -103,13 +103,17 @@ struct UnifiedLimitRow: View {
             Text(limitName)
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
 
-            Spacer()
+            Spacer(minLength: 8)
 
             // 右侧：重置时间或剩余额度
             Text(displayValue)
                 .font(.system(size: 12))
                 .fontWeight(.medium)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
                 .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
                 .transition(.asymmetric(
                     insertion: .move(edge: .top).combined(with: .opacity),
@@ -126,22 +130,16 @@ struct UnifiedLimitRow: View {
 
     private var limitName: String {
         switch type {
-        case .fiveHour:
-            return L.Limit.fiveHour
-        case .sevenDay:
-            return L.Limit.sevenDay
+        case .fiveHour, .codexPrimary:
+            return L.DetailRow.fiveHour
+        case .sevenDay, .codexSecondary:
+            return L.DetailRow.sevenDay
         case .opusWeekly:
-            return L.Limit.opusWeekly
+            return L.DetailRow.opusWeekly
         case .sonnetWeekly:
-            return L.Limit.sonnetWeekly
-        case .extraUsage:
-            return L.Limit.extraUsage
-        case .codexPrimary:
-            return L.Limit.fiveHour
-        case .codexSecondary:
-            return L.Limit.sevenDay
-        case .codexExtraUsage:
-            return L.Limit.extraUsage
+            return L.DetailRow.sonnetWeekly
+        case .extraUsage, .codexExtraUsage:
+            return L.DetailRow.extraUsage
         }
     }
 
@@ -183,7 +181,7 @@ struct UnifiedLimitRow: View {
         switch type {
         case .fiveHour:
             guard let fiveHour = data?.fiveHour else { return "-" }
-            return showRemainingMode ? fiveHour.formattedCompactRemaining : fiveHour.formattedCompactResetTime
+            return showRemainingMode ? fiveHour.formattedCompactRemaining : detailCompactResetTime(fiveHour)
 
         case .sevenDay:
             guard let sevenDay = data?.sevenDay else { return "-" }
@@ -203,7 +201,7 @@ struct UnifiedLimitRow: View {
 
         case .codexPrimary:
             guard let limitData = codexData?.primary?.asUsageLimitData() else { return "-" }
-            return showRemainingMode ? limitData.formattedCompactRemaining : limitData.formattedCompactResetTime
+            return showRemainingMode ? limitData.formattedCompactRemaining : detailCompactResetTime(limitData)
 
         case .codexSecondary:
             guard let limitData = codexData?.secondary?.asUsageLimitData() else { return "-" }
@@ -211,7 +209,25 @@ struct UnifiedLimitRow: View {
 
         case .codexExtraUsage:
             guard let extra = codexData?.extraUsage else { return "-" }
-            return showRemainingMode ? extra.formattedRemainingAmount : extra.formattedCompactAmount
+            return showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount
         }
+    }
+
+    private func detailCompactResetTime(_ limitData: UsageData.LimitData) -> String {
+        guard let resetsAt = limitData.resetsAt else {
+            return "-"
+        }
+
+        var calendar = Calendar.current
+        calendar.locale = UserSettings.shared.appLocale
+        let timeString = TimeFormatHelper.formatTimeOnly(resetsAt)
+
+        if calendar.isDateInToday(resetsAt) {
+            return "\(L.DetailRow.today) \(timeString)"
+        }
+        if calendar.isDateInTomorrow(resetsAt) {
+            return "\(L.UsageData.tomorrow) \(timeString)"
+        }
+        return TimeFormatHelper.formatDateTime(resetsAt, dateTemplate: "Md")
     }
 }
