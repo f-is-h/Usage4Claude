@@ -13,7 +13,7 @@
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
 [![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
-**Track your Claude (and optional Codex) subscription quota — beautifully, in your menu bar.**
+**Track your Claude (and Codex) subscription quota — beautifully, in your menu bar.**
 
 ✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
 
@@ -27,15 +27,15 @@
 
 ### 🎯 Core Features
 
-- **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar
-- **🎯 Multi-Limit Support** - Show up to 5 limits simultaneously (5-hour/7-day/Extra/7-day Opus/7-day Sonnet)
+- **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex monitoring
+- **🎯 Multi-Limit Support** - Claude supports up to 5 limits (5-hour/7-day/Extra/7-day Opus/7-day Sonnet), while Codex supports 5-hour, 7-day, and Extra Usage/credits
 - **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
 - **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
 - **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
 - **🔔 Usage Notifications** - Warning notification at 90% usage, reset notification when quota resets
-- **👥 Multi-Account Management** - Support multiple accounts / multiple organizations per account, quick switching
-- **✨ Codex Support** - Optional Codex quota monitoring alongside Claude; both providers shown as equals in a dual-column view (add a Codex account in settings to enable)
-- **🌐 Built-in Browser Login** - Built-in browser login to automatically extract Session Key, no manual copying needed
+- **👥 Multi-Account Management** - Support multiple Claude accounts / multiple organizations per account, plus independent Codex account management and quick switching
+- **🧩 Codex Support** - Optional Codex quota monitoring; use Codex alone or show it alongside Claude in a dual-column view (add a Codex account in settings to enable)
+- **🌐 Built-in Browser Login** - Claude login automatically extracts Session Key; Codex uses built-in browser login for ChatGPT authentication
 - **🎨 Appearance Settings** - Support system default / light / dark appearance modes
 - **🕐 Time Format** - Support system default / 12-hour / 24-hour format
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
@@ -53,6 +53,13 @@ Works seamlessly with all Claude products:
 - 🤝 **Cowork** (AI Agent)
 
 All platforms share the same usage quota, monitored in one place!
+
+### 🧩 Codex Support
+
+- Monitor Codex alone or together with Claude
+- Supports Codex 5-hour, 7-day, and Extra Usage/credits information
+- Add a Codex account by logging in to ChatGPT with the built-in browser
+- Claude-only users need no extra setup; the existing experience stays unchanged until a Codex account is added
 
 ### 🎨 Personalization
 
@@ -78,13 +85,13 @@ All platforms share the same usage quota, monitored in one place!
 - **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R, ⌘,, ⌘Q)
 - **👋 Friendly Onboarding** - Detailed setup wizard on first launch
 - **… Menu Display** - Multiple menu access methods, detail view and right-click
-- **🔔 Usage Notifications** - Usage warning and reset notifications, configurable in settings
-- **🛠️ Debug Mode** - Developer options: fake data testing, simulated updates, instant refresh
+- **🔔 Usage Notifications** - Claude usage warning and reset notifications, configurable in settings
+- **🛠️ Debug Mode** - Developer options: Claude/Codex fake data testing, simulated updates, instant refresh
 
 ### 🔒 Security & Privacy
 
 - 🏠 **Local Storage Only** - All data stored locally only, never collect or upload any personal information
-- 🔐 **Keychain Protection** - Sensitive information secured in Keychain, no plain text keys
+- 🔐 **Keychain Protection** - Claude Session Key and Codex authentication token secured in Keychain, no plain text keys
 - 📖 **Open Source Transparency** - Code fully public, anyone can audit
 - 🛡️ **Sandbox Protection** - App Sandbox enabled for enhanced security
 
@@ -94,14 +101,17 @@ All platforms share the same usage quota, monitored in one place!
 
 ### Menu Bar Display
 
-- Icons and any limit type can be freely combined for display (at least one item must be shown)
+- Claude and Codex menu bar icons and limit indicators are shown below
 - Dual indicators through shape and color ensure easy identification even in monochrome themes
 
 | Icon | 5-Hour | 7-Day | Extra | 7-Day Opus | 7-Day Sonnet | Monochrome (Adaptive) |
 |:---:|:---:|:---:|:---:|:---:|:---:|-----|
 | <img src="docs/images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="docs/images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="docs/images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="docs/images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="docs/images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="docs/images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="docs/images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="docs/images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
+| <img src="docs/images/bar.icon.codex@2x.png" width="40" height="40" alt="codex icon"> | <img src="docs/images/bar.5h.codex@2x.png" width="45" height="45" alt="codex 5h ring"> | <img src="docs/images/bar.7d.codex@2x.png" width="45" height="45" alt="codex 7d ring"> | <img src="docs/images/bar.ex.codex@2x.png" width="45" height="45" alt="codex extra ring"> | — | — | <img src="docs/images/bar.mono.b.codex@2x.png" width="auto" height="35" alt="codex mono black"></br> <img src="docs/images/bar.mono.w.codex@2x.png" width="auto" height="35" alt="codex mono white"> |
 
 **Color Indicators**:
+
+Claude current colors:
 
 - **5-Hour Limit (incl. detail window)**: ![macOS Green](https://img.shields.io/badge/macOS_Green-34C759) → ![macOS Orange](https://img.shields.io/badge/macOS_Orange-FF9500) → ![macOS Red](https://img.shields.io/badge/macOS_Red-FF3B30)
 - **7-Day Limit (incl. detail window)**: ![Light Purple](https://img.shields.io/badge/Light_Purple-C084FC) → ![Purple](https://img.shields.io/badge/Purple-B450F0) → ![Deep Purple](https://img.shields.io/badge/Deep_Purple-B41EA0)
@@ -109,21 +119,36 @@ All platforms share the same usage quota, monitored in one place!
 - **7-Day Opus Limit**: ![Light Orange](https://img.shields.io/badge/Light_Orange-FFC864) → ![Amber](https://img.shields.io/badge/Amber-FBBF24) → ![Orange Red](https://img.shields.io/badge/Orange_Red-FF6432)
 - **7-Day Sonnet Limit**: ![Light Blue](https://img.shields.io/badge/Light_Blue-64C8FF) → ![Blue](https://img.shields.io/badge/Blue-007AFF) → ![Indigo](https://img.shields.io/badge/Indigo-4F46E5)
 
+Codex current colors:
+
+- **Codex 5-Hour Limit**: ![Bright Teal](https://img.shields.io/badge/Bright_Teal-2DD4BF) → ![Deep Teal](https://img.shields.io/badge/Deep_Teal-0D9488) → ![Darkest Teal](https://img.shields.io/badge/Darkest_Teal-134E4A)
+- **Codex 7-Day Limit**: ![Sky Blue](https://img.shields.io/badge/Sky_Blue-60A5FA) → ![Blue](https://img.shields.io/badge/Blue-2563EB) → ![Deep Blue](https://img.shields.io/badge/Deep_Blue-1E3A8A)
+- **Codex Extra Usage / credits**: ![Gold](https://img.shields.io/badge/Gold-F59E0B) → ![Deep Gold](https://img.shields.io/badge/Deep_Gold-D97706) → ![Darkest Amber](https://img.shields.io/badge/Darkest_Amber-78350F)
+
 ### Detail Window
 
 <table border="0">
 <tr>
 <td align="top" valign="top">
-<img src="docs/images/detail.5.en@2x.png" width="280" alt="5-Hour Limit Mode">
-<br/><br/><br/><br/>
-<sub><i>5-Hour Limit Mode</i></sub>
-</td>
-<td align="center" valign="top">
-<img src="docs/images/detail.all.en@2x.png" width="280" alt="All Limits Mode">
+<img src="docs/images/detail.claude.en@2x.png" width="280" alt="Claude-only mode">
 <br/>
-<sub><i>All Limits Mode (Any combination freely selectable)</i></sub>
+<sub><i>Claude-only mode</i></sub>
 </td>
 <td align="center" valign="top">
+<img src="docs/images/detail.codex.en@2x.png" width="280" alt="Codex-only mode">
+<br/>
+<sub><i>Codex-only mode</i></sub>
+</td>
+</tr>
+<tr>
+<td align="center" valign="top" colspan="2">
+<img src="docs/images/detail.both.en@2x.png" width="560" alt="Claude and Codex mode">
+<br/>
+<sub><i>Claude + Codex mode</i></sub>
+</td>
+</tr>
+<tr>
+<td align="center" valign="top" colspan="2">
 <img src="docs/images/detail@2x.gif" width="280" alt="Time Remaining Toggle Animation">
 <br/>
 <sub><i>Time Remaining Toggle Animation</i></sub>
@@ -134,12 +159,12 @@ All platforms share the same usage quota, monitored in one place!
 ### Settings
 
 **General** - Display options, menu bar theme, notification settings, appearance (system/light/dark), refresh mode, time format, language options, launch at login
-**Authentication** - Multi-account management (add/delete/switch/alias editing), built-in browser login, manual input, connection diagnostics
+**Authentication** - Claude/Codex account management (add/delete/switch/alias editing), built-in browser login, Claude manual input, connection diagnostics
 **About** - Version info and related links
 
 ### Welcome Screen
 
-**Configure Authentication** - Built-in browser one-click login (recommended) or manual Session Key input, auto-retrieve Organization ID, auto-create multiple organizations under same Session Key
+**Configure Authentication** - Claude supports built-in browser one-click login (recommended) or manual Session Key input, auto-retrieves Organization ID, and auto-creates multiple organizations under the same Session Key; Codex can be added later in settings through built-in browser login to ChatGPT
 **Configure Display Options** - Menu bar theme, display content, display mode (smart/custom) selection with live preview
 **Set Up Later** - Close welcome screen, configure later in settings
 
@@ -153,7 +178,7 @@ All platforms share the same usage quota, monitored in one place!
 2. Download the latest `.dmg` file
 3. Double-click to open, drag app to Applications folder
 4. Right-click the app and select "Open" on first launch (allow unsigned app)
-5. Allow Keychain access for authentication info (Need to allow again after version updates. Authorization prompt appears once: Session Key)
+5. Allow Keychain access for authentication info (you may need to allow again after version updates; the prompt shows the relevant authentication token name)
 
 ### Option 2: Build from Source
 
@@ -185,23 +210,29 @@ open Usage4Claude.xcodeproj
    Welcome screen will appear on first run
 
 2. **Configure Authentication**
-   - **Option 1: Browser Login (Recommended)**
+   - **Claude Option 1: Browser Login (Recommended)**
      - Click the "Browser Login" button
      - Log in to your Claude account in the built-in browser
      - Session Key will be automatically extracted after successful login
-   - **Option 2: Manual Input**
+   - **Claude Option 2: Manual Input**
      - Open browser and visit the Claude usage page
      - Open developer tools (F12 or Cmd + Option + I)
      - Switch to "Network" tab, refresh the page
      - Find the `usage` request, extract `sessionKey=sk-ant-...` from Cookie
      - Paste into the input field
+   - **Codex Account (Optional)**
+     - Open Settings → Authentication
+     - Click "Browser Login" for Codex
+     - Log in to your ChatGPT account in the built-in browser
+     - Authentication info is saved automatically after successful login
+     - Codex does not currently support manual Session Key input
 
 ### Daily Usage
 
 - **Default Display** - Menu bar icon shows usage percentage
-- **View Details** - Click menu bar icon to view details
-- **Manual Refresh** - Click refresh button in detail window or use shortcut ⌘R (data also auto-refreshes when opening the main window)
-- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon to select account
+- **View Details** - Click the menu bar icon to view details; when only Claude/Codex is configured, the detail window shows a Claude/Codex single column, and when both are configured it shows a dual-column view
+- **Manual Refresh** - Click refresh button in detail window or use shortcut ⌘R (data also auto-refreshes when opening the main window); in the dual-column view, Claude and Codex can also be refreshed separately
+- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon to select a Claude / Codex account
 - **Keyboard Shortcuts**
   - ⌘R - Manual refresh data
   - ⌘, - Open General Settings
@@ -214,10 +245,11 @@ open Usage4Claude.xcodeproj
 
 **Smart Frequency (Recommended)**
 - Automatically adjusts refresh rate based on usage patterns
-- Active mode (1 min) - Fast refresh when actively using Claude
+- Active mode (1 min) - Fast refresh when actively using Claude or Codex
 - Idle modes (3/5/10 min) - Progressively slower refresh when idle
 - Significantly reduces API calls during idle periods (up to 10x)
 - Instantly returns to 1-minute refresh when usage detected
+- Automatically refreshes after system wake to avoid stale data
 
 **Fixed Frequency**
 - **1 minute** - Recommended for consistent monitoring
@@ -232,10 +264,11 @@ open Usage4Claude.xcodeproj
 <details>
 <summary><b>Q: What if the app shows "Session Expired"?</b></summary>
 
-A: Session Keys expire periodically (usually weeks to months), need to re-obtain:
+A: Claude Session Keys or Codex authentication tokens expire periodically (usually weeks to months), and you need to log in again:
 1. Open Settings → Authentication
-2. Click "Browser Login" to log in again (recommended), or manually re-obtain Session Key
-3. Done, monitoring will resume
+2. For Claude, click "Browser Login" to log in again (recommended), or manually re-obtain Session Key
+3. For Codex, click Codex "Browser Login" and log in to ChatGPT in the built-in browser
+4. Done, monitoring will resume
 
 </details>
 
@@ -260,7 +293,7 @@ A: Two methods:
 A: Very lightweight:
 - CPU Usage: < 0.1% (idle)
 - Memory: ~20MB
-- Network: Only 1 request per minute
+- Network: Refreshes at the configured smart frequency; when both Claude and Codex are configured, each service is requested separately
 
 </details>
 
@@ -276,8 +309,8 @@ A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon
 
 A:
 - Keychain is macOS's system-level password manager
-- Your Session Key is encrypted in Keychain
-- Organization ID is stored in local config (non-sensitive identifier)
+- Claude Session Key and Codex authentication token are encrypted in Keychain
+- Claude Organization ID is stored in local config (non-sensitive identifier)
 - This is Apple's recommended secure storage method
 - Only this app can access the information, other apps cannot view it
 
@@ -291,11 +324,11 @@ A:
 **Data Storage:**
 - All data stored **only** on your local Mac
 - No collection, no tracking, no statistics of any information
-- No network requests except Claude API calls
+- No network requests except Claude and Codex usage-related API calls
 - No third-party services used
 
 **Authentication Security:**
-- Session Key encrypted via macOS Keychain (system-level encryption)
+- Claude Session Key and Codex authentication token encrypted via macOS Keychain (system-level encryption)
 - Keychain uses AES-256 encryption + hardware protection (T2 / Secure Enclave)
 - Only this app can access your credentials, other apps cannot read them
 - You can revoke access anytime via "Keychain Access" app
@@ -333,6 +366,17 @@ You'll see your real-time total usage in the menu bar. No platform-specific conf
 </details>
 
 <details>
+<summary><b>Q: How do I enable Codex support? Can I use Codex only?</b></summary>
+
+A: Yes. Open Settings → Authentication, click Codex "Browser Login", and log in to ChatGPT in the built-in browser.
+
+- Codex only: the menu bar and detail window show Codex usage
+- Claude + Codex: the detail window shows both providers side by side
+- Codex currently supports browser login only, not manual Session Key input
+
+</details>
+
+<details>
 <summary><b>Q: Can't see the icon in menu bar?</b></summary>
 
 A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may automatically hide menu bar icons.
@@ -352,9 +396,9 @@ A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may a
 <details>
 <summary><b>Q: How to manage multiple accounts?</b></summary>
 
-A: Usage4Claude supports multi-account and multi-organization management:
-- **Add Account** - Click add button in Settings → Authentication, via browser login or manual input
-- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon, select the account to switch to
+A: Usage4Claude supports multiple Claude accounts, multiple organizations under the same Claude account, and independent Codex account management:
+- **Add Account** - Add via Claude browser login, Claude manual input, or Codex browser login in Settings → Authentication
+- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon, select the Claude / Codex account to switch to
 - **Edit Alias** - Set easily recognizable aliases for each account
 - **Delete Account** - Swipe left or use edit mode to remove unwanted accounts
 
@@ -363,9 +407,9 @@ A: Usage4Claude supports multi-account and multi-organization management:
 <details>
 <summary><b>Q: How to enable usage notifications?</b></summary>
 
-A: Toggle usage notifications in Settings → General:
-- **Usage Warning** - System notification when usage reaches 90%
-- **Reset Notification** - Notification when quota resets
+A: Toggle Claude usage notifications in Settings → General:
+- **Usage Warning** - System notification when Claude usage reaches 90%
+- **Reset Notification** - Notification when Claude quota resets
 - macOS notification permission required on first enable
 
 </details>
@@ -426,6 +470,12 @@ Built with modern macOS native technologies:
 - [x] Multi-account management
 - [x] Unified time format settings
 - [x] Settings interface dark mode adaptation
+- [x] Codex usage monitoring support
+- [x] Codex-only mode
+- [x] Claude + Codex dual-column detail window
+- [x] Codex account management and browser login
+- [x] French localization
+- [x] Automatic refresh after system wake
 
 ### Mid-term Plans
 1. **Feature Addition**
@@ -523,9 +573,9 @@ and/or sell copies of the Software.
 
 ## 🙏 Acknowledgments
 
-- Thanks to [Claude AI](https://claude.ai) - Most code written by AI
+- Thanks to Claude/Codex - Most code written by AI
 - Thanks to all contributors and users for their support
-- Icon design inspired by Claude AI official branding
+- Icon design inspired by Claude/Codex official branding
 
 ---
 
@@ -539,7 +589,7 @@ and/or sell copies of the Software.
 
 ## ⚖️ Disclaimer
 
-This project is an independent third-party tool with no official affiliation with Anthropic or Claude AI. Please comply with Claude AI's Terms of Service when using this software.
+This project is an independent third-party tool with no official affiliation with Anthropic, Claude AI, OpenAI, or Codex. Please comply with the relevant Terms of Service when using this software.
 
 ---
 
