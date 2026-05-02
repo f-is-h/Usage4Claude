@@ -452,6 +452,11 @@ class UserSettings: ObservableObject {
     var isMultiProviderActive: Bool {
         #if DEBUG
         if debugModeEnabled {
+            if displayMode == .custom {
+                let hasClaudeDisplayTypes = customDisplayTypes.contains { $0.provider == .claude }
+                let hasCodexDisplayTypes = customDisplayTypes.contains { $0.provider == .codex }
+                return hasClaudeDisplayTypes && hasCodexDisplayTypes
+            }
             return true
         }
         #endif
@@ -1475,9 +1480,15 @@ class UserSettings: ObservableObject {
 
         case .custom:
             // 自定义模式：按用户选择排序，无论数据是否存在都显示
-            // Codex 类型仅在有 Codex 账号时纳入候选
+            // Codex 类型仅在有 Codex 账号时纳入候选；Debug mock 模式例外
             var orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
-            if !codexAccounts.isEmpty {
+            var shouldIncludeCodexTypes = !codexAccounts.isEmpty
+            #if DEBUG
+            if debugModeEnabled {
+                shouldIncludeCodexTypes = true
+            }
+            #endif
+            if shouldIncludeCodexTypes {
                 orderedTypes.append(contentsOf: [.codexPrimary, .codexSecondary, .codexExtraUsage])
             }
             return orderedTypes.filter { customDisplayTypes.contains($0) }

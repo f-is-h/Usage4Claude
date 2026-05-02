@@ -68,14 +68,40 @@ class DataRefreshManager: ObservableObject {
 
     private var shouldFetchClaudeUsage: Bool {
         #if DEBUG
+        if shouldSuppressDebugClaudeUsageForDisplayOptions {
+            return false
+        }
         return settings.debugModeEnabled || settings.hasValidCredentials
         #else
         return settings.hasValidCredentials
         #endif
     }
 
+    private var shouldSuppressDebugClaudeUsageForDisplayOptions: Bool {
+        #if DEBUG
+        return settings.debugModeEnabled
+            && settings.displayMode == .custom
+            && !settings.customDisplayTypes.contains { $0.provider == .claude }
+        #else
+        return false
+        #endif
+    }
+
+    private var shouldSuppressDebugCodexUsageForDisplayOptions: Bool {
+        #if DEBUG
+        return settings.debugModeEnabled
+            && settings.displayMode == .custom
+            && !settings.customDisplayTypes.contains { $0.provider == .codex }
+        #else
+        return false
+        #endif
+    }
+
     private var shouldFetchCodexUsage: Bool {
         #if DEBUG
+        if shouldSuppressDebugCodexUsageForDisplayOptions {
+            return false
+        }
         return settings.debugModeEnabled || settings.hasValidCodexCredentials
         #else
         return settings.hasValidCodexCredentials
