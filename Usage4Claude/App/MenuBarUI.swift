@@ -23,8 +23,6 @@ class MenuBarUI {
     private(set) var popover: NSPopover!
     /// 弹出窗口关闭监听器 - 监听鼠标点击事件
     private var popoverCloseObserver: Any?
-    /// 多 Provider 弹窗居中用的透明锚点窗口
-    private var popoverAnchorWindow: NSWindow?
     /// 应用失焦观察者 - 用于在应用失去焦点时关闭 popover
     private var appResignActiveObserver: NSObjectProtocol?
 
@@ -120,13 +118,7 @@ class MenuBarUI {
             popover.appearance = NSAppearance(named: .darkAqua)
         }
 
-        // 宽弹窗用透明锚点窗口居中，避免 source rect 被状态栏按钮范围裁剪
-        if popover.contentSize.width > 300 {
-            showMultiProviderPopover(relativeTo: button)
-        } else {
-            closePopoverAnchorWindow()
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
 
         // 配置 popover 窗口属性
         configurePopoverWindow()
@@ -134,52 +126,6 @@ class MenuBarUI {
         // 设置监听器
         setupPopoverCloseObserver()
         setupAppResignActiveObserver()
-    }
-
-    /// 使用透明 1pt 锚点窗口显示多 Provider popover，使宽弹窗的箭头保持居中
-    private func showMultiProviderPopover(relativeTo button: NSStatusBarButton) {
-        guard let buttonWindow = button.window,
-              let screen = buttonWindow.screen ?? NSScreen.main else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            return
-        }
-
-        closePopoverAnchorWindow()
-
-        let popoverWidth = max(popover.contentSize.width, 580)
-        let buttonRectInWindow = button.convert(button.bounds, to: nil)
-        let buttonScreenRect = buttonWindow.convertToScreen(buttonRectInWindow)
-
-        let visibleFrame = screen.visibleFrame
-        let arrowX = min(max(buttonScreenRect.midX, visibleFrame.minX + popoverWidth / 2),
-                         visibleFrame.maxX - popoverWidth / 2)
-
-        let anchorRect = NSRect(
-            x: arrowX - 0.5,
-            y: buttonScreenRect.minY,
-            width: 1,
-            height: buttonScreenRect.height
-        )
-
-        let anchorWindow = NSWindow(
-            contentRect: anchorRect,
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        anchorWindow.backgroundColor = .clear
-        anchorWindow.isOpaque = false
-        anchorWindow.hasShadow = false
-        anchorWindow.ignoresMouseEvents = true
-        anchorWindow.level = .statusBar
-        anchorWindow.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
-
-        let anchorView = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: buttonScreenRect.height))
-        anchorWindow.contentView = anchorView
-        anchorWindow.orderFrontRegardless()
-        popoverAnchorWindow = anchorWindow
-
-        popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: .minY)
     }
 
     /// 配置 popover 窗口属性
@@ -222,16 +168,9 @@ class MenuBarUI {
         if popover.isShown {
             popover.performClose(nil)
         }
-        closePopoverAnchorWindow()
-
         // 移除事件监听器
         removePopoverCloseObserver()
         removeAppResignActiveObserver()
-    }
-
-    private func closePopoverAnchorWindow() {
-        popoverAnchorWindow?.orderOut(nil)
-        popoverAnchorWindow = nil
     }
 
     /// 设置弹出窗口外部点击监听
@@ -737,7 +676,6 @@ class MenuBarUI {
         if popover.isShown {
             popover.performClose(nil)
         }
-        closePopoverAnchorWindow()
     }
 
     deinit {
