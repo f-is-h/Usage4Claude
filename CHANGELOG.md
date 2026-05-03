@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-05-03
+
+### Added
+- **Codex usage monitoring**: Track Codex 5-hour, 7-day, and Extra Usage credits with dedicated colors, notifications, and refresh behavior
+- **Codex account management**: Add, delete, switch, alias, and authenticate Codex accounts independently from Claude accounts
+- **Dual-provider display**: Show Claude and Codex usage together in the menu bar and side by side in the detail view
+- **French localization**: Add French app strings, README, language selection, and localized release screenshots
+
+### Fixed
+- **Wake refresh reliability**: Refresh shortly after system wake and restart the active timer when leaving idle mode
+- **Smart display baseline limits**: Always show 5-hour and 7-day limits in smart display mode
+- **Debug and Release account state**: Isolate account selection storage across build configurations and fall back to the first account when needed
+- **Detail popover presentation**: Show the detail popover from the status bar button and use compact localized row labels
+
 ## [2.6.1] - 2026-04-14
 
 ### Fixed
@@ -43,14 +57,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Browser login entry points in AuthSettings and WelcomeView
   - Manual SessionKey input preserved as fallback option
 - **Appearance settings**: System / light / dark appearance modes for all UI
-windows
+  windows
   - Apply NSApp.appearance for settings window and welcome window
   - Set popover.appearance explicitly on each open
   - Listen for AppleInterfaceThemeChangedNotification to sync "follow system"
-mode
+  mode
   - Fix isDarkMode to read system AppleInterfaceStyle directly
 - **Usage notification system**: Native macOS notifications for usage
-monitoring
+  monitoring
   - Warning notification when usage crosses 90%
   - Reset notification when quota resets (percentage drop or resetsAt change)
   - Each limit type (5-hour, 7-day, opus, sonnet, extra) tracked independently
@@ -88,7 +102,7 @@ settings at top, launch at login at bottom)
   - Account list with add, delete, and alias editing
   - API validation before adding new accounts
   - Account switching from menu bar right-click menu and popover three-dot
-menu
+  menu
   - Multi-account hint in Welcome view authentication setup
 - **Unified time format preference**: Consistent time display across the app
   - TimeFormatPreference setting (System / 12-hour / 24-hour)
@@ -448,6 +462,7 @@ Key, Organization ID)
 
 ---
 
+[3.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.0
 [2.6.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.1
 [2.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.0
 [2.5.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.5.0
