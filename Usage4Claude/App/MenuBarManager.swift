@@ -64,6 +64,8 @@ class MenuBarManager: ObservableObject {
     @Published var isLoading = false
     /// 错误消息（从 dataManager 同步）
     @Published var errorMessage: String?
+    /// Codex 错误消息（独立于 Claude）
+    @Published var codexErrorMessage: String?
     /// 是否有可用更新（从 dataManager 同步）
     @Published var hasAvailableUpdate = false
     /// 最新版本号（从 dataManager 同步）
@@ -112,6 +114,9 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$errorMessage
             .assign(to: &$errorMessage)
+
+        dataManager.$codexErrorMessage
+            .assign(to: &$codexErrorMessage)
 
         dataManager.$hasAvailableUpdate
             .sink { [weak self] hasUpdate in
@@ -246,13 +251,15 @@ class MenuBarManager: ObservableObject {
 
         // 监听账户变更通知
         NotificationCenter.default.publisher(for: .accountChanged)
-            .sink { [weak self] _ in
+            .sink { [weak self] notification in
                 guard let self = self else { return }
                 Logger.menuBar.notice("账户已切换，刷新数据")
+                let providerRaw = notification.userInfo?[Notification.UserInfoKey.provider] as? String
+                let provider = providerRaw.flatMap { ProviderType(rawValue: $0) }
                 // 清除图标缓存，确保新数据到达时重新渲染
                 self.ui.clearIconCache()
-                // 立即刷新数据
-                self.dataManager.fetchUsage()
+                // 只刷新切换的 Provider，避免另一家的数据和通知状态被误清理
+                self.dataManager.handleAccountChanged(provider: provider)
                 // 更新菜单栏图标
                 self.updateMenuBarIcon()
             }
@@ -296,6 +303,10 @@ class MenuBarManager: ObservableObject {
                 get: { self.errorMessage },
                 set: { self.errorMessage = $0 }
             ),
+            codexErrorMessage: Binding(
+                get: { self.codexErrorMessage },
+                set: { self.codexErrorMessage = $0 }
+            ),
             refreshState: self.refreshState,
             onMenuAction: { [weak self] action in
                 self?.handleMenuAction(action)
@@ -322,7 +333,7 @@ class MenuBarManager: ObservableObject {
         let rowHeight: CGFloat = 26
         let spacing: CGFloat = 5
 
-        if settings.isMultiProviderActive, let codex = codexUsageData {
+        if settings.isMultiProviderActive && (codexUsageData != nil || codexErrorMessage != nil || settings.hasValidCodexCredentials) {
             let claudeRowCount: Int
             if let data = usageData {
                 let types = settings.getActiveDisplayTypes(usageData: data)
@@ -332,16 +343,21 @@ class MenuBarManager: ObservableObject {
                 claudeRowCount = 2
             }
 
-            let codexTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
-                .filter { $0.provider == .codex }
-            let codexRowCount = max(codexTypes.count, 1)
+            let codexRowCount: Int
+            if let codex = codexUsageData {
+                let codexTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
+                    .filter { $0.provider == .codex }
+                codexRowCount = max(codexTypes.count, 1)
+            } else {
+                codexRowCount = 2
+            }
             let maxRows = max(claudeRowCount, codexRowCount)
             let rowsHeight = CGFloat(maxRows) * rowHeight + CGFloat(max(0, maxRows - 1)) * spacing
             return NSSize(width: 580, height: baseHeight + rowsHeight)
         }
 
         let shouldUseCodexOnlyLayout = (!settings.hasValidCredentials && settings.hasValidCodexCredentials)
-            || (usageData == nil && codexUsageData != nil)
+            || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil))
         if shouldUseCodexOnlyLayout {
             let activeCount: Int
             if let codex = codexUsageData {

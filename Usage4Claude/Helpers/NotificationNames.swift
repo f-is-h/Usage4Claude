@@ -58,5 +58,9 @@ extension Notification {
         /// 标签页索引键
         /// 用于 openSettingsWithTab 通知，值类型为 Int
         static let tab = "tab"
+
+        /// 账户变更的 Provider 键
+        /// 用于 accountChanged 通知，值类型为 ProviderType.rawValue
+        static let provider = "provider"
     }
 }

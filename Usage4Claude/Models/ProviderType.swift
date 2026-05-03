@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum ProviderType: String, Codable, CaseIterable {
+enum ProviderType: String, Codable, CaseIterable, Hashable {
     case claude
     case codex
 

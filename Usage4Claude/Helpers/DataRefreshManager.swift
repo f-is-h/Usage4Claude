@@ -38,6 +38,8 @@ class DataRefreshManager: ObservableObject {
     @Published var isLoading = false
     /// 错误消息
     @Published var errorMessage: String?
+    /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
+    @Published var codexErrorMessage: String?
     /// 是否有可用更新
     @Published var hasAvailableUpdate = false
     /// 最新版本号
@@ -136,6 +138,7 @@ class DataRefreshManager: ObservableObject {
     func fetchUsage() {
         isLoading = true
         errorMessage = nil
+        codexErrorMessage = nil
         lastAPIFetchTime = Date()
 
         let fetchClaude = shouldFetchClaudeUsage
@@ -185,13 +188,16 @@ class DataRefreshManager: ObservableObject {
             self.isLoading = false
             self.endRefreshAnimationWithMinimumDuration { }
 
-            var codexError: Error?
+            var monitoringUtilizations: [ProviderType: Double] = [:]
             if fetchCodex {
                 switch codexResult {
                 case .success(let codex):
                     let previousCodexData = self.codexUsageData
                     self.codexUsageData = codex
-                    self.errorMessage = nil
+                    self.codexErrorMessage = nil
+                    if let utilization = self.monitoringUtilization(for: codex) {
+                        monitoringUtilizations[.codex] = utilization
+                    }
 
                     if self.settings.notificationsEnabled {
                         NotificationManager.shared.checkAndNotify(codexUsageData: codex, previousData: previousCodexData)
@@ -207,8 +213,8 @@ class DataRefreshManager: ObservableObject {
                     self.lastCodexResetsAt = newCodexResetsAt
 
                 case .failure(let error):
-                    codexError = error
-                    self.clearCodexUsageState()
+                    self.codexErrorMessage = error.localizedDescription
+                    self.clearCodexUsageState(clearError: false)
 
                 case .none:
                     self.clearCodexUsageState()
@@ -217,40 +223,38 @@ class DataRefreshManager: ObservableObject {
                 self.clearCodexUsageState()
             }
 
-            if !fetchClaude, fetchCodex {
-                self.errorMessage = codexError?.localizedDescription
-                return
-            }
-
             // 处理 Claude 结果
-            switch claudeResult {
-            case .success(let data):
-                let previousData = self.usageData
-                self.usageData = data
-                self.errorMessage = nil
+            if fetchClaude {
+                switch claudeResult {
+                case .success(let data):
+                    let previousData = self.usageData
+                    self.usageData = data
+                    self.errorMessage = nil
+                    monitoringUtilizations[.claude] = data.percentage
 
-                if self.settings.notificationsEnabled {
-                    NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
+                    }
+
+                    let newResetsAt = data.resetsAt
+                    let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
+                    if hasResetChanged {
+                        self.cancelResetVerification()
+                    } else if let resetsAt = newResetsAt {
+                        self.scheduleResetVerification(resetsAt: resetsAt)
+                    }
+                    self.lastResetsAt = newResetsAt
+
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                    Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
+
+                case .none:
+                    break
                 }
-
-                self.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
-
-                let newResetsAt = data.resetsAt
-                let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
-                if hasResetChanged {
-                    self.cancelResetVerification()
-                } else if let resetsAt = newResetsAt {
-                    self.scheduleResetVerification(resetsAt: resetsAt)
-                }
-                self.lastResetsAt = newResetsAt
-
-            case .failure(let error):
-                self.errorMessage = error.localizedDescription
-                Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
-
-            case .none:
-                break
             }
+
+            self.settings.updateSmartMonitoringMode(providerUtilizations: monitoringUtilizations)
         }
     }
 
@@ -260,10 +264,23 @@ class DataRefreshManager: ObservableObject {
         cancelResetVerification()
     }
 
-    private func clearCodexUsageState() {
+    private func clearCodexUsageState(clearError: Bool = true) {
         codexUsageData = nil
+        if clearError {
+            codexErrorMessage = nil
+        }
         lastCodexResetsAt = nil
         cancelCodexResetVerification()
+    }
+
+    private func monitoringUtilization(for codex: CodexUsageData) -> Double? {
+        [
+            codex.primary?.percentage,
+            codex.secondary?.percentage,
+            codex.extraUsage?.percentage
+        ]
+        .compactMap { $0 }
+        .max()
     }
 
     /// 开始数据刷新
@@ -485,7 +502,7 @@ class DataRefreshManager: ObservableObject {
                     if self.settings.notificationsEnabled {
                         NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                     }
-                    self.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
+                    self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
                     let newResetsAt = data.resetsAt
                     if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
                         self.cancelResetVerification()
@@ -508,6 +525,7 @@ class DataRefreshManager: ObservableObject {
             return
         }
         isLoading = true
+        codexErrorMessage = nil
         lastAPIFetchTime = Date()
 
         codexApiService.fetchUsage { [weak self] result in
@@ -519,7 +537,10 @@ class DataRefreshManager: ObservableObject {
                 if case .success(let data) = result {
                     let previousCodexData = self.codexUsageData
                     self.codexUsageData = data
-                    self.errorMessage = nil
+                    self.codexErrorMessage = nil
+                    if let utilization = self.monitoringUtilization(for: data) {
+                        self.settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
+                    }
                     if self.settings.notificationsEnabled {
                         NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
                     }
@@ -531,13 +552,36 @@ class DataRefreshManager: ObservableObject {
                     }
                     self.lastCodexResetsAt = newCodexResetsAt
                 } else if case .failure(let error) = result {
-                    self.clearCodexUsageState()
-                    if !self.shouldFetchClaudeUsage {
-                        self.errorMessage = error.localizedDescription
-                    }
+                    self.codexErrorMessage = error.localizedDescription
+                    self.clearCodexUsageState(clearError: false)
                     Logger.menuBar.info("Codex 请求失败: \(error.localizedDescription)")
                 }
             }
+        }
+    }
+
+    /// 账户切换后只清理并刷新对应 Provider，避免跨账号 previousData 误判重置。
+    /// 通知去重状态按账号隔离，切换账号时保留，删除账号时再由 UserSettings 精准清理。
+    func handleAccountChanged(provider: ProviderType?) {
+        switch provider {
+        case .claude:
+            errorMessage = nil
+            clearClaudeUsageState()
+            if shouldFetchClaudeUsage {
+                fetchClaudeOnly()
+            }
+
+        case .codex:
+            clearCodexUsageState()
+            if shouldFetchCodexUsage {
+                fetchCodexOnly()
+            }
+
+        case .none:
+            clearClaudeUsageState()
+            clearCodexUsageState()
+            NotificationManager.shared.resetAllNotificationStates()
+            fetchUsage()
         }
     }
 

@@ -15,6 +15,7 @@ struct CodexColumnView: View {
     let refreshState: RefreshState
     @Binding var animationType: UsageDetailView.LoadingAnimationType
     @Binding var rotationAngle: Double
+    @AppStorage("showRemainingMode") private var savedRemainingMode = false
     var onRefresh: (() -> Void)?
     var onAnimationHint: ((String) -> Void)?
 
@@ -145,6 +146,7 @@ struct CodexColumnView: View {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     showRemainingMode.toggle()
                 }
+                savedRemainingMode = showRemainingMode
             }
             .padding(.horizontal, 14)
         }

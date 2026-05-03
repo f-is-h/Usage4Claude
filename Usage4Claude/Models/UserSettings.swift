@@ -745,6 +745,9 @@ class UserSettings: ObservableObject {
     
     /// 上次检测的百分比（用于检测变化）
     var lastUtilization: Double?
+
+    /// 各 Provider 上次检测的百分比（用于 Codex/Claude 共同驱动智能刷新）
+    var lastUtilizationByProvider: [ProviderType: Double] = [:]
     
     /// 连续无变化次数
     var unchangedCount: Int = 0
@@ -1087,26 +1090,36 @@ class UserSettings: ObservableObject {
     /// 根据用量百分比变化智能调整刷新频率
     /// - Parameter currentUtilization: 当前用量百分比
     func updateSmartMonitoringMode(currentUtilization: Double) {
+        updateSmartMonitoringMode(providerUtilizations: [.claude: currentUtilization])
+    }
+
+    /// 更新智能监控模式
+    /// 任一 Provider 用量变化会切回活跃模式；全部无变化才累计静默次数。
+    /// - Parameter providerUtilizations: 本轮成功获取的 Provider 用量百分比
+    func updateSmartMonitoringMode(providerUtilizations: [ProviderType: Double]) {
         // 只在智能模式下工作
         guard refreshMode == .smart else { return }
+        guard !providerUtilizations.isEmpty else { return }
 
         // 检查是否有变化
-        if hasUtilizationChanged(currentUtilization) {
+        if hasProviderUtilizationChanged(providerUtilizations) {
             switchToActiveMode()
         } else {
             handleNoChange()
         }
 
-        // 更新上次的百分比
-        lastUtilization = currentUtilization
+        for (provider, utilization) in providerUtilizations {
+            lastUtilizationByProvider[provider] = utilization
+        }
+        // 保留旧字段的语义，便于旧代码和调试观察。
+        lastUtilization = providerUtilizations[.claude] ?? providerUtilizations.values.first
     }
 
-    /// 检查用量百分比是否有变化
-    /// - Parameter current: 当前用量百分比
-    /// - Returns: 如果变化超过 0.01 返回 true
-    private func hasUtilizationChanged(_ current: Double) -> Bool {
-        guard let last = lastUtilization else { return false }
-        return abs(current - last) > 0.01
+    private func hasProviderUtilizationChanged(_ current: [ProviderType: Double]) -> Bool {
+        current.contains { provider, utilization in
+            guard let last = lastUtilizationByProvider[provider] else { return false }
+            return abs(utilization - last) > 0.01
+        }
     }
 
     /// 切换到活跃模式
@@ -1171,6 +1184,7 @@ class UserSettings: ObservableObject {
     /// 在切换到固定模式或用户手动刷新时调用
     func resetSmartMonitoringState() {
         lastUtilization = nil
+        lastUtilizationByProvider.removeAll()
         unchangedCount = 0
         currentMonitoringMode = .active
     }
@@ -1202,7 +1216,7 @@ class UserSettings: ObservableObject {
         Logger.settings.notice("添加账户: \(account.displayName)")
 
         if wasFirstClaudeAccount {
-            NotificationCenter.default.post(name: .accountChanged, object: nil)
+            postAccountChanged(provider: .claude)
         }
     }
 
@@ -1213,12 +1227,13 @@ class UserSettings: ObservableObject {
 
         let wasCurrentAccount = (currentAccountId == account.id)
         accounts.remove(at: index)
+        NotificationManager.shared.resetNotificationStates(for: .claude, accountId: account.id)
 
         // 如果删除的是当前账户，切换到第一个账户
         if wasCurrentAccount {
             currentAccountId = accounts.first?.id
             // 发送账户变更通知
-            NotificationCenter.default.post(name: .accountChanged, object: nil)
+            postAccountChanged(provider: .claude)
         }
 
         Logger.settings.notice("删除账户: \(account.displayName)")
@@ -1234,7 +1249,7 @@ class UserSettings: ObservableObject {
         Logger.settings.notice("切换到账户: \(account.displayName)")
 
         // 发送账户变更通知
-        NotificationCenter.default.post(name: .accountChanged, object: nil)
+        postAccountChanged(provider: .claude)
     }
 
     /// 更新账户信息
@@ -1288,18 +1303,22 @@ class UserSettings: ObservableObject {
                 currentCodexAccountId = codexAccounts[index].id
             }
             Logger.settings.notice("更新已存在的 Codex 账户: \(self.codexAccounts[index].displayName)")
-            NotificationCenter.default.post(name: .accountChanged, object: nil)
+            postAccountChanged(provider: .codex)
             return codexAccounts[index]
         }
 
+        let wasFirstCodexAccount = codexAccounts.isEmpty
         var storedAccount = account
         storedAccount.provider = .codex
         codexAccounts.append(storedAccount)
         if codexAccounts.count == 1 {
             currentCodexAccountId = storedAccount.id
         }
+        if wasFirstCodexAccount {
+            ensureDefaultCodexDisplayTypesForCustomMode()
+        }
         Logger.settings.notice("添加 Codex 账户: \(storedAccount.displayName)")
-        NotificationCenter.default.post(name: .accountChanged, object: nil)
+        postAccountChanged(provider: .codex)
         return storedAccount
     }
 
@@ -1307,9 +1326,10 @@ class UserSettings: ObservableObject {
         guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
         let wasCurrent = (currentCodexAccountId == account.id)
         codexAccounts.remove(at: index)
+        NotificationManager.shared.resetNotificationStates(for: .codex, accountId: account.id)
         if wasCurrent {
             currentCodexAccountId = codexAccounts.first?.id
-            NotificationCenter.default.post(name: .accountChanged, object: nil)
+            postAccountChanged(provider: .codex)
         }
         Logger.settings.notice("删除 Codex 账户: \(account.displayName)")
     }
@@ -1319,13 +1339,28 @@ class UserSettings: ObservableObject {
         guard codexAccounts.contains(where: { $0.id == account.id }) else { return }
         currentCodexAccountId = account.id
         Logger.settings.notice("切换到 Codex 账户: \(account.displayName)")
-        NotificationCenter.default.post(name: .accountChanged, object: nil)
+        postAccountChanged(provider: .codex)
     }
 
     func updateCodexAccount(_ account: Account, alias: String?) {
         guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
         codexAccounts[index].alias = alias
         Logger.settings.notice("更新 Codex 账户别名: \(self.codexAccounts[index].displayName)")
+    }
+
+    private func postAccountChanged(provider: ProviderType) {
+        NotificationCenter.default.post(
+            name: .accountChanged,
+            object: nil,
+            userInfo: [Notification.UserInfoKey.provider: provider.rawValue]
+        )
+    }
+
+    private func ensureDefaultCodexDisplayTypesForCustomMode() {
+        guard displayMode == .custom else { return }
+        let codexTypes: Set<LimitType> = [.codexPrimary, .codexSecondary, .codexExtraUsage]
+        guard customDisplayTypes.isDisjoint(with: codexTypes) else { return }
+        customDisplayTypes.formUnion([.codexPrimary, .codexSecondary])
     }
 
     // MARK: - Organization Management (保留向后兼容)

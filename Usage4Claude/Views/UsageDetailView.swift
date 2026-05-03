@@ -14,6 +14,7 @@ struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
     @Binding var errorMessage: String?
+    @Binding var codexErrorMessage: String?
     @ObservedObject var refreshState: RefreshState
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
@@ -75,13 +76,14 @@ struct UsageDetailView: View {
     // MARK: - Body
 
     private var isMultiProviderActive: Bool {
-        UserSettings.shared.isMultiProviderActive && codexUsageData != nil
+        UserSettings.shared.isMultiProviderActive
+            && (codexUsageData != nil || codexErrorMessage != nil || UserSettings.shared.hasValidCodexCredentials)
     }
 
     private var isCodexOnlyActive: Bool {
         !isMultiProviderActive
             && ((!UserSettings.shared.hasValidCredentials && UserSettings.shared.hasValidCodexCredentials)
-                || (usageData == nil && codexUsageData != nil))
+                || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil)))
     }
 
     private var isClaudeRefreshing: Bool {
@@ -150,7 +152,7 @@ struct UsageDetailView: View {
                 .filter { $0.provider == .codex }
             codexRowCount = max(types.count, 1)
         } else {
-            codexRowCount = 1
+            codexRowCount = 2
         }
 
         let maxRows = max(claudeRowCount, codexRowCount)
@@ -550,7 +552,7 @@ struct UsageDetailView: View {
                 onRefresh: { onMenuAction?(.refreshCodex) },
                 onAnimationHint: { showAnimationHint($0, provider: .codex) }
             )
-        } else if let error = errorMessage {
+        } else if let error = codexErrorMessage {
             VStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
@@ -627,7 +629,7 @@ struct UsageDetailView: View {
         }
     }
 
-    private func multiProviderBody(codex: CodexUsageData) -> some View {
+    private func multiProviderBody(codex: CodexUsageData?) -> some View {
         VStack(spacing: contentSpacing) {
             HStack(alignment: .top, spacing: 0) {
                 VStack(spacing: contentSpacing) {
@@ -648,15 +650,7 @@ struct UsageDetailView: View {
                     ZStack(alignment: .bottom) {
                         VStack(spacing: contentSpacing) {
                             headerView(provider: .codex, showsControls: true)
-                            CodexColumnView(
-                                codexUsageData: codex,
-                                showRemainingMode: $showRemainingMode,
-                                refreshState: refreshState,
-                                animationType: $codexAnimationType,
-                                rotationAngle: $rotationAngle,
-                                onRefresh: { onMenuAction?(.refreshCodex) },
-                                onAnimationHint: { showAnimationHint($0, provider: .codex) }
-                            )
+                            codexOnlyMainContent(codex: codex)
                         }
                         .offset(y: isAnimationHintVisible(for: .codex) ? -18 : 0)
                     }
@@ -706,8 +700,8 @@ struct UsageDetailView: View {
 
     var body: some View {
         Group {
-            if isMultiProviderActive, let codex = codexUsageData {
-                multiProviderBody(codex: codex)
+            if isMultiProviderActive {
+                multiProviderBody(codex: codexUsageData)
             } else if isCodexOnlyActive {
                 codexOnlyBody(codex: codexUsageData)
             } else {
@@ -806,6 +800,7 @@ struct UsageDetailView_Previews: PreviewProvider {
     )
 
     @State static var errorMsg: String? = nil
+    @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
     @StateObject static var refreshState = RefreshState()
     @State static var hasUpdate = false
@@ -816,6 +811,7 @@ struct UsageDetailView_Previews: PreviewProvider {
             usageData: $sampleData,
             codexUsageData: $codexData,
             errorMessage: $errorMsg,
+            codexErrorMessage: $codexErrorMsg,
             refreshState: refreshState,
             hasAvailableUpdate: $hasUpdate,
             shouldShowUpdateBadge: $shouldShowBadge
