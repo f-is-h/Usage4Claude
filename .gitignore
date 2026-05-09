@@ -89,3 +89,5 @@ ClaudeUsageMonitor
 *~
 *.bak
 *.backup
+
+.claude
