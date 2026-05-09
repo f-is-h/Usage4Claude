@@ -32,7 +32,7 @@ class SensitiveDataRedactor {
     /// - Parameter key: 原始 Session Key
     /// - Returns: 脱敏后的字符串
     /// - Note: 对于 sk-ant- 开头的 key，保留前缀并显示长度；其他情况返回 "***"
-    /// - Example: "sk-ant-sid01-XXXXX..." -> "sk-ant-***...*** (128 chars)"
+    /// - Example: "sk-ant-sid...XXXXX" -> "sk-ant-***...*** (128 chars)"
     static func redactSessionKey(_ key: String) -> String {
         guard key.count > 20 else {
             return "***"

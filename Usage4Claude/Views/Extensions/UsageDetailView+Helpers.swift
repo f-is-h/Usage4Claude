@@ -43,10 +43,10 @@ extension UsageDetailView {
     }
 
     /// 加载动画视图
-    /// 根据animationType返回不同的加载效果
+    /// 根据claudeAnimationType返回不同的加载效果
     @ViewBuilder
     func loadingAnimation() -> some View {
-        switch animationType {
+        switch claudeAnimationType {
         case .rainbow:
             rainbowLoadingAnimation()
         case .dashed:
@@ -147,10 +147,10 @@ extension UsageDetailView {
             .rotationEffect(.degrees(-rotationAngle * 0.7))  // 慢速逆时针旋转
     }
 
-    /// 外侧圆环加载动画视图（根据animationType返回对应效果）
+    /// 外侧圆环加载动画视图（根据claudeAnimationType返回对应效果）
     @ViewBuilder
     func outerLoadingAnimation() -> some View {
-        switch animationType {
+        switch claudeAnimationType {
         case .rainbow:
             outerRainbowLoadingAnimation()
         case .dashed:

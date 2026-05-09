@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 import OSLog
+import AppKit
 
 /// 数据刷新管理器
 /// 负责管理所有数据刷新、定时器、更新检查和重置验证逻辑
@@ -18,6 +19,8 @@ class DataRefreshManager: ObservableObject {
 
     /// Claude API 服务实例
     private let apiService = ClaudeAPIService()
+    /// Codex API 服务实例
+    private let codexApiService = CodexAPIService()
     /// 更新检查器实例
     private let updateChecker = UpdateChecker()
     /// 定时器管理器
@@ -27,12 +30,16 @@ class DataRefreshManager: ObservableObject {
 
     // MARK: - Published State
 
-    /// 当前用量数据
+    /// Claude 用量数据
     @Published var usageData: UsageData?
+    /// Codex 用量数据（nil 表示无 Codex 账号或拉取失败）
+    @Published var codexUsageData: CodexUsageData?
     /// 加载状态
     @Published var isLoading = false
     /// 错误消息
     @Published var errorMessage: String?
+    /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
+    @Published var codexErrorMessage: String?
     /// 是否有可用更新
     @Published var hasAvailableUpdate = false
     /// 最新版本号
@@ -42,8 +49,10 @@ class DataRefreshManager: ObservableObject {
 
     // MARK: - Private State
 
-    /// 上次的重置时间（用于检测重置是否完成）
+    /// Claude 上次的重置时间（用于检测重置是否完成）
     private var lastResetsAt: Date?
+    /// Codex 上次的重置时间
+    private var lastCodexResetsAt: Date?
     /// 上次手动刷新时间
     private var lastManualRefreshTime: Date?
     /// 上次API请求时间
@@ -56,6 +65,50 @@ class DataRefreshManager: ObservableObject {
     private var lastUpdateCheckTime: Date?
     /// App Nap 防护活动令牌
     private var refreshActivity: NSObjectProtocol?
+    /// 系统唤醒观察者令牌
+    private var wakeObserver: NSObjectProtocol?
+
+    private var shouldFetchClaudeUsage: Bool {
+        #if DEBUG
+        if shouldSuppressDebugClaudeUsageForDisplayOptions {
+            return false
+        }
+        return settings.debugModeEnabled || settings.hasValidCredentials
+        #else
+        return settings.hasValidCredentials
+        #endif
+    }
+
+    private var shouldSuppressDebugClaudeUsageForDisplayOptions: Bool {
+        #if DEBUG
+        return settings.debugModeEnabled
+            && settings.displayMode == .custom
+            && !settings.customDisplayTypes.contains { $0.provider == .claude }
+        #else
+        return false
+        #endif
+    }
+
+    private var shouldSuppressDebugCodexUsageForDisplayOptions: Bool {
+        #if DEBUG
+        return settings.debugModeEnabled
+            && settings.displayMode == .custom
+            && !settings.customDisplayTypes.contains { $0.provider == .codex }
+        #else
+        return false
+        #endif
+    }
+
+    private var shouldFetchCodexUsage: Bool {
+        #if DEBUG
+        if shouldSuppressDebugCodexUsageForDisplayOptions {
+            return false
+        }
+        return settings.debugModeEnabled || settings.hasValidCodexCredentials
+        #else
+        return settings.hasValidCodexCredentials
+        #endif
+    }
 
     // MARK: - Timer Identifiers
 
@@ -66,6 +119,9 @@ class DataRefreshManager: ObservableObject {
         static let resetVerify1 = "resetVerify1"
         static let resetVerify2 = "resetVerify2"
         static let resetVerify3 = "resetVerify3"
+        static let codexResetVerify1 = "codexResetVerify1"
+        static let codexResetVerify2 = "codexResetVerify2"
+        static let codexResetVerify3 = "codexResetVerify3"
         static let dailyUpdate = "dailyUpdate"
     }
 
@@ -73,65 +129,158 @@ class DataRefreshManager: ObservableObject {
 
     init() {
         scheduleDailyUpdateCheck()
+        setupWakeObserver()
     }
 
     // MARK: - Data Fetching
 
-    /// 获取用量数据
-    /// 调用 API 服务获取最新的使用情况
+    /// 获取用量数据（Claude + Codex 并发）
     func fetchUsage() {
         isLoading = true
         errorMessage = nil
-
-        // 记录本次API请求时间
+        codexErrorMessage = nil
         lastAPIFetchTime = Date()
 
-        apiService.fetchUsage { [weak self] result in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.isLoading = false
+        let fetchClaude = shouldFetchClaudeUsage
+        let fetchCodex = shouldFetchCodexUsage
 
-                // 确保动画至少显示最小时长
-                self.endRefreshAnimationWithMinimumDuration {
+        if !fetchClaude {
+            clearClaudeUsageState()
+        }
+        if !fetchCodex {
+            clearCodexUsageState()
+        }
+
+        guard fetchClaude || fetchCodex else {
+            isLoading = false
+            endRefreshAnimationWithMinimumDuration { }
+            errorMessage = UsageError.noCredentials.localizedDescription
+            return
+        }
+
+        let group = DispatchGroup()
+        var claudeResult: Result<UsageData, Error>?
+        var codexResult: Result<CodexUsageData, Error>?
+
+        // Claude 请求
+        if fetchClaude {
+            group.enter()
+            apiService.fetchUsage { result in
+                claudeResult = result
+                group.leave()
+            }
+        }
+
+        // Codex 请求（仅当有凭证时）
+        if fetchCodex {
+            group.enter()
+            codexApiService.fetchUsage { result in
+                codexResult = result
+                if case .failure(let error) = result {
+                    Logger.menuBar.info("Codex 请求失败（不影响主功能）: \(error.localizedDescription)")
                 }
+                group.leave()
+            }
+        }
 
-                switch result {
+        group.notify(queue: .main) { [weak self] in
+            guard let self = self else { return }
+            self.isLoading = false
+            self.endRefreshAnimationWithMinimumDuration { }
+
+            var monitoringUtilizations: [ProviderType: Double] = [:]
+            if fetchCodex {
+                switch codexResult {
+                case .success(let codex):
+                    let previousCodexData = self.codexUsageData
+                    self.codexUsageData = codex
+                    self.codexErrorMessage = nil
+                    if let utilization = self.monitoringUtilization(for: codex) {
+                        monitoringUtilizations[.codex] = utilization
+                    }
+
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(codexUsageData: codex, previousData: previousCodexData)
+                    }
+
+                    let newCodexResetsAt = codex.primary?.resetsAt
+                    let codexResetChanged = self.hasResetTimeChanged(from: self.lastCodexResetsAt, to: newCodexResetsAt)
+                    if codexResetChanged {
+                        self.cancelCodexResetVerification()
+                    } else if let resetsAt = newCodexResetsAt {
+                        self.scheduleCodexResetVerification(resetsAt: resetsAt)
+                    }
+                    self.lastCodexResetsAt = newCodexResetsAt
+
+                case .failure(let error):
+                    self.codexErrorMessage = error.localizedDescription
+                    self.clearCodexUsageState(clearError: false)
+
+                case .none:
+                    self.clearCodexUsageState()
+                }
+            } else {
+                self.clearCodexUsageState()
+            }
+
+            // 处理 Claude 结果
+            if fetchClaude {
+                switch claudeResult {
                 case .success(let data):
                     let previousData = self.usageData
                     self.usageData = data
                     self.errorMessage = nil
+                    monitoringUtilizations[.claude] = data.percentage
 
-                    // 检查是否需要发送用量通知
                     if self.settings.notificationsEnabled {
                         NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                     }
 
-                    // 智能模式：根据百分比变化调整刷新频率
-                    self.settings.updateSmartMonitoringMode(currentUtilization: data.percentage)
-
-                    // 检测重置时间是否发生变化
                     let newResetsAt = data.resetsAt
                     let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
-
                     if hasResetChanged {
-                        // 重置时间发生变化，取消所有待执行的验证
                         self.cancelResetVerification()
-                    } else {
-                        // 重置时间未变化，安排验证
-                        if let resetsAt = newResetsAt {
-                            self.scheduleResetVerification(resetsAt: resetsAt)
-                        }
+                    } else if let resetsAt = newResetsAt {
+                        self.scheduleResetVerification(resetsAt: resetsAt)
                     }
-
-                    // 更新上次的重置时间
                     self.lastResetsAt = newResetsAt
 
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
-                    Logger.menuBar.error("API 请求失败: \(error.localizedDescription)")
+                    Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
+
+                case .none:
+                    break
                 }
             }
+
+            self.settings.updateSmartMonitoringMode(providerUtilizations: monitoringUtilizations)
         }
+    }
+
+    private func clearClaudeUsageState() {
+        usageData = nil
+        lastResetsAt = nil
+        cancelResetVerification()
+    }
+
+    private func clearCodexUsageState(clearError: Bool = true) {
+        codexUsageData = nil
+        if clearError {
+            codexErrorMessage = nil
+        }
+        lastCodexResetsAt = nil
+        cancelCodexResetVerification()
+    }
+
+    private func monitoringUtilization(for codex: CodexUsageData) -> Double? {
+        [
+            codex.primary?.percentage,
+            codex.secondary?.percentage,
+            codex.extraUsage?.percentage
+        ]
+        .compactMap { $0 }
+        .max()
     }
 
     /// 开始数据刷新
@@ -198,6 +347,22 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
+    /// 注册系统唤醒监听
+    /// 系统从睡眠唤醒后立即刷新数据，防止定时器在睡眠期间暂停导致长时间不更新
+    private func setupWakeObserver() {
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Logger.menuBar.debug("系统从睡眠唤醒，立即刷新数据")
+            // 延迟 3 秒等待网络恢复后再请求
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                self?.fetchUsage()
+            }
+        }
+    }
+
     // MARK: - Smart Refresh
 
     /// 打开Popover时的智能刷新
@@ -207,9 +372,17 @@ class DataRefreshManager: ObservableObject {
 
         // 用户打开详细界面，强制切换到活跃模式（1分钟刷新）
         if settings.refreshMode == .smart {
+            let wasIdle = settings.currentMonitoringMode != .active
             settings.currentMonitoringMode = .active
             settings.unchangedCount = 0
-            Logger.menuBar.debug("用户打开界面，切换到活跃模式")
+            // 如果之前处于空闲模式，需要重启定时器以应用新间隔
+            // 否则 updateSmartMonitoringMode 的 switchToActiveMode() 会因 guard 直接返回，导致定时器仍以旧间隔运行
+            if wasIdle {
+                restartTimer()
+                Logger.menuBar.debug("用户打开界面，从空闲模式切换到活跃模式，重启定时器")
+            } else {
+                Logger.menuBar.debug("用户打开界面，已在活跃模式")
+            }
         }
 
         // 如果距离上次刷新 < 30秒，跳过
@@ -222,44 +395,194 @@ class DataRefreshManager: ObservableObject {
     }
 
     /// 处理手动刷新
-    /// 防抖机制：10秒内只能刷新一次（调试模式下不启用）
+    /// 防抖机制：10秒内只能刷新一次
     func handleManualRefresh() {
         let now = Date()
 
-        #if !DEBUG
-        // 防抖检查：10秒内只能刷新一次（仅在 Release 模式下）
+        // 防抖检查：10秒内只能刷新一次
         if let lastManual = lastManualRefreshTime,
            now.timeIntervalSince(lastManual) < 10 {
             return
         }
-        #endif
 
         // 用户主动刷新，强制切换到活跃模式（1分钟刷新）
         if settings.refreshMode == .smart {
+            let wasIdle = settings.currentMonitoringMode != .active
             settings.currentMonitoringMode = .active
             settings.unchangedCount = 0
-            Logger.menuBar.debug("用户主动刷新，切换到活跃模式")
+            // 同 refreshOnPopoverOpen：若之前是空闲模式，需要重启定时器
+            if wasIdle {
+                restartTimer()
+                Logger.menuBar.debug("用户主动刷新，从空闲模式切换到活跃模式，重启定时器")
+            } else {
+                Logger.menuBar.debug("用户主动刷新，已在活跃模式")
+            }
         }
 
         // 更新状态
         lastManualRefreshTime = now
         refreshAnimationStartTime = now  // 记录动画开始时间
+        refreshState.refreshingProvider = nil
         refreshState.isRefreshing = true
 
-        #if DEBUG
-        // 调试模式：立即允许下次刷新
-        refreshState.canRefresh = true
-        #else
-        // 正式模式：设置防抖
+        // 设置防抖
         refreshState.canRefresh = false
         // 10秒后解除防抖
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             self?.refreshState.canRefresh = true
         }
-        #endif
 
         // 触发刷新
         fetchUsage()
+    }
+
+    /// 仅刷新 Claude 数据（Claude 圆环点击触发）
+    func handleClaudeOnlyRefresh() {
+        guard shouldFetchClaudeUsage else { return }
+        let now = Date()
+        if let lastManual = lastManualRefreshTime,
+           now.timeIntervalSince(lastManual) < 10 { return }
+        if settings.refreshMode == .smart {
+            let wasIdle = settings.currentMonitoringMode != .active
+            settings.currentMonitoringMode = .active
+            settings.unchangedCount = 0
+            if wasIdle { restartTimer() }
+        }
+        lastManualRefreshTime = now
+        refreshAnimationStartTime = now
+        refreshState.refreshingProvider = .claude
+        refreshState.isRefreshing = true
+        refreshState.canRefresh = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            self?.refreshState.canRefresh = true
+        }
+        fetchClaudeOnly()
+    }
+
+    /// 仅刷新 Codex 数据（Codex 圆环点击触发）
+    func handleCodexOnlyRefresh() {
+        guard shouldFetchCodexUsage else {
+            clearCodexUsageState()
+            return
+        }
+        let now = Date()
+        if let lastManual = lastManualRefreshTime,
+           now.timeIntervalSince(lastManual) < 10 { return }
+        lastManualRefreshTime = now
+        refreshAnimationStartTime = now
+        refreshState.refreshingProvider = .codex
+        refreshState.isRefreshing = true
+        refreshState.canRefresh = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            self?.refreshState.canRefresh = true
+        }
+        fetchCodexOnly()
+    }
+
+    private func fetchClaudeOnly() {
+        guard shouldFetchClaudeUsage else {
+            clearClaudeUsageState()
+            return
+        }
+        isLoading = true
+        errorMessage = nil
+        lastAPIFetchTime = Date()
+
+        apiService.fetchUsage { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.isLoading = false
+                self.endRefreshAnimationWithMinimumDuration { }
+
+                switch result {
+                case .success(let data):
+                    let previousData = self.usageData
+                    self.usageData = data
+                    self.errorMessage = nil
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
+                    }
+                    self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
+                    let newResetsAt = data.resetsAt
+                    if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
+                        self.cancelResetVerification()
+                    } else if let resetsAt = newResetsAt {
+                        self.scheduleResetVerification(resetsAt: resetsAt)
+                    }
+                    self.lastResetsAt = newResetsAt
+                case .failure(let error):
+                    self.clearClaudeUsageState()
+                    self.errorMessage = error.localizedDescription
+                    Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func fetchCodexOnly() {
+        guard shouldFetchCodexUsage else {
+            clearCodexUsageState()
+            return
+        }
+        isLoading = true
+        codexErrorMessage = nil
+        lastAPIFetchTime = Date()
+
+        codexApiService.fetchUsage { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.isLoading = false
+                self.endRefreshAnimationWithMinimumDuration { }
+
+                if case .success(let data) = result {
+                    let previousCodexData = self.codexUsageData
+                    self.codexUsageData = data
+                    self.codexErrorMessage = nil
+                    if let utilization = self.monitoringUtilization(for: data) {
+                        self.settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
+                    }
+                    if self.settings.notificationsEnabled {
+                        NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
+                    }
+                    let newCodexResetsAt = data.primary?.resetsAt
+                    if self.hasResetTimeChanged(from: self.lastCodexResetsAt, to: newCodexResetsAt) {
+                        self.cancelCodexResetVerification()
+                    } else if let resetsAt = newCodexResetsAt {
+                        self.scheduleCodexResetVerification(resetsAt: resetsAt)
+                    }
+                    self.lastCodexResetsAt = newCodexResetsAt
+                } else if case .failure(let error) = result {
+                    self.codexErrorMessage = error.localizedDescription
+                    self.clearCodexUsageState(clearError: false)
+                    Logger.menuBar.info("Codex 请求失败: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    /// 账户切换后只清理并刷新对应 Provider，避免跨账号 previousData 误判重置。
+    /// 通知去重状态按账号隔离，切换账号时保留，删除账号时再由 UserSettings 精准清理。
+    func handleAccountChanged(provider: ProviderType?) {
+        switch provider {
+        case .claude:
+            errorMessage = nil
+            clearClaudeUsageState()
+            if shouldFetchClaudeUsage {
+                fetchClaudeOnly()
+            }
+
+        case .codex:
+            clearCodexUsageState()
+            if shouldFetchCodexUsage {
+                fetchCodexOnly()
+            }
+
+        case .none:
+            clearClaudeUsageState()
+            clearCodexUsageState()
+            NotificationManager.shared.resetAllNotificationStates()
+            fetchUsage()
+        }
     }
 
     /// 结束刷新动画，确保至少显示最小时长
@@ -268,6 +591,7 @@ class DataRefreshManager: ObservableObject {
         guard let startTime = refreshAnimationStartTime else {
             // 没有记录开始时间，直接结束
             refreshState.isRefreshing = false
+            refreshState.refreshingProvider = nil
             completion()
             return
         }
@@ -279,11 +603,13 @@ class DataRefreshManager: ObservableObject {
             // 动画时间不足，延迟剩余时间后再结束
             DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
                 self?.refreshState.isRefreshing = false
+                self?.refreshState.refreshingProvider = nil
                 completion()
             }
         } else {
             // 动画时间已足够，直接结束
             refreshState.isRefreshing = false
+            refreshState.refreshingProvider = nil
             completion()
         }
 
@@ -364,6 +690,39 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
+    // MARK: - Codex Reset Verification
+
+    private func cancelCodexResetVerification() {
+        timerManager.invalidate(TimerID.codexResetVerify1)
+        timerManager.invalidate(TimerID.codexResetVerify2)
+        timerManager.invalidate(TimerID.codexResetVerify3)
+    }
+
+    private func scheduleCodexResetVerification(resetsAt: Date) {
+        cancelCodexResetVerification()
+
+        let timeUntilReset = resetsAt.timeIntervalSinceNow
+        guard timeUntilReset > 0 else {
+            Logger.menuBar.debug("Codex 重置时间已过，跳过验证安排")
+            return
+        }
+
+        timerManager.schedule(TimerID.codexResetVerify1, interval: timeUntilReset + 1, repeats: false) { [weak self] in
+            Logger.menuBar.debug("Codex 重置验证 +1秒 - 开始刷新")
+            self?.fetchUsage()
+        }
+
+        timerManager.schedule(TimerID.codexResetVerify2, interval: timeUntilReset + 10, repeats: false) { [weak self] in
+            Logger.menuBar.debug("Codex 重置验证 +10秒 - 开始刷新")
+            self?.fetchUsage()
+        }
+
+        timerManager.schedule(TimerID.codexResetVerify3, interval: timeUntilReset + 30, repeats: false) { [weak self] in
+            Logger.menuBar.debug("Codex 重置验证 +30秒 - 开始刷新")
+            self?.fetchUsage()
+        }
+    }
+
     // MARK: - Update Checking
 
     /// 安排每日更新检查
@@ -431,6 +790,10 @@ class DataRefreshManager: ObservableObject {
     func cleanup() {
         timerManager.invalidateAll()
         endRefreshActivity()
+        if let observer = wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            wakeObserver = nil
+        }
     }
 
     deinit {

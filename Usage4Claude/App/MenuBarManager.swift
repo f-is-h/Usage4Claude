@@ -16,6 +16,8 @@ import OSLog
 class RefreshState: ObservableObject {
     /// 是否正在刷新
     @Published var isRefreshing = false
+    /// 当前正在刷新的 Provider；nil 表示全量刷新
+    @Published var refreshingProvider: ProviderType?
     /// 是否可以刷新（防抖控制）
     @Published var canRefresh = true
     /// 通知消息
@@ -27,6 +29,10 @@ class RefreshState: ObservableObject {
     enum NotificationType {
         case loading          // 彩虹加载动画
         case updateAvailable  // 彩虹文字通知
+    }
+
+    func isRefreshingProvider(_ provider: ProviderType) -> Bool {
+        isRefreshing && (refreshingProvider == nil || refreshingProvider == provider)
     }
 }
 
@@ -52,10 +58,14 @@ class MenuBarManager: ObservableObject {
 
     /// 当前用量数据（从 dataManager 同步）
     @Published var usageData: UsageData?
+    /// Codex 用量数据（从 dataManager 同步）
+    @Published var codexUsageData: CodexUsageData?
     /// 加载状态（从 dataManager 同步）
     @Published var isLoading = false
     /// 错误消息（从 dataManager 同步）
     @Published var errorMessage: String?
+    /// Codex 错误消息（独立于 Claude）
+    @Published var codexErrorMessage: String?
     /// 是否有可用更新（从 dataManager 同步）
     @Published var hasAvailableUpdate = false
     /// 最新版本号（从 dataManager 同步）
@@ -92,11 +102,21 @@ class MenuBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        dataManager.$codexUsageData
+            .sink { [weak self] data in
+                self?.codexUsageData = data
+                self?.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
         dataManager.$isLoading
             .assign(to: &$isLoading)
 
         dataManager.$errorMessage
             .assign(to: &$errorMessage)
+
+        dataManager.$codexErrorMessage
+            .assign(to: &$codexErrorMessage)
 
         dataManager.$hasAvailableUpdate
             .sink { [weak self] hasUpdate in
@@ -151,8 +171,11 @@ class MenuBarManager: ObservableObject {
     private func handleMenuAction(_ action: UsageDetailView.MenuAction) {
         switch action {
         case .refresh:
-            // 处理手动刷新
             dataManager.handleManualRefresh()
+        case .refreshClaude:
+            dataManager.handleClaudeOnlyRefresh()
+        case .refreshCodex:
+            dataManager.handleCodexOnlyRefresh()
         case .generalSettings:
             closePopover()
             openSettingsWindow(tab: 0)
@@ -228,13 +251,15 @@ class MenuBarManager: ObservableObject {
 
         // 监听账户变更通知
         NotificationCenter.default.publisher(for: .accountChanged)
-            .sink { [weak self] _ in
+            .sink { [weak self] notification in
                 guard let self = self else { return }
                 Logger.menuBar.notice("账户已切换，刷新数据")
+                let providerRaw = notification.userInfo?[Notification.UserInfoKey.provider] as? String
+                let provider = providerRaw.flatMap { ProviderType(rawValue: $0) }
                 // 清除图标缓存，确保新数据到达时重新渲染
                 self.ui.clearIconCache()
-                // 立即刷新数据
-                self.dataManager.fetchUsage()
+                // 只刷新切换的 Provider，避免另一家的数据和通知状态被误清理
+                self.dataManager.handleAccountChanged(provider: provider)
                 // 更新菜单栏图标
                 self.updateMenuBarIcon()
             }
@@ -262,15 +287,25 @@ class MenuBarManager: ObservableObject {
         // 显示更新通知（如果有）
         showUpdateNotificationIfNeeded()
 
+        ui.setPopoverContentSize(usageDetailContentSize())
+
         // 创建并设置内容视图
         ui.setPopoverContent(UsageDetailView(
             usageData: Binding(
                 get: { self.usageData },
                 set: { self.usageData = $0 }
             ),
+            codexUsageData: Binding(
+                get: { self.codexUsageData },
+                set: { self.codexUsageData = $0 }
+            ),
             errorMessage: Binding(
                 get: { self.errorMessage },
                 set: { self.errorMessage = $0 }
+            ),
+            codexErrorMessage: Binding(
+                get: { self.codexErrorMessage },
+                set: { self.codexErrorMessage = $0 }
             ),
             refreshState: self.refreshState,
             onMenuAction: { [weak self] action in
@@ -291,6 +326,63 @@ class MenuBarManager: ObservableObject {
 
         // 启动刷新定时器
         startPopoverRefreshTimer()
+    }
+
+    private func usageDetailContentSize() -> NSSize {
+        let baseHeight: CGFloat = 190
+        let rowHeight: CGFloat = 26
+        let spacing: CGFloat = 5
+
+        if settings.isMultiProviderActive && (codexUsageData != nil || codexErrorMessage != nil || settings.hasValidCodexCredentials) {
+            let claudeRowCount: Int
+            if let data = usageData {
+                let types = settings.getActiveDisplayTypes(usageData: data)
+                    .filter { $0.provider == .claude }
+                claudeRowCount = types.count == 1 ? 2 : max(types.count, 1)
+            } else {
+                claudeRowCount = 2
+            }
+
+            let codexRowCount: Int
+            if let codex = codexUsageData {
+                let codexTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
+                    .filter { $0.provider == .codex }
+                codexRowCount = max(codexTypes.count, 1)
+            } else {
+                codexRowCount = 2
+            }
+            let maxRows = max(claudeRowCount, codexRowCount)
+            let rowsHeight = CGFloat(maxRows) * rowHeight + CGFloat(max(0, maxRows - 1)) * spacing
+            return NSSize(width: 580, height: baseHeight + rowsHeight)
+        }
+
+        let shouldUseCodexOnlyLayout = (!settings.hasValidCredentials && settings.hasValidCodexCredentials)
+            || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil))
+        if shouldUseCodexOnlyLayout {
+            let activeCount: Int
+            if let codex = codexUsageData {
+                activeCount = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
+                    .filter { $0.provider == .codex }
+                    .count
+            } else {
+                activeCount = 0
+            }
+            let rowCount = activeCount == 1 ? 2 : max(activeCount, codexUsageData == nil ? 0 : 1)
+            let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
+            return NSSize(width: 290, height: baseHeight + rowsHeight)
+        }
+
+        let activeCount: Int
+        if let data = usageData {
+            activeCount = settings.getActiveDisplayTypes(usageData: data)
+                .filter { $0.provider == .claude }
+                .count
+        } else {
+            activeCount = 0
+        }
+        let rowCount = activeCount == 1 ? 2 : activeCount
+        let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
+        return NSSize(width: 290, height: baseHeight + rowsHeight)
     }
 
     /// 显示更新通知（如果需要）
@@ -373,6 +465,12 @@ class MenuBarManager: ObservableObject {
         settings.switchToAccount(account)
     }
 
+    /// 切换 Codex 账户
+    @objc func switchCodexAccount(_ sender: NSMenuItem) {
+        guard let account = sender.representedObject as? Account else { return }
+        settings.switchToCodexAccount(account)
+    }
+
     @objc func checkForUpdates() {
         // 记录用户已确认当前版本的更新
         if let version = latestVersion {
@@ -419,7 +517,9 @@ class MenuBarManager: ObservableObject {
                 NSApp.setActivationPolicy(.accessory)
 
                 self?.settingsWindow = nil
-                if self?.settings.hasValidCredentials == true && self?.usageData == nil {
+                if self?.settings.hasAnyValidCredentials == true
+                    && self?.usageData == nil
+                    && self?.codexUsageData == nil {
                     self?.startRefreshing()
                 }
             }
@@ -475,7 +575,7 @@ class MenuBarManager: ObservableObject {
 
     /// 更新菜单栏图标
     private func updateMenuBarIcon() {
-        ui.updateMenuBarIcon(usageData: usageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
+        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
     }
     
     // MARK: - Cleanup

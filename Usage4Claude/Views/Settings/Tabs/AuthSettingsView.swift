@@ -21,6 +21,8 @@ struct AuthSettingsView: View {
     @State private var showDeleteConfirmation = false
     @State private var accountToDelete: Account?
     @State private var successMessage: String?
+    @State private var showDeleteCodexConfirmation = false
+    @State private var codexAccountToDelete: Account?
 
     var body: some View {
         ScrollView {
@@ -52,9 +54,14 @@ struct AuthSettingsView: View {
                     // 账户列表视图
                     accountListView
 
-                    // 当前账户详情
+                    // 当前 Claude 账户详情
                     if let currentAccount = settings.currentAccount {
                         currentAccountDetailView(account: currentAccount)
+                    }
+
+                    // 当前 Codex 账户详情
+                    if let currentCodexAccount = settings.currentCodexAccount {
+                        currentCodexAccountDetailView(account: currentCodexAccount)
                     }
 
                     // 说明卡片
@@ -76,19 +83,32 @@ struct AuthSettingsView: View {
         } message: {
             Text(L.Account.deleteConfirmMessage)
         }
+        .alert(L.Account.deleteConfirmTitle, isPresented: $showDeleteCodexConfirmation) {
+            Button(L.Account.cancel, role: .cancel) {}
+            Button(L.Account.delete, role: .destructive) {
+                if let account = codexAccountToDelete {
+                    settings.removeCodexAccount(account)
+                }
+            }
+        } message: {
+            Text(L.Account.deleteConfirmMessage)
+        }
     }
 
     // MARK: - Account List View
 
     private var accountListView: some View {
-        SettingCard(
+        let hasCodex = !settings.codexAccounts.isEmpty
+        let hasBothProviders = !settings.accounts.isEmpty && hasCodex
+
+        return SettingCard(
             icon: "person.2.fill",
             iconColor: .blue,
             title: L.Account.listTitle,
             hint: ""
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                if settings.accounts.isEmpty {
+                if settings.accounts.isEmpty && settings.codexAccounts.isEmpty {
                     // 无账户时的提示
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.badge.plus")
@@ -101,54 +121,159 @@ struct AuthSettingsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
                 } else {
-                    // 账户列表
-                    ForEach(settings.accounts) { account in
-                        accountRow(account: account)
+                    // Claude 账户组
+                    if !settings.accounts.isEmpty {
+                        if hasBothProviders {
+                            providerSectionHeader(provider: .claude, label: L.Account.claudeAccounts)
+                        }
+                        ForEach(settings.accounts) { account in
+                            accountRow(account: account, provider: .claude)
+                        }
+                    }
+
+                    // Codex 账户组
+                    if hasCodex {
+                        if hasBothProviders {
+                            providerSectionHeader(provider: .codex, label: L.Account.codexAccounts)
+                                .padding(.top, 4)
+                        }
+                        ForEach(settings.codexAccounts) { account in
+                            accountRow(account: account, provider: .codex)
+                        }
                     }
                 }
 
-                // 添加账户按钮
-                HStack(spacing: 10) {
-                    Button(action: {
-                        WebLoginWindowManager.shared.showLoginWindow()
-                    }) {
-                        HStack {
-                            Image(systemName: "globe")
-                            Text(L.WebLogin.browserLogin)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    Button(action: {
-                        withAnimation {
-                            isAddingAccount = true
-                            newSessionKey = ""
-                            newAlias = ""
-                            validationError = nil
-                        }
-                    }) {
-                        HStack {
-                            Image(systemName: "keyboard")
-                            Text(L.WebLogin.manualInput)
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .padding(.top, 8)
+                // 添加账户入口
+                addAccountActionsView
             }
+        }
+    }
+
+    private var addAccountActionsView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L.Account.addAccount)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 10) {
+                addAccountActionButton(
+                    provider: .claude,
+                    title: L.WebLogin.browserLogin,
+                    help: "\(ProviderType.claude.displayName) \(L.WebLogin.browserLogin)"
+                ) {
+                    WebLoginWindowManager.shared.showLoginWindow()
+                }
+
+                addAccountActionButton(
+                    provider: .claude,
+                    title: L.WebLogin.manualInput,
+                    help: L.SettingsAuth.manualInputClaudeOnlyHelp
+                ) {
+                    withAnimation {
+                        isAddingAccount = true
+                        newSessionKey = ""
+                        newAlias = ""
+                        validationError = nil
+                    }
+                }
+
+                addAccountActionButton(
+                    provider: .codex,
+                    title: L.WebLogin.browserLogin,
+                    help: "\(ProviderType.codex.displayName) \(L.WebLogin.browserLogin)"
+                ) {
+                    WebLoginWindowManager.shared.showCodexLoginWindow()
+                }
+            }
+        }
+        .padding(.top, 8)
+    }
+
+    private func addAccountActionButton(
+        provider: ProviderType,
+        title: String,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                providerIcon(provider: provider, size: 16)
+
+                Text(title)
+                    .font(.subheadline)
+            }
+        }
+        .buttonStyle(.bordered)
+        .help(help)
+        .accessibilityLabel(help)
+    }
+
+    @ViewBuilder
+    private func providerIcon(provider: ProviderType, size: CGFloat) -> some View {
+        switch provider {
+        case .claude:
+            if let icon = ImageHelper.createAppIcon(size: size) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: size, height: size)
+            } else {
+                Image(systemName: "sparkles")
+                    .frame(width: size, height: size)
+            }
+        case .codex:
+            if let icon = ImageHelper.createCodexIcon(size: size) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: size, height: size)
+            } else {
+                Image(systemName: "sparkles")
+                    .frame(width: size, height: size)
+            }
+        }
+    }
+
+    private func providerSectionHeader(provider: ProviderType, label: String) -> some View {
+        HStack(spacing: 4) {
+            if provider == .codex, let icon = ImageHelper.createCodexIcon(size: 12) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 12, height: 12)
+            } else if provider == .claude, let icon = ImageHelper.createAppIcon(size: 12) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 12, height: 12)
+            }
+            Text(label)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+            Divider()
+                .frame(height: 10)
         }
     }
 
     // MARK: - Account Row
 
-    private func accountRow(account: Account) -> some View {
-        Button(action: {
-            settings.switchToAccount(account)
+    private func accountRow(account: Account, provider: ProviderType) -> some View {
+        let isSelected = provider == .codex
+            ? account.id == settings.currentCodexAccountId
+            : account.id == settings.currentAccountId
+        let accentColor: Color = provider == .codex
+            ? Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
+            : .blue
+
+        return Button(action: {
+            if provider == .codex {
+                settings.switchToCodexAccount(account)
+            } else {
+                settings.switchToAccount(account)
+            }
         }) {
             HStack(spacing: 12) {
                 // 选中状态指示器
                 Circle()
-                    .fill(account.id == settings.currentAccountId ? Color.blue : Color.clear)
+                    .fill(isSelected ? accentColor : Color.clear)
                     .frame(width: 8, height: 8)
                     .overlay(
                         Circle()
@@ -163,14 +288,13 @@ struct AuthSettingsView: View {
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
 
-                        if account.id == settings.currentAccountId {
+                        if isSelected {
                             Image(systemName: "checkmark")
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(accentColor)
                         }
                     }
 
-                    // 如果有别名，显示原始名称作为副标题
                     if account.alias != nil && !account.alias!.isEmpty {
                         Text(account.organizationName)
                             .font(.caption)
@@ -184,7 +308,7 @@ struct AuthSettingsView: View {
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(account.id == settings.currentAccountId ? Color.blue.opacity(0.1) : Color.clear)
+                    .fill(isSelected ? accentColor.opacity(0.1) : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -319,6 +443,87 @@ struct AuthSettingsView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+        }
+    }
+
+    // MARK: - Current Codex Account Detail View
+
+    private func currentCodexAccountDetailView(account: Account) -> some View {
+        SettingCard(
+            icon: "person.circle.fill",
+            iconColor: Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0),
+            title: L.Account.codexCurrentAccount,
+            hint: ""
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                // 别名编辑
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tag.fill")
+                            .foregroundColor(.orange)
+                            .font(.subheadline)
+                        Text(L.Account.alias)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+
+                    HStack {
+                        TextField(account.organizationName, text: Binding(
+                            get: { account.alias ?? "" },
+                            set: { newValue in
+                                settings.updateCodexAccount(account, alias: newValue.isEmpty ? nil : newValue)
+                            }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+
+                        if account.alias != nil && !account.alias!.isEmpty {
+                            Button(action: {
+                                settings.updateCodexAccount(account, alias: nil)
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help(L.Account.clearAlias)
+                        }
+                    }
+                }
+
+                // Session Token 显示
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "key.fill")
+                            .foregroundColor(.red)
+                            .font(.subheadline)
+                        Text(L.SettingsAuth.sessionKeyLabel)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+
+                    HStack {
+                        Text(String(repeating: "•", count: min(account.sessionKey.count, 30)))
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundColor(.secondary)
+
+                        Spacer()
+                    }
+                }
+
+                // 删除按钮
+                Divider()
+
+                Button(action: {
+                    codexAccountToDelete = account
+                    showDeleteCodexConfirmation = true
+                }) {
+                    HStack {
+                        Image(systemName: "trash.fill")
+                        Text(L.Account.deleteAccount)
+                    }
+                    .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
             }
         }
     }

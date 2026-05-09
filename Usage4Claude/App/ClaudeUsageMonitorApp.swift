@@ -53,7 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menuBarManager = MenuBarManager()
 
-        if settings.isFirstLaunch || !settings.hasValidCredentials {
+        if settings.isFirstLaunch || !settings.hasAnyValidCredentials {
             showWelcomeWindow()
         } else {
             menuBarManager.startRefreshing()
@@ -116,7 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         welcomeWindow?.close()
         welcomeWindow = nil
 
-        if settings.hasValidCredentials {
+        if settings.hasAnyValidCredentials {
             menuBarManager.startRefreshing()
         }
     }

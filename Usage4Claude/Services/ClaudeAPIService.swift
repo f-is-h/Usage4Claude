@@ -139,6 +139,7 @@ class ClaudeAPIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
 
         // 使用统一的 Header 构建器添加完整的浏览器 Headers 以绕过 Cloudflare
         ClaudeAPIHeaderBuilder.applyHeaders(
@@ -241,6 +242,7 @@ class ClaudeAPIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
 
         // 使用统一的 Header 构建器，仅需要 sessionKey
         // 如果提供了 sessionKey 参数则使用它，否则使用 settings.sessionKey
@@ -336,6 +338,7 @@ class ClaudeAPIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
 
         // 使用统一的 Header 构建器添加完整的浏览器 Headers
         ClaudeAPIHeaderBuilder.applyHeaders(
@@ -449,10 +452,11 @@ class ClaudeAPIService {
             guard settings.debugExtraUsageEnabled else {
                 return ExtraUsageData(enabled: false, used: nil, limit: nil, currency: "USD")
             }
+            // 调试数据以美分为单位存储，与真实 API 格式一致，除以 100 转换为美元
             return ExtraUsageData(
                 enabled: true,
-                used: settings.debugExtraUsageUsed,
-                limit: settings.debugExtraUsageLimit,
+                used: settings.debugExtraUsageUsed / 100.0,
+                limit: Double(settings.debugExtraUsageLimit) / 100.0,
                 currency: "USD"
             )
         }()
@@ -534,14 +538,11 @@ nonisolated struct UsageResponse: Codable, Sendable {
         // 解析5小时限制数据
         let fiveHourData = parseLimitData(five_hour)
 
-        // 解析7天限制数据（仅当存在且有效时）
-        let sevenDayData: UsageData.LimitData? = {
+        // 解析7天限制数据。所有 Claude 账号都有 7 天限制；
+        // 未开始使用时 API 可能返回 0 且无 resets_at，仍保留为 0% 占位。
+        let sevenDayData: UsageData.LimitData = {
             guard let sevenDay = seven_day else {
-                return nil
-            }
-            // 如果utilization为0且resets_at为空，视为无数据
-            if sevenDay.utilization == 0 && sevenDay.resets_at == nil {
-                return nil
+                return UsageData.LimitData(percentage: 0, resetsAt: nil)
             }
             let parsed = parseLimitData(sevenDay)
             return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
@@ -614,12 +615,14 @@ nonisolated struct ExtraUsageResponse: Codable, Sendable {
     let limit_type: String?
     /// 是否启用
     let is_enabled: Bool?
-    /// 每月额度上限（单位：分）
+    /// 每月额度上限（单位：美分）- 新字段名
+    let monthly_limit: Int?
+    /// 每月额度上限（单位：美分）- 旧字段名
     let monthly_credit_limit: Int?
     /// 货币单位（如 "EUR", "USD"）
     let currency: String?
-    /// 已使用金额（单位：分）
-    let used_credits: Int?
+    /// 已使用金额（单位：美分，API 可能返回浮点数如 21.0）
+    let used_credits: Double?
     /// 信用额度耗尽
     let out_of_credits: Bool?
 
@@ -632,10 +635,11 @@ nonisolated struct ExtraUsageResponse: Codable, Sendable {
     /// 转换为 ExtraUsageData
     /// - Returns: 转换后的 ExtraUsageData，如果数据无效则返回 nil
     func toExtraUsageData() -> ExtraUsageData? {
-        // 优先使用新 API 字段，回退到旧字段
         let resolvedCurrency = (currency ?? spend_limit_currency ?? "USD").uppercased()
-        let limitCents = monthly_credit_limit ?? spend_limit_amount_cents
-        let usedCents = used_credits ?? balance_cents
+        // 优先使用新字段名 monthly_limit，回退到旧字段名，单位均为美分
+        let limitCents = monthly_limit ?? monthly_credit_limit ?? spend_limit_amount_cents
+        // used_credits 单位为美分（API 可能以浮点形式返回，如 21.0 表示 21 美分）
+        let usedCents = used_credits ?? balance_cents.map { Double($0) }
 
         // 使用 is_enabled 字段判断，回退到限额检查
         let enabled = is_enabled ?? (limitCents.map { $0 > 0 } ?? false)
@@ -649,8 +653,9 @@ nonisolated struct ExtraUsageResponse: Codable, Sendable {
             )
         }
 
+        // 美分转美元：除以 100
         let limit = Double(limitCents) / 100.0
-        let used = usedCents.map { Double($0) / 100.0 } ?? 0.0
+        let used = (usedCents ?? 0.0) / 100.0
 
         return ExtraUsageData(
             enabled: true,
@@ -922,11 +927,11 @@ struct UsageData: Sendable {
 struct ExtraUsageData: Sendable {
     /// 是否启用 Extra Usage
     let enabled: Bool
-    /// 已使用金额（美元）
+    /// 已使用金额
     let used: Double?
-    /// 总限额（美元）
+    /// 总限额
     let limit: Double?
-    /// 货币单位
+    /// 货币代码（ISO 4217，如 USD、EUR、GBP）
     let currency: String
 
     /// 使用百分比（用于统一显示）
@@ -937,6 +942,21 @@ struct ExtraUsageData: Sendable {
         return (used / limit) * 100.0
     }
 
+    /// 货币符号（根据 ISO 4217 货币代码映射）
+    var currencySymbol: String {
+        switch currency.uppercased() {
+        case "USD": return "$"
+        case "EUR": return "€"
+        case "GBP": return "£"
+        case "JPY": return "¥"
+        case "CAD": return "CA$"
+        case "AUD": return "A$"
+        case "BRL": return "R$"
+        case "INR": return "₹"
+        default: return currency
+        }
+    }
+
     // MARK: - Formatting Methods
 
     /// 格式化的使用金额/总额度字符串（默认模式）
@@ -945,7 +965,7 @@ struct ExtraUsageData: Sendable {
         guard enabled, let used = used, let limit = limit else {
             return L.ExtraUsage.notEnabled
         }
-        return L.ExtraUsage.usageAmount(used, limit)
+        return L.ExtraUsage.usageAmount(used, limit, symbol: currencySymbol)
     }
 
     /// 格式化的剩余金额字符串（剩余模式）
@@ -955,16 +975,17 @@ struct ExtraUsageData: Sendable {
             return L.ExtraUsage.notEnabled
         }
         let remaining = max(0, limit - used)
-        return L.ExtraUsage.remainingAmount(remaining)
+        return L.ExtraUsage.remainingAmount(remaining, symbol: currencySymbol)
     }
 
     /// 极简格式化的使用金额（用于列表显示）
-    /// - Returns: 如 "$10/$25"
+    /// - Returns: 如 "$10.47/$25"
     var formattedCompactAmount: String {
         guard enabled, let used = used, let limit = limit else {
             return "-"
         }
-        return String(format: "$%.0f/$%.0f", used, limit)
+        let sym = currencySymbol
+        return String(format: "%@%.2f/%@%.0f", sym, used, sym, limit)
     }
 }
 
@@ -1018,4 +1039,10 @@ enum UsageError: LocalizedError {
             return "HTTP 错误: \(statusCode)"
         }
     }
+}
+
+// MARK: - UsageProvider
+
+extension ClaudeAPIService: UsageProvider {
+    var providerType: ProviderType { .claude }
 }

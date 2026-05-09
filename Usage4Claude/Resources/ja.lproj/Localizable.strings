@@ -36,6 +36,7 @@
 "usage.refresh" = "更新";
 "usage.refresh_cooldown" = "少々お待ちください";
 "usage.run_diagnostic" = "診断を実行";
+"usage.codex_title" = "Codex使用状況";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "一般";
@@ -69,7 +70,7 @@
 "icon_style.monochrome_desc" = "システムメニューバースタイルに自動適応、シンプルでエレガント";
 
 // MARK: - Settings - Authentication
-"settings.auth.how_to_title" = "認証情報の取得方法";
+"settings.auth.how_to_title" = "Claude認証情報の取得方法";
 "settings.auth.step1" = "1. ブラウザでclaude.aiにアクセスしてログイン";
 "settings.auth.step2" = "2. ブラウザの開発者ツールを開く（F12またはCmd+Option+I）";
 "settings.auth.step3" = "3. Networkタブに切り替え";
@@ -79,7 +80,7 @@
 "settings.auth.open_browser" = "ブラウザでClaude使用状況ページを開く";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Session Keyを貼り付け";
-"settings.auth.session_key_hint" = "sk-ant-sid01-で始まる長い文字列";
+"settings.auth.session_key_hint" = "完全な sessionKey Cookie 値を貼り付け（通常は sk-ant-sid で始まります）";
 "settings.auth.configured" = "認証情報が設定済み";
 "settings.auth.not_configured" = "Session Keyを入力してください";
 "settings.auth.credentials_title" = "認証情報";
@@ -87,6 +88,7 @@
 "settings.auth.need_credentials" = "Session Keyを入力してください";
 "settings.auth.show_password" = "表示";
 "settings.auth.hide_password" = "非表示";
+"settings.auth.manual_input_claude_only_help" = "Claude 専用: Codex は Session Key の手動入力に対応していません。";
 
 // MARK: - Settings - About
 "settings.about.version" = "バージョン %@";
@@ -133,6 +135,7 @@
 "display.percentage_only" = "パーセンテージのみ";
 "display.icon_only" = "アイコンのみ";
 "display.both" = "アイコンとパーセンテージ";
+"display.none" = "表示しない";
 "display.show_icon" = "アイコンを表示";
 "display.show_percentage" = "パーセンテージを表示";
 
@@ -150,6 +153,7 @@
 "language.chinese" = "中文（簡体字）";
 "language.chinese_traditional" = "中文（繁體字）";
 "language.korean" = "한국어";
+"language.french" = "Français";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 設定";
@@ -163,6 +167,7 @@
 "usage_data.resets_in_days" = "残り約%d日%d時間";
 "usage_data.unknown" = "不明";
 "usage_data.today" = "今日";
+"usage_data.detail_today" = "今日";
 "usage_data.tomorrow" = "明日";
 
 // MARK: - Error Messages
@@ -247,6 +252,16 @@
 "opus_weekly_limit" = "7日Opus制限";
 "sonnet_weekly_limit" = "7日Sonnet制限";
 "extra_usage" = "追加使用量";
+"codex_primary_limit" = "Codex 5時間制限";
+"codex_secondary_limit" = "Codex 7日制限";
+"codex_extra_usage" = "Codex 追加使用量";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "5時間制限";
+"detail_row.seven_day_limit" = "7日制限";
+"detail_row.opus_weekly_limit" = "Opus 7日制限";
+"detail_row.sonnet_weekly_limit" = "Sonnet 7日制限";
+"detail_row.extra_usage" = "追加使用量";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "表示オプション";
@@ -256,7 +271,7 @@
 "custom_display_description" = "表示する制限を手動で選択";
 "display_mode_label" = "表示モード";
 "select_limit_types" = "表示する制限タイプを選択";
-"circular_icon_constraint" = "少なくとも1つの円形アイコン（5時間または7日）を選択する必要があります";
+"circular_icon_constraint" = "少なくとも1つの円形制限を選択する必要があります";
 "colored_theme_unavailable" = "カラーテーマは、他のタイプなしで1〜2個の円形アイコンを表示する場合のみ利用可能です";
 
 // MARK: - Theme Selection (v2.0.0)
@@ -289,7 +304,7 @@
 "welcome.authentication_setup" = "認証設定";
 "welcome.session_key" = "セッションキー";
 "welcome.session_key_placeholder" = "セッションキーをここに貼り付けてください";
-"welcome.session_key_hint" = "sk-ant-sid01-で始まります...";
+"welcome.session_key_hint" = "完全な sessionKey Cookie 値を貼り付けてください";
 "welcome.valid_format" = "形式が正しい";
 "welcome.invalid_format" = "セッションキーは20〜500文字である必要があります";
 "welcome.select_limits" = "制限を選択";
@@ -303,6 +318,7 @@
 "welcome.continue" = "続ける";
 "welcome.finish" = "完了";
 "welcome.how_to_get_session_key" = "Session Key の取得方法は？";
+"welcome.configuring" = "設定中...";
 "welcome.fetch_org_id_failed" = "Organization ID を取得できませんでした。後で設定で再試行してください";
 "welcome.menubar_icon_not_visible" = "メニューバーアイコンが見えませんか？";
 "welcome.multi_account_hint" = "複数アカウントが必要ですか？セットアップ後、設定で追加できます。";
@@ -333,8 +349,14 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "未有効";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "残り$%.0f";
+"extra_usage.unlimited" = "無制限";
+"extra_usage.limit_reached" = "上限に到達";
+"extra_usage.usage_amount" = "%@%.2f/%@%.0f";
+"extra_usage.remaining_amount" = "残り%@%.2f";
+"extra_usage.credits_balance" = "残高 %d クレジット";
+"extra_usage.credits_remaining" = "残り %d クレジット";
+"extra_usage.detail_credits_balance" = "%d クレジット";
+"extra_usage.detail_credits_remaining" = "残り %d クレジット";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "レインボーグラデーション";
@@ -362,7 +384,7 @@
 "account.no_accounts" = "アカウントが設定されていません\nアカウントを追加して開始してください";
 "account.add_account" = "アカウントを追加";
 "account.add_new_account" = "新しいアカウントを追加";
-"account.current_account" = "現在のアカウント";
+"account.current_account" = "現在の Claude アカウント";
 "account.alias" = "エイリアス";
 "account.alias_optional" = "エイリアス（任意）";
 "account.alias_placeholder" = "例: パーソナルPro、仕事チーム";
@@ -399,6 +421,15 @@
 "weblogin.success" = "アカウントを追加しました：%@";
 "weblogin.cloudflare_blocked" = "ページが読み込めない場合は、手動入力をご利用ください。";
 "weblogin.privacy_notice" = "ログイン情報はローカルでのみ使用され、システムの Keychain に安全に保存されます。";
+"weblogin.codex_window_title" = "Codex にサインイン";
+"weblogin.codex_waiting_for_login" = "ChatGPT アカウントにサインインしてください";
+
+// MARK: - Codex Account (v2.7.0)
+"account.claude_accounts" = "Claude アカウント";
+"account.codex_accounts" = "Codex アカウント";
+"account.add_codex_account" = "Codex アカウントを追加";
+"account.codex_current_account" = "現在の Codex アカウント";
+
 // MARK: - Graph Type
 "graph_type.circular" = "サークル";
 "graph_type.linear" = "ライン";

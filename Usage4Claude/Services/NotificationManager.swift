@@ -30,8 +30,8 @@ class NotificationManager {
 
     // MARK: - State
 
-    /// 已通知记录（防止同一周期内重复通知）
-    /// key = LimitType.rawValue, value = true 表示已发送过警告
+    /// 已通知记录（防止同一账号同一周期内重复通知）
+    /// key = provider + accountId + limitType，value = true 表示已发送过警告
     private var notifiedWarnings: [String: Bool] = [:]
 
     private init() {}
@@ -95,6 +95,34 @@ class NotificationManager {
         )
     }
 
+    /// 检查 Codex 用量数据并在需要时发送通知
+    /// - Parameters:
+    ///   - codexUsageData: 最新的 Codex 用量数据
+    ///   - previousData: 上一次的 Codex 用量数据（用于对比变化）
+    func checkAndNotify(codexUsageData: CodexUsageData, previousData: CodexUsageData?) {
+        checkLimit(
+            type: .codexPrimary,
+            current: codexUsageData.primary?.percentage,
+            previous: previousData?.primary?.percentage,
+            currentResetsAt: codexUsageData.primary?.resetsAt,
+            previousResetsAt: previousData?.primary?.resetsAt
+        )
+        checkLimit(
+            type: .codexSecondary,
+            current: codexUsageData.secondary?.percentage,
+            previous: previousData?.secondary?.percentage,
+            currentResetsAt: codexUsageData.secondary?.resetsAt,
+            previousResetsAt: previousData?.secondary?.resetsAt
+        )
+        checkLimit(
+            type: .codexExtraUsage,
+            current: codexUsageData.extraUsage?.percentage,
+            previous: previousData?.extraUsage?.percentage,
+            currentResetsAt: nil,
+            previousResetsAt: nil
+        )
+    }
+
     // MARK: - Private Methods
 
     /// 检查单个限制类型的用量变化
@@ -115,16 +143,16 @@ class NotificationManager {
             previousResetsAt: previousResetsAt
         ) {
             sendResetNotification(limitType: type)
-            notifiedWarnings.removeValue(forKey: type.rawValue)
-            notifiedWarnings.removeValue(forKey: "\(type.rawValue)_75")
+            notifiedWarnings.removeValue(forKey: notificationKey(for: type))
+            notifiedWarnings.removeValue(forKey: notificationKey(for: type, suffix: "75"))
             return
         }
 
         let previousPct = previous ?? 0
 
         // 7天限制额外检查 75% 阈值
-        if type == .sevenDay {
-            let earlyKey = "\(type.rawValue)_75"
+        if type == .sevenDay || type == .codexSecondary {
+            let earlyKey = notificationKey(for: type, suffix: "75")
             let alreadyNotifiedEarly = notifiedWarnings[earlyKey] ?? false
             if !alreadyNotifiedEarly && previousPct < sevenDayEarlyWarningThreshold && currentPct >= sevenDayEarlyWarningThreshold {
                 sendUsageWarning(limitType: type, percentage: currentPct)
@@ -133,11 +161,45 @@ class NotificationManager {
         }
 
         // 检测是否跨越 90% 阈值
-        let alreadyNotified = notifiedWarnings[type.rawValue] ?? false
+        let warningKey = notificationKey(for: type)
+        let alreadyNotified = notifiedWarnings[warningKey] ?? false
         if !alreadyNotified && previousPct < warningThreshold && currentPct >= warningThreshold {
             sendUsageWarning(limitType: type, percentage: currentPct)
-            notifiedWarnings[type.rawValue] = true
+            notifiedWarnings[warningKey] = true
         }
+    }
+
+    private func notificationKey(for type: LimitType, suffix: String? = nil) -> String {
+        let accountId: UUID?
+        switch type.provider {
+        case .claude:
+            accountId = UserSettings.shared.currentAccountId
+        case .codex:
+            accountId = UserSettings.shared.currentCodexAccountId
+        }
+        return Self.makeNotificationKey(
+            provider: type.provider,
+            accountId: accountId,
+            limitType: type,
+            suffix: suffix
+        )
+    }
+
+    static func makeNotificationKey(
+        provider: ProviderType,
+        accountId: UUID?,
+        limitType: LimitType,
+        suffix: String? = nil
+    ) -> String {
+        var key = "\(provider.rawValue):\(accountId?.uuidString ?? "none"):\(limitType.rawValue)"
+        if let suffix {
+            key += ":\(suffix)"
+        }
+        return key
+    }
+
+    static func makeAccountNotificationKeyPrefix(provider: ProviderType, accountId: UUID?) -> String {
+        "\(provider.rawValue):\(accountId?.uuidString ?? "none"):"
     }
 
     /// 判断是否发生了重置
@@ -213,4 +275,13 @@ class NotificationManager {
     func resetAllNotificationStates() {
         notifiedWarnings.removeAll()
     }
+
+    /// 重置指定账号的已通知记录
+    func resetNotificationStates(for provider: ProviderType, accountId: UUID?) {
+        let prefix = Self.makeAccountNotificationKeyPrefix(provider: provider, accountId: accountId)
+        notifiedWarnings = notifiedWarnings.filter { key, _ in
+            !key.hasPrefix(prefix)
+        }
+    }
+
 }

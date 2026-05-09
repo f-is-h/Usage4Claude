@@ -118,9 +118,11 @@ enum TimeFormatHelper {
         timeFormatter.locale = UserSettings.shared.appLocale
         timeFormatter.timeZone = TimeZone.current
         if uses24HourFormat {
-            // 24小时制：显示"15时"或"15"
-            if langCode.hasPrefix("zh") || langCode.hasPrefix("ja") {
+            // 24小时制：显示"15时"/"15時"或"15"
+            if langCode.hasPrefix("zh") {
                 timeFormatter.dateFormat = "H时"
+            } else if langCode.hasPrefix("ja") {
+                timeFormatter.dateFormat = "H時"
             } else if langCode.hasPrefix("ko") {
                 timeFormatter.dateFormat = "H시"
             } else {

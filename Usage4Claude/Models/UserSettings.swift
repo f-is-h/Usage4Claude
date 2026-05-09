@@ -22,7 +22,9 @@ enum IconDisplayMode: String, CaseIterable, Codable {
     case iconOnly = "icon_only"
     /// 同时显示图标和百分比
     case both = "both"
-    
+    /// 不显示图标（双 Provider 时显示尖头分隔线）
+    case none = "no_display"
+
     var localizedName: String {
         switch self {
         case .percentageOnly:
@@ -31,6 +33,8 @@ enum IconDisplayMode: String, CaseIterable, Codable {
             return L.Display.iconOnly
         case .both:
             return L.Display.both
+        case .none:
+            return L.Display.none
         }
     }
 }
@@ -151,10 +155,26 @@ enum LimitType: String, CaseIterable, Codable {
     case opusWeekly = "seven_day_opus"
     /// Sonnet 每周限制
     case sonnetWeekly = "seven_day_sonnet"
+    /// Codex 5小时窗口（primary）
+    case codexPrimary = "codex_primary"
+    /// Codex 7天窗口（secondary）
+    case codexSecondary = "codex_secondary"
+    /// Codex Extra Usage / credits
+    case codexExtraUsage = "codex_extra_usage"
 
-    /// 是否为圆形图标（5小时和7天）
+    /// 所属 Provider
+    var provider: ProviderType {
+        switch self {
+        case .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly:
+            return .claude
+        case .codexPrimary, .codexSecondary, .codexExtraUsage:
+            return .codex
+        }
+    }
+
+    /// 是否为圆形图标（5小时、7天和 Codex 两项）
     var isCircular: Bool {
-        return self == .fiveHour || self == .sevenDay
+        return self == .fiveHour || self == .sevenDay || self == .codexPrimary || self == .codexSecondary
     }
 
     /// 是否为矩形图标（Opus和Sonnet）
@@ -164,7 +184,12 @@ enum LimitType: String, CaseIterable, Codable {
 
     /// 是否为六边形图标（Extra Usage）
     var isHexagonal: Bool {
-        return self == .extraUsage
+        return self == .extraUsage || self == .codexExtraUsage
+    }
+
+    /// 是否使用虚线样式（7天类型）
+    var usesDashedStyle: Bool {
+        return self == .sevenDay || self == .codexSecondary
     }
 
     /// 显示名称
@@ -180,6 +205,12 @@ enum LimitType: String, CaseIterable, Codable {
             return L.LimitTypes.sonnetWeekly
         case .extraUsage:
             return L.LimitTypes.extraUsage
+        case .codexPrimary:
+            return L.LimitTypes.codexPrimary
+        case .codexSecondary:
+            return L.LimitTypes.codexSecondary
+        case .codexExtraUsage:
+            return L.LimitTypes.codexExtraUsage
         }
     }
 }
@@ -285,6 +316,8 @@ enum AppLanguage: String, CaseIterable, Codable {
     case chineseTraditional = "zh-Hant"
     /// 韩语
     case korean = "ko"
+    /// 法语
+    case french = "fr"
 
     var localizedName: String {
         switch self {
@@ -298,6 +331,8 @@ enum AppLanguage: String, CaseIterable, Codable {
             return L.Language.chineseTraditional
         case .korean:
             return L.Language.korean
+        case .french:
+            return L.Language.french
         }
     }
 }
@@ -316,6 +351,8 @@ extension AppLanguage {
             return Locale(identifier: "zh_TW")
         case .korean:
             return Locale(identifier: "ko_KR")
+        case .french:
+            return Locale(identifier: "fr_FR")
         }
     }
 }
@@ -349,10 +386,15 @@ class UserSettings: ObservableObject {
     /// 当前激活账户的 ID（存储在 UserDefaults 中）
     @Published var currentAccountId: UUID? {
         didSet {
+            #if DEBUG
+            let key = "DEBUG_currentAccountId"
+            #else
+            let key = "currentAccountId"
+            #endif
             if let id = currentAccountId {
-                defaults.set(id.uuidString, forKey: "currentAccountId")
+                defaults.set(id.uuidString, forKey: key)
             } else {
-                defaults.removeObject(forKey: "currentAccountId")
+                defaults.removeObject(forKey: key)
             }
         }
     }
@@ -360,7 +402,7 @@ class UserSettings: ObservableObject {
     /// 当前激活的账户
     var currentAccount: Account? {
         guard let id = currentAccountId else { return accounts.first }
-        return accounts.first { $0.id == id }
+        return accounts.first { $0.id == id } ?? accounts.first
     }
 
     /// Claude Session Key（计算属性，指向当前账户）
@@ -381,6 +423,65 @@ class UserSettings: ObservableObject {
                   let index = accounts.firstIndex(where: { $0.id == id }) else { return }
             accounts[index].organizationId = newValue
         }
+    }
+
+    /// Claude 账户列表的语义别名（等同于 accounts，用于 provider-aware 代码中保持对称）
+    var claudeAccounts: [Account] { accounts }
+
+    // MARK: - Codex 账户支持
+
+    /// Codex 账户列表（存储在独立 Keychain key "accounts_codex" 中，不干扰 Claude 数据）
+    @Published var codexAccounts: [Account] = [] {
+        didSet {
+            saveCodexAccounts()
+        }
+    }
+
+    /// 当前激活的 Codex 账户 ID（存储在 UserDefaults 中）
+    @Published var currentCodexAccountId: UUID? {
+        didSet {
+            #if DEBUG
+            let key = "DEBUG_currentCodexAccountId"
+            #else
+            let key = "currentCodexAccountId"
+            #endif
+            if let id = currentCodexAccountId {
+                defaults.set(id.uuidString, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+    }
+
+    /// 当前激活的 Codex 账户
+    var currentCodexAccount: Account? {
+        guard let id = currentCodexAccountId else { return codexAccounts.first }
+        return codexAccounts.first { $0.id == id } ?? codexAccounts.first
+    }
+
+    /// Codex Session Token（计算属性，指向当前 Codex 账户的 sessionKey 字段）
+    var codexSessionToken: String {
+        currentCodexAccount?.sessionKey ?? ""
+    }
+
+    /// 是否同时存在 Claude 和 Codex 账户（决定 UI 进入 multi-provider 形态）
+    var isMultiProviderActive: Bool {
+        #if DEBUG
+        if debugModeEnabled {
+            if displayMode == .custom {
+                let hasClaudeDisplayTypes = customDisplayTypes.contains { $0.provider == .claude }
+                let hasCodexDisplayTypes = customDisplayTypes.contains { $0.provider == .codex }
+                return hasClaudeDisplayTypes && hasCodexDisplayTypes
+            }
+            return true
+        }
+        #endif
+        return !accounts.isEmpty && !codexAccounts.isEmpty
+    }
+
+    /// Codex 认证信息是否已配置
+    var hasValidCodexCredentials: Bool {
+        !codexSessionToken.isEmpty
     }
 
     // MARK: - 非敏感设置（存储在UserDefaults中）
@@ -560,6 +661,30 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 调试用的 Codex 5小时窗口百分比（0-100）
+    @Published var debugCodexPrimaryPercentage: Double {
+        didSet {
+            defaults.set(debugCodexPrimaryPercentage, forKey: "debugCodexPrimaryPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 调试用的 Codex 7天窗口百分比（0-100）
+    @Published var debugCodexSecondaryPercentage: Double {
+        didSet {
+            defaults.set(debugCodexSecondaryPercentage, forKey: "debugCodexSecondaryPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// 调试用的 Codex Extra Usage 百分比（0-100）
+    @Published var debugCodexExtraUsagePercentage: Double {
+        didSet {
+            defaults.set(debugCodexExtraUsagePercentage, forKey: "debugCodexExtraUsagePercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 调试用的 Extra Usage 是否启用
     @Published var debugExtraUsageEnabled: Bool {
         didSet {
@@ -567,15 +692,15 @@ class UserSettings: ObservableObject {
         }
     }
 
-    /// 调试用的 Extra Usage 已使用金额（美元）
+    /// 调试用的 Extra Usage 已使用金额（美分），与真实 API used_credits 单位一致
     @Published var debugExtraUsageUsed: Double {
         didSet {
             defaults.set(debugExtraUsageUsed, forKey: "debugExtraUsageUsed")
         }
     }
 
-    /// 调试用的 Extra Usage 总限额（美元）
-    @Published var debugExtraUsageLimit: Double {
+    /// 调试用的 Extra Usage 总限额（美分），与真实 API monthly_limit 单位一致，只能为整数
+    @Published var debugExtraUsageLimit: Int {
         didSet {
             defaults.set(debugExtraUsageLimit, forKey: "debugExtraUsageLimit")
         }
@@ -585,8 +710,8 @@ class UserSettings: ObservableObject {
     @Published var debugExtraUsagePercentage: Double {
         didSet {
             defaults.set(debugExtraUsagePercentage, forKey: "debugExtraUsagePercentage")
-            // 同步更新 used 值
-            debugExtraUsageUsed = debugExtraUsageLimit * (debugExtraUsagePercentage / 100.0)
+            // 同步更新 used 值（美分）
+            debugExtraUsageUsed = Double(debugExtraUsageLimit) * (debugExtraUsagePercentage / 100.0)
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -644,6 +769,9 @@ class UserSettings: ObservableObject {
     
     /// 上次检测的百分比（用于检测变化）
     var lastUtilization: Double?
+
+    /// 各 Provider 上次检测的百分比（用于 Codex/Claude 共同驱动智能刷新）
+    var lastUtilizationByProvider: [ProviderType: Double] = [:]
     
     /// 连续无变化次数
     var unchangedCount: Int = 0
@@ -667,6 +795,8 @@ class UserSettings: ObservableObject {
             return .japanese
         } else if systemLanguage.hasPrefix("ko") {
             return .korean
+        } else if systemLanguage.hasPrefix("fr") {
+            return .french
         } else {
             return .english  // 默认英语
         }
@@ -682,7 +812,12 @@ class UserSettings: ObservableObject {
         var loadedCurrentAccountId: UUID? = nil
 
         // 加载当前账户 ID
-        if let idString = defaults.string(forKey: "currentAccountId"),
+        #if DEBUG
+        let currentAccountIdKey = "DEBUG_currentAccountId"
+        #else
+        let currentAccountIdKey = "currentAccountId"
+        #endif
+        if let idString = defaults.string(forKey: currentAccountIdKey),
            let id = UUID(uuidString: idString) {
             loadedCurrentAccountId = id
         } else if let firstAccount = loadedAccounts.first {
@@ -727,6 +862,23 @@ class UserSettings: ObservableObject {
         // 设置 accounts 和 currentAccountId
         self.accounts = loadedAccounts
         self.currentAccountId = loadedCurrentAccountId
+
+        // MARK: - 加载 Codex 账户数据
+
+        let loadedCodexAccounts = keychain.loadCodexAccounts() ?? []
+        self.codexAccounts = loadedCodexAccounts
+
+        #if DEBUG
+        let codexCurrentAccountIdKey = "DEBUG_currentCodexAccountId"
+        #else
+        let codexCurrentAccountIdKey = "currentCodexAccountId"
+        #endif
+        if let idString = defaults.string(forKey: codexCurrentAccountIdKey),
+           let id = UUID(uuidString: idString) {
+            self.currentCodexAccountId = id
+        } else {
+            self.currentCodexAccountId = loadedCodexAccounts.first?.id
+        }
 
         // MARK: - 旧版迁移（v1.x → v2.0.0，保留向后兼容）
 
@@ -841,9 +993,12 @@ class UserSettings: ObservableObject {
         self.debugSevenDayPercentage = defaults.object(forKey: "debugSevenDayPercentage") as? Double ?? 66.0
         self.debugOpusPercentage = defaults.object(forKey: "debugOpusPercentage") as? Double ?? 77.0
         self.debugSonnetPercentage = defaults.object(forKey: "debugSonnetPercentage") as? Double ?? 88.0
+        self.debugCodexPrimaryPercentage = defaults.object(forKey: "debugCodexPrimaryPercentage") as? Double ?? 42.0
+        self.debugCodexSecondaryPercentage = defaults.object(forKey: "debugCodexSecondaryPercentage") as? Double ?? 58.0
+        self.debugCodexExtraUsagePercentage = defaults.object(forKey: "debugCodexExtraUsagePercentage") as? Double ?? 35.0
         self.debugExtraUsageEnabled = defaults.object(forKey: "debugExtraUsageEnabled") as? Bool ?? true
-        self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 30.50
-        self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Double ?? 50.0
+        self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 3050.0
+        self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Int ?? 5000
         self.debugExtraUsagePercentage = defaults.object(forKey: "debugExtraUsagePercentage") as? Double ?? 61.0
         self.simulateUpdateAvailable = defaults.bool(forKey: "simulateUpdateAvailable")
         self.debugShowAllShapesIndividually = defaults.bool(forKey: "debugShowAllShapesIndividually")
@@ -878,6 +1033,11 @@ class UserSettings: ObservableObject {
     /// - Returns: 如果 Organization ID 和 Session Key 都不为空则返回 true
     var hasValidCredentials: Bool {
         return !organizationId.isEmpty && !sessionKey.isEmpty
+    }
+
+    /// 检查任一 Provider 的认证信息是否已配置
+    var hasAnyValidCredentials: Bool {
+        return hasValidCredentials || hasValidCodexCredentials
     }
 
     /// 验证 Organization ID 格式
@@ -963,26 +1123,36 @@ class UserSettings: ObservableObject {
     /// 根据用量百分比变化智能调整刷新频率
     /// - Parameter currentUtilization: 当前用量百分比
     func updateSmartMonitoringMode(currentUtilization: Double) {
+        updateSmartMonitoringMode(providerUtilizations: [.claude: currentUtilization])
+    }
+
+    /// 更新智能监控模式
+    /// 任一 Provider 用量变化会切回活跃模式；全部无变化才累计静默次数。
+    /// - Parameter providerUtilizations: 本轮成功获取的 Provider 用量百分比
+    func updateSmartMonitoringMode(providerUtilizations: [ProviderType: Double]) {
         // 只在智能模式下工作
         guard refreshMode == .smart else { return }
+        guard !providerUtilizations.isEmpty else { return }
 
         // 检查是否有变化
-        if hasUtilizationChanged(currentUtilization) {
+        if hasProviderUtilizationChanged(providerUtilizations) {
             switchToActiveMode()
         } else {
             handleNoChange()
         }
 
-        // 更新上次的百分比
-        lastUtilization = currentUtilization
+        for (provider, utilization) in providerUtilizations {
+            lastUtilizationByProvider[provider] = utilization
+        }
+        // 保留旧字段的语义，便于旧代码和调试观察。
+        lastUtilization = providerUtilizations[.claude] ?? providerUtilizations.values.first
     }
 
-    /// 检查用量百分比是否有变化
-    /// - Parameter current: 当前用量百分比
-    /// - Returns: 如果变化超过 0.01 返回 true
-    private func hasUtilizationChanged(_ current: Double) -> Bool {
-        guard let last = lastUtilization else { return false }
-        return abs(current - last) > 0.01
+    private func hasProviderUtilizationChanged(_ current: [ProviderType: Double]) -> Bool {
+        current.contains { provider, utilization in
+            guard let last = lastUtilizationByProvider[provider] else { return false }
+            return abs(utilization - last) > 0.01
+        }
     }
 
     /// 切换到活跃模式
@@ -1047,6 +1217,7 @@ class UserSettings: ObservableObject {
     /// 在切换到固定模式或用户手动刷新时调用
     func resetSmartMonitoringState() {
         lastUtilization = nil
+        lastUtilizationByProvider.removeAll()
         unchangedCount = 0
         currentMonitoringMode = .active
     }
@@ -1069,12 +1240,17 @@ class UserSettings: ObservableObject {
             Logger.settings.notice("账户已存在，跳过: \(account.displayName)")
             return
         }
+        let wasFirstClaudeAccount = accounts.isEmpty
         accounts.append(account)
         // 如果是第一个账户，自动设为当前账户
         if accounts.count == 1 {
             currentAccountId = account.id
         }
         Logger.settings.notice("添加账户: \(account.displayName)")
+
+        if wasFirstClaudeAccount {
+            postAccountChanged(provider: .claude)
+        }
     }
 
     /// 删除账户
@@ -1084,12 +1260,13 @@ class UserSettings: ObservableObject {
 
         let wasCurrentAccount = (currentAccountId == account.id)
         accounts.remove(at: index)
+        NotificationManager.shared.resetNotificationStates(for: .claude, accountId: account.id)
 
         // 如果删除的是当前账户，切换到第一个账户
         if wasCurrentAccount {
             currentAccountId = accounts.first?.id
             // 发送账户变更通知
-            NotificationCenter.default.post(name: .accountChanged, object: nil)
+            postAccountChanged(provider: .claude)
         }
 
         Logger.settings.notice("删除账户: \(account.displayName)")
@@ -1105,7 +1282,7 @@ class UserSettings: ObservableObject {
         Logger.settings.notice("切换到账户: \(account.displayName)")
 
         // 发送账户变更通知
-        NotificationCenter.default.post(name: .accountChanged, object: nil)
+        postAccountChanged(provider: .claude)
     }
 
     /// 更新账户信息
@@ -1128,6 +1305,95 @@ class UserSettings: ObservableObject {
     /// 当前账户的显示名称
     var currentAccountName: String? {
         return currentAccount?.displayName
+    }
+
+    // MARK: - Codex Account Management
+
+    private func saveCodexAccounts() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            self.keychain.saveCodexAccounts(self.codexAccounts)
+        }
+    }
+
+    @discardableResult
+    func addCodexAccount(_ account: Account) -> Account {
+        let stableId = account.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let existingIndex = codexAccounts.firstIndex { existing in
+            if !stableId.isEmpty {
+                let existingStableId = existing.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return existingStableId == stableId || existing.sessionKey == account.sessionKey
+            }
+            return existing.sessionKey == account.sessionKey
+        }
+
+        if let index = existingIndex {
+            codexAccounts[index].sessionKey = account.sessionKey
+            codexAccounts[index].organizationId = account.organizationId
+            codexAccounts[index].organizationName = account.organizationName
+            codexAccounts[index].provider = .codex
+            if currentCodexAccountId == nil {
+                currentCodexAccountId = codexAccounts[index].id
+            }
+            Logger.settings.notice("更新已存在的 Codex 账户: \(self.codexAccounts[index].displayName)")
+            postAccountChanged(provider: .codex)
+            return codexAccounts[index]
+        }
+
+        let wasFirstCodexAccount = codexAccounts.isEmpty
+        var storedAccount = account
+        storedAccount.provider = .codex
+        codexAccounts.append(storedAccount)
+        if codexAccounts.count == 1 {
+            currentCodexAccountId = storedAccount.id
+        }
+        if wasFirstCodexAccount {
+            ensureDefaultCodexDisplayTypesForCustomMode()
+        }
+        Logger.settings.notice("添加 Codex 账户: \(storedAccount.displayName)")
+        postAccountChanged(provider: .codex)
+        return storedAccount
+    }
+
+    func removeCodexAccount(_ account: Account) {
+        guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
+        let wasCurrent = (currentCodexAccountId == account.id)
+        codexAccounts.remove(at: index)
+        NotificationManager.shared.resetNotificationStates(for: .codex, accountId: account.id)
+        if wasCurrent {
+            currentCodexAccountId = codexAccounts.first?.id
+            postAccountChanged(provider: .codex)
+        }
+        Logger.settings.notice("删除 Codex 账户: \(account.displayName)")
+    }
+
+    func switchToCodexAccount(_ account: Account) {
+        guard account.id != currentCodexAccountId else { return }
+        guard codexAccounts.contains(where: { $0.id == account.id }) else { return }
+        currentCodexAccountId = account.id
+        Logger.settings.notice("切换到 Codex 账户: \(account.displayName)")
+        postAccountChanged(provider: .codex)
+    }
+
+    func updateCodexAccount(_ account: Account, alias: String?) {
+        guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
+        codexAccounts[index].alias = alias
+        Logger.settings.notice("更新 Codex 账户别名: \(self.codexAccounts[index].displayName)")
+    }
+
+    private func postAccountChanged(provider: ProviderType) {
+        NotificationCenter.default.post(
+            name: .accountChanged,
+            object: nil,
+            userInfo: [Notification.UserInfoKey.provider: provider.rawValue]
+        )
+    }
+
+    private func ensureDefaultCodexDisplayTypesForCustomMode() {
+        guard displayMode == .custom else { return }
+        let codexTypes: Set<LimitType> = [.codexPrimary, .codexSecondary, .codexExtraUsage]
+        guard customDisplayTypes.isDisjoint(with: codexTypes) else { return }
+        customDisplayTypes.formUnion([.codexPrimary, .codexSecondary])
     }
 
     // MARK: - Organization Management (保留向后兼容)
@@ -1241,40 +1507,58 @@ class UserSettings: ObservableObject {
     // MARK: - Display Logic Helper Methods (v2.0)
 
     /// 获取当前应该显示的限制类型列表
-    /// - Parameter usageData: 用量数据
+    /// - Parameters:
+    ///   - usageData: Claude 用量数据
+    ///   - codexUsageData: Codex 用量数据（可选，有 Codex 账号时传入）
     /// - Returns: 要显示的限制类型数组，按显示顺序排列
-    func getActiveDisplayTypes(usageData: UsageData?) -> [LimitType] {
+    func getActiveDisplayTypes(usageData: UsageData?, codexUsageData: CodexUsageData? = nil) -> [LimitType] {
         switch displayMode {
         case .smart:
             // 智能模式：显示所有有数据的类型
-            guard let data = usageData else {
-                return []
-            }
-
             var types: [LimitType] = []
 
-            // 按规范顺序: fiveHour → sevenDay → extraUsage → opus → sonnet
-            if data.fiveHour != nil {
+            // Claude 类型：按规范顺序 fiveHour → sevenDay → extraUsage → opus → sonnet
+            if let data = usageData {
+                // 5小时和7天限制始终显示，因为所有账号均受这两项限制约束
                 types.append(.fiveHour)
-            }
-            if data.sevenDay != nil {
                 types.append(.sevenDay)
+                if data.extraUsage?.enabled == true {
+                    types.append(.extraUsage)
+                }
+                if data.opus != nil {
+                    types.append(.opusWeekly)
+                }
+                if data.sonnet != nil {
+                    types.append(.sonnetWeekly)
+                }
             }
-            if data.extraUsage?.enabled == true {
-                types.append(.extraUsage)
-            }
-            if data.opus != nil {
-                types.append(.opusWeekly)
-            }
-            if data.sonnet != nil {
-                types.append(.sonnetWeekly)
+
+            // Codex 类型：有 Codex 数据时追加
+            if let codex = codexUsageData {
+                types.append(.codexPrimary)
+                if codex.secondary != nil {
+                    types.append(.codexSecondary)
+                }
+                if codex.extraUsage?.enabled == true {
+                    types.append(.codexExtraUsage)
+                }
             }
 
             return types
 
         case .custom:
             // 自定义模式：按用户选择排序，无论数据是否存在都显示
-            let orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
+            // Codex 类型仅在有 Codex 账号时纳入候选；Debug mock 模式例外
+            var orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
+            var shouldIncludeCodexTypes = !codexAccounts.isEmpty
+            #if DEBUG
+            if debugModeEnabled {
+                shouldIncludeCodexTypes = true
+            }
+            #endif
+            if shouldIncludeCodexTypes {
+                orderedTypes.append(contentsOf: [.codexPrimary, .codexSecondary, .codexExtraUsage])
+            }
             return orderedTypes.filter { customDisplayTypes.contains($0) }
         }
     }

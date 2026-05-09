@@ -215,9 +215,10 @@ struct LinearUsageGraphView: View {
 
         let totalWindow: TimeInterval
         switch limitType {
-        case .fiveHour:
+        case .fiveHour, .codexPrimary:
             totalWindow = 5 * 3600  // 5 hours in seconds
-        case .sevenDay, .opusWeekly, .sonnetWeekly, .extraUsage:
+        case .sevenDay, .opusWeekly, .sonnetWeekly, .extraUsage,
+             .codexSecondary, .codexExtraUsage:
             totalWindow = 7 * 24 * 3600  // 7 days in seconds
         }
 
@@ -247,6 +248,9 @@ struct LinearUsageGraphView: View {
                 return UsageData.LimitData(percentage: percentage, resetsAt: nil)
             }
             return nil
+        case .codexPrimary, .codexSecondary, .codexExtraUsage:
+            // Codex limits are not part of Claude UsageData
+            return nil
         }
     }
 
@@ -273,6 +277,9 @@ struct LinearUsageGraphView: View {
             if let extra = data.extraUsage, let percentage = extra.percentage {
                 return Color(UsageColorScheme.extraUsageColor(percentage))
             }
+        case .codexPrimary, .codexSecondary, .codexExtraUsage:
+            // Codex limits are not rendered by this Claude-only view
+            break
         }
         return .gray
     }

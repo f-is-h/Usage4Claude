@@ -36,6 +36,7 @@
 "usage.refresh" = "重新整理";
 "usage.refresh_cooldown" = "請稍後再試";
 "usage.run_diagnostic" = "執行診斷";
+"usage.codex_title" = "Codex 使用狀況";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "一般";
@@ -69,7 +70,7 @@
 "icon_style.monochrome_desc" = "自動適應系統選單列樣式，簡潔優雅";
 
 // MARK: - Settings - Authentication
-"settings.auth.how_to_title" = "如何取得認證資訊";
+"settings.auth.how_to_title" = "如何取得Claude認證資訊";
 "settings.auth.step1" = "1. 在瀏覽器中造訪 claude.ai 並登入";
 "settings.auth.step2" = "2. 開啟瀏覽器開發者工具（F12 或 Cmd+Option+I）";
 "settings.auth.step3" = "3. 切換到 Network（網路）標籤";
@@ -79,7 +80,7 @@
 "settings.auth.open_browser" = "在瀏覽器中開啟 Claude 用量頁面";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "貼上 Session Key";
-"settings.auth.session_key_hint" = "以 sk-ant-sid01- 開頭的長字串";
+"settings.auth.session_key_hint" = "貼上完整的 sessionKey Cookie 值（通常以 sk-ant-sid 開頭）";
 "settings.auth.configured" = "認證資訊已設定";
 "settings.auth.not_configured" = "請填寫 Session Key";
 "settings.auth.credentials_title" = "認證資訊";
@@ -87,6 +88,7 @@
 "settings.auth.need_credentials" = "需要填寫 Session Key";
 "settings.auth.show_password" = "顯示";
 "settings.auth.hide_password" = "隱藏";
+"settings.auth.manual_input_claude_only_help" = "僅適用於 Claude：Codex 不支援手動輸入 Session Key。";
 
 // MARK: - Settings - About
 "settings.about.version" = "版本 %@";
@@ -133,6 +135,7 @@
 "display.percentage_only" = "僅顯示百分比";
 "display.icon_only" = "僅顯示圖示";
 "display.both" = "圖示和百分比";
+"display.none" = "不顯示";
 "display.show_icon" = "顯示圖示";
 "display.show_percentage" = "顯示百分比";
 
@@ -150,6 +153,7 @@
 "language.english" = "English";
 "language.japanese" = "日本語";
 "language.korean" = "한국어";
+"language.french" = "Français";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 設定";
@@ -163,6 +167,7 @@
 "usage_data.resets_in_days" = "剩餘約%d天%d小時";
 "usage_data.unknown" = "未知";
 "usage_data.today" = "今天";
+"usage_data.detail_today" = "今天";
 "usage_data.tomorrow" = "明天";
 
 // MARK: - Error Messages
@@ -247,6 +252,16 @@
 "opus_weekly_limit" = "7天Opus限制";
 "sonnet_weekly_limit" = "7天Sonnet限制";
 "extra_usage" = "額外用量";
+"codex_primary_limit" = "Codex 5小時限制";
+"codex_secondary_limit" = "Codex 7天限制";
+"codex_extra_usage" = "Codex 額外用量";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "5小時限制";
+"detail_row.seven_day_limit" = "7天限制";
+"detail_row.opus_weekly_limit" = "Opus 7天限制";
+"detail_row.sonnet_weekly_limit" = "Sonnet 7天限制";
+"detail_row.extra_usage" = "額外用量";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "顯示選項";
@@ -256,7 +271,7 @@
 "custom_display_description" = "手動選擇要顯示的限制";
 "display_mode_label" = "顯示模式";
 "select_limit_types" = "選擇要顯示的限制類型";
-"circular_icon_constraint" = "至少必須選擇一個圓形圖示（5小時或7天）";
+"circular_icon_constraint" = "至少必須選擇一個圓形限制";
 "colored_theme_unavailable" = "彩色主題僅在顯示1-2個圓形圖示且無其他類型時可用";
 
 // MARK: - Theme Selection (v2.0.0)
@@ -289,7 +304,7 @@
 "welcome.authentication_setup" = "認證設定";
 "welcome.session_key" = "Session Key";
 "welcome.session_key_placeholder" = "在此貼上您的 Session Key";
-"welcome.session_key_hint" = "以 sk-ant-sid01- 開頭...";
+"welcome.session_key_hint" = "貼上完整的 sessionKey Cookie 值";
 "welcome.valid_format" = "格式正確";
 "welcome.invalid_format" = "Session Key 長度應在 20-500 字元之間";
 "welcome.select_limits" = "選擇限制";
@@ -303,6 +318,7 @@
 "welcome.continue" = "繼續";
 "welcome.finish" = "完成";
 "welcome.how_to_get_session_key" = "如何取得 Session Key？";
+"welcome.configuring" = "正在設定...";
 "welcome.fetch_org_id_failed" = "無法取得 Organization ID，請稍後在設定中重試";
 "welcome.menubar_icon_not_visible" = "看不見選單列圖示？";
 "welcome.multi_account_hint" = "需要多帳戶？完成設定後可在設定頁面中新增更多帳戶。";
@@ -333,8 +349,14 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "未啟用";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "還可使用 $%.0f";
+"extra_usage.unlimited" = "無限";
+"extra_usage.limit_reached" = "已達上限";
+"extra_usage.usage_amount" = "%@%.2f/%@%.0f";
+"extra_usage.remaining_amount" = "還可使用 %@%.2f";
+"extra_usage.credits_balance" = "餘額 %d 點";
+"extra_usage.credits_remaining" = "還剩 %d 點";
+"extra_usage.detail_credits_balance" = "%d 點";
+"extra_usage.detail_credits_remaining" = "還剩 %d 點";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "彩虹漸變";
@@ -362,7 +384,7 @@
 "account.no_accounts" = "尚未配置帳戶\n請新增帳戶以開始使用";
 "account.add_account" = "新增帳戶";
 "account.add_new_account" = "新增帳戶";
-"account.current_account" = "目前帳戶";
+"account.current_account" = "目前 Claude 帳戶";
 "account.alias" = "別名";
 "account.alias_optional" = "別名（選填）";
 "account.alias_placeholder" = "例如：個人 Pro、工作團隊";
@@ -399,6 +421,15 @@
 "weblogin.success" = "已成功新增帳戶：%@";
 "weblogin.cloudflare_blocked" = "如果頁面無法載入，請使用手動輸入方式。";
 "weblogin.privacy_notice" = "您的登入資訊僅在本機使用，並安全儲存於系統 Keychain 中。";
+"weblogin.codex_window_title" = "登入 Codex";
+"weblogin.codex_waiting_for_login" = "請登入您的 ChatGPT 帳號";
+
+// MARK: - Codex Account (v2.7.0)
+"account.claude_accounts" = "Claude 帳號";
+"account.codex_accounts" = "Codex 帳號";
+"account.add_codex_account" = "新增 Codex 帳號";
+"account.codex_current_account" = "目前的 Codex 帳號";
+
 // MARK: - Graph Type
 "graph_type.circular" = "圓形";
 "graph_type.linear" = "線性";

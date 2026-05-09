@@ -36,6 +36,7 @@
 "usage.refresh" = "刷新";
 "usage.refresh_cooldown" = "请稍后再试";
 "usage.run_diagnostic" = "运行诊断";
+"usage.codex_title" = "Codex 使用情况";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "通用";
@@ -69,7 +70,7 @@
 "icon_style.monochrome_desc" = "自动适应系统菜单栏样式，简洁优雅";
 
 // MARK: - Settings - Authentication
-"settings.auth.how_to_title" = "如何获取认证信息";
+"settings.auth.how_to_title" = "如何获取Claude认证信息";
 "settings.auth.step1" = "1. 在浏览器中访问 claude.ai 并登录";
 "settings.auth.step2" = "2. 打开浏览器开发者工具（F12 或 Cmd+Option+I）";
 "settings.auth.step3" = "3. 切换到 Network（网络）标签";
@@ -79,7 +80,7 @@
 "settings.auth.open_browser" = "在浏览器中打开 Claude 用量页面";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "粘贴 Session Key";
-"settings.auth.session_key_hint" = "以 sk-ant-sid01- 开头的长字符串";
+"settings.auth.session_key_hint" = "粘贴完整的 sessionKey Cookie 值（通常以 sk-ant-sid 开头）";
 "settings.auth.configured" = "认证信息已配置";
 "settings.auth.not_configured" = "请填写 Session Key";
 "settings.auth.credentials_title" = "认证信息";
@@ -87,6 +88,7 @@
 "settings.auth.need_credentials" = "需要填写 Session Key";
 "settings.auth.show_password" = "显示";
 "settings.auth.hide_password" = "隐藏";
+"settings.auth.manual_input_claude_only_help" = "仅适用于 Claude：Codex 不支持手动输入 Session Key。";
 
 // MARK: - Settings - About
 "settings.about.version" = "版本 %@";
@@ -133,6 +135,7 @@
 "display.percentage_only" = "仅显示百分比";
 "display.icon_only" = "仅显示图标";
 "display.both" = "图标和百分比";
+"display.none" = "不显示";
 "display.show_icon" = "显示图标";
 "display.show_percentage" = "显示百分比";
 
@@ -150,6 +153,7 @@
 "language.chinese" = "中文（简体）";
 "language.chinese_traditional" = "中文（繁体）";
 "language.korean" = "한국어";
+"language.french" = "Français";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 设置";
@@ -163,6 +167,7 @@
 "usage_data.resets_in_days" = "剩余约%d天%d小时";
 "usage_data.unknown" = "未知";
 "usage_data.today" = "今天";
+"usage_data.detail_today" = "今天";
 "usage_data.tomorrow" = "明天";
 
 // MARK: - Error Messages
@@ -247,6 +252,16 @@
 "opus_weekly_limit" = "7天Opus限制";
 "sonnet_weekly_limit" = "7天Sonnet限制";
 "extra_usage" = "额外用量";
+"codex_primary_limit" = "Codex 5小时限制";
+"codex_secondary_limit" = "Codex 7天限制";
+"codex_extra_usage" = "Codex 额外用量";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "5小时限制";
+"detail_row.seven_day_limit" = "7天限制";
+"detail_row.opus_weekly_limit" = "Opus 7天限制";
+"detail_row.sonnet_weekly_limit" = "Sonnet 7天限制";
+"detail_row.extra_usage" = "额外用量";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "显示选项";
@@ -256,7 +271,7 @@
 "custom_display_description" = "手动选择要显示的限制";
 "display_mode_label" = "显示模式";
 "select_limit_types" = "选择要显示的限制类型";
-"circular_icon_constraint" = "至少必须选择一个圆形图标（5小时或7天）";
+"circular_icon_constraint" = "至少必须选择一个圆形限制";
 "colored_theme_unavailable" = "彩色主题仅在显示1-2个圆形图标且无其他类型时可用";
 
 // MARK: - Theme Selection (v2.0.0)
@@ -289,7 +304,7 @@
 "welcome.authentication_setup" = "认证设置";
 "welcome.session_key" = "Session Key";
 "welcome.session_key_placeholder" = "在此粘贴您的 Session Key";
-"welcome.session_key_hint" = "以 sk-ant-sid01- 开头...";
+"welcome.session_key_hint" = "粘贴完整的 sessionKey Cookie 值";
 "welcome.valid_format" = "格式正确";
 "welcome.invalid_format" = "Session Key 长度应在 20-500 字符之间";
 "welcome.select_limits" = "选择限制";
@@ -332,8 +347,14 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "未启用";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "还可使用 $%.0f";
+"extra_usage.unlimited" = "无限";
+"extra_usage.limit_reached" = "已达上限";
+"extra_usage.usage_amount" = "%@%.2f/%@%.0f";
+"extra_usage.remaining_amount" = "还可使用 %@%.2f";
+"extra_usage.credits_balance" = "余额 %d 点";
+"extra_usage.credits_remaining" = "还剩 %d 点";
+"extra_usage.detail_credits_balance" = "%d 点";
+"extra_usage.detail_credits_remaining" = "还剩 %d 点";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "彩虹渐变";
@@ -361,7 +382,7 @@
 "account.no_accounts" = "还没有配置账户。添加一个账户开始使用。";
 "account.add_account" = "添加账户";
 "account.add_new_account" = "添加新账户";
-"account.current_account" = "当前账户";
+"account.current_account" = "当前 Claude 账户";
 "account.alias" = "别名";
 "account.alias_optional" = "别名（可选）";
 "account.alias_placeholder" = "例如：个人 Pro、工作团队";
@@ -398,6 +419,15 @@
 "weblogin.success" = "已成功添加账户：%@";
 "weblogin.cloudflare_blocked" = "如果页面无法加载，请使用手动输入方式。";
 "weblogin.privacy_notice" = "您的登录信息仅在本地使用，并安全存储于系统 Keychain 中。";
+"weblogin.codex_window_title" = "登录 Codex";
+"weblogin.codex_waiting_for_login" = "请登录您的 ChatGPT 账户";
+
+// MARK: - Codex Account (v2.7.0)
+"account.claude_accounts" = "Claude 账户";
+"account.codex_accounts" = "Codex 账户";
+"account.add_codex_account" = "添加 Codex 账户";
+"account.codex_current_account" = "当前 Codex 账户";
+
 // MARK: - Graph Type
 "graph_type.circular" = "圆形";
 "graph_type.linear" = "线性";

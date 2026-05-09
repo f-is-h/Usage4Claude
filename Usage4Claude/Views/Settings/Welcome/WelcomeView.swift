@@ -213,7 +213,7 @@ struct SetupStepView: View {
 
     /// 判断是否应该禁用某个checkbox
     private func shouldDisableCheckbox(for limitType: LimitType) -> Bool {
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay]
+        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
 
         // 如果这是最后一个选中的圆形图标，则禁用
         if circularTypes.contains(limitType) {
@@ -617,6 +617,10 @@ struct SetupStepView: View {
         case .korean:
             let anchor = section == .initialSetup ? "#초기-설정" : "#-자주-묻는-질문"
             return "\(baseURL)/docs/README.ko.md\(anchor)"
+
+        case .french:
+            let anchor = section == .initialSetup ? "#configuration-initiale" : "#-faq"
+            return "\(baseURL)/docs/README.fr.md\(anchor)"
         }
     }
 }

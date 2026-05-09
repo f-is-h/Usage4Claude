@@ -37,12 +37,61 @@ struct MiniProgressIcon: View {
     }
 }
 
+// MARK: - Animation Type Hint View
+
+/// 动画类型切换提示（长按圆环后显示），Claude 列和 Codex 列共用
+struct AnimationTypeHintView: View {
+    let animationTypeName: String
+
+    private let rainbowColors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple]
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "wand.and.stars")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(
+                    LinearGradient(colors: rainbowColors, startPoint: .leading, endPoint: .trailing)
+                )
+            Text(L.LoadingAnimation.current(animationTypeName))
+                .font(.system(size: 12, weight: .medium))
+                .lineLimit(1)
+                .foregroundStyle(
+                    LinearGradient(colors: rainbowColors, startPoint: .leading, endPoint: .trailing)
+                )
+        }
+        .padding(.horizontal, 12)
+        .fixedSize(horizontal: true, vertical: true)
+    }
+}
+
+// MARK: - Provider Divider
+
+/// 双 Provider 主窗口中央的柔和竖线，视觉与设置页标签分隔线一致
+struct ProviderDivider: View {
+    let height: CGFloat
+
+    var body: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color.secondary.opacity(0.0),
+                Color.secondary.opacity(0.3),
+                Color.secondary.opacity(0.3),
+                Color.secondary.opacity(0.0)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(width: 1, height: height)
+    }
+}
+
 // MARK: - Unified Limit Row Component
 
-/// 统一的限制行组件（支持所有5种限制类型）
+/// 统一的限制行组件（支持所有 Claude 和 Codex 限制类型）
 struct UnifiedLimitRow: View {
     let type: LimitType
-    let data: UsageData
+    var data: UsageData? = nil
+    var codexData: CodexUsageData? = nil
     let showRemainingMode: Bool
 
     var body: some View {
@@ -54,13 +103,17 @@ struct UnifiedLimitRow: View {
             Text(limitName)
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
 
-            Spacer()
+            Spacer(minLength: 8)
 
             // 右侧：重置时间或剩余额度
             Text(displayValue)
                 .font(.system(size: 12))
                 .fontWeight(.medium)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
                 .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
                 .transition(.asymmetric(
                     insertion: .move(edge: .top).combined(with: .opacity),
@@ -77,65 +130,104 @@ struct UnifiedLimitRow: View {
 
     private var limitName: String {
         switch type {
-        case .fiveHour:
-            return L.Limit.fiveHour
-        case .sevenDay:
-            return L.Limit.sevenDay
+        case .fiveHour, .codexPrimary:
+            return L.DetailRow.fiveHour
+        case .sevenDay, .codexSecondary:
+            return L.DetailRow.sevenDay
         case .opusWeekly:
-            return L.Limit.opusWeekly
+            return L.DetailRow.opusWeekly
         case .sonnetWeekly:
-            return L.Limit.sonnetWeekly
-        case .extraUsage:
-            return L.Limit.extraUsage
+            return L.DetailRow.sonnetWeekly
+        case .extraUsage, .codexExtraUsage:
+            return L.DetailRow.extraUsage
         }
     }
 
     private var iconColor: Color {
         switch type {
         case .fiveHour:
-            return .green  // 5小时用绿色
+            return .green
         case .sevenDay:
             return .purple
         case .opusWeekly:
             return .orange
         case .sonnetWeekly:
-            return .blue  // 7天Sonnet用蓝色
+            return .blue
         case .extraUsage:
             return .pink
+        case .codexPrimary:
+            return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)   // #2DD4BF
+        case .codexSecondary:
+            return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
+        case .codexExtraUsage:
+            return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)    // #F59E0B
         }
     }
 
     private var percentageValue: Double? {
         switch type {
-        case .fiveHour:   return data.fiveHour?.percentage
-        case .sevenDay:   return data.sevenDay?.percentage
-        case .opusWeekly: return data.opus?.percentage
-        case .sonnetWeekly: return data.sonnet?.percentage
-        case .extraUsage: return data.extraUsage?.percentage
+        case .fiveHour:       return data?.fiveHour?.percentage
+        case .sevenDay:       return data?.sevenDay?.percentage
+        case .opusWeekly:     return data?.opus?.percentage
+        case .sonnetWeekly:   return data?.sonnet?.percentage
+        case .extraUsage:     return data?.extraUsage?.percentage
+        case .codexPrimary:   return codexData?.primary?.percentage
+        case .codexSecondary: return codexData?.secondary?.percentage
+        case .codexExtraUsage: return codexData?.extraUsage?.percentage
         }
     }
 
     private var displayValue: String {
         switch type {
         case .fiveHour:
-            guard let fiveHour = data.fiveHour else { return "-" }
-            return showRemainingMode ? fiveHour.formattedCompactRemaining : fiveHour.formattedCompactResetTime
+            guard let fiveHour = data?.fiveHour else { return "-" }
+            return showRemainingMode ? fiveHour.formattedCompactRemaining : detailCompactResetTime(fiveHour)
 
         case .sevenDay:
-            guard let sevenDay = data.sevenDay else { return "-" }
+            guard let sevenDay = data?.sevenDay else { return "-" }
             return showRemainingMode ? sevenDay.formattedCompactRemaining : sevenDay.formattedCompactResetDate
 
         case .opusWeekly:
-            guard let opus = data.opus else { return "-" }
+            guard let opus = data?.opus else { return "-" }
             return showRemainingMode ? opus.formattedCompactRemaining : opus.formattedCompactResetDate
 
         case .sonnetWeekly:
-            guard let sonnet = data.sonnet else { return "-" }
+            guard let sonnet = data?.sonnet else { return "-" }
             return showRemainingMode ? sonnet.formattedCompactRemaining : sonnet.formattedCompactResetDate
 
         case .extraUsage:
-            guard let extra = data.extraUsage else { return "-" }
+            guard let extra = data?.extraUsage else { return "-" }
             return showRemainingMode ? extra.formattedRemainingAmount : extra.formattedCompactAmount
+
+        case .codexPrimary:
+            guard let limitData = codexData?.primary?.asUsageLimitData() else { return "-" }
+            return showRemainingMode ? limitData.formattedCompactRemaining : detailCompactResetTime(limitData)
+
+        case .codexSecondary:
+            guard let limitData = codexData?.secondary?.asUsageLimitData() else { return "-" }
+            return showRemainingMode ? limitData.formattedCompactRemaining : limitData.formattedCompactResetDate
+
+        case .codexExtraUsage:
+            guard let extra = codexData?.extraUsage else { return "-" }
+            return showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount
         }
+    }
+
+    private func detailCompactResetTime(_ limitData: UsageData.LimitData) -> String {
+        guard let resetsAt = limitData.resetsAt else {
+            return "-"
+        }
+
+        var calendar = Calendar.current
+        calendar.locale = UserSettings.shared.appLocale
+        let timeString = TimeFormatHelper.formatTimeOnly(resetsAt)
+
+        if calendar.isDateInToday(resetsAt) {
+            return "\(L.DetailRow.today) \(timeString)"
+        }
+        if calendar.isDateInTomorrow(resetsAt) {
+            return "\(L.UsageData.tomorrow) \(timeString)"
+        }
+        return TimeFormatHelper.formatDateTime(resetsAt, dateTemplate: "Md")
     }
 }

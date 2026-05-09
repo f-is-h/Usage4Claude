@@ -27,6 +27,7 @@ env:
   PROJECT_NAME: Usage4Claude
   XCODE_PROJECT: Usage4Claude.xcodeproj
   BUILD_CONFIG: Release
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ============================================

@@ -36,6 +36,7 @@
 "usage.refresh" = "Refresh";
 "usage.refresh_cooldown" = "Please wait a moment";
 "usage.run_diagnostic" = "Run Diagnostic";
+"usage.codex_title" = "Codex Usage";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "General";
@@ -69,7 +70,7 @@
 "icon_style.monochrome_desc" = "Automatically adapts to system menu bar style, clean and elegant";
 
 // MARK: - Settings - Authentication
-"settings.auth.how_to_title" = "How to Get Authentication Info";
+"settings.auth.how_to_title" = "How to Get Claude Authentication Info";
 "settings.auth.step1" = "1. Visit claude.ai in your browser and log in";
 "settings.auth.step2" = "2. Open browser developer tools (F12 or Cmd+Option+I)";
 "settings.auth.step3" = "3. Switch to the Network tab";
@@ -79,7 +80,7 @@
 "settings.auth.open_browser" = "Open Claude Usage Page in Browser";
 "settings.auth.session_key_label" = "Session Key";
 "settings.auth.session_key_placeholder" = "Paste Session Key";
-"settings.auth.session_key_hint" = "Long string starting with sk-ant-sid01-";
+"settings.auth.session_key_hint" = "Paste the full sessionKey cookie value (usually starts with sk-ant-sid)";
 "settings.auth.configured" = "Authentication configured";
 "settings.auth.not_configured" = "Please enter Session Key";
 "settings.auth.credentials_title" = "Authentication Credentials";
@@ -87,6 +88,7 @@
 "settings.auth.need_credentials" = "Please enter Session Key";
 "settings.auth.show_password" = "Show";
 "settings.auth.hide_password" = "Hide";
+"settings.auth.manual_input_claude_only_help" = "Claude only: manual Session Key input is not supported for Codex.";
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";
@@ -133,6 +135,7 @@
 "display.percentage_only" = "Percentage Only";
 "display.icon_only" = "Icon Only";
 "display.both" = "Icon and Percentage";
+"display.none" = "No Display";
 "display.show_icon" = "Show Icon";
 "display.show_percentage" = "Show Percentage";
 
@@ -150,6 +153,7 @@
 "language.chinese" = "中文（简体）";
 "language.chinese_traditional" = "中文（繁體）";
 "language.korean" = "한국어";
+"language.french" = "Français";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude Settings";
@@ -163,6 +167,7 @@
 "usage_data.resets_in_days" = "About %dd %dh left";
 "usage_data.unknown" = "Unknown";
 "usage_data.today" = "Today";
+"usage_data.detail_today" = "Today";
 "usage_data.tomorrow" = "Tomorrow";
 
 // MARK: - Error Messages
@@ -247,6 +252,16 @@
 "opus_weekly_limit" = "7D Opus Limit";
 "sonnet_weekly_limit" = "7D Sonnet Limit";
 "extra_usage" = "Extra Usage";
+"codex_primary_limit" = "Codex 5-Hour Limit";
+"codex_secondary_limit" = "Codex 7-Day Limit";
+"codex_extra_usage" = "Codex Extra Usage";
+
+// MARK: - Detail Row Labels
+"detail_row.five_hour_limit" = "5-Hour Limit";
+"detail_row.seven_day_limit" = "7-Day Limit";
+"detail_row.opus_weekly_limit" = "7D Opus Limit";
+"detail_row.sonnet_weekly_limit" = "7D Sonnet Limit";
+"detail_row.extra_usage" = "Extra Usage";
 
 // MARK: - Display Options (v2.0.0)
 "display_options" = "Display Options";
@@ -256,7 +271,7 @@
 "custom_display_description" = "Manually select which limits to display";
 "display_mode_label" = "Display Mode";
 "select_limit_types" = "Select Limit Types to Display";
-"circular_icon_constraint" = "At least one circular icon (5-hour or 7-day) must be selected";
+"circular_icon_constraint" = "At least one circular limit must be selected";
 "colored_theme_unavailable" = "Colored themes are only available when showing 1-2 circular icons without other types";
 
 // MARK: - Theme Selection (v2.0.0)
@@ -289,7 +304,7 @@
 "welcome.authentication_setup" = "Authentication Setup";
 "welcome.session_key" = "Session Key";
 "welcome.session_key_placeholder" = "Paste your Session Key here";
-"welcome.session_key_hint" = "Starts with sk-ant-sid01-...";
+"welcome.session_key_hint" = "Paste the full sessionKey cookie value";
 "welcome.valid_format" = "Valid format";
 "welcome.invalid_format" = "Session Key should be 20-500 characters";
 "welcome.select_limits" = "Select Limits";
@@ -334,8 +349,14 @@
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "Not Enabled";
-"extra_usage.usage_amount" = "$%.0f/$%.0f";
-"extra_usage.remaining_amount" = "$%.0f remaining";
+"extra_usage.unlimited" = "Unlimited";
+"extra_usage.limit_reached" = "Limit reached";
+"extra_usage.usage_amount" = "%@%.2f/%@%.0f";
+"extra_usage.remaining_amount" = "%@%.2f remaining";
+"extra_usage.credits_balance" = "Balance %d credits";
+"extra_usage.credits_remaining" = "%d credits remaining";
+"extra_usage.detail_credits_balance" = "%d credits";
+"extra_usage.detail_credits_remaining" = "%d credits remaining";
 
 // MARK: - Loading Animation
 "loading_animation.rainbow" = "Rainbow Gradient";
@@ -363,7 +384,7 @@
 "account.no_accounts" = "No accounts configured. Add an account to get started.";
 "account.add_account" = "Add Account";
 "account.add_new_account" = "Add New Account";
-"account.current_account" = "Current Account";
+"account.current_account" = "Current Claude Account";
 "account.alias" = "Alias";
 "account.alias_optional" = "Alias (Optional)";
 "account.alias_placeholder" = "e.g., Personal Pro, Work Team";
@@ -400,6 +421,15 @@
 "weblogin.success" = "Successfully added account: %@";
 "weblogin.cloudflare_blocked" = "If the page won't load, please use manual input instead.";
 "weblogin.privacy_notice" = "Your credentials are only used locally and stored securely in the system Keychain.";
+"weblogin.codex_window_title" = "Sign in to Codex";
+"weblogin.codex_waiting_for_login" = "Please sign in to your ChatGPT account";
+
+// MARK: - Codex Account (v2.7.0)
+"account.claude_accounts" = "Claude Accounts";
+"account.codex_accounts" = "Codex Accounts";
+"account.add_codex_account" = "Add Codex Account";
+"account.codex_current_account" = "Current Codex Account";
+
 // MARK: - Graph Type
 "graph_type.circular" = "Circular";
 "graph_type.linear" = "Linear";
