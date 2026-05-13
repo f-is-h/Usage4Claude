@@ -177,7 +177,11 @@ class CodexAPIService {
                 Logger.api.debug("Codex usage HTTP status: \(httpResponse.statusCode)")
                 switch httpResponse.statusCode {
                 case 200...299: break
-                case 401: completion(.failure(UsageError.unauthorized)); return
+                case 401:
+                    if let body = String(data: data, encoding: .utf8) {
+                        Logger.api.error("Codex usage 401 body: \(body)")
+                    }
+                    completion(.failure(UsageError.unauthorized)); return
                 case 403: completion(.failure(UsageError.cloudflareBlocked)); return
                 case 429: completion(.failure(UsageError.rateLimited)); return
                 default:
@@ -207,7 +211,7 @@ class CodexAPIService {
     /// - Parameters:
     ///   - sessionToken: __Secure-next-auth.session-token 值
     ///   - completion: 成功返回 (email, displayName)，失败返回 Error
-    func validateSessionToken(_ sessionToken: String, completion: @escaping (Result<(email: String, displayName: String), Error>) -> Void) {
+    func validateSessionToken(_ sessionToken: String, cookieHeader: String, completion: @escaping (Result<(email: String, displayName: String), Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/api/auth/session") else {
             completion(.failure(UsageError.invalidURL))
             return
@@ -217,6 +221,8 @@ class CodexAPIService {
         request.httpMethod = "GET"
         request.assumesHTTP3Capable = false
         CodexAPIHeaderBuilder.applySessionHeaders(to: &request, sessionToken: sessionToken)
+        // 使用 WebView 的完整 Cookie header，确保 Cloudflare 相关 Cookie 一并携带
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
 
         let task = session.dataTask(with: request) { data, response, error in
             if error != nil {

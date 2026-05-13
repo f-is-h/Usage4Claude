@@ -128,29 +128,53 @@ final class CodexWebLoginCoordinator: ObservableObject {
         cookieStore.getAllCookies { [weak self] cookies in
             guard let self = self else { return }
 
-            let sessionCookie = cookies.first { cookie in
-                cookie.name == "__Secure-next-auth.session-token" && cookie.domain.contains("chatgpt.com")
-            }
+            let chatgptCookies = cookies.filter { $0.domain.contains("chatgpt.com") }
+            guard let sessionToken = Self.extractSessionToken(from: chatgptCookies) else { return }
 
-            if let cookie = sessionCookie {
-                let sessionToken = cookie.value
-                Logger.settings.info("CodexWebLogin: 检测到 session-token Cookie")
+            let cookieHeader = chatgptCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+            Logger.settings.info("CodexWebLogin: 检测到 session-token Cookie")
 
-                DispatchQueue.main.async {
-                    self.cookieTimer?.invalidate()
-                    self.cookieTimer = nil
-                    self.validateSessionToken(sessionToken)
-                }
+            DispatchQueue.main.async {
+                self.cookieTimer?.invalidate()
+                self.cookieTimer = nil
+                self.validateSessionToken(sessionToken, cookieHeader: cookieHeader)
             }
         }
     }
 
+    /// 从 chatgpt.com Cookie 列表中提取 session token 值
+    /// 支持标准名称、无 __Secure- 前缀版本，以及 next-auth 分片 Cookie（.0/.1/...）
+    private static func extractSessionToken(from cookies: [HTTPCookie]) -> String? {
+        let baseNames = ["__Secure-next-auth.session-token", "next-auth.session-token"]
+
+        for baseName in baseNames {
+            if let cookie = cookies.first(where: { $0.name == baseName }) {
+                return cookie.value
+            }
+            let chunks = cookies
+                .filter { cookie in
+                    guard cookie.name.hasPrefix(baseName + ".") else { return false }
+                    let suffix = cookie.name.dropFirst(baseName.count + 1)
+                    return !suffix.isEmpty && suffix.allSatisfy(\.isNumber)
+                }
+                .sorted {
+                    let ia = Int($0.name.dropFirst(baseName.count + 1)) ?? 0
+                    let ib = Int($1.name.dropFirst(baseName.count + 1)) ?? 0
+                    return ia < ib
+                }
+            if !chunks.isEmpty {
+                return chunks.map(\.value).joined()
+            }
+        }
+        return nil
+    }
+
     // MARK: - Validation
 
-    private func validateSessionToken(_ sessionToken: String) {
+    private func validateSessionToken(_ sessionToken: String, cookieHeader: String) {
         loginState = .validating
 
-        apiService.validateSessionToken(sessionToken) { [weak self] result in
+        apiService.validateSessionToken(sessionToken, cookieHeader: cookieHeader) { [weak self] result in
             guard let self = self else { return }
 
             switch result {
