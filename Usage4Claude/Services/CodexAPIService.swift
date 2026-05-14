@@ -128,6 +128,10 @@ class CodexAPIService {
                     completion(.failure(UsageError.sessionExpired))
                     return
                 }
+                if let exp = jwtExpiry(from: accessToken) {
+                    let remaining = exp.timeIntervalSinceNow
+                    Logger.api.info("Codex accessToken expires at \(exp) (in \(Int(remaining / 60)) min)")
+                }
                 completion(.success(accessToken))
             } catch {
                 Logger.api.debug("Codex session decode error: \(error.localizedDescription)")
@@ -137,6 +141,13 @@ class CodexAPIService {
 
         activeTasks.append(task)
         task.resume()
+    }
+
+    /// 跳过 session 步骤，直接用已获取的 accessToken 查询用量（用于刷新后重试）
+    func fetchUsageWithAccessToken(_ accessToken: String, completion: @escaping (Result<CodexUsageData, Error>) -> Void) {
+        fetchWhamUsage(accessToken: accessToken) { result in
+            DispatchQueue.main.async { completion(result) }
+        }
     }
 
     // MARK: - Private: Step 2 — accessToken → usage
@@ -177,11 +188,7 @@ class CodexAPIService {
                 Logger.api.debug("Codex usage HTTP status: \(httpResponse.statusCode)")
                 switch httpResponse.statusCode {
                 case 200...299: break
-                case 401:
-                    if let body = String(data: data, encoding: .utf8) {
-                        Logger.api.error("Codex usage 401 body: \(body)")
-                    }
-                    completion(.failure(UsageError.unauthorized)); return
+                case 401: completion(.failure(UsageError.unauthorized)); return
                 case 403: completion(.failure(UsageError.cloudflareBlocked)); return
                 case 429: completion(.failure(UsageError.rateLimited)); return
                 default:
@@ -308,6 +315,18 @@ class CodexAPIService {
         )
     }
     #endif
+}
+
+func jwtExpiry(from token: String) -> Date? {
+    let parts = token.split(separator: ".", omittingEmptySubsequences: false)
+    guard parts.count == 3 else { return nil }
+    var base64 = String(parts[1])
+    let remainder = base64.count % 4
+    if remainder != 0 { base64 += String(repeating: "=", count: 4 - remainder) }
+    guard let data = Data(base64Encoded: base64),
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          let exp = json["exp"] as? TimeInterval else { return nil }
+    return Date(timeIntervalSince1970: exp)
 }
 
 private extension Decimal {

@@ -67,6 +67,8 @@ class DataRefreshManager: ObservableObject {
     private var refreshActivity: NSObjectProtocol?
     /// 系统唤醒观察者令牌
     private var wakeObserver: NSObjectProtocol?
+    /// Codex accessToken 已确认无法自动刷新，等待用户手动刷新或重新登录
+    private var codexNeedsRelogin = false
 
     private var shouldFetchClaudeUsage: Bool {
         #if DEBUG
@@ -192,29 +194,18 @@ class DataRefreshManager: ObservableObject {
             if fetchCodex {
                 switch codexResult {
                 case .success(let codex):
-                    let previousCodexData = self.codexUsageData
-                    self.codexUsageData = codex
-                    self.codexErrorMessage = nil
                     if let utilization = self.monitoringUtilization(for: codex) {
                         monitoringUtilizations[.codex] = utilization
                     }
-
-                    if self.settings.notificationsEnabled {
-                        NotificationManager.shared.checkAndNotify(codexUsageData: codex, previousData: previousCodexData)
-                    }
-
-                    let newCodexResetsAt = codex.primary?.resetsAt
-                    let codexResetChanged = self.hasResetTimeChanged(from: self.lastCodexResetsAt, to: newCodexResetsAt)
-                    if codexResetChanged {
-                        self.cancelCodexResetVerification()
-                    } else if let resetsAt = newCodexResetsAt {
-                        self.scheduleCodexResetVerification(resetsAt: resetsAt)
-                    }
-                    self.lastCodexResetsAt = newCodexResetsAt
+                    self.processCodexSuccess(codex)
 
                 case .failure(let error):
-                    self.codexErrorMessage = error.localizedDescription
-                    self.clearCodexUsageState(clearError: false)
+                    if case UsageError.unauthorized = error {
+                        self.attemptTokenRefreshAndRetry()
+                    } else {
+                        self.codexErrorMessage = error.localizedDescription
+                        self.clearCodexUsageState(clearError: false)
+                    }
 
                 case .none:
                     self.clearCodexUsageState()
@@ -424,6 +415,7 @@ class DataRefreshManager: ObservableObject {
         refreshAnimationStartTime = now  // 记录动画开始时间
         refreshState.refreshingProvider = nil
         refreshState.isRefreshing = true
+        codexNeedsRelogin = false  // 用户主动刷新，允许重新尝试 token 刷新
 
         // 设置防抖
         refreshState.canRefresh = false
@@ -473,6 +465,7 @@ class DataRefreshManager: ObservableObject {
         refreshState.refreshingProvider = .codex
         refreshState.isRefreshing = true
         refreshState.canRefresh = false
+        codexNeedsRelogin = false  // 用户主动刷新，允许重新尝试 token 刷新
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             self?.refreshState.canRefresh = true
         }
@@ -519,7 +512,7 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
-    private func fetchCodexOnly() {
+    private func fetchCodexOnly(retryOnUnauthorized: Bool = true) {
         guard shouldFetchCodexUsage else {
             clearCodexUsageState()
             return
@@ -534,27 +527,79 @@ class DataRefreshManager: ObservableObject {
                 self.isLoading = false
                 self.endRefreshAnimationWithMinimumDuration { }
 
-                if case .success(let data) = result {
-                    let previousCodexData = self.codexUsageData
-                    self.codexUsageData = data
-                    self.codexErrorMessage = nil
-                    if let utilization = self.monitoringUtilization(for: data) {
-                        self.settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
+                switch result {
+                case .success(let data):
+                    self.processCodexSuccess(data)
+                case .failure(let error):
+                    if retryOnUnauthorized, case UsageError.unauthorized = error {
+                        self.attemptTokenRefreshAndRetry()
+                    } else {
+                        self.codexErrorMessage = error.localizedDescription
+                        self.clearCodexUsageState(clearError: false)
+                        Logger.menuBar.info("Codex 请求失败: \(error.localizedDescription)")
                     }
-                    if self.settings.notificationsEnabled {
-                        NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
+                }
+            }
+        }
+    }
+
+    private func processCodexSuccess(_ data: CodexUsageData) {
+        let previousCodexData = codexUsageData
+        codexUsageData = data
+        codexErrorMessage = nil
+        if let utilization = monitoringUtilization(for: data) {
+            settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
+        }
+        if settings.notificationsEnabled {
+            NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
+        }
+        let newCodexResetsAt = data.primary?.resetsAt
+        if hasResetTimeChanged(from: lastCodexResetsAt, to: newCodexResetsAt) {
+            cancelCodexResetVerification()
+        } else if let resetsAt = newCodexResetsAt {
+            scheduleCodexResetVerification(resetsAt: resetsAt)
+        }
+        lastCodexResetsAt = newCodexResetsAt
+    }
+
+    private func attemptTokenRefreshAndRetry() {
+        guard !codexNeedsRelogin else {
+            Logger.menuBar.info("Codex 已确认需要重新登录，跳过刷新")
+            codexErrorMessage = UsageError.sessionExpired.localizedDescription
+            clearCodexUsageState(clearError: false)
+            return
+        }
+        let prefix = UserSettings.shared.codexSessionToken.prefix(16)
+        Logger.menuBar.info("Codex accessToken 已过期，尝试从 SSR bootstrap 获取新鲜 token（session prefix=\(prefix)…）")
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            CodexTokenRefreshCoordinator.shared.refresh { [weak self] result in
+                guard let self else { return }
+                switch result {
+                case .success(let freshAccessToken):
+                    Logger.menuBar.notice("Codex token 刷新成功，使用新鲜 accessToken 直接重试")
+                    self.isLoading = true
+                    self.codexApiService.fetchUsageWithAccessToken(freshAccessToken) { [weak self] usageResult in
+                        DispatchQueue.main.async {
+                            guard let self else { return }
+                            self.isLoading = false
+                            self.endRefreshAnimationWithMinimumDuration { }
+                            switch usageResult {
+                            case .success(let data):
+                                self.processCodexSuccess(data)
+                            case .failure(let error):
+                                Logger.menuBar.error("Codex 使用新鲜 accessToken 仍失败: \(error.localizedDescription)")
+                                self.codexNeedsRelogin = true
+                                self.codexErrorMessage = UsageError.sessionExpired.localizedDescription
+                                self.clearCodexUsageState(clearError: false)
+                            }
+                        }
                     }
-                    let newCodexResetsAt = data.primary?.resetsAt
-                    if self.hasResetTimeChanged(from: self.lastCodexResetsAt, to: newCodexResetsAt) {
-                        self.cancelCodexResetVerification()
-                    } else if let resetsAt = newCodexResetsAt {
-                        self.scheduleCodexResetVerification(resetsAt: resetsAt)
-                    }
-                    self.lastCodexResetsAt = newCodexResetsAt
-                } else if case .failure(let error) = result {
-                    self.codexErrorMessage = error.localizedDescription
+                case .failure:
+                    Logger.menuBar.error("Codex token 刷新失败，需要重新登录")
+                    self.codexNeedsRelogin = true
+                    self.codexErrorMessage = UsageError.sessionExpired.localizedDescription
                     self.clearCodexUsageState(clearError: false)
-                    Logger.menuBar.info("Codex 请求失败: \(error.localizedDescription)")
                 }
             }
         }
@@ -572,6 +617,7 @@ class DataRefreshManager: ObservableObject {
             }
 
         case .codex:
+            codexNeedsRelogin = false
             clearCodexUsageState()
             if shouldFetchCodexUsage {
                 fetchCodexOnly()

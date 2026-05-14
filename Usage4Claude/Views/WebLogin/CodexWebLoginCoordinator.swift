@@ -144,7 +144,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
 
     /// 从 chatgpt.com Cookie 列表中提取 session token 值
     /// 支持标准名称、无 __Secure- 前缀版本，以及 next-auth 分片 Cookie（.0/.1/...）
-    private static func extractSessionToken(from cookies: [HTTPCookie]) -> String? {
+    static func extractSessionToken(from cookies: [HTTPCookie]) -> String? {
         let baseNames = ["__Secure-next-auth.session-token", "next-auth.session-token"]
 
         for baseName in baseNames {

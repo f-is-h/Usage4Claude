@@ -15,6 +15,10 @@ struct GeneralSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
+    #if DEBUG
+    @State private var tokenRefreshStatus: String? = nil
+    @State private var isTestingTokenRefresh = false
+    #endif
     
     var body: some View {
         ScrollView {
@@ -593,6 +597,48 @@ struct GeneralSettingsView: View {
                             Spacer()
 
                             Text("背景变为不透明纯白色")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // 强制触发 Codex Token 刷新（仅适用于 Codex）
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        HStack {
+                            Button(action: {
+                                isTestingTokenRefresh = true
+                                tokenRefreshStatus = nil
+                                Task { @MainActor in
+                                    CodexTokenRefreshCoordinator.shared.refresh { result in
+                                        isTestingTokenRefresh = false
+                                        switch result {
+                                        case .success(let token):
+                                            tokenRefreshStatus = "✓ 刷新成功 (\(token.prefix(16))…)"
+                                        case .failure:
+                                            tokenRefreshStatus = "✗ 刷新失败"
+                                        }
+                                    }
+                                }
+                            }) {
+                                if isTestingTokenRefresh {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Text("强制刷新 Codex Token")
+                                }
+                            }
+                            .disabled(isTestingTokenRefresh || !settings.hasValidCodexCredentials)
+                            .controlSize(.small)
+
+                            if let status = tokenRefreshStatus {
+                                Text(status)
+                                    .font(.caption)
+                                    .foregroundColor(status.hasPrefix("✓") ? .green : .red)
+                            }
+
+                            Spacer()
+
+                            Text("仅适用于 Codex · 查看日志确认结果")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
