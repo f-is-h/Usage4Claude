@@ -8,137 +8,97 @@
 
 import Foundation
 
-/// 诊断报告数据模型
-/// 包含完整的诊断信息，所有敏感数据已自动脱敏
-struct DiagnosticReport: Codable {
-    // MARK: - 基本信息
+// MARK: - DiagnosticStep
 
-    /// 报告生成时间
-    let timestamp: Date
-
-    /// 应用版本
-    let appVersion: String
-
-    /// macOS 版本
-    let osVersion: String
-
-    /// 系统架构 (arm64/x86_64)
-    let architecture: String
-
-    /// 用户设置的界面语言
-    let locale: String
-
-    // MARK: - 配置信息
-
-    /// 刷新模式 (Smart/Fixed)
-    let refreshMode: String
-
-    /// 刷新间隔（如果是固定模式）
-    let refreshInterval: String?
-
-    /// 显示模式
-    let displayMode: String
-
-    /// Organization ID (已脱敏)
-    let organizationIdRedacted: String
-
-    /// Session Key (已脱敏)
-    let sessionKeyRedacted: String
-
-    // MARK: - 测试结果
-
-    /// 测试是否成功
+/// 单个测试步骤的结果
+struct DiagnosticStep: Codable {
+    let name: String
     let success: Bool
-
-    /// HTTP 状态码
     let httpStatusCode: Int?
-
-    /// 响应时间（毫秒）
     let responseTime: Double?
-
-    /// 响应类型 (JSON/HTML/Unknown)
     let responseType: ResponseType
-
-    /// 错误类型（如果失败）
     let errorType: DiagnosticErrorType?
-
-    /// 错误描述
     let errorDescription: String?
-
-    // MARK: - 响应详情
-
-    /// 响应头信息（已过滤敏感信息）
     let responseHeaders: [String: String]
-
-    /// 响应体预览（前500字符）
     let responseBodyPreview: String?
-
-    /// 是否检测到 Cloudflare challenge
     let cloudflareChallenge: Bool
-
-    /// 是否包含 cf-mitigated 头
     let cfMitigated: Bool
-
-    // MARK: - 分析结果
-
-    /// 问题诊断
-    let diagnosis: String
-
-    /// 建议的解决方案（数组）
-    let suggestions: [String]
-
-    /// 置信度 (High/Medium/Low)
-    let confidence: ConfidenceLevel
-
-    // MARK: - 枚举定义
+    /// 额外备注，例如 JWT 过期时间
+    let notes: String?
 
     enum ResponseType: String, Codable {
         case json = "JSON"
         case html = "HTML"
         case unknown = "Unknown"
     }
+}
+
+// MARK: - ProviderDiagnosticResult
+
+/// 单个 provider 的诊断结果
+struct ProviderDiagnosticResult: Codable {
+    let providerType: ProviderType
+    /// 脱敏后的凭据键值对，用于报告展示
+    let credentials: [String: String]
+    let steps: [DiagnosticStep]
+    let success: Bool
+    let errorType: DiagnosticErrorType?
+    let diagnosis: String
+    let suggestions: [String]
+    let confidence: ConfidenceLevel
 
     enum ConfidenceLevel: String, Codable {
         case high = "High"
         case medium = "Medium"
         case low = "Low"
     }
+}
 
-    // MARK: - 格式化输出
+// MARK: - DiagnosticReport
 
-    /// 生成 Markdown 格式的完整报告
+/// 顶层诊断报告（provider-agnostic）
+struct DiagnosticReport: Codable {
+
+    // MARK: - 基本信息
+
+    let timestamp: Date
+    let appVersion: String
+    let osVersion: String
+    let architecture: String
+    let locale: String
+
+    // MARK: - 配置信息
+
+    let refreshMode: String
+    let refreshInterval: String?
+    let displayMode: String
+
+    // MARK: - Provider 诊断结果
+
+    let providers: [ProviderDiagnosticResult]
+
+    // MARK: - 计算属性
+
+    var overallSuccess: Bool {
+        !providers.isEmpty && providers.allSatisfy { $0.success }
+    }
+
+    // MARK: - Markdown 输出
+
     func toMarkdown() -> String {
         var report = """
         # Usage4Claude Diagnostic Report
 
-        **⚠️ PRIVACY NOTICE**: All sensitive information has been automatically redacted.  
-        **✅ Safe to share**: This report contains no complete credentials or personal data.  
+        **⚠️ PRIVACY NOTICE**: All sensitive information has been automatically redacted.
+        **✅ Safe to share**: This report contains no complete credentials or personal data.
 
         ---
 
         ## Test Result
 
         """
-        report += "**Status**: \(success ? "✅ Success" : "❌ Failed")  \n"
+        report += "**Status**: \(overallSuccess ? "✅ All Passed" : "❌ Issues Detected")  \n"
         report += "**Timestamp**: \(formatTimestamp())  \n"
-        report += "**Response Time**: \(formatResponseTime())  \n"
-        report += """
-
-        """
-
-        if !success {
-            report += """
-
-            ### Error Information
-
-            """
-            report += "**Error Type**: \(errorType?.rawValue ?? "Unknown")  \n"
-            report += "**Description**: \(errorDescription ?? "No description")  \n"
-            report += """
-
-            """
-        }
-
         report += """
 
         ---
@@ -159,81 +119,11 @@ struct DiagnosticReport: Codable {
             report += "\n- **Refresh Interval**: \(interval)"
         }
 
-        report += """
+        report += "\n- **Display Mode**: \(displayMode)\n"
+        report += "\n---\n"
 
-        - **Display Mode**: \(displayMode)
-        - **Organization ID**: `\(organizationIdRedacted)` (redacted)
-        - **Session Key**: `\(sessionKeyRedacted)` (redacted)
-
-        ---
-
-        ## Connection Test Details
-
-        ### Request
-
-        ```http
-        GET /api/organizations/\(organizationIdRedacted)/usage HTTP/2
-        Host: claude.ai
-        accept: */*
-        user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
-        Cookie: sessionKey=\(sessionKeyRedacted)
-        [... other headers omitted for brevity]
-        ```
-
-        ### Response
-
-        """
-
-        if let statusCode = httpStatusCode {
-            report += "**HTTP Status**: \(statusCode)  \n"
-        }
-
-        report += "**Content Type**: \(responseType.rawValue)  \n"
-
-        if cloudflareChallenge {
-            report += "**Cloudflare Challenge**: ⚠️ Detected  \n"
-        }
-
-        if cfMitigated {
-            report += "**CF-Mitigated Header**: Present  \n"
-        }
-
-        if !responseHeaders.isEmpty {
-            report += "\n**Response Headers**:\n```\n"
-            for (key, value) in responseHeaders.sorted(by: { $0.key < $1.key }) {
-                report += "\(key): \(value)\n"
-            }
-            report += "```\n"
-        }
-
-        if let preview = responseBodyPreview, !preview.isEmpty {
-            report += """
-
-            **Response Body** (first 500 characters):
-            ```
-            \(preview)
-            ```
-
-            """
-        }
-
-        report += """
-
-        ---
-
-        ## Analysis
-
-        """
-        report += "**Diagnosis**: \(diagnosis)  \n"
-        report += "**Confidence**: \(confidence.rawValue)  \n"
-        report += """
-
-        ### Suggested Actions
-
-        """
-
-        for (index, suggestion) in suggestions.enumerated() {
-            report += "\(index + 1). \(suggestion)\n"
+        for result in providers {
+            report += renderProviderSection(result)
         }
 
         report += """
@@ -247,11 +137,93 @@ struct DiagnosticReport: Codable {
         - Include this report when reporting issues
 
         """
-
         return report
     }
 
-    // MARK: - 私有辅助方法
+    private func renderProviderSection(_ result: ProviderDiagnosticResult) -> String {
+        let title: String
+        switch result.providerType {
+        case .claude: title = "## Claude Diagnostic"
+        case .codex: title = "## Codex (ChatGPT) Diagnostic"
+        }
+
+        var section = "\n\(title)\n\n"
+        section += "**Status**: \(result.success ? "✅ Success" : "❌ Failed")  \n"
+
+        if !result.credentials.isEmpty {
+            section += "\n### Credentials\n\n"
+            for (key, value) in result.credentials.sorted(by: { $0.key < $1.key }) {
+                section += "- **\(key)**: `\(value)` (redacted)\n"
+            }
+        }
+
+        for step in result.steps {
+            section += renderStepSection(step)
+        }
+
+        section += "\n### Analysis\n\n"
+        section += "**Diagnosis**: \(result.diagnosis)  \n"
+        section += "**Confidence**: \(result.confidence.rawValue)  \n"
+
+        if !result.suggestions.isEmpty {
+            section += "\n#### Suggested Actions\n\n"
+            for (index, suggestion) in result.suggestions.enumerated() {
+                section += "\(index + 1). \(suggestion)\n"
+            }
+        }
+
+        section += "\n---\n"
+        return section
+    }
+
+    private func renderStepSection(_ step: DiagnosticStep) -> String {
+        var section = "\n### \(step.name)\n\n"
+        section += "**Result**: \(step.success ? "✅ Pass" : "❌ Fail")  \n"
+
+        if let statusCode = step.httpStatusCode {
+            section += "**HTTP Status**: \(statusCode)  \n"
+        }
+
+        if let responseTime = step.responseTime {
+            section += "**Response Time**: \(String(format: "%.0f ms", responseTime))  \n"
+        }
+
+        section += "**Content Type**: \(step.responseType.rawValue)  \n"
+
+        if step.cloudflareChallenge {
+            section += "**Cloudflare Challenge**: ⚠️ Detected  \n"
+        }
+
+        if step.cfMitigated {
+            section += "**CF-Mitigated Header**: Present  \n"
+        }
+
+        if let notes = step.notes, !notes.isEmpty {
+            section += "**Notes**: \(notes)  \n"
+        }
+
+        if let errorType = step.errorType {
+            section += "**Error Type**: \(errorType.rawValue)  \n"
+        }
+
+        if let errorDesc = step.errorDescription {
+            section += "**Error**: \(errorDesc)  \n"
+        }
+
+        if !step.responseHeaders.isEmpty {
+            section += "\n**Response Headers**:\n```\n"
+            for (key, value) in step.responseHeaders.sorted(by: { $0.key < $1.key }) {
+                section += "\(key): \(value)\n"
+            }
+            section += "```\n"
+        }
+
+        if let preview = step.responseBodyPreview, !preview.isEmpty {
+            section += "\n**Response Body** (first 500 characters):\n```\n\(preview)\n```\n"
+        }
+
+        return section
+    }
 
     private func formatTimestamp() -> String {
         let formatter = DateFormatter()
@@ -259,17 +231,13 @@ struct DiagnosticReport: Codable {
         formatter.timeZone = TimeZone.current
         return formatter.string(from: timestamp)
     }
-
-    private func formatResponseTime() -> String {
-        guard let time = responseTime else {
-            return "N/A"
-        }
-        return String(format: "%.0f ms", time)
-    }
 }
+
+// MARK: - DiagnosticErrorType
 
 /// 诊断错误类型
 enum DiagnosticErrorType: String, Codable {
+    // Claude
     case cloudflareBlocked = "Cloudflare Challenge"
     case authenticationFailed = "Authentication Failed"
     case networkError = "Network Error"
@@ -277,15 +245,19 @@ enum DiagnosticErrorType: String, Codable {
     case invalidCredentials = "Invalid Credentials"
     case timeout = "Request Timeout"
     case unknown = "Unknown Error"
+    // Codex
+    case sessionTokenInvalid = "Codex Session Token Invalid"
+    case accessTokenExpired = "Codex Access Token Expired"
+    case usageEndpointFailed = "Codex Usage Endpoint Failed"
+    case ssrBootstrapFailed = "Codex SSR Bootstrap Failed"
 }
 
 // MARK: - English Diagnostic Messages (for export only, not localized)
 
-/// English diagnostic messages for diagnostic reports
-/// These are used in exported reports to maintain consistency across different locales
+/// 诊断报告的英文文案（导出用，不走本地化，保持语言一致性）
 enum DiagnosticMessage {
 
-    // MARK: - Diagnosis Messages
+    // MARK: - Claude
 
     static let diagnosisSuccess = "Connection is working properly. API returned valid usage data."
     static let diagnosisCloudflare = "Request was blocked by Cloudflare security system. This may be due to IP reputation or network configuration."
@@ -294,8 +266,6 @@ enum DiagnosticMessage {
     static let diagnosisNoCredentials = "Authentication credentials are not configured."
     static let diagnosisInvalidUrl = "Invalid Organization ID format."
     static let diagnosisUnknown = "Unknown error occurred. Please export and share this report with developers."
-
-    // MARK: - Suggestion Messages
 
     static let suggestionSuccess = "Everything is working correctly. No action needed."
     static let suggestionVisitBrowser = "Visit claude.ai in your browser and complete any security challenges"
@@ -312,4 +282,21 @@ enum DiagnosticMessage {
     static let suggestionCheckOrgId = "Check if Organization ID format is correct (should be a UUID)"
     static let suggestionExportAndShare = "Export this diagnostic report and share it on GitHub Issues"
     static let suggestionContactSupport = "Contact developer for help at github.com/f-is-h/Usage4Claude/issues"
+
+    // MARK: - Codex
+
+    static let diagnosisCodexSuccess = "Connection is working properly. Codex API returned valid usage data."
+    static let diagnosisCodexNoCredentials = "Codex session token is not configured."
+    static let diagnosisCodexSessionInvalid = "Codex session token is invalid or expired. Please log in again."
+    static let diagnosisCodexSessionCloudflare = "Session endpoint was blocked by Cloudflare. ChatGPT may have flagged your IP."
+    static let diagnosisCodexAccessExpired = "Access token was obtained but the usage endpoint returned 401. The cached access token may be expired."
+    static let diagnosisCodexSsrRecovered = "Session endpoint failed but SSR refresh succeeded. Restarting the app should restore functionality."
+    static let diagnosisCodexSsrFailed = "Both session endpoint and SSR refresh failed. The session token has likely expired."
+    static let diagnosisCodexUsageFailed = "Session token is valid but the usage API returned an unexpected response."
+    static let diagnosisCodexUsageCloudflare = "Usage endpoint was blocked by Cloudflare. ChatGPT may have flagged your IP."
+
+    static let suggestionCodexRelogin = "Please log in to Codex again from Settings"
+    static let suggestionCodexRestartApp = "Restart the app — it will automatically refresh the access token via SSR"
+    static let suggestionCodexCheckChatGPTBrowser = "Visit chatgpt.com in your browser to complete any security challenges"
+    static let suggestionCodexClearWebViewCache = "Try clearing the WebView cache from Settings and logging in again"
 }

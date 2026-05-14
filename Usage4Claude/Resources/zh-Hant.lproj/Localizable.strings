@@ -193,7 +193,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "連線診斷";
-"diagnostic.section_description" = "測試與 Claude API 的連線並診斷問題。報告中的所有敏感資訊都會自動遮罩處理。";
+"diagnostic.section_description" = "測試與 API 的連線並診斷問題。報告中的所有敏感資訊都會自動遮罩處理。";
 "diagnostic.test_button" = "測試連線";
 "diagnostic.view_details_button" = "檢視詳情";
 "diagnostic.export_button" = "匯出報告";

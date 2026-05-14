@@ -193,7 +193,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "연결 진단";
-"diagnostic.section_description" = "Claude API와의 연결을 테스트하고 문제를 진단합니다. 보고서의 모든 민감한 정보는 자동으로 마스킹 처리됩니다.";
+"diagnostic.section_description" = "API와의 연결을 테스트하고 문제를 진단합니다. 보고서의 모든 민감한 정보는 자동으로 마스킹 처리됩니다.";
 "diagnostic.test_button" = "연결 테스트";
 "diagnostic.view_details_button" = "세부 정보 보기";
 "diagnostic.export_button" = "보고서 내보내기";

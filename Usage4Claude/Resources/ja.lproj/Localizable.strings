@@ -193,7 +193,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "接続診断";
-"diagnostic.section_description" = "Claude APIへの接続をテストし、問題を診断します。レポート内の機密情報はすべて自動的に編集されます。";
+"diagnostic.section_description" = "APIへの接続をテストし、問題を診断します。レポート内の機密情報はすべて自動的に編集されます。";
 "diagnostic.test_button" = "接続テスト";
 "diagnostic.view_details_button" = "詳細を表示";
 "diagnostic.export_button" = "レポートをエクスポート";

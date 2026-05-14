@@ -193,7 +193,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "Connection Diagnostics";
-"diagnostic.section_description" = "Test your connection to Claude API and diagnose issues. All sensitive information is automatically redacted in reports.";
+"diagnostic.section_description" = "Test your API connections and diagnose issues. All sensitive information is automatically redacted in reports.";
 "diagnostic.test_button" = "Test Connection";
 "diagnostic.view_details_button" = "View Details";
 "diagnostic.export_button" = "Export Report";

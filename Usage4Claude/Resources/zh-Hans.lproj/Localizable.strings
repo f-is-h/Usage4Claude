@@ -193,7 +193,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "连接诊断";
-"diagnostic.section_description" = "测试与 Claude API 的连接并诊断问题。报告中的所有敏感信息都会自动脱敏处理。";
+"diagnostic.section_description" = "测试与 API 的连接并诊断问题。报告中的所有敏感信息都会自动脱敏处理。";
 "diagnostic.test_button" = "测试连接";
 "diagnostic.view_details_button" = "查看详情";
 "diagnostic.export_button" = "导出报告";
