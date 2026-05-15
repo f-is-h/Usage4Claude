@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-05-15
+
+### Added
+- **Silent Codex token refresh**: Automatically refresh Codex access tokens in the background via SSR bootstrap without requiring manual re-login
+- **Codex support in diagnostics**: The built-in diagnostic tool now tests Codex connectivity alongside Claude
+- **Codex 7-day reset time precision**: Display Codex 7-day window reset time with minute-level precision
+
+### Fixed
+- **Codex browser login reliability**: Harden cookie detection and session validation for
+more consistent sign-in
+- **Japanese hour unit**: Use correct kanji for the hour unit in reset time display
+
 ## [3.0.0] - 2026-05-03
 
 ### Added
@@ -462,6 +474,7 @@ Key, Organization ID)
 
 ---
 
+[3.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.1
 [3.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.0
 [2.6.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.1
 [2.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.0
