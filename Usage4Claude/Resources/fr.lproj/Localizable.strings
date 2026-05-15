@@ -346,6 +346,7 @@
 "usage_data.compact_remaining_minutes" = "%dmin";
 "usage_data.compact_remaining_hours" = "%dh %dmin";
 "usage_data.compact_remaining_days" = "%dj %dh";
+"usage_data.compact_remaining_days_with_minutes" = "%dj %dh %dmin";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "Non activé";

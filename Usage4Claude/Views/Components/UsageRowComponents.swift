@@ -205,7 +205,7 @@ struct UnifiedLimitRow: View {
 
         case .codexSecondary:
             guard let limitData = codexData?.secondary?.asUsageLimitData() else { return "-" }
-            return showRemainingMode ? limitData.formattedCompactRemaining : limitData.formattedCompactResetDate
+            return showRemainingMode ? limitData.formattedCompactRemainingWithMinutes : limitData.formattedCompactResetDateWithMinutes
 
         case .codexExtraUsage:
             guard let extra = codexData?.extraUsage else { return "-" }

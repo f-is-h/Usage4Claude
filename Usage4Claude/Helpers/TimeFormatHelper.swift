@@ -137,6 +137,35 @@ enum TimeFormatHelper {
         return "\(dateString) \(timeString)"
     }
 
+    /// 格式化日期和分钟（精度到分钟）
+    /// - Parameters:
+    ///   - date: 要格式化的日期
+    ///   - dateTemplate: 日期部分的模板
+    /// - Returns: 格式化后的日期+小时分钟字符串（如 "12月16日 15:42"）
+    static func formatDateMinute(_ date: Date, dateTemplate: String) -> String {
+        let langCode = UserSettings.shared.appLocale.identifier
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = UserSettings.shared.appLocale
+        dateFormatter.timeZone = TimeZone.current
+        if langCode.hasPrefix("zh") || langCode.hasPrefix("ja") {
+            dateFormatter.dateFormat = "M月d日"
+        } else if langCode.hasPrefix("ko") {
+            dateFormatter.dateFormat = "M월d일"
+        } else {
+            dateFormatter.dateFormat = "MMM d"
+        }
+        let dateString = dateFormatter.string(from: date)
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.locale = UserSettings.shared.appLocale
+        timeFormatter.timeZone = TimeZone.current
+        timeFormatter.dateFormat = timeOnlyFormat  // "HH:mm" 或 "h:mm a"
+        let timeString = timeFormatter.string(from: date)
+
+        return "\(dateString) \(timeString)"
+    }
+
     // MARK: - Detection
 
     /// 检测当前是否应该使用 24 小时格式

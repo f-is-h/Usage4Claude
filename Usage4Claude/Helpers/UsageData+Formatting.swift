@@ -176,6 +176,47 @@ extension UsageData.LimitData {
 
         return TimeFormatHelper.formatDateHour(resetsAt, dateTemplate: "MMMd")
     }
+
+    /// 格式化的重置日期（精确到分钟，仅用于 Codex secondary_window）
+    /// - 示例: "Dec 16 15:42" / "Dec 16 3:42 PM", "12月16日 15:42"
+    var formattedCompactResetDateWithMinutes: String {
+        guard let resetsAt = resetsAt else {
+            return "-"
+        }
+
+        return TimeFormatHelper.formatDateMinute(resetsAt, dateTemplate: "MMMd")
+    }
+
+    /// 极简格式化的剩余时间（精确到分钟，仅用于 Codex secondary_window）
+    /// - 示例: "45m", "1h30m", "3d12h35m"
+    var formattedCompactRemainingWithMinutes: String {
+        guard let resetsAt = resetsAt else {
+            return "-"
+        }
+
+        let resetsIn = resetsAt.timeIntervalSinceNow
+        guard resetsIn > 0 else {
+            return L.UsageData.compactResettingSoon
+        }
+
+        let totalMinutes = Int(ceil(resetsIn / 60))
+
+        if totalMinutes < 60 {
+            return L.UsageData.compactRemainingMinutes(totalMinutes)
+        }
+
+        let totalHours = totalMinutes / 60
+        let remainingMinutes = totalMinutes % 60
+
+        if totalHours < 24 {
+            return L.UsageData.compactRemainingHours(totalHours, remainingMinutes)
+        }
+
+        let days = totalHours / 24
+        let hours = totalHours % 24
+
+        return L.UsageData.compactRemainingDaysWithMinutes(days, hours, remainingMinutes)
+    }
 }
 
 // MARK: - UsageData formatting (backward-compat shims)

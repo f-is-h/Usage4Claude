@@ -344,6 +344,7 @@
 "usage_data.compact_remaining_minutes" = "还剩 %d分钟";
 "usage_data.compact_remaining_hours" = "还剩 %d小时%d分钟";
 "usage_data.compact_remaining_days" = "还剩 %d天%d小时";
+"usage_data.compact_remaining_days_with_minutes" = "还剩 %d天%d小时%d分";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "未启用";

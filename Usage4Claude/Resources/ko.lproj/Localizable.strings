@@ -344,6 +344,7 @@
 "usage_data.compact_remaining_minutes" = "%d분 남음";
 "usage_data.compact_remaining_hours" = "%d시간 %d분 남음";
 "usage_data.compact_remaining_days" = "%d일 %d시간 남음";
+"usage_data.compact_remaining_days_with_minutes" = "%d일 %d시간 %d분 남음";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "활성화되지 않음";
