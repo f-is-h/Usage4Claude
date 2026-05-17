@@ -37,17 +37,18 @@ final class WebLoginCoordinator: ObservableObject {
     private var progressObservation: NSKeyValueObservation?
     private var onAccountCreated: ((Account) -> Void)?
     private var navigationDelegate: NavigationDelegate?
+    private var uiDelegate: UIDelegate?
 
     /// 允许导航的域名列表
     private let allowedDomains: Set<String> = [
         "claude.ai",
-        "accounts.google.com",
+        "google.com",
+        "youtube.com",
         "appleid.apple.com",
         "login.microsoftonline.com",
         "github.com",
-        "accounts.google.co.jp",
-        "accounts.google.com.hk",
-        "www.google.com",
+        "google.co.jp",
+        "google.com.hk",
         "challenges.cloudflare.com"
     ]
 
@@ -76,6 +77,10 @@ final class WebLoginCoordinator: ObservableObject {
         let delegate = NavigationDelegate(coordinator: self)
         webView.navigationDelegate = delegate
         self.navigationDelegate = delegate
+
+        let ui = UIDelegate(coordinator: self)
+        webView.uiDelegate = ui
+        self.uiDelegate = ui
 
         // 监听加载进度
         progressObservation = webView.observe(\.estimatedProgress) { [weak self] webView, _ in
@@ -261,6 +266,32 @@ extension WebLoginCoordinator {
                 NSWorkspace.shared.open(url)
                 decisionHandler(.cancel)
             }
+        }
+    }
+}
+
+// MARK: - WKUIDelegate
+
+extension WebLoginCoordinator {
+
+    /// 处理页面通过 window.open() 触发的弹出窗口
+    /// Google OAuth 传统流程会用弹出窗口完成授权，缺少此代理会导致登录静默失败
+    final class UIDelegate: NSObject, WKUIDelegate {
+        private weak var coordinator: WebLoginCoordinator?
+
+        init(coordinator: WebLoginCoordinator) {
+            self.coordinator = coordinator
+            super.init()
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            webView.load(navigationAction.request)
+            return nil
         }
     }
 }

@@ -37,6 +37,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
     private var progressObservation: NSKeyValueObservation?
     private var onAccountCreated: ((Account) -> Void)?
     private var navigationDelegate: NavigationDelegate?
+    private var uiDelegate: UIDelegate?
 
     private let apiService = CodexAPIService()
 
@@ -46,13 +47,13 @@ final class CodexWebLoginCoordinator: ObservableObject {
         "openai.com",
         "auth.openai.com",
         "auth0.openai.com",
-        "accounts.google.com",
+        "google.com",
+        "youtube.com",
         "appleid.apple.com",
         "login.microsoftonline.com",
         "github.com",
-        "accounts.google.co.jp",
-        "accounts.google.com.hk",
-        "www.google.com",
+        "google.co.jp",
+        "google.com.hk",
         "challenges.cloudflare.com"
     ]
 
@@ -78,6 +79,10 @@ final class CodexWebLoginCoordinator: ObservableObject {
         let delegate = NavigationDelegate(coordinator: self)
         webView.navigationDelegate = delegate
         self.navigationDelegate = delegate
+
+        let ui = UIDelegate(coordinator: self)
+        webView.uiDelegate = ui
+        self.uiDelegate = ui
 
         progressObservation = webView.observe(\.estimatedProgress) { [weak self] webView, _ in
             DispatchQueue.main.async {
@@ -261,6 +266,32 @@ extension CodexWebLoginCoordinator {
                 NSWorkspace.shared.open(url)
                 decisionHandler(.cancel)
             }
+        }
+    }
+}
+
+// MARK: - WKUIDelegate
+
+extension CodexWebLoginCoordinator {
+
+    /// 处理页面通过 window.open() 触发的弹出窗口
+    /// Google OAuth 传统流程会用弹出窗口完成授权，缺少此代理会导致登录静默失败
+    final class UIDelegate: NSObject, WKUIDelegate {
+        private weak var coordinator: CodexWebLoginCoordinator?
+
+        init(coordinator: CodexWebLoginCoordinator) {
+            self.coordinator = coordinator
+            super.init()
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            webView.load(navigationAction.request)
+            return nil
         }
     }
 }
