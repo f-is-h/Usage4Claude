@@ -71,7 +71,8 @@ struct UsageDetailView: View {
     @State private var showUpdateNotification = false
     // 显示模式切换（false: 重置时间, true: 剩余时间）
     @AppStorage("showRemainingMode") private var savedRemainingMode = false
-    @State private var showRemainingMode = false
+    @State private var showRemainingMode = UserDefaults.standard.bool(forKey: "showRemainingMode")
+    @State private var remainingModeAnimationTrigger = 0
     
     // MARK: - Body
 
@@ -238,6 +239,12 @@ struct UsageDetailView: View {
                     let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
 
                     if let primary = primaryLimitData {
+                        let primaryRingColor = colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes)
+                        let primaryRingRange = UsageRingDisplay.displayedTrimRange(
+                            usedPercentage: primary.percentage,
+                            showRemainingMode: showRemainingMode
+                        )
+
                         Circle()
                             .stroke(Color.gray.opacity(0.2), lineWidth: 10)
                             .frame(width: 100, height: 100)
@@ -246,14 +253,17 @@ struct UsageDetailView: View {
                             loadingAnimation()
                         } else {
                             Circle()
-                                .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
+                                .trim(from: primaryRingRange.from, to: primaryRingRange.to)
                                 .stroke(
-                                    colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes),
+                                    primaryRingColor,
                                     style: StrokeStyle(lineWidth: 10, lineCap: .round)
                                 )
                                 .frame(width: 100, height: 100)
                                 .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut, value: primary.percentage)
+                                .animation(
+                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                    value: primaryRingRange
+                                )
                         }
 
                         if activeDisplayTypes.contains(.fiveHour) &&
@@ -261,6 +271,11 @@ struct UsageDetailView: View {
                             let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.displayMode == .custom ? 0 : nil)
 
                             if let percentage = sevenDayPercentage {
+                                let outerRingRange = UsageRingDisplay.displayedTrimRange(
+                                    usedPercentage: percentage,
+                                    showRemainingMode: showRemainingMode
+                                )
+
                                 Circle()
                                     .stroke(Color.gray.opacity(0.15), lineWidth: 3)
                                     .frame(width: 114, height: 114)
@@ -269,25 +284,34 @@ struct UsageDetailView: View {
                                     outerLoadingAnimation()
                                 } else {
                                     Circle()
-                                        .trim(from: 0, to: CGFloat(percentage) / 100.0)
+                                        .trim(from: outerRingRange.from, to: outerRingRange.to)
                                         .stroke(
                                             colorForSevenDay(percentage),
                                             style: StrokeStyle(lineWidth: 3, lineCap: .round)
                                         )
                                         .frame(width: 114, height: 114)
                                         .rotationEffect(.degrees(-90))
-                                        .animation(.easeInOut, value: percentage)
+                                        .animation(
+                                            .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                            value: outerRingRange
+                                        )
                                 }
                             }
                         }
 
-                        VStack(spacing: 2) {
-                            Text("\(Int(primary.percentage))%")
-                                .font(.system(size: 28, weight: .bold))
-                            Text(L.Usage.used)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        if !isClaudeRefreshing {
+                            DetailUsageRingSweep(
+                                trigger: remainingModeAnimationTrigger,
+                                diameter: 122,
+                                lineWidth: 3,
+                                color: primaryRingColor
+                            )
                         }
+
+                        DetailUsageRingCenterText(
+                            usedPercentage: primary.percentage,
+                            showRemainingMode: showRemainingMode
+                        )
                     }
                 }
                 .frame(height: 114)
@@ -321,8 +345,7 @@ struct UsageDetailView: View {
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.2)) { showRemainingMode.toggle() }
-                            savedRemainingMode = showRemainingMode
+                            toggleRemainingMode()
                         }
                     } else if activeTypes.count == 1 {
                         let singleType = activeTypes.first!
@@ -549,8 +572,10 @@ struct UsageDetailView: View {
                 refreshState: refreshState,
                 animationType: $codexAnimationType,
                 rotationAngle: $rotationAngle,
+                remainingModeAnimationTrigger: remainingModeAnimationTrigger,
                 onRefresh: { onMenuAction?(.refreshCodex) },
-                onAnimationHint: { showAnimationHint($0, provider: .codex) }
+                onAnimationHint: { showAnimationHint($0, provider: .codex) },
+                onToggleRemainingMode: toggleRemainingMode
             )
         } else if let error = codexErrorMessage {
             VStack(spacing: 12) {
@@ -714,7 +739,11 @@ struct UsageDetailView: View {
         .animation(.easeInOut(duration: 0.25), value: showAnimationTypeHint)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
-            showRemainingMode = savedRemainingMode
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                showRemainingMode = savedRemainingMode
+            }
             // 如果打开时已经在刷新，启动旋转动画
             if refreshState.isRefreshing {
                 startRotationAnimation()
@@ -783,6 +812,14 @@ struct UsageDetailView: View {
         }
         animationTypeHintDismissWorkItem = dismissWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: dismissWorkItem)
+    }
+
+    private func toggleRemainingMode() {
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05)) {
+            showRemainingMode.toggle()
+            remainingModeAnimationTrigger += 1
+        }
+        savedRemainingMode = showRemainingMode
     }
 }
 

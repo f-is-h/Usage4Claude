@@ -23,6 +23,7 @@
 "usage.not_started" = "开始使用后显示";
 "usage.reset_in" = "距离重置还剩";
 "usage.remaining" = "剩余时间";
+"usage.available" = "剩余用量";
 "usage.loading" = "加载中...";
 "usage.not_configured" = "未配置认证信息";
 "usage.go_to_settings" = "去设置认证信息";

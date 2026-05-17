@@ -23,6 +23,7 @@
 "usage.not_started" = "S'affichera après le début de l'utilisation";
 "usage.reset_in" = "Réinitialisation dans";
 "usage.remaining" = "Restant";
+"usage.available" = "Disponible";
 "usage.loading" = "Chargement…";
 "usage.not_configured" = "Authentification non configurée";
 "usage.go_to_settings" = "Aller aux réglages";

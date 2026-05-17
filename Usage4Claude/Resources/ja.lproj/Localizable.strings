@@ -23,6 +23,7 @@
 "usage.not_started" = "使用開始後に表示";
 "usage.reset_in" = "リセットまで";
 "usage.remaining" = "残り時間";
+"usage.available" = "残量";
 "usage.loading" = "読み込み中...";
 "usage.not_configured" = "認証情報が未設定";
 "usage.go_to_settings" = "設定へ";

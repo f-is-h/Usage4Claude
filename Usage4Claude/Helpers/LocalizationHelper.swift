@@ -59,6 +59,7 @@ enum L {
         static var notStarted: String { localized("usage.not_started") }
         static var resetIn: String { localized("usage.reset_in") }
         static var remaining: String { localized("usage.remaining") }
+        static var available: String { localized("usage.available") }
         static var loading: String { localized("usage.loading") }
         static var notConfigured: String { localized("usage.not_configured") }
         static var goToSettings: String { localized("usage.go_to_settings") }

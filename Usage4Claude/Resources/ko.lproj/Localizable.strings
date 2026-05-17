@@ -23,6 +23,7 @@
 "usage.not_started" = "사용 후 표시됩니다";
 "usage.reset_in" = "재설정까지 남은 시간";
 "usage.remaining" = "남은 시간";
+"usage.available" = "사용 가능";
 "usage.loading" = "로딩 중...";
 "usage.not_configured" = "인증 정보 미설정";
 "usage.go_to_settings" = "인증 정보 설정하기";

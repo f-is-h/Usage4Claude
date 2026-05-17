@@ -15,9 +15,10 @@ struct CodexColumnView: View {
     let refreshState: RefreshState
     @Binding var animationType: UsageDetailView.LoadingAnimationType
     @Binding var rotationAngle: Double
-    @AppStorage("showRemainingMode") private var savedRemainingMode = false
+    let remainingModeAnimationTrigger: Int
     var onRefresh: (() -> Void)?
     var onAnimationHint: ((String) -> Void)?
+    var onToggleRemainingMode: (() -> Void)?
 
     private var activeCodexTypes: [LimitType] {
         UserSettings.shared.getActiveDisplayTypes(usageData: nil, codexUsageData: codexUsageData)
@@ -65,6 +66,12 @@ struct CodexColumnView: View {
             // 圆环区域
             ZStack {
                 if let primary = primaryRingData {
+                    let primaryColor = primaryRingColor(for: primary.percentage)
+                    let primaryRange = UsageRingDisplay.displayedTrimRange(
+                        usedPercentage: primary.percentage,
+                        showRemainingMode: showRemainingMode
+                    )
+
                     // 背景圆环
                     Circle()
                         .stroke(Color.gray.opacity(0.2), lineWidth: 10)
@@ -75,18 +82,26 @@ struct CodexColumnView: View {
                         codexLoadingAnimation()
                     } else {
                         Circle()
-                            .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
+                            .trim(from: primaryRange.from, to: primaryRange.to)
                             .stroke(
-                                primaryRingColor(for: primary.percentage),
+                                primaryColor,
                                 style: StrokeStyle(lineWidth: 10, lineCap: .round)
                             )
                             .frame(width: 100, height: 100)
                             .rotationEffect(.degrees(-90))
-                            .animation(.easeInOut, value: primary.percentage)
+                            .animation(
+                                .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                value: primaryRange
+                            )
                     }
 
                     // 外层细圆环（Secondary / 7天）
                     if showSecondaryRing, let secondary = secondaryData {
+                        let secondaryRange = UsageRingDisplay.displayedTrimRange(
+                            usedPercentage: secondary.percentage,
+                            showRemainingMode: showRemainingMode
+                        )
+
                         Circle()
                             .stroke(Color.gray.opacity(0.15), lineWidth: 3)
                             .frame(width: 114, height: 114)
@@ -95,25 +110,34 @@ struct CodexColumnView: View {
                             codexOuterLoadingAnimation()
                         } else {
                             Circle()
-                                .trim(from: 0, to: CGFloat(secondary.percentage) / 100.0)
+                                .trim(from: secondaryRange.from, to: secondaryRange.to)
                                 .stroke(
                                     UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
                                     style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [5, 2])
                                 )
                                 .frame(width: 114, height: 114)
                                 .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut, value: secondary.percentage)
+                                .animation(
+                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                    value: secondaryRange
+                                )
                         }
                     }
 
-                    // 中心百分比
-                    VStack(spacing: 2) {
-                        Text("\(Int(primary.percentage))%")
-                            .font(.system(size: 28, weight: .bold))
-                        Text(L.Usage.used)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    if !isCodexRefreshing {
+                        DetailUsageRingSweep(
+                            trigger: remainingModeAnimationTrigger,
+                            diameter: 122,
+                            lineWidth: 3,
+                            color: primaryColor
+                        )
                     }
+
+                    // 中心百分比
+                    DetailUsageRingCenterText(
+                        usedPercentage: primary.percentage,
+                        showRemainingMode: showRemainingMode
+                    )
                 }
             }
             .frame(height: 114)
@@ -143,10 +167,7 @@ struct CodexColumnView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showRemainingMode.toggle()
-                }
-                savedRemainingMode = showRemainingMode
+                onToggleRemainingMode?()
             }
             .padding(.horizontal, 14)
         }

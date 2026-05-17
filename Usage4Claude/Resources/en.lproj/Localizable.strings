@@ -23,6 +23,7 @@
 "usage.not_started" = "Display after usage starts";
 "usage.reset_in" = "Resets in";
 "usage.remaining" = "Remaining";
+"usage.available" = "Available";
 "usage.loading" = "Loading...";
 "usage.not_configured" = "Authentication not configured";
 "usage.go_to_settings" = "Go to Settings";
