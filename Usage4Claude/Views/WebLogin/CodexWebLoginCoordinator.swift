@@ -69,7 +69,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .nonPersistent()
+        config.websiteDataStore = .default()
         config.preferences.isElementFullscreenEnabled = false
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -109,14 +109,6 @@ final class CodexWebLoginCoordinator: ObservableObject {
         cookieTimer?.invalidate()
         cookieTimer = nil
         progressObservation = nil
-
-        let dataStore = webView.configuration.websiteDataStore
-        let allTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-        dataStore.fetchDataRecords(ofTypes: allTypes) { records in
-            dataStore.removeData(ofTypes: allTypes, for: records) {
-                Logger.settings.info("CodexWebLogin: 已清除所有 WebView 数据")
-            }
-        }
     }
 
     // MARK: - Cookie Monitoring

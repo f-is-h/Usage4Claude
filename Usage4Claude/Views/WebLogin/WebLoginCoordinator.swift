@@ -65,9 +65,7 @@ final class WebLoginCoordinator: ObservableObject {
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
-
-        // 非持久化 DataStore — 每次登录全新 session
-        config.websiteDataStore = .nonPersistent()
+        config.websiteDataStore = .default()
         config.preferences.isElementFullscreenEnabled = false
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -106,19 +104,10 @@ final class WebLoginCoordinator: ObservableObject {
         self.onAccountCreated = callback
     }
 
-    /// 清理所有 WebView 数据
     func cleanup() {
         cookieTimer?.invalidate()
         cookieTimer = nil
         progressObservation = nil
-
-        let dataStore = webView.configuration.websiteDataStore
-        let allTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-        dataStore.fetchDataRecords(ofTypes: allTypes) { records in
-            dataStore.removeData(ofTypes: allTypes, for: records) {
-                Logger.settings.info("WebLogin: 已清除所有 WebView 数据")
-            }
-        }
     }
 
     // MARK: - Cookie Monitoring

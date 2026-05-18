@@ -187,8 +187,8 @@ class ClaudeAPIService {
                     completion(.failure(UsageError.unauthorized))
                     return
                 case 403:
-                    // 禁止访问，可能是 Cloudflare 拦截
-                    completion(.failure(UsageError.cloudflareBlocked))
+                    // HTML 已在上方提前返回 cloudflareBlocked，此处 403 均为 JSON 鉴权失败
+                    completion(.failure(UsageError.unauthorized))
                     return
                 case 429:
                     // 请求频率过高
@@ -288,8 +288,12 @@ class ClaudeAPIService {
                     }
                     return
                 case 403:
+                    // Cloudflare 拦截返回 HTML；API 鉴权失败返回 JSON
+                    let isHTML = String(data: data, encoding: .utf8).map {
+                        $0.contains("<!DOCTYPE html>") || $0.contains("<html")
+                    } ?? false
                     DispatchQueue.main.async {
-                        completion(.failure(UsageError.cloudflareBlocked))
+                        completion(.failure(isHTML ? UsageError.cloudflareBlocked : UsageError.unauthorized))
                     }
                     return
                 default:
