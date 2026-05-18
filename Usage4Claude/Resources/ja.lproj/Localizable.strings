@@ -11,7 +11,8 @@
 "menu.auth_settings" = "認証情報";
 "menu.check_updates" = "アップデートを確認";
 "menu.about" = "このアプリについて";
-"menu.web_usage" = "Claude使用状況を表示";
+"menu.claude_status" = "Claudeステータス";
+"menu.codex_status" = "OpenAIステータス";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claudeを終了";

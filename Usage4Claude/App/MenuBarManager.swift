@@ -156,8 +156,14 @@ class MenuBarManager: ObservableObject {
     
     // MARK: - Menu Actions
     
-    @objc func openWebUsage() {
-        if let url = URL(string: "https://claude.ai/settings/usage") {
+    @objc func openClaudeStatus() {
+        if let url = URL(string: "https://status.claude.com") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    @objc func openCodexStatus() {
+        if let url = URL(string: "https://status.openai.com/") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -188,9 +194,12 @@ class MenuBarManager: ObservableObject {
         case .about:
             closePopover()
             openSettingsWindow(tab: 2)
-        case .webUsage:
+        case .claudeStatus:
             closePopover()
-            openWebUsage()
+            openClaudeStatus()
+        case .codexStatus:
+            closePopover()
+            openCodexStatus()
         case .coffee:
             closePopover()
             if let url = URL(string: "https://ko-fi.com/1atte") {

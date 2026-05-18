@@ -50,7 +50,8 @@ struct UsageDetailView: View {
         case authSettings
         case checkForUpdates
         case about
-        case webUsage
+        case claudeStatus
+        case codexStatus
         case coffee
         case githubSponsor
         case quit
@@ -474,8 +475,15 @@ struct UsageDetailView: View {
                     Label(L.Menu.about, systemImage: "info.circle")
                 }
                 Divider()
-                Button(action: { onMenuAction?(.webUsage) }) {
-                    Label(L.Menu.webUsage, systemImage: "safari")
+                if !UserSettings.shared.accounts.isEmpty {
+                    Button(action: { onMenuAction?(.claudeStatus) }) {
+                        Label(L.Menu.claudeStatus, systemImage: "safari")
+                    }
+                }
+                if !UserSettings.shared.codexAccounts.isEmpty {
+                    Button(action: { onMenuAction?(.codexStatus) }) {
+                        Label(L.Menu.codexStatus, systemImage: "safari.fill")
+                    }
                 }
                 Button(action: { onMenuAction?(.coffee) }) {
                     Label(L.Menu.coffee, systemImage: "cup.and.saucer")

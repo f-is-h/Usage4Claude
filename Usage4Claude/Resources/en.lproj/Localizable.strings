@@ -11,7 +11,8 @@
 "menu.auth_settings" = "Authentication Settings";
 "menu.check_updates" = "Check for Updates";
 "menu.about" = "About";
-"menu.web_usage" = "View Claude Usage";
+"menu.claude_status" = "Claude Status";
+"menu.codex_status" = "OpenAI Status";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Quit Usage4Claude";

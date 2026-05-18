@@ -11,7 +11,8 @@
 "menu.auth_settings" = "인증 정보";
 "menu.check_updates" = "업데이트 확인";
 "menu.about" = "정보";
-"menu.web_usage" = "Claude 사용량 웹페이지";
+"menu.claude_status" = "Claude 상태 페이지";
+"menu.codex_status" = "OpenAI 상태 페이지";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claude 종료";

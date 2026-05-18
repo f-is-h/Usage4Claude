@@ -353,16 +353,27 @@ class MenuBarUI {
 
         menu.addItem(NSMenuItem.separator())
 
-        // 访问 Claude 用量
-        let webItem = NSMenuItem(
-            title: L.Menu.webUsage,
-            action: #selector(MenuBarManager.openWebUsage),
-            keyEquivalent: "w"
-        )
-        webItem.target = target
-        webItem.keyEquivalentModifierMask = [.command, .shift] as NSEvent.ModifierFlags
-        setMenuItemIcon(webItem, systemName: "safari")
-        menu.addItem(webItem)
+        if !settings.accounts.isEmpty {
+            let claudeStatusItem = NSMenuItem(
+                title: L.Menu.claudeStatus,
+                action: #selector(MenuBarManager.openClaudeStatus),
+                keyEquivalent: ""
+            )
+            claudeStatusItem.target = target
+            setMenuItemIcon(claudeStatusItem, systemName: "safari")
+            menu.addItem(claudeStatusItem)
+        }
+
+        if !settings.codexAccounts.isEmpty {
+            let codexStatusItem = NSMenuItem(
+                title: L.Menu.codexStatus,
+                action: #selector(MenuBarManager.openCodexStatus),
+                keyEquivalent: ""
+            )
+            codexStatusItem.target = target
+            setMenuItemIcon(codexStatusItem, systemName: "safari.fill")
+            menu.addItem(codexStatusItem)
+        }
 
         // Buy Me A Coffee
         let coffeeItem = NSMenuItem(

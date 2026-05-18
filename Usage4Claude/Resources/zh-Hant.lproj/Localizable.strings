@@ -11,7 +11,8 @@
 "menu.auth_settings" = "認證資訊";
 "menu.check_updates" = "檢查更新";
 "menu.about" = "關於";
-"menu.web_usage" = "檢視 Claude 用量";
+"menu.claude_status" = "Claude 狀態頁面";
+"menu.codex_status" = "OpenAI 狀態頁面";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "結束 Usage4Claude";
