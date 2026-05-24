@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-05-24
+
+### Added
+- **Remaining-mode ring sync**: Detail rings now fill from the available-quota direction when the view is in remaining display mode
+- **Conditional status page links**: Menu shows "Claude Status" or "OpenAI Status" only when the corresponding account type is configured, replacing the static usage link
+
+### Fixed
+- **Web login session persistence**: Browser login sessions now persist across app launches
+- **Google login in browser view**: Fixed Google sign-in failure in the embedded browser login view
+- **403 error classification**: Corrected 403 HTTP responses being misclassified as authentication errors
+
 ## [3.0.1] - 2026-05-15
 
 ### Added
@@ -474,6 +485,7 @@ Key, Organization ID)
 
 ---
 
+[3.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.1.0
 [3.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.1
 [3.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.0
 [2.6.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.1
