@@ -70,7 +70,7 @@ enum ImageHelper {
             operation: .sourceOver,
             fraction: 1.0,
             respectFlipped: false,
-            hints: [.interpolation: NSImageInterpolation.high]
+            hints: [.interpolation: NSNumber(value: NSImageInterpolation.high.rawValue)]
         )
         image.unlockFocus()
         image.isTemplate = isTemplate
