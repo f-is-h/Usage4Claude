@@ -10,6 +10,7 @@ import SwiftUI
 import AppKit
 import Combine
 import OSLog
+import Sparkle
 
 /// 刷新状态管理器
 /// 用于在视图间同步刷新状态，支持响应式更新
@@ -66,22 +67,10 @@ class MenuBarManager: ObservableObject {
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude）
     @Published var codexErrorMessage: String?
-    /// 是否有可用更新（从 dataManager 同步）
-    @Published var hasAvailableUpdate = false
-    /// 最新版本号（从 dataManager 同步）
-    @Published var latestVersion: String?
-    /// 用户已确认的版本号（点击检查更新后记录）
-    private var acknowledgedVersion: String?
 
     /// 刷新状态管理器（从 dataManager 引用）
     var refreshState: RefreshState {
         return dataManager.refreshState
-    }
-
-    /// 是否应该显示徽章和通知（用户未确认时才显示）
-    var shouldShowUpdateBadge: Bool {
-        guard hasAvailableUpdate, let latest = latestVersion else { return false }
-        return acknowledgedVersion != latest
     }
 
     // MARK: - Initialization
@@ -117,16 +106,6 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexErrorMessage
             .assign(to: &$codexErrorMessage)
-
-        dataManager.$hasAvailableUpdate
-            .sink { [weak self] hasUpdate in
-                self?.hasAvailableUpdate = hasUpdate
-                self?.updateMenuBarIcon()
-            }
-            .store(in: &cancellables)
-
-        dataManager.$latestVersion
-            .assign(to: &$latestVersion)
     }
     
     /// 处理菜单栏图标点击事件
@@ -147,7 +126,7 @@ class MenuBarManager: ObservableObject {
 
     /// 显示右键菜单
     private func showMenu() {
-        let menu = ui.createStandardMenu(hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge, target: self)
+        let menu = ui.createStandardMenu(target: self)
         ui.statusItem.menu = menu
         ui.statusItem.button?.performClick(nil)
         ui.statusItem.menu = nil
@@ -228,17 +207,6 @@ class MenuBarManager: ObservableObject {
                 #if DEBUG
                 // 调试模式下立即刷新数据（不使用防抖）
                 self.dataManager.fetchUsage()
-
-                // 如果模拟更新设置发生变化，重新应用更新状态
-                if self.settings.simulateUpdateAvailable {
-                    self.hasAvailableUpdate = true
-                    self.latestVersion = "2.0.0"
-                    Logger.menuBar.debug("模拟更新已启用")
-                } else {
-                    self.hasAvailableUpdate = false
-                    self.latestVersion = ""
-                    Logger.menuBar.debug("模拟更新已禁用")
-                }
                 #endif
             }
             .store(in: &cancellables)
@@ -293,9 +261,6 @@ class MenuBarManager: ObservableObject {
         // 智能刷新数据
         dataManager.refreshOnPopoverOpen()
 
-        // 显示更新通知（如果有）
-        showUpdateNotificationIfNeeded()
-
         ui.setPopoverContentSize(usageDetailContentSize())
 
         // 创建并设置内容视图
@@ -319,15 +284,7 @@ class MenuBarManager: ObservableObject {
             refreshState: self.refreshState,
             onMenuAction: { [weak self] action in
                 self?.handleMenuAction(action)
-            },
-            hasAvailableUpdate: Binding(
-                get: { self.hasAvailableUpdate },
-                set: { self.hasAvailableUpdate = $0 }
-            ),
-            shouldShowUpdateBadge: Binding(
-                get: { self.shouldShowUpdateBadge },
-                set: { _ in }
-            )
+            }
         ))
 
         // 打开 popover
@@ -392,18 +349,6 @@ class MenuBarManager: ObservableObject {
         let rowCount = activeCount == 1 ? 2 : activeCount
         let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
         return NSSize(width: 290, height: baseHeight + rowsHeight)
-    }
-
-    /// 显示更新通知（如果需要）
-    private func showUpdateNotificationIfNeeded() {
-        guard shouldShowUpdateBadge else { return }
-
-        dataManager.refreshState.notificationMessage = L.Update.Notification.available
-        dataManager.refreshState.notificationType = .updateAvailable
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.dataManager.refreshState.notificationMessage = nil
-        }
     }
 
     /// 关闭弹出窗口
@@ -481,17 +426,16 @@ class MenuBarManager: ObservableObject {
     }
 
     @objc func checkForUpdates() {
-        // 记录用户已确认当前版本的更新
-        if let version = latestVersion {
-            acknowledgedVersion = version
-            // 触发UI更新（隐藏徽章和通知）
-            objectWillChange.send()
-            // 更新菜单栏图标
-            updateMenuBarIcon()
+        // 交给 Sparkle。SPUStandardUpdaterController 拥有模态对话框、下载
+        // 进度、EdDSA 签名校验和重启 ——UpdateChecker 之前只完成了一半的事情
+        // 现在全部由 Sparkle 处理。通过 AppDelegate.shared 访问控制器是因为
+        // `NSApp.delegate as? AppDelegate` 在 NSApplicationDelegateAdaptor
+        // 包装下不能可靠转换。
+        guard let appDelegate = AppDelegate.shared else {
+            Logger.menuBar.error("checkForUpdates: AppDelegate.shared not set")
+            return
         }
-
-        // 手动检查更新（会弹出对话框）
-        dataManager.checkForUpdatesManually()
+        appDelegate.updaterController.checkForUpdates(self)
     }
     
     /// 打开设置窗口
@@ -584,7 +528,7 @@ class MenuBarManager: ObservableObject {
 
     /// 更新菜单栏图标
     private func updateMenuBarIcon() {
-        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
+        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData)
     }
     
     // MARK: - Cleanup

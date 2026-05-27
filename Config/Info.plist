@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Static Info.plist for the Usage4Claude app target.
+
+    Switched from Xcode's auto-generated Info.plist (GENERATE_INFOPLIST_FILE = YES)
+    to this static file because third-party keys like SUFeedURL, SUPublicEDKey,
+    and SUEnableAutomaticChecks are silently dropped by the INFOPLIST_KEY_*
+    code path (only Apple-known keys survive). Adding new keys → edit here.
+
+    Build settings still interpolate via $(VARIABLE_NAME), so version bumps in
+    project.pbxproj's MARKETING_VERSION / CURRENT_PROJECT_VERSION flow through.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string></string>
+
+    <!--
+        Sparkle keys. See docs/RELEASING.md for the one-time setup:
+          1. Download Sparkle from https://github.com/sparkle-project/Sparkle/releases
+          2. Run ./bin/generate_keys (private key lands in your login keychain;
+             prints the public key)
+          3. Paste the public key into SUPublicEDKey below
+          4. Commit the resulting Info.plist
+
+        ⚠️  Once shipped, the private key MUST be safeguarded. Losing it
+        orphans every existing install — Sparkle will reject all future
+        updates whose signature doesn't match the embedded SUPublicEDKey.
+    -->
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/f-is-h/Usage4Claude/main/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>REPLACE_WITH_YOUR_PUBLIC_KEY_AFTER_RUNNING_generate_keys</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+</dict>
+</plist>

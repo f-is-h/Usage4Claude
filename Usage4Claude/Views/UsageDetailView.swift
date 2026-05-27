@@ -19,11 +19,8 @@ struct UsageDetailView: View {
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
     @StateObject private var localization = LocalizationManager.shared
-    /// 是否有可用更新（用于显示文字和徽章）
-    @Binding var hasAvailableUpdate: Bool
-    /// 是否应显示更新徽章（用户未确认时才显示徽章）
-    @Binding var shouldShowUpdateBadge: Bool
-    
+
+
     /// 加载动画效果类型
     enum LoadingAnimationType: Int, CaseIterable {
         case rainbow = 0   // 彩虹渐变旋转
@@ -460,16 +457,10 @@ struct UsageDetailView: View {
                 Button(action: { onMenuAction?(.authSettings) }) {
                     Label(L.Menu.authSettings, systemImage: "key")
                 }
-                if hasAvailableUpdate {
-                    Button(action: { onMenuAction?(.checkForUpdates) }) {
-                        Label { Text(createUpdateMenuText()) } icon: {
-                            Image(systemName: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-                        }
-                    }
-                } else {
-                    Button(action: { onMenuAction?(.checkForUpdates) }) {
-                        Label(L.Menu.checkUpdates, systemImage: "arrow.triangle.2.circlepath")
-                    }
+                // Sparkle 现在拥有“有可用更新”的对话框 UI；菜单项不再
+                // 需要单独的“badge”分支，统一为普通样式。
+                Button(action: { onMenuAction?(.checkForUpdates) }) {
+                    Label(L.Menu.checkUpdates, systemImage: "arrow.triangle.2.circlepath")
                 }
                 Button(action: { onMenuAction?(.about) }) {
                     Label(L.Menu.about, systemImage: "info.circle")
@@ -507,10 +498,6 @@ struct UsageDetailView: View {
             .fixedSize()
             .buttonStyle(.plain)
             .focusable(false)
-
-            if shouldShowUpdateBadge {
-                Circle().fill(Color.red).frame(width: 6, height: 6).offset(x: 5, y: -5)
-            }
         }
     }
 
@@ -848,8 +835,6 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
     @StateObject static var refreshState = RefreshState()
-    @State static var hasUpdate = false
-    @State static var shouldShowBadge = false
 
     static var previews: some View {
         UsageDetailView(
@@ -857,9 +842,7 @@ struct UsageDetailView_Previews: PreviewProvider {
             codexUsageData: $codexData,
             errorMessage: $errorMsg,
             codexErrorMessage: $codexErrorMsg,
-            refreshState: refreshState,
-            hasAvailableUpdate: $hasUpdate,
-            shouldShowUpdateBadge: $shouldShowBadge
+            refreshState: refreshState
         )
     }
 }

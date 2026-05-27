@@ -8,12 +8,13 @@
 
 import SwiftUI
 import Combine
+import Sparkle
 
 /// Usage4Claude 应用主入口
 @main
 struct ClaudeUsageMonitorApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
+
     var body: some Scene {
         Settings {
             EmptyView()
@@ -25,18 +26,41 @@ struct ClaudeUsageMonitorApp: App {
 /// 负责应用生命周期管理、资源初始化和清理
 class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Properties
-    
+
+    /// 应用代理共享实例
+    /// SwiftUI 的 NSApplicationDelegateAdaptor 包装了 delegate，导致
+    /// `NSApp.delegate as? AppDelegate` 不能可靠地拿到本类型；MenuBarManager
+    /// 需要通过这个静态引用调用 `updaterController.checkForUpdates(_:)`。
+    static weak var shared: AppDelegate?
+
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
-    
+
     /// 菜单栏管理器，负责所有菜单栏相关功能
     private var menuBarManager: MenuBarManager!
-    
+
     /// 欢迎窗口，在首次启动时显示
     private var welcomeWindow: NSWindow?
-    
+
     /// 用户设置实例
     private let settings = UserSettings.shared
+
+    /// Sparkle 更新控制器
+    /// - `startingUpdater: true` 让 Sparkle 按 Info.plist 中的
+    ///   SUEnableAutomaticChecks / SUScheduledCheckInterval 自动后台检查（默认24小时）
+    /// - `updaterDelegate: nil` 使用默认行为：从 SUFeedURL 拉取 appcast.xml，
+    ///   弹出标准对话框；EdDSA 签名校验通过 Info.plist 的 SUPublicEDKey 完成
+    /// - 暴露为 internal，让 MenuBarManager 通过 `AppDelegate.shared` 调用
+    let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
+
+    override init() {
+        super.init()
+        AppDelegate.shared = self
+    }
 
     /// Combine 订阅集合，用于自动管理观察者生命周期
     private var cancellables = Set<AnyCancellable>()
