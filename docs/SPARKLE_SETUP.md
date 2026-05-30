@@ -114,12 +114,14 @@ After setup, every release follows this flow:
 3. **Paste that into `appcast.xml`** as a new top `<item>` (above any
    existing items). Fill in `<title>`, `<pubDate>`, `<sparkle:version>`,
    `<sparkle:shortVersionString>`, `<link>`, and `<description>` —
-   the template at the top of `appcast.xml` shows the shape.
+   the template at the top of `appcast.xml` shows the shape. The
+   `<description>` carries `sparkle:format="markdown"`, so release notes
+   can be written in Markdown directly (Sparkle 2.9+ renders it).
 4. **Commit, tag, push**, and create the GitHub release with the DMG
    attached.
 
-Existing v1.6.x+ Sparkle users get the prompt within 24h via the
-background poll (or instantly via Settings → Check for Updates).
+Once shipped, users on that release and later get the prompt within
+24h via the background poll — or instantly via Menu → Check for Updates.
 
 ---
 

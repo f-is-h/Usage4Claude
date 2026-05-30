@@ -692,6 +692,15 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 是否模拟有可用更新（调试用）
+    @Published var simulateUpdateAvailable: Bool {
+        didSet {
+            defaults.set(simulateUpdateAvailable, forKey: "simulateUpdateAvailable")
+            // 发送通知让 MenuBarManager 重新检查更新状态
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 是否在菜单栏单独显示所有形状图标（调试用，方便截图）
     @Published var debugShowAllShapesIndividually: Bool {
         didSet {
@@ -959,6 +968,7 @@ class UserSettings: ObservableObject {
         self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 3050.0
         self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Int ?? 5000
         self.debugExtraUsagePercentage = defaults.object(forKey: "debugExtraUsagePercentage") as? Double ?? 61.0
+        self.simulateUpdateAvailable = defaults.bool(forKey: "simulateUpdateAvailable")
         self.debugShowAllShapesIndividually = defaults.bool(forKey: "debugShowAllShapesIndividually")
         self.debugKeepDetailWindowOpen = defaults.bool(forKey: "debugKeepDetailWindowOpen")
         #endif

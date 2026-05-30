@@ -177,32 +177,11 @@ enum L {
         static var multiAccountHint: String { localized("welcome.multi_account_hint") }
     }
     
-    // MARK: - Update Checker
+    // MARK: - Update
     enum Update {
-        static var newVersionTitle: String { localized("update.new_version_title") }
-        static var latestVersion: String { localized("update.latest_version") }
-        static var currentVersion: String { localized("update.current_version") }
-        static var viewDetailsHint: String { localized("update.view_details_hint") }
-        static var viewReleasePage: String { localized("update.view_release_page") }
-        static var downloadButton: String { localized("update.download_button") }
-        static var remindLaterButton: String { localized("update.remind_later_button") }
-        static var viewDetailsButton: String { localized("update.view_details_button") }
-        static var upToDateTitle: String { localized("update.up_to_date_title") }
-        static func upToDateMessage(_ version: String) -> String {
-            String(format: localized("update.up_to_date_message"), version)
-        }
+        /// 通用“好”按钮，被诊断 / 设置等多处复用
         static var okButton: String { localized("update.ok_button") }
-        static var checkFailedTitle: String { localized("update.check_failed_title") }
-        static var confirmButton: String { localized("update.confirm_button") }
-        
-        enum Error {
-            static var invalidUrl: String { localized("update.error.invalid_url") }
-            static var network: String { localized("update.error.network") }
-            static var noData: String { localized("update.error.no_data") }
-            static var parseFailed: String { localized("update.error.parse_failed") }
-        }
-        
-        // 🆕 Update Notification
+        // 更新提示：菜单栏徽章 / 彩虹文字 / 弹窗横幅
         enum Notification {
             static var available: String { localized("update.notification.available") }
             static var badgeMenu: String { localized("update.notification.badge_menu") }

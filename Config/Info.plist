@@ -43,7 +43,7 @@
     <string></string>
 
     <!--
-        Sparkle keys. See docs/RELEASING.md for the one-time setup:
+        Sparkle keys. See docs/SPARKLE_SETUP.md for the one-time setup:
           1. Download Sparkle from https://github.com/sparkle-project/Sparkle/releases
           2. Run ./bin/generate_keys (private key lands in your login keychain;
              prints the public key)

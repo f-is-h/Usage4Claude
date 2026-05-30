@@ -385,7 +385,7 @@ print_success "DMG 创建完成: $DMG_PATH"
 # ============================================
 # Sparkle 用 EdDSA 私钥对 DMG 内容签名，把签名+长度作为 <enclosure> 写入
 # appcast.xml。私钥在 generate_keys 时创建并保存到登录 Keychain；详见
-# docs/RELEASING.md。
+# docs/SPARKLE_SETUP.md。
 #
 # 默认在 /tmp/sparkle-tools/bin 寻找 sign_update；用 $SIGN_UPDATE 环境变量
 # 覆盖（例如已通过 brew/homebrew tap 安装）。找不到时打印警告并跳过 —— 这样

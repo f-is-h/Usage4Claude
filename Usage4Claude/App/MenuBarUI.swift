@@ -239,9 +239,12 @@ class MenuBarUI {
 
     /// 创建标准菜单
     /// 用于右键菜单和弹出窗口中的三点菜单
-    /// - Parameter target: 菜单项目标对象
+    /// - Parameters:
+    ///   - hasUpdate: 是否有可用更新
+    ///   - shouldShowBadge: 是否显示更新徽章
+    ///   - target: 菜单项目标对象
     /// - Returns: 配置好的 NSMenu 实例
-    func createStandardMenu(target: AnyObject?) -> NSMenu {
+    func createStandardMenu(hasUpdate: Bool, shouldShowBadge: Bool, target: AnyObject?) -> NSMenu {
         let menu = NSMenu()
 
         // 账户选择子菜单（多账户时显示）
@@ -300,15 +303,42 @@ class MenuBarUI {
         setMenuItemIcon(authItem, systemName: "key.horizontal")
         menu.addItem(authItem)
 
-        // 检查更新（Sparkle 现在拥有“有可用更新”的对话框 UI，
-        // 因此菜单项不再需要彩虹文字 / 徽章 / 已确认版本逻辑）
+        // 检查更新
         let updateItem = NSMenuItem(
-            title: L.Menu.checkUpdates,
+            title: "",
             action: #selector(MenuBarManager.checkForUpdates),
             keyEquivalent: "u"
         )
         updateItem.target = target
-        setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
+
+        // 根据是否有更新设置不同的样式
+        if hasUpdate {
+            // 有更新：显示彩虹文字
+            let baseText = L.Menu.checkUpdates
+            let highlightText = L.Update.Notification.badgeMenu
+            let title = "\(baseText)\t\(highlightText)"
+
+            let highlightLocation = baseText.utf16.count + 1
+            let highlightLength = highlightText.utf16.count
+            let highlightRange = NSRange(location: highlightLocation, length: highlightLength)
+
+            let attributedTitle = createRainbowText(title, highlightRange: highlightRange)
+            updateItem.attributedTitle = attributedTitle
+
+            // 徽章图标：仅在用户未确认时显示
+            if shouldShowBadge {
+                if let badgeImage = createBadgeIcon() {
+                    updateItem.image = badgeImage
+                }
+            } else {
+                setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
+            }
+        } else {
+            // 无更新：普通样式
+            updateItem.title = L.Menu.checkUpdates
+            setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
+        }
+
         menu.addItem(updateItem)
 
         // 关于
@@ -510,11 +540,16 @@ class MenuBarUI {
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据
-    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil) {
+    ///   - hasUpdate: 是否有可用更新
+    ///   - shouldShowBadge: 是否显示更新徽章
+    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
         guard let button = statusItem.button else { return }
 
+        // 确定是否实际显示徽章
+        let showBadge = hasUpdate && shouldShowBadge
+
         // 生成缓存键
-        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData)
+        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: showBadge)
 
         // 尝试从缓存获取
         if let cachedImage = iconCache[cacheKey] {
@@ -526,7 +561,7 @@ class MenuBarUI {
         let icon = iconRenderer.createIcon(
             usageData: usageData,
             codexUsageData: codexUsageData,
-            hasUpdate: false,
+            hasUpdate: showBadge,
             button: button
         )
 
@@ -548,8 +583,9 @@ class MenuBarUI {
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据
+    ///   - hasUpdate: 是否有更新徽章
     /// - Returns: 缓存键字符串
-    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil) -> String {
+    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
         let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
             var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)"
@@ -582,6 +618,10 @@ class MenuBarUI {
                 }
             }
 
+            if hasUpdate {
+                key += "_badge"
+            }
+
             return key
         }
 
@@ -607,6 +647,10 @@ class MenuBarUI {
             if let p = codex.primary { key += "_cxp\(Int(p.percentage))" }
             if let s = codex.secondary { key += "_cxs\(Int(s.percentage))" }
             if let e = codex.extraUsage?.percentage { key += "_cxe\(Int(e))" }
+        }
+
+        if hasUpdate {
+            key += "_badge"
         }
 
         return key
