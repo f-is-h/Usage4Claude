@@ -60,5 +60,16 @@
     <string>REPLACE_WITH_YOUR_PUBLIC_KEY_AFTER_RUNNING_generate_keys</string>
     <key>SUEnableAutomaticChecks</key>
     <true/>
+
+    <!--
+        Under App Sandbox, Sparkle installs updates through a bundled XPC
+        service (Installer.xpc). This key opts into that launcher service
+        and pairs with the Sparkle mach-lookup exceptions in
+        Config/Usage4Claude.entitlements. See the "App Sandbox" section of
+        docs/SPARKLE_SETUP.md. (SUEnableDownloaderService is intentionally
+        omitted — the app has network.client, so Sparkle downloads in-process.)
+    -->
+    <key>SUEnableInstallerLauncherService</key>
+    <true/>
 </dict>
 </plist>

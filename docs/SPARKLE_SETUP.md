@@ -125,6 +125,34 @@ Once shipped, users on that release and later get the prompt within
 
 ---
 
+## App Sandbox
+
+The app ships sandboxed (`ENABLE_APP_SANDBOX = YES`). Three things keep
+Sparkle's one-click install working under the sandbox:
+
+1. **`Config/Usage4Claude.entitlements`** (wired via `CODE_SIGN_ENTITLEMENTS`)
+   grants:
+   - `com.apple.security.app-sandbox`
+   - `com.apple.security.network.client` — HTTPS to the API + the appcast
+   - `com.apple.security.temporary-exception.mach-lookup.global-name` for
+     `$(PRODUCT_BUNDLE_IDENTIFIER)-spks` / `-spki`, Sparkle's Installer and
+     Status XPC services (bundled inside the framework). The `$(...)` is
+     substituted at build time, so it tracks the bundle id automatically.
+2. **`SUEnableInstallerLauncherService = true`** in `Config/Info.plist`
+   opts into the sandbox-friendly installer launcher.
+3. The Sparkle SwiftPM package bundles `Installer.xpc` automatically — no
+   extra embedding step.
+
+`SUEnableDownloaderService` is deliberately left out: the Downloader XPC is
+only needed when the app lacks `network.client`, which we grant.
+
+> **Note for existing (pre-sandbox) installs:** enabling the sandbox changes
+> the Keychain access group, so credentials saved by an unsandboxed build are
+> not visible to the sandboxed one — users re-authenticate once via Browser
+> Login. Worth a line in the release notes for the first sandboxed release.
+
+---
+
 ## Why does the build skip Sparkle signing on Debug machines?
 
 `scripts/build.sh` looks for `sign_update` at the default path and
