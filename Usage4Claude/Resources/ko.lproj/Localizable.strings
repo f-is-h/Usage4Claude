@@ -109,24 +109,8 @@
 "welcome.setup_button" = "인증 정보 설정하기";
 "welcome.later_button" = "나중에 설정";
 
-// MARK: - Update Checker
-"update.new_version_title" = "새 버전 발견";
-"update.latest_version" = "최신 버전";
-"update.current_version" = "현재 버전";
-"update.view_details_hint" = "[세부 정보 보기]를 클릭하여 전체 업데이트 내용 확인";
-"update.view_release_page" = "전체 업데이트 내용은 Release 페이지에서 확인하세요";
-"update.download_button" = "업데이트 다운로드";
-"update.remind_later_button" = "나중에 알림";
-"update.view_details_button" = "세부 정보 보기";
-"update.up_to_date_title" = "최신 버전입니다";
-"update.up_to_date_message" = "현재 버전 %@는 최신 버전입니다.";
+// MARK: - Update
 "update.ok_button" = "확인";
-"update.check_failed_title" = "업데이트 확인 실패";
-"update.confirm_button" = "확인";
-"update.error.invalid_url" = "유효하지 않은 URL";
-"update.error.network" = "네트워크 오류, 네트워크 연결을 확인하세요";
-"update.error.no_data" = "데이터를 가져올 수 없습니다";
-"update.error.parse_failed" = "업데이트 정보 파싱 실패";
 
 // MARK: - Update Notification
 "update.notification.available" = "새 버전이 있습니다!";

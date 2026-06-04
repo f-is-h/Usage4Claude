@@ -109,24 +109,8 @@
 "welcome.setup_button" = "Configurer l'authentification";
 "welcome.later_button" = "Configurer plus tard";
 
-// MARK: - Update Checker
-"update.new_version_title" = "Nouvelle version disponible";
-"update.latest_version" = "Dernière version";
-"update.current_version" = "Version actuelle";
-"update.view_details_hint" = "Cliquez sur [Voir les détails] pour consulter le contenu complet de la mise à jour";
-"update.view_release_page" = "Voir le contenu complet de la mise à jour sur la page Release";
-"update.download_button" = "Télécharger la mise à jour";
-"update.remind_later_button" = "Rappeler plus tard";
-"update.view_details_button" = "Voir les détails";
-"update.up_to_date_title" = "À jour";
-"update.up_to_date_message" = "La version actuelle %@ est à jour.";
+// MARK: - Update
 "update.ok_button" = "OK";
-"update.check_failed_title" = "Échec de la vérification";
-"update.confirm_button" = "Confirmer";
-"update.error.invalid_url" = "URL invalide";
-"update.error.network" = "Erreur réseau. Veuillez vérifier votre connexion Internet.";
-"update.error.no_data" = "Impossible de récupérer les données";
-"update.error.parse_failed" = "Échec de l'analyse des informations de mise à jour.";
 
 // MARK: - Update Notification
 "update.notification.available" = "Nouvelle version disponible !";

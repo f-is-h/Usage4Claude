@@ -23,7 +23,7 @@ struct UsageDetailView: View {
     @Binding var hasAvailableUpdate: Bool
     /// 是否应显示更新徽章（用户未确认时才显示徽章）
     @Binding var shouldShowUpdateBadge: Bool
-    
+
     /// 加载动画效果类型
     enum LoadingAnimationType: Int, CaseIterable {
         case rainbow = 0   // 彩虹渐变旋转

@@ -109,24 +109,8 @@
 "welcome.setup_button" = "Configure Authentication";
 "welcome.later_button" = "Set Up Later";
 
-// MARK: - Update Checker
-"update.new_version_title" = "New Version Available";
-"update.latest_version" = "Latest version";
-"update.current_version" = "Current version";
-"update.view_details_hint" = "Click [View Details] to see complete update content";
-"update.view_release_page" = "View complete update content on Release page";
-"update.download_button" = "Download Update";
-"update.remind_later_button" = "Remind Later";
-"update.view_details_button" = "View Details";
-"update.up_to_date_title" = "Up to Date";
-"update.up_to_date_message" = "Current version %@ is up to date.";
+// MARK: - Update
 "update.ok_button" = "OK";
-"update.check_failed_title" = "Update Check Failed";
-"update.confirm_button" = "Confirm";
-"update.error.invalid_url" = "Invalid URL";
-"update.error.network" = "Network error. Please check your internet connection.";
-"update.error.no_data" = "Unable to fetch data";
-"update.error.parse_failed" = "Failed to parse update information.";
 
 // MARK: - Update Notification
 "update.notification.available" = "New Version Available!";

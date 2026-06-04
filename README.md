@@ -180,6 +180,8 @@ Codex current colors:
 4. Right-click the app and select "Open" on first launch (allow unsigned app)
 5. Allow Keychain access for authentication info (you may need to allow again after version updates; the prompt shows the relevant authentication token name)
 
+> **Updates after the first install are in-app.** Sparkle checks for new versions automatically (and on demand via Menu → Check for Updates), then downloads, verifies the EdDSA signature, and installs with one click — no need to re-download the DMG for future releases.
+
 ### Option 2: Build from Source
 
 #### Requirements
@@ -238,8 +240,8 @@ open Usage4Claude.xcodeproj
   - ⌘, - Open General Settings
   - ⌘⇧A - Open Authentication Settings
   - ⌘Q - Quit app
-- **Update Alerts** - When new version available, menu bar icon shows badge and menu items display rainbow text
-- **Check Updates** - Menu → Check for Updates
+- **Update Alerts** - When a new version is available, the menu bar icon shows a badge and menu items display rainbow text
+- **Check Updates** - Menu → Check for Updates. New versions download, verify (EdDSA signature), and install in-app — no manual re-download needed (powered by [Sparkle](https://sparkle-project.org))
 
 ### Refresh Mode
 

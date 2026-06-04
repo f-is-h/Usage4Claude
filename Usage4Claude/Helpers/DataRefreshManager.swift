@@ -21,8 +21,6 @@ class DataRefreshManager: ObservableObject {
     private let apiService = ClaudeAPIService()
     /// Codex API 服务实例
     private let codexApiService = CodexAPIService()
-    /// 更新检查器实例
-    private let updateChecker = UpdateChecker()
     /// 定时器管理器
     private let timerManager = TimerManager()
     /// 用户设置实例
@@ -40,10 +38,6 @@ class DataRefreshManager: ObservableObject {
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
     @Published var codexErrorMessage: String?
-    /// 是否有可用更新
-    @Published var hasAvailableUpdate = false
-    /// 最新版本号
-    @Published var latestVersion: String?
     /// 刷新状态管理器
     let refreshState = RefreshState()
 
@@ -61,8 +55,6 @@ class DataRefreshManager: ObservableObject {
     private var refreshAnimationStartTime: Date?
     /// 动画最小显示时长（秒）
     private let minimumAnimationDuration: TimeInterval = 1.0
-    /// 上次检查更新时间
-    private var lastUpdateCheckTime: Date?
     /// App Nap 防护活动令牌
     private var refreshActivity: NSObjectProtocol?
     /// 系统唤醒观察者令牌
@@ -124,13 +116,11 @@ class DataRefreshManager: ObservableObject {
         static let codexResetVerify1 = "codexResetVerify1"
         static let codexResetVerify2 = "codexResetVerify2"
         static let codexResetVerify3 = "codexResetVerify3"
-        static let dailyUpdate = "dailyUpdate"
     }
 
     // MARK: - Initialization
 
     init() {
-        scheduleDailyUpdateCheck()
         setupWakeObserver()
     }
 
@@ -767,67 +757,6 @@ class DataRefreshManager: ObservableObject {
             Logger.menuBar.debug("Codex 重置验证 +30秒 - 开始刷新")
             self?.fetchUsage()
         }
-    }
-
-    // MARK: - Update Checking
-
-    /// 安排每日更新检查
-    private func scheduleDailyUpdateCheck() {
-        #if DEBUG
-        // 🧪 调试模式：检查是否启用模拟更新
-        if settings.simulateUpdateAvailable {
-            hasAvailableUpdate = true
-            latestVersion = "2.0.0"
-            Logger.menuBar.debug("模拟更新已启用，显示更新通知")
-        } else {
-            // 即使在 Debug 模式，也进行真实的更新检查
-            checkForUpdatesInBackground()
-
-            timerManager.schedule(TimerID.dailyUpdate, interval: 24 * 60 * 60, repeats: true) { [weak self] in
-                self?.checkForUpdatesInBackground()
-            }
-
-            Logger.menuBar.info("Debug 模式：真实更新检查已启动")
-        }
-        #else
-        // Release 模式：始终进行真实更新检查
-        checkForUpdatesInBackground()
-
-        // 每24小时检查一次
-        timerManager.schedule(TimerID.dailyUpdate, interval: 24 * 60 * 60, repeats: true) { [weak self] in
-            self?.checkForUpdatesInBackground()
-        }
-
-        Logger.menuBar.info("每日更新检查已启动")
-        #endif
-    }
-
-    /// 后台静默检查更新（无UI提示）
-    private func checkForUpdatesInBackground() {
-        let now = Date()
-
-        // 防止重复检查：距离上次检查 < 12小时则跳过
-        if let lastCheck = lastUpdateCheckTime,
-           now.timeIntervalSince(lastCheck) < 12 * 60 * 60 {
-            return
-        }
-
-        lastUpdateCheckTime = now
-
-        updateChecker.checkForUpdatesInBackground { [weak self] hasUpdate, version in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-
-                self.hasAvailableUpdate = hasUpdate
-                self.latestVersion = version
-            }
-        }
-    }
-
-    /// 用户手动检查更新
-    func checkForUpdatesManually() {
-        // 手动检查更新（会弹出对话框）
-        updateChecker.checkForUpdates(manually: true)
     }
 
     // MARK: - Cleanup

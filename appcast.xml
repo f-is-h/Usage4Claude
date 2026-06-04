@@ -1,0 +1,45 @@
+<?xml version="1.0" standalone="yes"?>
+<!--
+    Sparkle appcast feed for Usage4Claude.
+
+    Each release is recorded here as an <item> with the signed enclosure
+    that scripts/build.sh prints after sign_update. New items go at the
+    top of the <channel> so Sparkle finds the latest first.
+
+    Feed URL referenced by Info.plist's SUFeedURL:
+      https://raw.githubusercontent.com/f-is-h/Usage4Claude/main/appcast.xml
+
+    See docs/SPARKLE_SETUP.md for the per-release workflow.
+
+    Template for a new item (paste at the top, beneath <language>):
+
+        <item>
+            <title>vX.Y.Z</title>
+            <pubDate>Mon, 01 Jan 2026 00:00:00 +0000</pubDate>
+            <sparkle:version>BUILD</sparkle:version>
+            <sparkle:shortVersionString>X.Y.Z</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/vX.Y.Z</link>
+            <!-- sparkle:format="markdown" lets you write release notes in Markdown (Sparkle 2.9+) -->
+            <description sparkle:format="markdown"><![CDATA[
+## vX.Y.Z
+
+- Summary line (Markdown is rendered by Sparkle's release-notes view)
+            ]]></description>
+            <!-- enclosure line from scripts/build.sh below -->
+            <enclosure
+                url="https://github.com/f-is-h/Usage4Claude/releases/download/vX.Y.Z/Usage4Claude-vX.Y.Z.dmg"
+                sparkle:edSignature="..."
+                length="..."
+                type="application/octet-stream"/>
+        </item>
+-->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Usage4Claude</title>
+        <link>https://github.com/f-is-h/Usage4Claude</link>
+        <description>Updates to Usage4Claude — Claude.ai usage menu bar app for macOS.</description>
+        <language>en</language>
+        <!-- Items go here. Top item is the latest version. -->
+    </channel>
+</rss>

@@ -109,24 +109,8 @@
 "welcome.setup_button" = "認証情報を設定";
 "welcome.later_button" = "後で設定";
 
-// MARK: - Update Checker
-"update.new_version_title" = "新しいバージョンがあります";
-"update.latest_version" = "最新バージョン";
-"update.current_version" = "現在のバージョン";
-"update.view_details_hint" = "【詳細を表示】をクリックして完全な更新内容を確認";
-"update.view_release_page" = "完全な更新内容はReleaseページをご覧ください";
-"update.download_button" = "アップデートをダウンロード";
-"update.remind_later_button" = "後で通知";
-"update.view_details_button" = "詳細を表示";
-"update.up_to_date_title" = "最新版です";
-"update.up_to_date_message" = "現在のバージョン %@ は最新です。";
+// MARK: - Update
 "update.ok_button" = "OK";
-"update.check_failed_title" = "アップデート確認に失敗";
-"update.confirm_button" = "確認";
-"update.error.invalid_url" = "無効なURL";
-"update.error.network" = "ネットワークエラー。インターネット接続を確認してください。";
-"update.error.no_data" = "データを取得できません";
-"update.error.parse_failed" = "更新情報の解析に失敗しました。";
 
 // MARK: - Update Notification
 "update.notification.available" = "新しいバージョンがあります！";

@@ -10,6 +10,7 @@ import SwiftUI
 import AppKit
 import Combine
 import OSLog
+import Sparkle
 
 /// 刷新状态管理器
 /// 用于在视图间同步刷新状态，支持响应式更新
@@ -66,9 +67,9 @@ class MenuBarManager: ObservableObject {
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude）
     @Published var codexErrorMessage: String?
-    /// 是否有可用更新（从 dataManager 同步）
+    /// 是否有可用更新（由 Sparkle 的 SPUUpdaterDelegate 回调驱动）
     @Published var hasAvailableUpdate = false
-    /// 最新版本号（从 dataManager 同步）
+    /// 最新版本号（来自 Sparkle 发现的 appcast 条目）
     @Published var latestVersion: String?
     /// 用户已确认的版本号（点击检查更新后记录）
     private var acknowledgedVersion: String?
@@ -117,16 +118,6 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexErrorMessage
             .assign(to: &$codexErrorMessage)
-
-        dataManager.$hasAvailableUpdate
-            .sink { [weak self] hasUpdate in
-                self?.hasAvailableUpdate = hasUpdate
-                self?.updateMenuBarIcon()
-            }
-            .store(in: &cancellables)
-
-        dataManager.$latestVersion
-            .assign(to: &$latestVersion)
     }
     
     /// 处理菜单栏图标点击事件
@@ -229,14 +220,16 @@ class MenuBarManager: ObservableObject {
                 // 调试模式下立即刷新数据（不使用防抖）
                 self.dataManager.fetchUsage()
 
-                // 如果模拟更新设置发生变化，重新应用更新状态
+                // 模拟更新开关变化时，直接驱动 Sparkle 徽章状态机（无需真实 appcast）
                 if self.settings.simulateUpdateAvailable {
                     self.hasAvailableUpdate = true
                     self.latestVersion = "2.0.0"
+                    self.updateMenuBarIcon()
                     Logger.menuBar.debug("模拟更新已启用")
                 } else {
                     self.hasAvailableUpdate = false
-                    self.latestVersion = ""
+                    self.latestVersion = nil
+                    self.updateMenuBarIcon()
                     Logger.menuBar.debug("模拟更新已禁用")
                 }
                 #endif
@@ -481,19 +474,39 @@ class MenuBarManager: ObservableObject {
     }
 
     @objc func checkForUpdates() {
-        // 记录用户已确认当前版本的更新
+        // 记录用户已确认当前版本，隐藏徽章与彩虹文字
         if let version = latestVersion {
             acknowledgedVersion = version
-            // 触发UI更新（隐藏徽章和通知）
             objectWillChange.send()
-            // 更新菜单栏图标
             updateMenuBarIcon()
         }
 
-        // 手动检查更新（会弹出对话框）
-        dataManager.checkForUpdatesManually()
+        // 交给 Sparkle：模态对话框、下载进度、EdDSA 签名校验和重启都由它处理。
+        // 通过 AppDelegate.shared 访问控制器是因为 `NSApp.delegate as? AppDelegate`
+        // 在 NSApplicationDelegateAdaptor 包装下不能可靠转换。
+        guard let appDelegate = AppDelegate.shared else {
+            Logger.menuBar.error("checkForUpdates: AppDelegate.shared not set")
+            return
+        }
+        appDelegate.updaterController.checkForUpdates(self)
     }
     
+    // MARK: - Update Status（由 Sparkle 驱动）
+
+    /// Sparkle 发现可用更新时调用：点亮徽章 / 彩虹文字状态机。
+    func applyUpdateAvailable(version: String?) {
+        hasAvailableUpdate = true
+        latestVersion = version
+        updateMenuBarIcon()
+    }
+
+    /// Sparkle 未发现更新时调用：清除徽章状态。
+    func applyUpdateNotFound() {
+        hasAvailableUpdate = false
+        latestVersion = nil
+        updateMenuBarIcon()
+    }
+
     /// 打开设置窗口
     /// - Parameter tab: 要显示的标签页索引 (0: 通用, 1: 认证, 2: 关于)
     private func openSettingsWindow(tab: Int) {

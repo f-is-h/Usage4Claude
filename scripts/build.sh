@@ -381,6 +381,44 @@ fi
 print_success "DMG 创建完成: $DMG_PATH"
 
 # ============================================
+# Sparkle 签名（在 DMG 创建之后）
+# ============================================
+# Sparkle 用 EdDSA 私钥对 DMG 内容签名，把签名+长度作为 <enclosure> 写入
+# appcast.xml。私钥在 generate_keys 时创建并保存到登录 Keychain；详见
+# docs/SPARKLE_SETUP.md。
+#
+# 默认在 /tmp/sparkle-tools/bin 寻找 sign_update；用 $SIGN_UPDATE 环境变量
+# 覆盖（例如已通过 brew/homebrew tap 安装）。找不到时打印警告并跳过 —— 这样
+# Debug 构建在没有 Sparkle 工具的开发者机器上也能继续。
+SIGN_UPDATE="${SIGN_UPDATE:-/tmp/sparkle-tools/bin/sign_update}"
+
+print_header "Sparkle 签名"
+
+if [ ! -x "$SIGN_UPDATE" ]; then
+    print_warning "sign_update 未找到 ($SIGN_UPDATE)，跳过 Sparkle 签名"
+    print_info "下载 Sparkle 工具：https://github.com/sparkle-project/Sparkle/releases"
+    print_info "或用 SIGN_UPDATE 环境变量指定已安装的 sign_update 路径"
+else
+    SIGN_OUTPUT=$("$SIGN_UPDATE" "$DMG_PATH" 2>&1)
+    if [ $? -eq 0 ]; then
+        print_success "Sparkle 签名已生成"
+        echo ""
+        print_info "把以下内容贴到 appcast.xml 作为新的 <enclosure ...>："
+        echo ""
+        cat <<EOF
+    <enclosure
+        url="https://github.com/f-is-h/$PROJECT_NAME/releases/download/v$VERSION/$DMG_NAME"
+        $SIGN_OUTPUT
+        type="application/octet-stream"/>
+EOF
+        echo ""
+        print_info "（版本=$VERSION，构建=$(xcodebuild -project "$XCODEPROJ" -showBuildSettings 2>/dev/null | awk '/CURRENT_PROJECT_VERSION/{print $3; exit}'))"
+    else
+        print_error "Sparkle 签名失败：$SIGN_OUTPUT"
+    fi
+fi
+
+# ============================================
 # 清理临时文件
 # ============================================
 print_header "清理临时文件"

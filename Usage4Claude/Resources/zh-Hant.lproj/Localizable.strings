@@ -109,24 +109,8 @@
 "welcome.setup_button" = "前往設定認證資訊";
 "welcome.later_button" = "稍後設定";
 
-// MARK: - Update Checker
-"update.new_version_title" = "發現新版本";
-"update.latest_version" = "最新版本";
-"update.current_version" = "目前版本";
-"update.view_details_hint" = "點選【檢視詳情】查看完整更新內容";
-"update.view_release_page" = "查看完整更新內容請造訪Release頁面";
-"update.download_button" = "下載更新";
-"update.remind_later_button" = "稍後提醒";
-"update.view_details_button" = "檢視詳情";
-"update.up_to_date_title" = "已是最新版本";
-"update.up_to_date_message" = "目前版本 %@ 已是最新版本。";
+// MARK: - Update
 "update.ok_button" = "好的";
-"update.check_failed_title" = "檢查更新失敗";
-"update.confirm_button" = "確定";
-"update.error.invalid_url" = "無效的URL";
-"update.error.network" = "網路錯誤，請檢查網路連線";
-"update.error.no_data" = "無法取得資料";
-"update.error.parse_failed" = "解析更新資訊失敗";
 
 // MARK: - Update Notification
 "update.notification.available" = "有新版本可用！";
