@@ -57,7 +57,7 @@
     <key>SUFeedURL</key>
     <string>https://raw.githubusercontent.com/f-is-h/Usage4Claude/main/appcast.xml</string>
     <key>SUPublicEDKey</key>
-    <string>REPLACE_WITH_YOUR_PUBLIC_KEY_AFTER_RUNNING_generate_keys</string>
+    <string>p0CSf0X2mD0Z74yU64g36hGMQKpRE5/GFpaoyhhr6aY=</string>
     <key>SUEnableAutomaticChecks</key>
     <true/>
 
