@@ -273,12 +273,8 @@ jobs:
           fi
 
           # Save the enclosure element as a file for the release job to consume
-          cat > "$BUILD_DIR/sparkle_enclosure.txt" << ENCLOSURE_EOF
-              <enclosure
-                  url="$DMG_URL"
-                  $SIGN_OUTPUT
-                  type="application/octet-stream"/>
-ENCLOSURE_EOF
+          printf '          <enclosure\n              url="%s"\n              %s\n              type="application/octet-stream"/>\n' \
+            "$DMG_URL" "$SIGN_OUTPUT" > "$BUILD_DIR/sparkle_enclosure.txt"
 
           echo "✅ Sparkle signature generated"
           cat "$BUILD_DIR/sparkle_enclosure.txt"
