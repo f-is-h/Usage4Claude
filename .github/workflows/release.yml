@@ -223,11 +223,13 @@ jobs:
 
           # Import Sparkle EdDSA private key into the same temporary keychain
           # sign_update will find it via the keychain search path set above
+          # -A: allow any application to access without prompting (required in CI)
           # Note: add-generic-password takes the keychain as a positional arg, not -k
           security add-generic-password \
             -a "ed25519" \
             -s "https://sparkle-project.org" \
             -w "$SPARKLE_KEY" \
+            -A \
             "$KEYCHAIN_PATH"
 
           echo "✅ Certificate and Sparkle EdDSA key imported"
