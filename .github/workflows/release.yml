@@ -28,6 +28,7 @@ env:
   XCODE_PROJECT: Usage4Claude.xcodeproj
   BUILD_CONFIG: Release
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SPARKLE_TOOLS_VERSION: "2.9.2"
 
 jobs:
   # ============================================
@@ -179,20 +180,28 @@ jobs:
         run: |
           echo "Installing create-dmg..."
           brew install create-dmg
+
+          echo "Downloading Sparkle CLI tools..."
+          curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${{ env.SPARKLE_TOOLS_VERSION }}/Sparkle-${{ env.SPARKLE_TOOLS_VERSION }}.tar.xz" \
+            -o /tmp/sparkle.tar.xz
+          mkdir -p /tmp/sparkle-tools
+          tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle-tools
+          echo "✅ Sparkle CLI tools installed"
       
       - name: Import code signing certificate
         env:
           CODESIGN_CERT: ${{ secrets.CODESIGN_CERTIFICATE }}
           CODESIGN_PWD: ${{ secrets.CODESIGN_PASSWORD }}
+          SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
           # Create temporary keychain
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-          
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          
+
           # Import certificate
           echo "$CODESIGN_CERT" | base64 --decode > certificate.p12
           security import certificate.p12 \
@@ -200,7 +209,7 @@ jobs:
             -P "$CODESIGN_PWD" \
             -T /usr/bin/codesign \
             -T /usr/bin/security
-          
+
           # Set keychain for codesign
           security list-keychains -d user -s "$KEYCHAIN_PATH"
           security set-key-partition-list \
@@ -208,11 +217,19 @@ jobs:
             -s \
             -k "$KEYCHAIN_PASSWORD" \
             "$KEYCHAIN_PATH"
-          
+
           # Cleanup certificate file
           rm -f certificate.p12
-          
-          echo "✅ Certificate imported successfully"
+
+          # Import Sparkle EdDSA private key into the same temporary keychain
+          # sign_update will find it via the keychain search path set above
+          security add-generic-password \
+            -a "ed25519" \
+            -s "https://sparkle-project.org" \
+            -w "$SPARKLE_KEY" \
+            -k "$KEYCHAIN_PATH"
+
+          echo "✅ Certificate and Sparkle EdDSA key imported"
       
       - name: Build application
         run: |
@@ -238,6 +255,34 @@ jobs:
           echo "✅ Checksum generated"
           cat "$DMG_FILE.sha256"
       
+      - name: Sign DMG with Sparkle
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          BUILD_DIR="build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-$VERSION"
+          DMG_FILE="${{ env.PROJECT_NAME }}-v$VERSION.dmg"
+          DMG_PATH="$BUILD_DIR/$DMG_FILE"
+          SIGN_UPDATE="/tmp/sparkle-tools/bin/sign_update"
+          DMG_URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/$DMG_FILE"
+
+          echo "Signing DMG with Sparkle EdDSA key..."
+          SIGN_OUTPUT=$("$SIGN_UPDATE" "$DMG_PATH")
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Sparkle signing failed: $SIGN_OUTPUT"
+            exit 1
+          fi
+
+          # Save the enclosure element as a file for the release job to consume
+          cat > "$BUILD_DIR/sparkle_enclosure.txt" << ENCLOSURE_EOF
+              <enclosure
+                  url="$DMG_URL"
+                  $SIGN_OUTPUT
+                  type="application/octet-stream"/>
+ENCLOSURE_EOF
+
+          echo "✅ Sparkle signature generated"
+          cat "$BUILD_DIR/sparkle_enclosure.txt"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -245,6 +290,7 @@ jobs:
           path: |
             build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-${{ needs.validate.outputs.version }}/${{ env.PROJECT_NAME }}-v${{ needs.validate.outputs.version }}.dmg
             build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-${{ needs.validate.outputs.version }}/${{ env.PROJECT_NAME }}-v${{ needs.validate.outputs.version }}.dmg.sha256
+            build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-${{ needs.validate.outputs.version }}/sparkle_enclosure.txt
           retention-days: 7
       
       - name: Cleanup keychain
@@ -341,6 +387,48 @@ jobs:
           echo "3. Add your release description"
           echo "4. Click 'Publish release'"
       
+      - name: Update appcast.xml
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          IS_DRY_RUN: ${{ needs.validate.outputs.is_dry_run }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          IS_DRY_RUN="${{ needs.validate.outputs.is_dry_run }}"
+          DMG_FILE="${{ env.PROJECT_NAME }}-v$VERSION.dmg"
+          DMG_URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/$DMG_FILE"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+
+          BUILD_NUMBER=$(grep -m1 'CURRENT_PROJECT_VERSION' ${{ env.XCODE_PROJECT }}/project.pbxproj \
+            | awk '{print $3}' | tr -d ';')
+
+          PUB_DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
+
+          python3 .github/scripts/update_appcast.py \
+            appcast.xml \
+            "$VERSION" \
+            "$BUILD_NUMBER" \
+            "$PUB_DATE" \
+            "$DMG_URL" \
+            "$RELEASE_URL" \
+            CHANGELOG.md \
+            ./artifacts/sparkle_enclosure.txt
+
+          echo ""
+          echo "📄 appcast.xml after update:"
+          cat appcast.xml
+
+          if [[ "$IS_DRY_RUN" == "true" ]]; then
+            echo ""
+            echo "🧪 Dry run: changes shown above, not pushing to main"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add appcast.xml
+            git commit -m "chore: update appcast.xml for v$VERSION"
+            git push origin main
+            echo "✅ appcast.xml pushed to main"
+          fi
+
       - name: Cleanup on failure
         if: failure()
         run: |
