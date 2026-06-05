@@ -394,7 +394,9 @@ SIGN_UPDATE="${SIGN_UPDATE:-/tmp/sparkle-tools/bin/sign_update}"
 
 print_header "Sparkle 签名"
 
-if [ ! -x "$SIGN_UPDATE" ]; then
+if [[ "${CI:-}" == "true" ]]; then
+    print_info "CI 环境：跳过 Sparkle 签名（由工作流的 Sign DMG 步骤处理）"
+elif [ ! -x "$SIGN_UPDATE" ]; then
     print_warning "sign_update 未找到 ($SIGN_UPDATE)，跳过 Sparkle 签名"
     print_info "下载 Sparkle 工具：https://github.com/sparkle-project/Sparkle/releases"
     print_info "或用 SIGN_UPDATE 环境变量指定已安装的 sign_update 路径"
