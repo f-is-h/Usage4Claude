@@ -1348,6 +1348,17 @@ class UserSettings: ObservableObject {
         Logger.settings.notice("更新 Codex 账户别名: \(self.codexAccounts[index].displayName)")
     }
 
+    /// 静默更新当前 Codex 账户的 session-token（不触发 accountChanged 通知）
+    /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
+    func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
+        guard let id = currentCodexAccountId,
+              let index = codexAccounts.firstIndex(where: { $0.id == id }) else { return }
+        guard codexAccounts[index].sessionKey != token else { return }
+        // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
+        codexAccounts[index].sessionKey = token
+        Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+    }
+
     private func postAccountChanged(provider: ProviderType) {
         NotificationCenter.default.post(
             name: .accountChanged,

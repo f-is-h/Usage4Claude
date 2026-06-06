@@ -15,6 +15,8 @@ struct UsageDetailView: View {
     @Binding var codexUsageData: CodexUsageData?
     @Binding var errorMessage: String?
     @Binding var codexErrorMessage: String?
+    /// Codex 三级刷新均失败，需要用户手动重新登录
+    @Binding var codexNeedsRelogin: Bool
     @ObservedObject var refreshState: RefreshState
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
@@ -58,6 +60,7 @@ struct UsageDetailView: View {
         case refresh
         case refreshClaude
         case refreshCodex
+        case codexRelogin
     }
     
     // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
@@ -587,7 +590,7 @@ struct UsageDetailView: View {
             )
         } else if let error = codexErrorMessage {
             VStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
+                Image(systemName: codexNeedsRelogin ? "lock.open.trianglebadge.exclamationmark.fill" : "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
                     .foregroundColor(.orange)
                 Text(error)
@@ -595,30 +598,45 @@ struct UsageDetailView: View {
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
 
-                HStack(spacing: 12) {
+                if codexNeedsRelogin {
+                    // 三级刷新均失败：提供一键重新登录入口
                     Button(action: {
-                        onMenuAction?(.authSettings)
+                        onMenuAction?(.codexRelogin)
                     }) {
-                        Label(L.Usage.goToSettings, systemImage: "key.fill")
-                            .padding(.horizontal, 16)
+                        Label(L.Usage.codexRelogin, systemImage: "arrow.counterclockwise.circle.fill")
+                            .padding(.horizontal, 20)
                             .padding(.vertical, 8)
                             .background(Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
+                } else {
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            onMenuAction?(.authSettings)
+                        }) {
+                            Label(L.Usage.goToSettings, systemImage: "key.fill")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
 
-                    Button(action: {
-                        onMenuAction?(.authSettings)
-                    }) {
-                        Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.orange)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                        Button(action: {
+                            onMenuAction?(.authSettings)
+                        }) {
+                            Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.orange)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding()
@@ -847,6 +865,7 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var errorMsg: String? = nil
     @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
+    @State static var codexNeedsRelogin = false
     @StateObject static var refreshState = RefreshState()
     @State static var hasUpdate = false
     @State static var shouldShowBadge = false
@@ -857,6 +876,7 @@ struct UsageDetailView_Previews: PreviewProvider {
             codexUsageData: $codexData,
             errorMessage: $errorMsg,
             codexErrorMessage: $codexErrorMsg,
+            codexNeedsRelogin: $codexNeedsRelogin,
             refreshState: refreshState,
             hasAvailableUpdate: $hasUpdate,
             shouldShowUpdateBadge: $shouldShowBadge

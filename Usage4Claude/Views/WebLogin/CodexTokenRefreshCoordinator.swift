@@ -85,12 +85,37 @@ final class CodexTokenRefreshCoordinator: NSObject {
 
             if let http = response as? HTTPURLResponse {
                 Logger.settings.debug("CodexTokenRefresh: HTTP \(http.statusCode)")
+                // Phase 0 诊断：记录 Set-Cookie 响应头，确认服务端是否续期 session-token
+                let setCookieHeaders = http.allHeaderFields
+                    .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
+                    .compactMap { $0.value as? String }
+                Logger.settings.debug("CodexTokenRefresh: Set-Cookie 响应头数量=\(setCookieHeaders.count)")
+                for cookieStr in setCookieHeaders {
+                    let isSessionToken = cookieStr.contains("next-auth.session-token")
+                    Logger.settings.info("CodexTokenRefresh: Set-Cookie [\(isSessionToken ? "SESSION-TOKEN" : "other")] \(cookieStr.prefix(80))")
+                }
+
                 guard (200...299).contains(http.statusCode) else {
                     let err: Error = http.statusCode == 403
                         ? UsageError.cloudflareBlocked
                         : UsageError.httpError(statusCode: http.statusCode)
                     DispatchQueue.main.async { self.finish(result: .failure(err)) }
                     return
+                }
+            }
+
+            // Level 1：检查 HTTPCookieStorage 是否收到新的 session-token
+            let chatgptURL = URL(string: "https://chatgpt.com")!
+            let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
+            if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies) {
+                let currentToken = UserSettings.shared.codexSessionToken
+                if newToken != currentToken {
+                    Logger.settings.notice("CodexTokenRefresh: URLSession 检测到新 session-token，静默写回")
+                    DispatchQueue.main.async {
+                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                    }
+                } else {
+                    Logger.settings.debug("CodexTokenRefresh: session-token 未变化")
                 }
             }
 

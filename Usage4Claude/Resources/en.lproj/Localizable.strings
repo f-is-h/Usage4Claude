@@ -39,6 +39,7 @@
 "usage.refresh_cooldown" = "Please wait a moment";
 "usage.run_diagnostic" = "Run Diagnostic";
 "usage.codex_title" = "Codex Usage";
+"usage.codex_relogin" = "Sign In Again";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "General";
@@ -395,6 +396,8 @@
 "notification.warning_body" = "%@ has reached %d%% usage";
 "notification.reset_title" = "Usage Reset";
 "notification.reset_body" = "%@ usage has been reset";
+"notification.codex_session_expired_title" = "Codex Session Expired";
+"notification.codex_session_expired_body" = "Please sign in again to continue monitoring your Codex usage.";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Sign in to Claude";

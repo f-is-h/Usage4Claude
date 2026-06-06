@@ -18,6 +18,8 @@ struct GeneralSettingsView: View {
     #if DEBUG
     @State private var tokenRefreshStatus: String? = nil
     @State private var isTestingTokenRefresh = false
+    @State private var silentRefreshStatus: String? = nil
+    @State private var isTestingSilentRefresh = false
     #endif
     
     var body: some View {
@@ -601,10 +603,11 @@ struct GeneralSettingsView: View {
                                 .foregroundColor(.secondary)
                         }
 
-                        // 强制触发 Codex Token 刷新（仅适用于 Codex）
+                        // Codex 续期防线测试（仅适用于 Codex）
                         Divider()
                             .padding(.vertical, 4)
 
+                        // Level 1：SSR Token 刷新
                         HStack {
                             Button(action: {
                                 isTestingTokenRefresh = true
@@ -614,9 +617,9 @@ struct GeneralSettingsView: View {
                                         isTestingTokenRefresh = false
                                         switch result {
                                         case .success(let token):
-                                            tokenRefreshStatus = "✓ 刷新成功 (\(token.prefix(16))…)"
+                                            tokenRefreshStatus = "✓ 成功 (\(token.prefix(16))…)"
                                         case .failure:
-                                            tokenRefreshStatus = "✗ 刷新失败"
+                                            tokenRefreshStatus = "✗ 失败"
                                         }
                                     }
                                 }
@@ -624,7 +627,7 @@ struct GeneralSettingsView: View {
                                 if isTestingTokenRefresh {
                                     ProgressView().controlSize(.small)
                                 } else {
-                                    Text("强制刷新 Codex Token")
+                                    Text("Level 1：SSR 刷新")
                                 }
                             }
                             .disabled(isTestingTokenRefresh || !settings.hasValidCodexCredentials)
@@ -638,7 +641,44 @@ struct GeneralSettingsView: View {
 
                             Spacer()
 
-                            Text("仅适用于 Codex · 查看日志确认结果")
+                            Text("SSR bootstrap accessToken")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // Level 2：隐藏 WebView 静默刷新
+                        HStack {
+                            Button(action: {
+                                isTestingSilentRefresh = true
+                                silentRefreshStatus = nil
+                                CodexSilentRefreshCoordinator.shared.refresh { result in
+                                    isTestingSilentRefresh = false
+                                    switch result {
+                                    case .success:
+                                        silentRefreshStatus = "✓ 成功"
+                                    case .failure(let error):
+                                        silentRefreshStatus = "✗ 失败: \(error.localizedDescription)"
+                                    }
+                                }
+                            }) {
+                                if isTestingSilentRefresh {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Text("Level 2：WebView 刷新")
+                                }
+                            }
+                            .disabled(isTestingSilentRefresh || !settings.hasValidCodexCredentials)
+                            .controlSize(.small)
+
+                            if let status = silentRefreshStatus {
+                                Text(status)
+                                    .font(.caption)
+                                    .foregroundColor(status.hasPrefix("✓") ? .green : .red)
+                            }
+
+                            Spacer()
+
+                            Text("隐藏 WebView 读取 cookie")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

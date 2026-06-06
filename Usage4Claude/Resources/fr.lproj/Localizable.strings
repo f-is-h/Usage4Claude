@@ -39,6 +39,7 @@
 "usage.refresh_cooldown" = "Veuillez patienter un instant";
 "usage.run_diagnostic" = "Lancer le diagnostic";
 "usage.codex_title" = "Utilisation de Codex";
+"usage.codex_relogin" = "Se reconnecter";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "Général";
@@ -395,6 +396,8 @@
 "notification.warning_body" = "%@ a atteint %d %% d'utilisation";
 "notification.reset_title" = "Réinitialisation de l'utilisation";
 "notification.reset_body" = "L'utilisation de %@ a été réinitialisée";
+"notification.codex_session_expired_title" = "Session Codex expirée";
+"notification.codex_session_expired_body" = "Veuillez vous reconnecter pour continuer à surveiller votre utilisation Codex.";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Se connecter à Claude";

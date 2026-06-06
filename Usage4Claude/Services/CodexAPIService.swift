@@ -24,6 +24,63 @@ class CodexAPIService {
     /// 当前进行中的任务（最多两个：session + usage）
     private var activeTasks: [URLSessionDataTask] = []
 
+    // MARK: - Access Token Cache
+
+    private var cachedAccessToken: String?
+    private var cachedAccessTokenExpiry: Date?
+    private var cachedForSessionToken: String?
+    /// 主动刷新窗口：距过期不足20分钟时触发重新拉取
+    /// 设为最大刷新间隔(15min) + 5min buffer，确保任意间隔下都能主动刷新而不依赖三级链兜底
+    private static let tokenRefreshMargin: TimeInterval = 20 * 60
+
+    /// 保护缓存三属性的锁：主线程读（计时器/fetchAccessToken 入口），URLSession 后台线程写
+    private let cacheLock = NSLock()
+
+    /// 缓存是否在刷新窗口外（剩余 > 20 分钟）。调用方必须在主线程。
+    private var hasCachedValidToken: Bool {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        guard let token = cachedAccessToken, !token.isEmpty,
+              let expiry = cachedAccessTokenExpiry,
+              let forToken = cachedForSessionToken else { return false }
+        return forToken == settings.codexSessionToken
+            && expiry > Date().addingTimeInterval(Self.tokenRefreshMargin)
+    }
+
+    /// 缓存 token 是否尚未过期（即使已进入主动刷新窗口）。可在任意线程调用。
+    private func cachedTokenFallback(for sessionToken: String) -> String? {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        guard let token = cachedAccessToken, !token.isEmpty,
+              let expiry = cachedAccessTokenExpiry,
+              cachedForSessionToken == sessionToken,
+              expiry > Date() else { return nil }
+        return token
+    }
+
+    /// 账户切换或 401 时清除缓存，确保下次立即重新拉取
+    func clearAccessTokenCache() {
+        cacheLock.lock()
+        cachedAccessToken = nil
+        cachedAccessTokenExpiry = nil
+        cachedForSessionToken = nil
+        cacheLock.unlock()
+    }
+
+    /// 由独立计时器调用：仅在缓存即将过期时主动调用 session API 续期，不触发用量拉取
+    func proactivelyRefreshIfNeeded() {
+        guard settings.hasValidCodexCredentials, !hasCachedValidToken else { return }
+        let sessionToken = settings.codexSessionToken
+        fetchAccessToken(sessionToken: sessionToken) { result in
+            switch result {
+            case .success:
+                Logger.api.notice("Codex accessToken: 独立计时器主动续期成功")
+            case .failure(let error):
+                Logger.api.warning("Codex accessToken: 主动续期失败（\(error.localizedDescription)），用量拉取时再试")
+            }
+        }
+    }
+
     // MARK: - Initialization
 
     init() {
@@ -76,7 +133,27 @@ class CodexAPIService {
     // MARK: - Private: Step 1 — Session → accessToken
 
     /// 第一步：用 session-token Cookie 换取 accessToken
+    /// 缓存有效时（距过期 > 5 分钟）跳过网络请求，避免每60秒调用 session API
     private func fetchAccessToken(sessionToken: String, completion: @escaping (Result<String, Error>) -> Void) {
+        // 原子性读取缓存，避免 hasCachedValidToken 和 cachedAccessToken 之间的 TOCTOU 竞争
+        cacheLock.lock()
+        let cachedEntry: (token: String, remaining: Int)?
+        if let token = cachedAccessToken, !token.isEmpty,
+           let expiry = cachedAccessTokenExpiry,
+           cachedForSessionToken == sessionToken,
+           expiry > Date().addingTimeInterval(Self.tokenRefreshMargin) {
+            cachedEntry = (token, Int(expiry.timeIntervalSinceNow / 60))
+        } else {
+            cachedEntry = nil
+        }
+        cacheLock.unlock()
+
+        if let entry = cachedEntry {
+            Logger.api.debug("Codex accessToken: 使用缓存（剩余约 \(entry.remaining) 分钟）")
+            completion(.success(entry.token))
+            return
+        }
+
         guard let url = URL(string: "\(baseURL)/api/auth/session") else {
             completion(.failure(UsageError.invalidURL))
             return
@@ -87,15 +164,27 @@ class CodexAPIService {
         request.assumesHTTP3Capable = false
         CodexAPIHeaderBuilder.applySessionHeaders(to: &request, sessionToken: sessionToken)
 
-        let task = session.dataTask(with: request) { data, response, error in
+        let task = session.dataTask(with: request) { [weak self] data, response, error in
+            guard let self else { return }
             if let error = error {
                 Logger.api.debug("Codex session error: \(error.localizedDescription)")
-                completion(.failure(UsageError.networkError))
+                // 网络失败时，若旧 token 尚未真正过期则回退使用，避免瞬断影响用量拉取
+                if let fallback = self.cachedTokenFallback(for: sessionToken) {
+                    let remaining = Int((self.cachedAccessTokenExpiry?.timeIntervalSinceNow ?? 0) / 60)
+                    Logger.api.warning("Codex session API 失败，回退缓存 token（剩余约 \(remaining) 分钟）")
+                    completion(.success(fallback))
+                } else {
+                    completion(.failure(UsageError.networkError))
+                }
                 return
             }
 
             guard let data = data else {
-                completion(.failure(UsageError.noData))
+                if let fallback = self.cachedTokenFallback(for: sessionToken) {
+                    completion(.success(fallback))
+                } else {
+                    completion(.failure(UsageError.noData))
+                }
                 return
             }
 
@@ -109,6 +198,17 @@ class CodexAPIService {
 
             if let httpResponse = response as? HTTPURLResponse {
                 Logger.api.debug("Codex session HTTP status: \(httpResponse.statusCode)")
+                // Phase 0 诊断：检查 /api/auth/session 是否下发新 session-token
+                let setCookieHeaders = httpResponse.allHeaderFields
+                    .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
+                    .compactMap { $0.value as? String }
+                Logger.api.debug("Codex session Set-Cookie 数量=\(setCookieHeaders.count)")
+                for cookieStr in setCookieHeaders {
+                    if cookieStr.contains("next-auth.session-token") {
+                        Logger.api.info("Codex session Set-Cookie [SESSION-TOKEN] \(cookieStr.prefix(80))")
+                    }
+                }
+
                 switch httpResponse.statusCode {
                 case 200...299: break
                 case 401: completion(.failure(UsageError.unauthorized)); return
@@ -120,6 +220,19 @@ class CodexAPIService {
                 }
             }
 
+            // Level 1：检查 HTTPCookieStorage 是否收到新的 session-token
+            let chatgptURL = URL(string: "https://chatgpt.com")!
+            let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
+            if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies) {
+                // 用已捕获的 sessionToken 参数比较，避免在后台线程读取 @Published 属性
+                if newToken != sessionToken {
+                    Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
+                    DispatchQueue.main.async {
+                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                    }
+                }
+            }
+
             let decoder = JSONDecoder()
             do {
                 let sessionResponse = try decoder.decode(CodexSessionResponse.self, from: data)
@@ -128,10 +241,18 @@ class CodexAPIService {
                     completion(.failure(UsageError.sessionExpired))
                     return
                 }
-                if let exp = jwtExpiry(from: accessToken) {
-                    let remaining = exp.timeIntervalSinceNow
-                    Logger.api.info("Codex accessToken expires at \(exp) (in \(Int(remaining / 60)) min)")
+                let exp = jwtExpiry(from: accessToken)
+                let expiry = exp ?? Date().addingTimeInterval(30 * 60)
+                if let exp {
+                    Logger.api.info("Codex accessToken expires at \(exp) (in \(Int(exp.timeIntervalSinceNow / 60)) min)")
+                } else {
+                    Logger.api.debug("Codex accessToken: exp 不可解析，缓存30分钟")
                 }
+                self.cacheLock.lock()
+                self.cachedAccessToken = accessToken
+                self.cachedAccessTokenExpiry = expiry
+                self.cachedForSessionToken = sessionToken
+                self.cacheLock.unlock()
                 completion(.success(accessToken))
             } catch {
                 Logger.api.debug("Codex session decode error: \(error.localizedDescription)")
@@ -271,6 +392,13 @@ class CodexAPIService {
             do {
                 let sessionResponse = try decoder.decode(CodexSessionResponse.self, from: data)
                 guard let accessToken = sessionResponse.accessToken, !accessToken.isEmpty else {
+                    DispatchQueue.main.async { completion(.failure(UsageError.sessionExpired)) }
+                    return
+                }
+                // session-token 是 JWE 无法本地解密，但内部 accessToken 是普通 JWT
+                // 若 accessToken 已过期，说明 OAuth refresh token 也失效，拒绝此 session
+                if let exp = jwtExpiry(from: accessToken), exp < Date() {
+                    Logger.api.warning("Codex validate: session stale (accessToken expired at \(exp)), rejecting login")
                     DispatchQueue.main.async { completion(.failure(UsageError.sessionExpired)) }
                     return
                 }

@@ -75,6 +75,7 @@ enum L {
         static var refreshCooldown: String { localized("usage.refresh_cooldown") }
         static var runDiagnostic: String { localized("usage.run_diagnostic") }
         static var codexTitle: String { localized("usage.codex_title") }
+        static var codexRelogin: String { localized("usage.codex_relogin") }
     }
     
     // MARK: - Settings Tabs
@@ -501,6 +502,8 @@ enum L {
         static func resetBody(_ type: String) -> String {
             String(format: localized("notification.reset_body"), type)
         }
+        static var codexSessionExpiredTitle: String { localized("notification.codex_session_expired_title") }
+        static var codexSessionExpiredBody: String { localized("notification.codex_session_expired_body") }
     }
 
     // MARK: - Settings General (Time Format)

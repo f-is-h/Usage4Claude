@@ -59,8 +59,11 @@ class DataRefreshManager: ObservableObject {
     private var refreshActivity: NSObjectProtocol?
     /// 系统唤醒观察者令牌
     private var wakeObserver: NSObjectProtocol?
-    /// Codex accessToken 已确认无法自动刷新，等待用户手动刷新或重新登录
-    private var codexNeedsRelogin = false
+    /// Codex 三级刷新全部失败，需要用户手动重新登录
+    /// 暴露给 UI 层以显示"重新登录"按钮
+    @Published private(set) var codexNeedsRelogin = false
+    /// Codex 过期通知已发送，防止重复打扰
+    private var codexSessionExpiredNotified = false
 
     private var shouldFetchClaudeUsage: Bool {
         #if DEBUG
@@ -116,6 +119,7 @@ class DataRefreshManager: ObservableObject {
         static let codexResetVerify1 = "codexResetVerify1"
         static let codexResetVerify2 = "codexResetVerify2"
         static let codexResetVerify3 = "codexResetVerify3"
+        static let codexTokenRefresh = "codexTokenRefresh"
     }
 
     // MARK: - Initialization
@@ -270,6 +274,7 @@ class DataRefreshManager: ObservableObject {
         beginRefreshActivity()
         fetchUsage()
         restartTimer()
+        startCodexTokenRefreshTimer()
 
         #if DEBUG
         // 🧪 测试：确保图标显示徽章
@@ -282,6 +287,7 @@ class DataRefreshManager: ObservableObject {
     /// 停止数据刷新
     func stopRefreshing() {
         timerManager.invalidate(TimerID.mainRefresh)
+        timerManager.invalidate(TimerID.codexTokenRefresh)
         endRefreshActivity()
     }
 
@@ -306,6 +312,13 @@ class DataRefreshManager: ObservableObject {
         let interval = TimeInterval(settings.effectiveRefreshInterval)
         timerManager.schedule(TimerID.mainRefresh, interval: interval, repeats: true) { [weak self] in
             self?.fetchUsage()
+        }
+    }
+
+    /// 启动 Codex accessToken 独立续期计时器（固定10分钟，与用量拉取解耦）
+    private func startCodexTokenRefreshTimer() {
+        timerManager.schedule(TimerID.codexTokenRefresh, interval: 10 * 60, repeats: true) { [weak self] in
+            self?.codexApiService.proactivelyRefreshIfNeeded()
         }
     }
 
@@ -405,7 +418,7 @@ class DataRefreshManager: ObservableObject {
         refreshAnimationStartTime = now  // 记录动画开始时间
         refreshState.refreshingProvider = nil
         refreshState.isRefreshing = true
-        codexNeedsRelogin = false  // 用户主动刷新，允许重新尝试 token 刷新
+        resetCodexReloginState()  // 用户主动刷新，允许重新尝试 token 刷新
 
         // 设置防抖
         refreshState.canRefresh = false
@@ -455,7 +468,7 @@ class DataRefreshManager: ObservableObject {
         refreshState.refreshingProvider = .codex
         refreshState.isRefreshing = true
         refreshState.canRefresh = false
-        codexNeedsRelogin = false  // 用户主动刷新，允许重新尝试 token 刷新
+        resetCodexReloginState()  // 用户主动刷新，允许重新尝试 token 刷新
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             self?.refreshState.canRefresh = true
         }
@@ -522,6 +535,8 @@ class DataRefreshManager: ObservableObject {
                     self.processCodexSuccess(data)
                 case .failure(let error):
                     if retryOnUnauthorized, case UsageError.unauthorized = error {
+                        // 401 说明缓存的 accessToken 已失效，立即清除避免下次继续用坏 token
+                        self.codexApiService.clearAccessTokenCache()
                         self.attemptTokenRefreshAndRetry()
                     } else {
                         self.codexErrorMessage = error.localizedDescription
@@ -555,44 +570,90 @@ class DataRefreshManager: ObservableObject {
     private func attemptTokenRefreshAndRetry() {
         guard !codexNeedsRelogin else {
             Logger.menuBar.info("Codex 已确认需要重新登录，跳过刷新")
-            codexErrorMessage = UsageError.sessionExpired.localizedDescription
-            clearCodexUsageState(clearError: false)
+            markCodexNeedsRelogin()
             return
         }
         let prefix = UserSettings.shared.codexSessionToken.prefix(16)
-        Logger.menuBar.info("Codex accessToken 已过期，尝试从 SSR bootstrap 获取新鲜 token（session prefix=\(prefix)…）")
+        Logger.menuBar.info("Codex accessToken 已过期，启动三级刷新链（session prefix=\(prefix)…）")
+        attemptLevel1SSRRefresh()
+    }
+
+    /// 级别 1：SSR bootstrap 刷新 accessToken
+    private func attemptLevel1SSRRefresh() {
+        Logger.menuBar.info("Codex 级别1：SSR bootstrap 刷新")
         Task { @MainActor [weak self] in
             guard let self else { return }
             CodexTokenRefreshCoordinator.shared.refresh { [weak self] result in
                 guard let self else { return }
                 switch result {
                 case .success(let freshAccessToken):
-                    Logger.menuBar.notice("Codex token 刷新成功，使用新鲜 accessToken 直接重试")
-                    self.isLoading = true
-                    self.codexApiService.fetchUsageWithAccessToken(freshAccessToken) { [weak self] usageResult in
-                        DispatchQueue.main.async {
-                            guard let self else { return }
-                            self.isLoading = false
-                            self.endRefreshAnimationWithMinimumDuration { }
-                            switch usageResult {
-                            case .success(let data):
-                                self.processCodexSuccess(data)
-                            case .failure(let error):
-                                Logger.menuBar.error("Codex 使用新鲜 accessToken 仍失败: \(error.localizedDescription)")
-                                self.codexNeedsRelogin = true
-                                self.codexErrorMessage = UsageError.sessionExpired.localizedDescription
-                                self.clearCodexUsageState(clearError: false)
-                            }
-                        }
-                    }
-                case .failure:
-                    Logger.menuBar.error("Codex token 刷新失败，需要重新登录")
-                    self.codexNeedsRelogin = true
-                    self.codexErrorMessage = UsageError.sessionExpired.localizedDescription
-                    self.clearCodexUsageState(clearError: false)
+                    Logger.menuBar.notice("Codex 级别1 SSR 刷新成功，用新 accessToken 重试")
+                    self.retryCodexWithAccessToken(freshAccessToken)
+                case .failure(let error):
+                    Logger.menuBar.info("Codex 级别1 失败（\(error.localizedDescription)），降级至级别2")
+                    self.attemptLevel2WebViewRefresh()
                 }
             }
         }
+    }
+
+    /// 级别 2：隐藏 WebView 静默续期 session-token
+    private func attemptLevel2WebViewRefresh() {
+        Logger.menuBar.info("Codex 级别2：隐藏 WebView 静默续期")
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            CodexSilentRefreshCoordinator.shared.refresh { [weak self] result in
+                guard let self else { return }
+                switch result {
+                case .success:
+                    Logger.menuBar.notice("Codex 级别2 WebView 续期成功，重新拉取用量")
+                    // session-token 已在 coordinator 内写回，重新走完整的 session→usage 流程
+                    self.fetchCodexOnly(retryOnUnauthorized: false)
+                case .failure(let error):
+                    Logger.menuBar.error("Codex 级别2 失败（\(error.localizedDescription)），进入级别3")
+                    self.markCodexNeedsRelogin()
+                }
+            }
+        }
+    }
+
+    /// 用新鲜 accessToken 直接查询用量（跳过 session 步骤）
+    private func retryCodexWithAccessToken(_ accessToken: String) {
+        isLoading = true
+        codexApiService.fetchUsageWithAccessToken(accessToken) { [weak self] usageResult in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isLoading = false
+                self.endRefreshAnimationWithMinimumDuration { }
+                switch usageResult {
+                case .success(let data):
+                    self.processCodexSuccess(data)
+                case .failure(let error):
+                    Logger.menuBar.error("Codex 新鲜 accessToken 仍失败: \(error.localizedDescription)，降级至级别2")
+                    self.attemptLevel2WebViewRefresh()
+                }
+            }
+        }
+    }
+
+    /// 重置重登状态（用户主动刷新时调用，允许再次尝试三级刷新链）
+    private func resetCodexReloginState() {
+        codexNeedsRelogin = false
+        codexSessionExpiredNotified = false
+    }
+
+    /// 级别 3：标记需要重登，发送系统通知（仅一次）
+    private func markCodexNeedsRelogin() {
+        codexNeedsRelogin = true
+        if !codexSessionExpiredNotified {
+            codexSessionExpiredNotified = true
+            if settings.notificationsEnabled {
+                NotificationManager.shared.sendCodexSessionExpiredNotification()
+            }
+        }
+        codexErrorMessage = UsageError.sessionExpired.localizedDescription
+        clearCodexUsageState(clearError: false)
+        Logger.menuBar.error("Codex 三级刷新均已失败，需要用户重新登录")
     }
 
     /// 账户切换后只清理并刷新对应 Provider，避免跨账号 previousData 误判重置。
@@ -607,7 +668,8 @@ class DataRefreshManager: ObservableObject {
             }
 
         case .codex:
-            codexNeedsRelogin = false
+            resetCodexReloginState()
+            codexApiService.clearAccessTokenCache()
             clearCodexUsageState()
             if shouldFetchCodexUsage {
                 fetchCodexOnly()

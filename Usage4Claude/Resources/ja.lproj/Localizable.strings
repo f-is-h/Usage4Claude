@@ -39,6 +39,7 @@
 "usage.refresh_cooldown" = "少々お待ちください";
 "usage.run_diagnostic" = "診断を実行";
 "usage.codex_title" = "Codex使用状況";
+"usage.codex_relogin" = "再ログイン";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "一般";
@@ -395,6 +396,8 @@
 "notification.warning_body" = "%@が%d%%の使用量に達しました";
 "notification.reset_title" = "使用量リセット";
 "notification.reset_body" = "%@の使用量がリセットされました";
+"notification.codex_session_expired_title" = "Codex セッションの期限切れ";
+"notification.codex_session_expired_body" = "Codex の使用量を確認するには、再ログインしてください。";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Claude にサインイン";

@@ -128,5 +128,7 @@ extension TimerManager {
         static let resetVerify3 = "resetVerify3"
         /// 每日更新检查定时器
         static let dailyUpdate = "dailyUpdate"
+        /// Codex accessToken 主动续期定时器（独立于用量拉取计时器）
+        static let codexTokenRefresh = "codexTokenRefresh"
     }
 }

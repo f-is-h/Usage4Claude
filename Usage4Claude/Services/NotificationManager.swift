@@ -271,6 +271,29 @@ class NotificationManager {
         Logger.menuBar.info("已发送重置通知: \(limitType.displayName)")
     }
 
+    /// 发送 Codex 登录已过期系统通知（仅发送一次，不重复打扰）
+    /// 由调用方负责去重控制（DataRefreshManager.codexSessionExpiredNotified）
+    func sendCodexSessionExpiredNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = L.UsageNotification.codexSessionExpiredTitle
+        content.body = L.UsageNotification.codexSessionExpiredBody
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "codex_session_expired",
+            content: content,
+            trigger: nil
+        )
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                Logger.menuBar.error("发送 Codex 过期通知失败: \(error.localizedDescription)")
+            }
+        }
+
+        Logger.menuBar.info("已发送 Codex 登录过期通知")
+    }
+
     /// 重置所有已通知记录
     func resetAllNotificationStates() {
         notifiedWarnings.removeAll()

@@ -39,6 +39,7 @@
 "usage.refresh_cooldown" = "잠시 후 다시 시도하세요";
 "usage.run_diagnostic" = "진단 실행";
 "usage.codex_title" = "Codex 사용 현황";
+"usage.codex_relogin" = "다시 로그인";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "일반";
@@ -393,6 +394,8 @@
 "notification.warning_body" = "%@이(가) %d%% 사용량에 도달했습니다";
 "notification.reset_title" = "사용량 재설정";
 "notification.reset_body" = "%@ 사용량이 재설정되었습니다";
+"notification.codex_session_expired_title" = "Codex 세션 만료";
+"notification.codex_session_expired_body" = "Codex 사용량을 계속 확인하려면 다시 로그인해 주세요.";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Claude 로그인";

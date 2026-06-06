@@ -11,6 +11,7 @@ import AppKit
 import Combine
 import OSLog
 import Sparkle
+import WebKit
 
 /// 刷新状态管理器
 /// 用于在视图间同步刷新状态，支持响应式更新
@@ -67,6 +68,8 @@ class MenuBarManager: ObservableObject {
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude）
     @Published var codexErrorMessage: String?
+    /// Codex 三级刷新均失败，需要用户手动重新登录
+    @Published var codexNeedsRelogin = false
     /// 是否有可用更新（由 Sparkle 的 SPUUpdaterDelegate 回调驱动）
     @Published var hasAvailableUpdate = false
     /// 最新版本号（来自 Sparkle 发现的 appcast 条目）
@@ -118,6 +121,9 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexErrorMessage
             .assign(to: &$codexErrorMessage)
+
+        dataManager.$codexNeedsRelogin
+            .assign(to: &$codexNeedsRelogin)
     }
     
     /// 处理菜单栏图标点击事件
@@ -199,11 +205,36 @@ class MenuBarManager: ObservableObject {
         case .githubSponsor:
             closePopover()
             openGithubSponsor()
+        case .codexRelogin:
+            closePopover()
+            clearCodexSessionCookiesThenShowLogin()
         case .quit:
             quitApp()
         }
     }
-    
+
+    /// 清除 WebKit 中 chatgpt.com 和 openai.com 的认证 cookies，然后打开登录窗口
+    /// 必须清除所有认证 cookie（含 auth.openai.com），否则 OAuth SSO 会自动重登录，
+    /// 导致窗口未等用户输入就关闭。保留 Cloudflare cookie 以避免 CF 验证挑战。
+    private func clearCodexSessionCookiesThenShowLogin() {
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+            let toDelete = cookies.filter { cookie in
+                let isAuthDomain = cookie.domain.contains("chatgpt.com") || cookie.domain.contains("openai.com")
+                let isCloudflare = cookie.name.hasPrefix("cf_") || cookie.name.hasPrefix("__cf")
+                return isAuthDomain && !isCloudflare
+            }
+            let group = DispatchGroup()
+            for cookie in toDelete {
+                group.enter()
+                WKWebsiteDataStore.default().httpCookieStore.delete(cookie) { group.leave() }
+            }
+            group.notify(queue: .main) {
+                Logger.settings.info("Codex 重新登录：已清除 \(toDelete.count) 个认证 Cookie，打开登录窗口")
+                WebLoginWindowManager.shared.showCodexLoginWindow()
+            }
+        }
+    }
+
     /// 设置设置变更观察者
     /// 监听设置变更、刷新频率变更等通知
     private func setupSettingsObservers() {
@@ -308,6 +339,10 @@ class MenuBarManager: ObservableObject {
             codexErrorMessage: Binding(
                 get: { self.codexErrorMessage },
                 set: { self.codexErrorMessage = $0 }
+            ),
+            codexNeedsRelogin: Binding(
+                get: { self.codexNeedsRelogin },
+                set: { _ in }
             ),
             refreshState: self.refreshState,
             onMenuAction: { [weak self] action in

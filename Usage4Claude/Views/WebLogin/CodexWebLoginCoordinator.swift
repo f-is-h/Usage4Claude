@@ -227,7 +227,14 @@ extension CodexWebLoginCoordinator {
             if case .validating = coordinator.loginState { return }
             if case .success = coordinator.loginState { return }
             coordinator.loginState = .waitingForLogin
-            coordinator.startCookieMonitoring()
+
+            // 仅在跳转到 chatgpt.com 的非认证页面后才开始轮询 Cookie
+            // 这表示用户已完成 OAuth 流程并被重定向回主页
+            // 避免在 auth/login 页面误拾取后台 WebView 写入的旧 session-token
+            if let host = webView.url?.host, host.hasSuffix("chatgpt.com"),
+               let path = webView.url?.path, !path.hasPrefix("/auth") {
+                coordinator.startCookieMonitoring()
+            }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
