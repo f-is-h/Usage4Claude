@@ -82,10 +82,8 @@ struct GeneralSettingsView: View {
                                             settings.iconDisplayMode = .both
                                         } else if showIcon {
                                             settings.iconDisplayMode = .iconOnly
-                                        } else if showPercentage {
-                                            settings.iconDisplayMode = .percentageOnly
                                         } else {
-                                            settings.iconDisplayMode = .none
+                                            settings.iconDisplayMode = .percentageOnly
                                         }
                                     }
                                 )) {
@@ -93,6 +91,7 @@ struct GeneralSettingsView: View {
                                 }
                                 .toggleStyle(.checkbox)
                                 .focusable(false)
+                                .disabled(settings.iconDisplayMode == .iconOnly)
 
                                 Toggle(isOn: Binding(
                                     get: { settings.iconDisplayMode == .percentageOnly || settings.iconDisplayMode == .both },
@@ -102,10 +101,8 @@ struct GeneralSettingsView: View {
                                             settings.iconDisplayMode = .both
                                         } else if showPercentage {
                                             settings.iconDisplayMode = .percentageOnly
-                                        } else if showIcon {
-                                            settings.iconDisplayMode = .iconOnly
                                         } else {
-                                            settings.iconDisplayMode = .none
+                                            settings.iconDisplayMode = .iconOnly
                                         }
                                     }
                                 )) {
@@ -113,6 +110,7 @@ struct GeneralSettingsView: View {
                                 }
                                 .toggleStyle(.checkbox)
                                 .focusable(false)
+                                .disabled(settings.iconDisplayMode == .percentageOnly)
                             }
                         }
                     }

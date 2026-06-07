@@ -123,13 +123,9 @@ class MenuBarIconRenderer {
 
         switch settings.iconDisplayMode {
         case .iconOnly:
-            // 只显示品牌图标
             let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
             if let copy = ImageHelper.createSquareIcon(named: iconName, size: providerBrandIconSize, isTemplate: isMonochrome) {
                 icons.append(copy)
-            }
-            if let codexBrand = createProviderBrandIcon(.codex, isMonochrome: isMonochrome, size: providerBrandIconSize) {
-                icons.append(codexBrand)
             }
 
         case .percentageOnly, .both:

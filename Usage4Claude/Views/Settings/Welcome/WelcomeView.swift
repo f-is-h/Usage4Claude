@@ -446,10 +446,7 @@ struct SetupStepView: View {
                                                 settings.iconDisplayMode = .both
                                             } else if showIcon {
                                                 settings.iconDisplayMode = .iconOnly
-                                            } else if showPercentage {
-                                                settings.iconDisplayMode = .percentageOnly
                                             } else {
-                                                // 至少保留一个
                                                 settings.iconDisplayMode = .percentageOnly
                                             }
                                         }
@@ -457,6 +454,7 @@ struct SetupStepView: View {
                                         Text(L.Display.showIcon)
                                     }
                                     .toggleStyle(.checkbox)
+                                    .disabled(settings.iconDisplayMode == .iconOnly)
 
                                     Toggle(isOn: Binding(
                                         get: { settings.iconDisplayMode == .percentageOnly || settings.iconDisplayMode == .both },
@@ -466,10 +464,7 @@ struct SetupStepView: View {
                                                 settings.iconDisplayMode = .both
                                             } else if showPercentage {
                                                 settings.iconDisplayMode = .percentageOnly
-                                            } else if showIcon {
-                                                settings.iconDisplayMode = .iconOnly
                                             } else {
-                                                // 至少保留一个
                                                 settings.iconDisplayMode = .iconOnly
                                             }
                                         }
@@ -477,6 +472,7 @@ struct SetupStepView: View {
                                         Text(L.Display.showPercentage)
                                     }
                                     .toggleStyle(.checkbox)
+                                    .disabled(settings.iconDisplayMode == .percentageOnly)
                                 }
                             }
                         }
