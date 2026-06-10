@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-06-10
+
+### Added
+- **In-app updates via Sparkle**: The app now checks for and installs updates
+automatically using the Sparkle framework
+- **Codex session auto-renewal**: Automatically renews expired Codex sessions using a
+three-level fallback chain without requiring manual re-login
+- **Custom display scope**: Option to restrict custom display configuration to the menu
+bar only
+
+### Fixed
+- **Multi-account OAuth stability**: Prevent auto-SSO triggering and token corruption
+when managing multiple accounts
+- **Codex outer ring rendering**: Remove jagged dash segments from the Codex ring stroke
+for a clean continuous ring
+- **Multi-provider icon-only display**: Show a single representative icon when multiple
+providers are configured in icon-only mode
+
 ## [3.1.0] - 2026-05-24
 
 ### Added
@@ -485,6 +503,7 @@ Key, Organization ID)
 
 ---
 
+[3.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.0
 [3.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.1.0
 [3.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.1
 [3.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.0
