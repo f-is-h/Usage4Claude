@@ -65,7 +65,8 @@ final class WebLoginCoordinator: ObservableObject {
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .default()
+        // nonPersistent：完全空白，任何 OAuth provider 都无已有 session，确保多账号添加时不会 auto-SSO
+        config.websiteDataStore = .nonPersistent()
         config.preferences.isElementFullscreenEnabled = false
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -110,6 +111,18 @@ final class WebLoginCoordinator: ObservableObject {
         progressObservation = nil
     }
 
+    /// 将登录 WebView（nonPersistent）中指定域的 cookie 复制到 default store
+    /// 用于在成功登录后同步 session，供 Level 2 静默刷新使用
+    private func transferCookiesToDefaultStore(domains: [String]) {
+        let sourceStore = webView.configuration.websiteDataStore.httpCookieStore
+        let destStore = WKWebsiteDataStore.default().httpCookieStore
+        sourceStore.getAllCookies { cookies in
+            let relevant = cookies.filter { c in domains.contains { c.domain.contains($0) } }
+            for cookie in relevant { destStore.setCookie(cookie) { } }
+            Logger.settings.info("WebLogin: 复制 \(relevant.count) 个 Claude cookie 到 default store")
+        }
+    }
+
     // MARK: - Cookie Monitoring
 
     /// 启动 Cookie 轮询定时器
@@ -126,19 +139,19 @@ final class WebLoginCoordinator: ObservableObject {
         cookieStore.getAllCookies { [weak self] cookies in
             guard let self = self else { return }
 
-            let sessionCookie = cookies.first { cookie in
-                cookie.name == "sessionKey" && cookie.domain.contains("claude.ai")
-            }
+            let claudeCookies = cookies.filter { $0.domain.contains("claude.ai") }
+            guard let sessionCookie = claudeCookies.first(where: { $0.name == "sessionKey" }) else { return }
 
-            if let cookie = sessionCookie {
-                let sessionKey = cookie.value
-                Logger.settings.info("WebLogin: 检测到 sessionKey Cookie")
+            let sessionKey = sessionCookie.value
+            // 将 WebView 的完整 cookie（含 cf_clearance/__cf_bm）拼成 header，
+            // 避免验证请求因缺少 Cloudflare 通行证而被拦截
+            let cookieHeader = claudeCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+            Logger.settings.info("WebLogin: 检测到 sessionKey Cookie")
 
-                DispatchQueue.main.async {
-                    self.cookieTimer?.invalidate()
-                    self.cookieTimer = nil
-                    self.validateSessionKey(sessionKey)
-                }
+            DispatchQueue.main.async {
+                self.cookieTimer?.invalidate()
+                self.cookieTimer = nil
+                self.validateSessionKey(sessionKey, cookieHeader: cookieHeader)
             }
         }
     }
@@ -146,11 +159,11 @@ final class WebLoginCoordinator: ObservableObject {
     // MARK: - Validation
 
     /// 验证 sessionKey 并获取组织信息
-    private func validateSessionKey(_ sessionKey: String) {
+    private func validateSessionKey(_ sessionKey: String, cookieHeader: String) {
         loginState = .validating
 
         let apiService = ClaudeAPIService()
-        apiService.fetchOrganizations(sessionKey: sessionKey) { [weak self] result in
+        apiService.fetchOrganizations(sessionKey: sessionKey, cookieHeader: cookieHeader) { [weak self] result in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
@@ -170,6 +183,7 @@ final class WebLoginCoordinator: ObservableObject {
 
                         self.loginState = .success(accountName: account.displayName)
                         self.onAccountCreated?(account)
+                        self.transferCookiesToDefaultStore(domains: ["claude.ai"])
 
                         Logger.settings.notice("WebLogin: 账户创建成功 - \(account.displayName)")
                     } else {

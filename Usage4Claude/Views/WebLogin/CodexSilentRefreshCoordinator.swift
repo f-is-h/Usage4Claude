@@ -83,8 +83,73 @@ final class CodexSilentRefreshCoordinator: NSObject {
             return
         }
 
-        Logger.settings.info("CodexSilentRefresh: 隐藏 WebView 加载 chatgpt.com")
-        wv.load(URLRequest(url: url))
+        // 续期前重置 default() store 的 session-token：
+        // 1. 删除所有残留（含其他账号 / 旧分片 .0/.1）
+        // 2. 注入当前账号的完整 session-token
+        // 3. 全部完成后再 load，确保服务端看到正确账号的 session
+        let cookieStore = wv.configuration.websiteDataStore.httpCookieStore
+        cookieStore.getAllCookies { cookies in
+            let toDelete = cookies.filter { c in
+                (c.domain.contains("chatgpt.com") || c.domain.contains("openai.com")) &&
+                c.name.contains("session-token")
+            }
+            Logger.settings.debug("CodexSilentRefresh: 清理旧 session-token \(toDelete.count) 个")
+
+            let group = DispatchGroup()
+            for cookie in toDelete {
+                group.enter()
+                cookieStore.delete(cookie) { group.leave() }
+            }
+
+            group.notify(queue: .main) {
+                let baseName = "__Secure-next-auth.session-token"
+                // WebKit 单 cookie 上限约 4KB，NextAuth 超限时会自动分片为 .0/.1/.2...
+                // 注入时同样分片，与 extractSessionToken 的读取逻辑对齐
+                let chunkSize = 4000
+                // originURL（HTTPS）是 __Secure- 前缀 cookie 合法性验证的必要条件
+                let origin = URL(string: "https://chatgpt.com")!
+
+                let tokenChunks = stride(from: 0, to: sessionToken.count, by: chunkSize).map { start -> String in
+                    let from = sessionToken.index(sessionToken.startIndex, offsetBy: start)
+                    let to = sessionToken.index(from, offsetBy: min(chunkSize, sessionToken.count - start))
+                    return String(sessionToken[from..<to])
+                }
+
+                let shards: [(name: String, value: String)]
+                if tokenChunks.count == 1 {
+                    shards = [(baseName, tokenChunks[0])]
+                } else {
+                    shards = tokenChunks.enumerated().map { ("\(baseName).\($0.offset)", $0.element) }
+                    Logger.settings.debug("CodexSilentRefresh: token 超限，分 \(shards.count) 片注入")
+                }
+
+                let cookies = shards.compactMap { name, value in
+                    HTTPCookie(properties: [
+                        .name: name,
+                        .value: value,
+                        .originURL: origin,
+                        .path: "/",
+                        .secure: "TRUE"
+                    ])
+                }
+
+                guard !cookies.isEmpty else {
+                    Logger.settings.warning("CodexSilentRefresh: session-token cookie 构造失败，直接加载")
+                    wv.load(URLRequest(url: url))
+                    return
+                }
+
+                let injectGroup = DispatchGroup()
+                for cookie in cookies {
+                    injectGroup.enter()
+                    cookieStore.setCookie(cookie) { injectGroup.leave() }
+                }
+                injectGroup.notify(queue: .main) {
+                    Logger.settings.info("CodexSilentRefresh: 注入 \(cookies.count) 个 cookie，加载 chatgpt.com")
+                    wv.load(URLRequest(url: url))
+                }
+            }
+        }
     }
 
     // MARK: - Navigation Callbacks (called by NavigationDelegate)

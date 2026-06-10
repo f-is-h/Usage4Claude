@@ -230,9 +230,10 @@ class ClaudeAPIService {
     /// 获取用户的组织列表
     /// - Parameters:
     ///   - sessionKey: 可选的 sessionKey，如果不提供则使用 settings.sessionKey
+    ///   - cookieHeader: 可选的完整 Cookie header 字符串（由 WebView 登录流程提供，含 cf_clearance/__cf_bm）
     ///   - completion: 完成回调，包含成功的组织数组或失败的 Error
     /// - Note: 用于自动获取 Organization ID，简化用户配置流程
-    func fetchOrganizations(sessionKey: String? = nil, completion: @escaping (Result<[Organization], Error>) -> Void) {
+    func fetchOrganizations(sessionKey: String? = nil, cookieHeader: String? = nil, completion: @escaping (Result<[Organization], Error>) -> Void) {
         let urlString = "\(baseURL.replacingOccurrences(of: "/organizations", with: ""))/organizations"
 
         guard let url = URL(string: urlString) else {
@@ -252,6 +253,11 @@ class ClaudeAPIService {
             organizationId: nil,  // 获取组织列表不需要 organizationId
             sessionKey: actualSessionKey
         )
+        // 若提供了来自 WebView 的完整 Cookie header（含 cf_clearance/__cf_bm），
+        // 覆盖 applyHeaders 仅含 sessionKey 的 Cookie 字段，确保 Cloudflare 通行证一并携带
+        if let cookieHeader = cookieHeader {
+            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        }
 
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {

@@ -69,7 +69,8 @@ final class CodexWebLoginCoordinator: ObservableObject {
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .default()
+        // nonPersistent：完全空白，任何 OAuth provider 都无已有 session，确保多账号添加时不会 auto-SSO
+        config.websiteDataStore = .nonPersistent()
         config.preferences.isElementFullscreenEnabled = false
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -109,6 +110,20 @@ final class CodexWebLoginCoordinator: ObservableObject {
         cookieTimer?.invalidate()
         cookieTimer = nil
         progressObservation = nil
+    }
+
+    /// 将登录 WebView（nonPersistent）中 chatgpt.com / openai.com 的 cookie 复制到 default store
+    /// 用于在成功登录后同步 session，供 Level 2 静默刷新使用
+    private func transferCookiesToDefaultStore() {
+        let sourceStore = webView.configuration.websiteDataStore.httpCookieStore
+        let destStore = WKWebsiteDataStore.default().httpCookieStore
+        sourceStore.getAllCookies { cookies in
+            let relevant = cookies.filter { c in
+                c.domain.contains("chatgpt.com") || c.domain.contains("openai.com")
+            }
+            for cookie in relevant { destStore.setCookie(cookie) { } }
+            Logger.settings.info("CodexWebLogin: 复制 \(relevant.count) 个 cookie 到 default store")
+        }
     }
 
     // MARK: - Cookie Monitoring
@@ -189,6 +204,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
 
                 self.loginState = .success(accountName: storedAccount.displayName)
                 self.onAccountCreated?(storedAccount)
+                self.transferCookiesToDefaultStore()
 
                 Logger.settings.notice("CodexWebLogin: 账户创建成功 - \(storedAccount.displayName)")
 
