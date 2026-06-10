@@ -20,13 +20,11 @@
             <sparkle:shortVersionString>X.Y.Z</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
             <link>https://github.com/f-is-h/Usage4Claude/releases/tag/vX.Y.Z</link>
-            <!-- sparkle:format="markdown" lets you write release notes in Markdown (Sparkle 2.9+) -->
             <description sparkle:format="markdown"><![CDATA[
 ## vX.Y.Z
 
 - Summary line (Markdown is rendered by Sparkle's release-notes view)
             ]]></description>
-            <!-- enclosure line from scripts/build.sh below -->
             <enclosure
                 url="https://github.com/f-is-h/Usage4Claude/releases/download/vX.Y.Z/Usage4Claude-vX.Y.Z.dmg"
                 sparkle:edSignature="..."
