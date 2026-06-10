@@ -113,7 +113,7 @@ struct CodexColumnView: View {
                                 .trim(from: secondaryRange.from, to: secondaryRange.to)
                                 .stroke(
                                     UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
-                                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [5, 2])
+                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
                                 )
                                 .frame(width: 114, height: 114)
                                 .rotationEffect(.degrees(-90))
