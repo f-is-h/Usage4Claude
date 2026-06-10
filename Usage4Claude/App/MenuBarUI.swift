@@ -590,7 +590,7 @@ class MenuBarUI {
         guard let data = usageData else {
             var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)"
             if let codex = codexUsageData {
-                let activeTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
+                let activeTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex, forMenuBar: true)
                     .map(\.rawValue)
                     .sorted()
                     .joined(separator: ",")

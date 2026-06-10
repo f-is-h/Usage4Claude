@@ -399,6 +399,8 @@ enum L {
         static var selectLimitTypes: String { localized("select_limit_types") }
         static var circularIconConstraint: String { localized("circular_icon_constraint") }
         static var coloredThemeUnavailable: String { localized("colored_theme_unavailable") }
+        static var menuBarOnlyToggle: String { localized("custom_display.menu_bar_only_toggle") }
+        static var menuBarOnlyDescription: String { localized("custom_display.menu_bar_only_description") }
     }
 
     // MARK: - Launch at Login

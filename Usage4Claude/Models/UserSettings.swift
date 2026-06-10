@@ -552,6 +552,20 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 自定义显示是否仅应用于菜单栏（开启时 Popover 走智能显示）
+    @Published var customDisplayMenuBarOnly: Bool {
+        didSet {
+            defaults.set(customDisplayMenuBarOnly, forKey: "customDisplayMenuBarOnly")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// Popover 端是否应该显示自定义模式的占位符（0% 空壳）
+    /// 仅当显示模式为 custom 且未开启"仅应用于菜单栏"时为 true
+    var shouldShowCustomPlaceholderInPopover: Bool {
+        displayMode == .custom && !customDisplayMenuBarOnly
+    }
+
     /// 是否为首次启动标记
     @Published var isFirstLaunch: Bool {
         didSet {
@@ -936,6 +950,9 @@ class UserSettings: ObservableObject {
             self.customDisplayTypes = [.fiveHour, .sevenDay]
         }
 
+        // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
+        self.customDisplayMenuBarOnly = defaults.bool(forKey: "customDisplayMenuBarOnly")
+
         // 检查是否首次启动（如果没有保存过认证信息，就是首次启动）
         if !defaults.bool(forKey: "hasLaunched") {
             self.isFirstLaunch = true
@@ -1069,6 +1086,7 @@ class UserSettings: ObservableObject {
         timeFormatPreference = .system
         displayMode = .smart
         customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
+        customDisplayMenuBarOnly = false
         notificationsEnabled = true
 
         // 重置智能模式状态
@@ -1488,9 +1506,18 @@ class UserSettings: ObservableObject {
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据（可选，有 Codex 账号时传入）
+    ///   - forMenuBar: 是否用于菜单栏渲染。当 customDisplayMenuBarOnly 开启时，
+    ///                 仅菜单栏走 custom 分支，Popover 自动 fallback 到 smart 分支
     /// - Returns: 要显示的限制类型数组，按显示顺序排列
-    func getActiveDisplayTypes(usageData: UsageData?, codexUsageData: CodexUsageData? = nil) -> [LimitType] {
-        switch displayMode {
+    func getActiveDisplayTypes(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, forMenuBar: Bool = false) -> [LimitType] {
+        // 当"仅应用于菜单栏"开启且当前是为 Popover 渲染时，强制走智能分支
+        let effectiveMode: DisplayMode = {
+            if displayMode == .custom && customDisplayMenuBarOnly && !forMenuBar {
+                return .smart
+            }
+            return displayMode
+        }()
+        switch effectiveMode {
         case .smart:
             // 智能模式：显示所有有数据的类型
             var types: [LimitType] = []

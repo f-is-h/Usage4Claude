@@ -260,6 +260,8 @@
 "select_limit_types" = "Select Limit Types to Display";
 "circular_icon_constraint" = "At least one circular limit must be selected";
 "colored_theme_unavailable" = "Colored themes are only available when showing 1-2 circular icons without other types";
+"custom_display.menu_bar_only_toggle" = "Apply only to menu bar";
+"custom_display.menu_bar_only_description" = "When on, the popover ignores this selection and shows all available limits.";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "Theme";

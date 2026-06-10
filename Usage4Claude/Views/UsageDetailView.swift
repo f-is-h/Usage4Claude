@@ -272,7 +272,7 @@ struct UsageDetailView: View {
 
                         if activeDisplayTypes.contains(.fiveHour) &&
                            activeDisplayTypes.contains(.sevenDay) {
-                            let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.displayMode == .custom ? 0 : nil)
+                            let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.shouldShowCustomPlaceholderInPopover ? 0 : nil)
 
                             if let percentage = sevenDayPercentage {
                                 let outerRingRange = UsageRingDisplay.displayedTrimRange(

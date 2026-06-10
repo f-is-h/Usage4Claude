@@ -260,6 +260,8 @@
 "select_limit_types" = "표시할 제한 유형 선택";
 "circular_icon_constraint" = "최소한 하나의 원형 제한을 선택해야 합니다";
 "colored_theme_unavailable" = "컬러 테마는 1-2개의 원형 아이콘과 다른 유형이 없을 때만 사용할 수 있습니다";
+"custom_display.menu_bar_only_toggle" = "메뉴 막대에만 적용";
+"custom_display.menu_bar_only_description" = "켜져 있으면 세부 정보 창은 위 선택을 무시하고 스마트 모드로 사용 가능한 모든 제한 유형을 표시합니다.";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "테마";

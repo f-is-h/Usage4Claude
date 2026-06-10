@@ -190,6 +190,23 @@ struct GeneralSettingsView: View {
                                     }
                                     .padding(.leading, 20)
                                 }
+
+                                Divider()
+
+                                // "仅应用于菜单栏"开关：开启后 Popover 走智能显示
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Toggle(isOn: $settings.customDisplayMenuBarOnly) {
+                                        Text(L.DisplayOptions.menuBarOnlyToggle)
+                                            .font(.subheadline)
+                                    }
+                                    .toggleStyle(.checkbox)
+
+                                    Text(L.DisplayOptions.menuBarOnlyDescription)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.leading, 20)
+                                }
                             }
                         }
                     }

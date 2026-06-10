@@ -260,6 +260,8 @@
 "select_limit_types" = "表示する制限タイプを選択";
 "circular_icon_constraint" = "少なくとも1つの円形制限を選択する必要があります";
 "colored_theme_unavailable" = "カラーテーマは、他のタイプなしで1〜2個の円形アイコンを表示する場合のみ利用可能です";
+"custom_display.menu_bar_only_toggle" = "メニューバーにのみ適用";
+"custom_display.menu_bar_only_description" = "オンにすると、詳細ウィンドウは上記の選択を無視し、スマートモードで利用可能なすべての制限タイプを表示します。";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "テーマ";

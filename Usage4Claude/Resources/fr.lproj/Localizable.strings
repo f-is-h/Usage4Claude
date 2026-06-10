@@ -260,6 +260,8 @@
 "select_limit_types" = "Sélectionner les types de limites à afficher";
 "circular_icon_constraint" = "Au moins une limite circulaire doit être sélectionnée";
 "colored_theme_unavailable" = "Les thèmes colorés ne sont disponibles qu'avec 1 à 2 icônes circulaires sans autre type";
+"custom_display.menu_bar_only_toggle" = "Appliquer uniquement à la barre de menus";
+"custom_display.menu_bar_only_description" = "Lorsque cette option est activée, la fenêtre de détails ignore cette sélection et affiche toutes les limites disponibles.";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "Thème";

@@ -80,6 +80,7 @@ class DataRefreshManager: ObservableObject {
         #if DEBUG
         return settings.debugModeEnabled
             && settings.displayMode == .custom
+            && !settings.customDisplayMenuBarOnly
             && !settings.customDisplayTypes.contains { $0.provider == .claude }
         #else
         return false
@@ -90,6 +91,7 @@ class DataRefreshManager: ObservableObject {
         #if DEBUG
         return settings.debugModeEnabled
             && settings.displayMode == .custom
+            && !settings.customDisplayMenuBarOnly
             && !settings.customDisplayTypes.contains { $0.provider == .codex }
         #else
         return false

@@ -169,7 +169,7 @@ extension UsageDetailView {
     /// - Returns: 主要限制的数据
     func getPrimaryLimitData(data: UsageData, activeTypes: [LimitType]) -> UsageData.LimitData? {
         // 在自定义模式下，即使数据为 nil 也显示占位数据（0%）
-        let showPlaceholder = UserSettings.shared.displayMode == .custom
+        let showPlaceholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
         let placeholderData = UsageData.LimitData(percentage: 0, resetsAt: nil)
 
         // 从激活的类型中找到第一个圆形类型

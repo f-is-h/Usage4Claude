@@ -260,6 +260,8 @@
 "select_limit_types" = "选择要显示的限制类型";
 "circular_icon_constraint" = "至少必须选择一个圆形限制";
 "colored_theme_unavailable" = "彩色主题仅在显示1-2个圆形图标且无其他类型时可用";
+"custom_display.menu_bar_only_toggle" = "仅应用于菜单栏";
+"custom_display.menu_bar_only_description" = "开启后，详情窗口将忽略上面的选择，按智能模式显示所有可用的限制类型。";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "主题";

@@ -58,7 +58,7 @@ class MenuBarIconRenderer {
 
         if let codex = codexUsageData {
             // 有 Codex 数据路径
-            let allTypes = settings.getActiveDisplayTypes(usageData: usageData, codexUsageData: codex)
+            let allTypes = settings.getActiveDisplayTypes(usageData: usageData, codexUsageData: codex, forMenuBar: true)
             let codexTypes = allTypes.filter { $0.provider == .codex }
 
             if settings.isMultiProviderActive, let data = usageData {
@@ -85,7 +85,7 @@ class MenuBarIconRenderer {
                 return defaultIcon
             }
 
-            let activeTypes = settings.getActiveDisplayTypes(usageData: data)
+            let activeTypes = settings.getActiveDisplayTypes(usageData: data, forMenuBar: true)
 
             switch settings.iconDisplayMode {
             case .percentageOnly:

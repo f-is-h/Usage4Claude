@@ -260,6 +260,8 @@
 "select_limit_types" = "選擇要顯示的限制類型";
 "circular_icon_constraint" = "至少必須選擇一個圓形限制";
 "colored_theme_unavailable" = "彩色主題僅在顯示1-2個圓形圖示且無其他類型時可用";
+"custom_display.menu_bar_only_toggle" = "僅套用於選單列";
+"custom_display.menu_bar_only_description" = "開啟後，詳情視窗將忽略上方的選擇，依智慧模式顯示所有可用的限制類型。";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "主題";
