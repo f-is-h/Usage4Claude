@@ -41,5 +41,34 @@
         <description>Updates to Usage4Claude — Claude.ai usage menu bar app for macOS.</description>
         <language>en</language>
         <!-- Items go here. Top item is the latest version. -->
+        <item>
+            <title>v3.2.0</title>
+            <pubDate>Wed, 10 Jun 2026 06:52:01 +0000</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>3.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.0</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Added
+- **In-app updates via Sparkle**: The app now checks for and installs updates
+automatically using the Sparkle framework
+- **Codex session auto-renewal**: Automatically renews expired Codex sessions using a
+three-level fallback chain without requiring manual re-login
+- **Custom display scope**: Option to restrict custom display configuration to the menu
+bar only
+
+### Fixed
+- **Multi-account OAuth stability**: Prevent auto-SSO triggering and token corruption
+when managing multiple accounts
+- **Codex outer ring rendering**: Remove jagged dash segments from the Codex ring stroke
+for a clean continuous ring
+- **Multi-provider icon-only display**: Show a single representative icon when multiple
+providers are configured in icon-only mode
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.2.0/Usage4Claude-v3.2.0.dmg"
+              sparkle:edSignature="/s2ZQ1OeLRwirXpteQKh//3dadecxRT0u/nXEeYKnwyp9gRKbx0RB1c4PrsLBMK948FAtrSjplbK1Qo+NQo7Bw==" length="5515047"
+              type="application/octet-stream"/>
+        </item>
     </channel>
 </rss>
