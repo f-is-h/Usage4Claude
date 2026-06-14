@@ -125,6 +125,8 @@
 "display.none" = "Ne rien afficher";
 "display.show_icon" = "Afficher l'icône";
 "display.show_percentage" = "Afficher le pourcentage";
+"display.menu_bar_countdown" = "Compte à rebours de réinitialisation";
+"display.menu_bar_countdown_description" = "Affiche un anneau de compte à rebours pour chaque fenêtre de réinitialisation (5 heures et 7 jours) à côté de son anneau d'utilisation dans la barre de menus.";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "Fréquence intelligente";

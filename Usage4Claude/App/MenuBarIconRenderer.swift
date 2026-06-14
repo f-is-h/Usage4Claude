@@ -21,7 +21,7 @@ class MenuBarIconRenderer {
     /// 菜单栏品牌图标尺寸
     private let providerBrandIconSize: CGFloat = 16
     /// 菜单栏指标图标尺寸
-    private let metricIconSize: CGFloat = 18
+    private let metricIconSize: CGFloat = 22
     
     // MARK: - Initialization
     
@@ -241,9 +241,15 @@ class MenuBarIconRenderer {
             return createSimpleCircleIcon()
         }
 
-        // 为每个类型创建图标
-        let icons = types.compactMap { type in
-            createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
+        // 按类型顺序：每个用量圆环后紧跟其对应的时间圆环
+        // 例如 [5H用量][5H时间][7天用量][7天时间]
+        var icons: [NSImage] = []
+        for type in types {
+            guard let usageIcon = createIconForType(type, data: data, isMonochrome: isMonochrome, button: button) else { continue }
+            icons.append(usageIcon)
+            if let timeIcon = timeCircleFor(type: type, data: data, isMonochrome: isMonochrome, button: button) {
+                icons.append(timeIcon)
+            }
         }
 
         // 组合图标
@@ -252,7 +258,7 @@ class MenuBarIconRenderer {
         } else if icons.count == 1 {
             return icons[0]
         } else {
-            let combined = combineIcons(icons, spacing: 3.0, height: 18)
+            let combined = combineIcons(icons, spacing: 3.0, height: metricIconSize)
             combined.isTemplate = isMonochrome
             return combined
         }
@@ -271,14 +277,15 @@ class MenuBarIconRenderer {
             return createCombinedPercentageIcon(data: data, types: types, isMonochrome: isMonochrome, button: button)
         }
 
-        // 创建百分比图标
-        let percentageIcons = types.compactMap { type in
-            createIconForType(type, data: data, isMonochrome: isMonochrome, button: button)
-        }
-
-        // 组合 App 图标 + 百分比图标
+        // 组合 App 图标 + （每个用量圆环后紧跟其时间圆环）
         var allIcons = [appIconCopy]
-        allIcons.append(contentsOf: percentageIcons)
+        for type in types {
+            guard let usageIcon = createIconForType(type, data: data, isMonochrome: isMonochrome, button: button) else { continue }
+            allIcons.append(usageIcon)
+            if let timeIcon = timeCircleFor(type: type, data: data, isMonochrome: isMonochrome, button: button) {
+                allIcons.append(timeIcon)
+            }
+        }
 
         let combined = combineIcons(allIcons, spacing: 3.0, height: metricIconSize)
         combined.isTemplate = isMonochrome
@@ -287,7 +294,7 @@ class MenuBarIconRenderer {
     
     // MARK: - Icon Drawing - Colored Mode (彩色模式)
 
-    private func createCircleImage(percentage: Double, size: NSSize, useSevenDayColor: Bool = false, colorOverride: NSColor? = nil, useDashedStyle: Bool = false, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+    private func createCircleImage(percentage: Double, size: NSSize, useSevenDayColor: Bool = false, colorOverride: NSColor? = nil, useDashedStyle: Bool = false, button: NSStatusBarButton?, removeBackground: Bool = false, centerText: String? = nil) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -352,9 +359,18 @@ class MenuBarIconRenderer {
         progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
         progressPath.stroke()
 
-        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: percentage >= 100 ? .bold : .semibold)
-        let text = "\(Int(percentage))"
+        let text = centerText ?? "\(Int(percentage))"
+        let fontSize: CGFloat
+        let fontWeight: NSFont.Weight
+        if centerText != nil {
+            // 时间圆环：按文本长度自适应字号（如 "45m"/"2h"/"5d"）
+            fontSize = text.count >= 3 ? size.width * 0.30 : size.width * 0.40
+            fontWeight = .semibold
+        } else {
+            fontSize = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
+            fontWeight = percentage >= 100 ? .bold : .semibold
+        }
+        let font = NSFont.systemFont(ofSize: fontSize, weight: fontWeight)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
 
@@ -369,7 +385,7 @@ class MenuBarIconRenderer {
 
     // MARK: - Icon Drawing - Template Mode (单色模式)
 
-    private func createCircleTemplateImage(percentage: Double, size: NSSize, useSevenDayStyle: Bool = false, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
+    private func createCircleTemplateImage(percentage: Double, size: NSSize, useSevenDayStyle: Bool = false, button: NSStatusBarButton? = nil, removeBackground: Bool = false, centerText: String? = nil) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -420,9 +436,18 @@ class MenuBarIconRenderer {
         progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
         progressPath.stroke()
 
-        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: percentage >= 100 ? .bold : .semibold)
-        let text = "\(Int(percentage))"
+        let text = centerText ?? "\(Int(percentage))"
+        let fontSize: CGFloat
+        let fontWeight: NSFont.Weight
+        if centerText != nil {
+            // 时间圆环：按文本长度自适应字号（如 "45m"/"2h"/"5d"）
+            fontSize = text.count >= 3 ? size.width * 0.30 : size.width * 0.40
+            fontWeight = .semibold
+        } else {
+            fontSize = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
+            fontWeight = percentage >= 100 ? .bold : .semibold
+        }
+        let font = NSFont.systemFont(ofSize: fontSize, weight: fontWeight)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
@@ -438,7 +463,7 @@ class MenuBarIconRenderer {
 
     /// 创建简单圆形图标（备用）
     private func createSimpleCircleIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+        let size = NSSize(width: metricIconSize, height: metricIconSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -478,6 +503,101 @@ class MenuBarIconRenderer {
         badgedImage.isTemplate = baseImage.isTemplate
 
         return badgedImage
+    }
+
+    // MARK: - Countdown Circle Rendering
+
+    /// 窗口总时长，用于计算"已过去比例"，使时间圆环可与相邻用量圆环直接对比
+    private let fiveHourWindowSeconds: TimeInterval = 5 * 60 * 60
+    private let sevenDayWindowSeconds: TimeInterval = 7 * 24 * 60 * 60
+
+    /// 为指定限制类型构建对应的时间圆环（紧跟在该类型的用量圆环之后显示）
+    /// - 环填充 = 当前窗口"已过去"的比例（与相邻用量环同向，便于判断用量是否超前于时间）
+    /// - 中心文本 = 剩余时间（紧凑自适应单位）
+    /// - 5小时 = 红色，7天 = 橙色；其它类型无时间圆环（返回 nil）
+    private func timeCircleFor(
+        type: LimitType,
+        data: UsageData,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage? {
+        // 用户可在设置中关闭菜单栏倒计时（关闭时不绘制时间圆环）
+        guard settings.menuBarCountdownEnabled else { return nil }
+        switch type {
+        case .fiveHour:
+            // 窗口重置后尚未使用 token 时 API 无 resets_at；此时显示满窗占位（空环 + 整窗时间），
+            // 让时钟始终与用量圆环成对出现，首次用量产生后平滑切换为真实倒计时。
+            let remaining = placeholderRemaining(data.fiveHour?.resetsIn, window: fiveHourWindowSeconds)
+            return makeTimeCircle(
+                remaining: remaining,
+                windowSeconds: fiveHourWindowSeconds,
+                text: timeCircleText(remaining: remaining, isShortWindow: true),
+                color: .systemRed,
+                isMonochrome: isMonochrome,
+                button: button
+            )
+        case .sevenDay:
+            let remaining = placeholderRemaining(data.sevenDay?.resetsIn, window: sevenDayWindowSeconds)
+            return makeTimeCircle(
+                remaining: remaining,
+                windowSeconds: sevenDayWindowSeconds,
+                text: timeCircleText(remaining: remaining, isShortWindow: false),
+                color: .systemOrange,
+                isMonochrome: isMonochrome,
+                button: button
+            )
+        default:
+            return nil
+        }
+    }
+
+    /// 计算时间圆环使用的"剩余秒数"：
+    /// - 有有效 resets_at（resetsIn > 0）时返回真实剩余（并夹在整窗内）
+    /// - 窗口刚重置、尚无 resets_at，或剩余 <= 0 时，回退为整个窗口 → 空环 + 满窗占位
+    private func placeholderRemaining(_ resetsIn: TimeInterval?, window: TimeInterval) -> TimeInterval {
+        guard let resetsIn = resetsIn, resetsIn > 0 else { return window }
+        return min(resetsIn, window)
+    }
+
+    /// 绘制单个时间圆环，复用用量圆环的绘制逻辑（环=已过去比例，中心=剩余时间文本）
+    private func makeTimeCircle(
+        remaining: TimeInterval,
+        windowSeconds: TimeInterval,
+        text: String,
+        color: NSColor,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        // 已过去比例（0-100），与用量百分比同尺度
+        let elapsed = max(0, min(100, (1 - remaining / windowSeconds) * 100))
+        let size = NSSize(width: metricIconSize, height: metricIconSize)
+        let removeBackground = settings.iconStyleMode == .colorTranslucent
+
+        if isMonochrome {
+            return createCircleTemplateImage(percentage: elapsed, size: size, button: button, removeBackground: true, centerText: text)
+        }
+        return createCircleImage(percentage: elapsed, size: size, colorOverride: color, button: button, removeBackground: removeBackground, centerText: text)
+    }
+
+    /// 紧凑的时间圆环中心文本（≤3字符，自适应单位）
+    /// - 短窗口（5小时）: <60分钟显示 "Nm"，否则 "Nh"
+    /// - 长窗口（7天）: <24小时显示 "Nh"，否则 "Nd"
+    private func timeCircleText(remaining: TimeInterval, isShortWindow: Bool) -> String {
+        if isShortWindow {
+            let totalMinutes = remaining / 60.0
+            if totalMinutes < 60 {
+                let m = max(1, Int(totalMinutes.rounded()))
+                if m < 60 { return "\(m)m" }
+                // 四舍五入恰好到 60 分钟时，按 1 小时显示
+            }
+            // ≥1 小时：四舍五入到最近的整点（剩余分钟 >30 进位，<30 舍去）
+            let hours = max(1, Int((remaining / 3600).rounded()))
+            return "\(hours)h"
+        } else {
+            let hours = Int(ceil(remaining / 3600))
+            if hours < 24 { return "\(hours)h" }
+            return "\(hours / 24)d"
+        }
     }
 
     // MARK: - Icon Combination Methods (v2.0)
@@ -541,18 +661,18 @@ class MenuBarIconRenderer {
             let percentage = data.fiveHour?.percentage ?? (showPlaceholder ? 0 : nil)
             guard let percentage = percentage else { return nil }
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
             } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: removeBackground)
+                return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: removeBackground)
             }
 
         case .sevenDay:
             let percentage = data.sevenDay?.percentage ?? (showPlaceholder ? 0 : nil)
             guard let percentage = percentage else { return nil }
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
             } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayColor: true, button: button, removeBackground: removeBackground)
+                return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayColor: true, button: button, removeBackground: removeBackground)
             }
 
         case .opusWeekly:
@@ -596,17 +716,17 @@ class MenuBarIconRenderer {
         switch type {
         case .codexPrimary:
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
             }
             let color = UsageColorScheme.codexPrimaryColorAdaptive(percentage, for: button)
-            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), colorOverride: color, button: button, removeBackground: removeBackground)
+            return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, button: button, removeBackground: removeBackground)
 
         case .codexSecondary:
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
             }
             let color = UsageColorScheme.codexSecondaryColorAdaptive(percentage, for: button)
-            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
+            return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
 
         case .codexExtraUsage:
             let color = UsageColorScheme.codexExtraUsageColorAdaptive(percentage, for: button)

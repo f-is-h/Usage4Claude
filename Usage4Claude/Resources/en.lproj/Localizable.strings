@@ -125,6 +125,8 @@
 "display.none" = "No Display";
 "display.show_icon" = "Show Icon";
 "display.show_percentage" = "Show Percentage";
+"display.menu_bar_countdown" = "Reset countdown";
+"display.menu_bar_countdown_description" = "Show a countdown ring for each reset window (5-hour and 7-day) next to its usage ring in the menu bar.";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "Smart Frequency";

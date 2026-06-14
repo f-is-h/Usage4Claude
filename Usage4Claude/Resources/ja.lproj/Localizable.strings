@@ -125,6 +125,8 @@
 "display.none" = "表示しない";
 "display.show_icon" = "アイコンを表示";
 "display.show_percentage" = "パーセンテージを表示";
+"display.menu_bar_countdown" = "リセットまでのカウントダウン";
+"display.menu_bar_countdown_description" = "メニューバーの各使用量リングの隣に、各リセット期間（5時間・7日）の残り時間を示すカウントダウンリングを表示します。";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "スマート頻度";

@@ -125,6 +125,8 @@
 "display.none" = "不顯示";
 "display.show_icon" = "顯示圖示";
 "display.show_percentage" = "顯示百分比";
+"display.menu_bar_countdown" = "重置倒數計時";
+"display.menu_bar_countdown_description" = "在選單列每個用量圓環旁顯示一個倒數計時圓環，分別對應 5 小時與 7 天視窗的重置時間。";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "智慧頻率";

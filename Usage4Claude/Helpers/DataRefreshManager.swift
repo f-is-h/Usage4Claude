@@ -298,6 +298,20 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
+    /// 启动菜单栏倒计时刷新定时器
+    /// 周期性重绘菜单栏图标，使倒计时文本保持最新（仅本地重绘，不触发网络请求）
+    /// - Parameter updateHandler: 每次触发时调用的重绘闭包
+    func startMenuBarCountdownTimer(updateHandler: @escaping () -> Void) {
+        timerManager.schedule(TimerID.menuBarCountdown, interval: 30.0, repeats: true) {
+            updateHandler()
+        }
+    }
+
+    /// 停止菜单栏倒计时刷新定时器
+    func stopMenuBarCountdownTimer() {
+        timerManager.invalidate(TimerID.menuBarCountdown)
+    }
+
     // MARK: - App Nap Prevention
 
     /// 开始后台活动声明，防止 macOS App Nap 冻结定时器

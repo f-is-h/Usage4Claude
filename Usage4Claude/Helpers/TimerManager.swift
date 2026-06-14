@@ -149,5 +149,7 @@ extension TimerManager {
         static let codexResetVerify3 = "codexResetVerify3"
         /// Codex accessToken 主动续期定时器（独立于用量拉取计时器）
         static let codexTokenRefresh = "codexTokenRefresh"
+        /// 菜单栏重置倒计时重绘定时器（30秒间隔）
+        static let menuBarCountdown = "menuBarCountdown"
     }
 }

@@ -101,6 +101,24 @@ struct GeneralSettingsDisplaySection: View {
                         .disabled(settings.iconDisplayMode == .percentageOnly)
                     }
                 }
+
+                Divider()
+
+                // 菜单栏重置倒计时开关
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle(isOn: $settings.menuBarCountdownEnabled) {
+                        Text(L.Display.menuBarCountdown)
+                            .font(.subheadline)
+                    }
+                    .toggleStyle(.checkbox)
+                    .focusable(false)
+
+                    Text(L.Display.menuBarCountdownDescription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.leading, 20)
+                }
             }
         }
     }
