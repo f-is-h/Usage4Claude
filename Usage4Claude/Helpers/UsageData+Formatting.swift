@@ -130,6 +130,35 @@ extension UsageData.LimitData {
         return L.UsageData.compactRemainingDays(days, hours)
     }
 
+    /// 菜单栏倒计时文本（紧凑、无后缀、语言无关）
+    /// - 用于菜单栏常驻显示距离重置的剩余时间
+    /// - 示例: "45m", "1h32m", "2d7h"；无重置时间或已重置时返回 nil
+    var menuBarCountdown: String? {
+        guard let resetsAt = resetsAt else { return nil }
+
+        let resetsIn = resetsAt.timeIntervalSinceNow
+        guard resetsIn > 0 else { return nil }
+
+        // 向上取整到分钟，与其它倒计时格式保持一致
+        let totalMinutes = Int(ceil(resetsIn / 60))
+
+        if totalMinutes < 60 {
+            return "\(totalMinutes)m"
+        }
+
+        let totalHours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+
+        if totalHours < 24 {
+            return "\(totalHours)h\(minutes)m"
+        }
+
+        let days = totalHours / 24
+        let hours = totalHours % 24
+
+        return "\(days)d\(hours)h"
+    }
+
     /// 格式化的重置时间（用于5小时限制）
     /// - 示例: "Today 15:07" / "Today 3:07 PM", "Tomorrow 09:30" / "Tomorrow 9:30 AM"
     var formattedCompactResetTime: String {
