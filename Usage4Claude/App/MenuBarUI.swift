@@ -643,6 +643,11 @@ class MenuBarUI {
             key += "_extra\(Int(percentage))"
         }
 
+        // 菜单栏倒计时文本随时间变化，纳入缓存键以便每分钟自动刷新（关闭倒计时时不计入）
+        if settings.menuBarCountdownEnabled {
+            key += "_c5\(data.fiveHour?.menuBarCountdown ?? "")_c7\(data.sevenDay?.menuBarCountdown ?? "")"
+        }
+
         if let codex = codexUsageData {
             if let p = codex.primary { key += "_cxp\(Int(p.percentage))" }
             if let s = codex.secondary { key += "_cxs\(Int(s.percentage))" }
