@@ -40,6 +40,23 @@
         <language>en</language>
         <!-- Items go here. Top item is the latest version. -->
         <item>
+            <title>v3.2.1</title>
+            <pubDate>Fri, 19 Jun 2026 13:59:56 +0000</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>3.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.1</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Fixed
+- **Codex OAuth via system browser**: Sign in to Codex through the system browser, supporting Google, Microsoft SSO, enterprise SSO, and passkeys
+- **Claude OAuth via system browser**: Sign in to Claude through the system browser for improved compatibility and reliability
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.2.1/Usage4Claude-v3.2.1.dmg"
+              sparkle:edSignature="F/SPbOzcn7XX51jk8IkfF+KSVtW3qeP78HUyv7mrPSns26EYuCODHewGQt7yqMKe+Ilz/zqrtVtkHkupiDLTAA==" length="5646742"
+              type="application/octet-stream"/>
+        </item>
+        <item>
             <title>v3.2.0</title>
             <pubDate>Wed, 10 Jun 2026 06:52:01 +0000</pubDate>
             <sparkle:version>1</sparkle:version>
