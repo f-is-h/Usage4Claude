@@ -40,6 +40,22 @@
         <language>en</language>
         <!-- Items go here. Top item is the latest version. -->
         <item>
+            <title>v3.2.2</title>
+            <pubDate>Fri, 19 Jun 2026 14:59:17 +0000</pubDate>
+            <sparkle:version>3.2.2</sparkle:version>
+            <sparkle:shortVersionString>3.2.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.2</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Fixed
+- **Sparkle update version comparison**: Build number now tracks the marketing version so the updater recognizes newer releases, preventing repeated update prompts for an already-installed version
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.2.2/Usage4Claude-v3.2.2.dmg"
+              sparkle:edSignature="bNrrstRax1Iv4DzS08XR6KR7s8+Om5AYPF4pA6ta4bVr5olZyAJCqZEu4KHhkUODpjndEP76xXX7bGBSLPXlCQ==" length="5646748"
+              type="application/octet-stream"/>
+        </item>
+        <item>
             <title>v3.2.1</title>
             <pubDate>Fri, 19 Jun 2026 13:59:56 +0000</pubDate>
             <sparkle:version>3.2.1</sparkle:version>
