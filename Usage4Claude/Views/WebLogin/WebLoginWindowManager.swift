@@ -57,8 +57,10 @@ final class WebLoginWindowManager {
             return
         }
 
-        let loginView = CodexWebLoginView(onAccountCreated: onAccountCreated)
-        let window = makeWindow(title: L.WebLogin.codexWindowTitle, content: loginView)
+        // 改用 OAuth（系统浏览器）登录，替代内嵌 WKWebView，
+        // 以支持 Google / 微软 / 企业 SSO / passkey 等在嵌入式 WebView 中受限的登录方式
+        let loginView = CodexOAuthLoginView(onAccountCreated: onAccountCreated)
+        let window = makeCompactWindow(title: L.WebLogin.codexWindowTitle, content: loginView, width: 440, height: 300)
         self.codexLoginWindow = window
 
         NotificationCenter.default.addObserver(
@@ -88,6 +90,22 @@ final class WebLoginWindowManager {
         window.contentView = NSHostingView(rootView: content)
         window.title = title
         window.minSize = NSSize(width: 600, height: 500)
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+        return window
+    }
+
+    /// 固定尺寸的小窗口（用于 OAuth 进度展示，不可缩放）
+    private func makeCompactWindow<V: View>(title: String, content: V, width: CGFloat, height: CGFloat) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = NSHostingView(rootView: content)
+        window.title = title
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .floating

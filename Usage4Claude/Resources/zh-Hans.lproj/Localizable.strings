@@ -419,3 +419,14 @@
 "account.codex_accounts" = "Codex 账户";
 "account.add_codex_account" = "添加 Codex 账户";
 "account.codex_current_account" = "当前 Codex 账户";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "正在准备登录…";
+"weblogin.codex_oauth_waiting_browser" = "请在浏览器中继续登录";
+"weblogin.codex_oauth_waiting_hint" = "请在浏览器中完成 ChatGPT 登录（支持 Google、微软、企业 SSO 和 passkey），完成后会自动返回。";
+"weblogin.codex_oauth_exchanging" = "正在完成登录…";
+"weblogin.codex_oauth_failed" = "登录失败，请重试。";
+"weblogin.codex_oauth_timeout" = "登录超时，请重试。";
+"weblogin.codex_oauth_port_busy" = "本地端口 1455/1457 被占用，无法接收登录回调。请关闭占用该端口的程序后重试。";
+"weblogin.codex_oauth_reopen_browser" = "重新打开浏览器";
+"weblogin.codex_oauth_retry" = "重试";

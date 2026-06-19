@@ -484,6 +484,17 @@ enum L {
         }
         static var cloudflareBlocked: String { localized("weblogin.cloudflare_blocked") }
         static var privacyNotice: String { localized("weblogin.privacy_notice") }
+
+        // MARK: Codex OAuth 登录（系统浏览器）
+        static var codexOAuthPreparing: String { localized("weblogin.codex_oauth_preparing") }
+        static var codexOAuthWaitingBrowser: String { localized("weblogin.codex_oauth_waiting_browser") }
+        static var codexOAuthWaitingHint: String { localized("weblogin.codex_oauth_waiting_hint") }
+        static var codexOAuthExchanging: String { localized("weblogin.codex_oauth_exchanging") }
+        static var codexOAuthFailed: String { localized("weblogin.codex_oauth_failed") }
+        static var codexOAuthTimeout: String { localized("weblogin.codex_oauth_timeout") }
+        static var codexOAuthPortBusy: String { localized("weblogin.codex_oauth_port_busy") }
+        static var codexOAuthReopenBrowser: String { localized("weblogin.codex_oauth_reopen_browser") }
+        static var codexOAuthRetry: String { localized("weblogin.codex_oauth_retry") }
     }
 
     // MARK: - Settings Notification

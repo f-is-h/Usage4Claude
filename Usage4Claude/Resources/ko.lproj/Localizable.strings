@@ -419,3 +419,14 @@
 "account.codex_accounts" = "Codex 계정";
 "account.add_codex_account" = "Codex 계정 추가";
 "account.codex_current_account" = "현재 Codex 계정";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "로그인 준비 중…";
+"weblogin.codex_oauth_waiting_browser" = "브라우저에서 로그인을 계속하세요";
+"weblogin.codex_oauth_waiting_hint" = "브라우저에서 ChatGPT 로그인을 완료하세요(Google, Microsoft, 기업 SSO, 패스키 모두 지원). 완료되면 자동으로 돌아옵니다.";
+"weblogin.codex_oauth_exchanging" = "로그인 완료 중…";
+"weblogin.codex_oauth_failed" = "로그인에 실패했습니다. 다시 시도하세요.";
+"weblogin.codex_oauth_timeout" = "로그인 시간이 초과되었습니다. 다시 시도하세요.";
+"weblogin.codex_oauth_port_busy" = "로컬 포트 1455/1457이 사용 중이어서 로그인 콜백을 받을 수 없습니다. 해당 앱을 종료한 후 다시 시도하세요.";
+"weblogin.codex_oauth_reopen_browser" = "브라우저 다시 열기";
+"weblogin.codex_oauth_retry" = "다시 시도";

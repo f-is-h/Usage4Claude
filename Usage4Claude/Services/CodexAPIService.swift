@@ -36,6 +36,16 @@ class CodexAPIService {
     /// 保护缓存三属性的锁：主线程读（计时器/fetchAccessToken 入口），URLSession 后台线程写
     private let cacheLock = NSLock()
 
+    // MARK: - OAuth refresh 单飞（in-flight 合并）
+
+    /// OAuth refresh_token 是一次性的（每次刷新都会轮换、旧值立即作废）。
+    /// 多个计时器可能并发用同一 refresh_token 发起刷新，导致后到者用已作废的 token 被服务端拒绝。
+    /// 这里做单飞合并：同一 refresh_token 的刷新进行中时，后续调用挂入等待队列复用其结果。
+    /// 复用 cacheLock 保护以下三个属性。
+    private var oauthRefreshInFlight = false
+    private var oauthRefreshInFlightToken: String?
+    private var oauthRefreshWaiters: [(Result<String, Error>) -> Void] = []
+
     /// 缓存是否在刷新窗口外（剩余 > 20 分钟）。调用方必须在主线程。
     private var hasCachedValidToken: Bool {
         cacheLock.lock()
@@ -154,6 +164,13 @@ class CodexAPIService {
             return
         }
 
+        // OAuth 账户：sessionKey 实为 OAuth refresh_token，用它向 auth.openai.com 换 access_token，
+        // 不再走 chatgpt.com 的 /api/auth/session（cookie）路径。旧 session-token 账户继续走下方逻辑。
+        if Self.isOAuthRefreshToken(sessionToken) {
+            fetchAccessTokenViaOAuth(refreshToken: sessionToken, completion: completion)
+            return
+        }
+
         guard let url = URL(string: "\(baseURL)/api/auth/session") else {
             completion(.failure(UsageError.invalidURL))
             return
@@ -262,6 +279,78 @@ class CodexAPIService {
 
         activeTasks.append(task)
         task.resume()
+    }
+
+    // MARK: - Private: OAuth refresh → accessToken
+
+    /// 判断账户凭据是否为 OAuth refresh_token（OpenAI 格式以 "rt." 开头）
+    /// 旧 session-token 是 next-auth 加密串，不会命中此前缀
+    static func isOAuthRefreshToken(_ credential: String) -> Bool {
+        credential.hasPrefix("rt.")
+    }
+
+    /// 用 OAuth refresh_token 向 auth.openai.com 换取 access_token
+    /// 成功后缓存 access_token；若 refresh_token 发生轮换，则静默写回账户存储
+    /// 通过单飞合并避免并发刷新（见 oauthRefreshInFlight 注释）
+    private func fetchAccessTokenViaOAuth(refreshToken: String, completion: @escaping (Result<String, Error>) -> Void) {
+        cacheLock.lock()
+        // 同一 refresh_token 已有刷新在进行：挂入等待队列复用其结果，不再重复发起
+        if oauthRefreshInFlight, oauthRefreshInFlightToken == refreshToken {
+            oauthRefreshWaiters.append(completion)
+            cacheLock.unlock()
+            return
+        }
+        // 成为发起者（不同账户的并发刷新极罕见——仅账户切换瞬间，此处不特殊合并，各自独立刷新）
+        oauthRefreshInFlight = true
+        oauthRefreshInFlightToken = refreshToken
+        cacheLock.unlock()
+
+        CodexOAuthService.refresh(refreshToken: refreshToken) { [weak self] result in
+            guard let self else { return }
+
+            let finalResult: Result<String, Error>
+            switch result {
+            case .failure(let error):
+                // 网络瞬断时，若旧 access_token 尚未过期则回退使用
+                if let fallback = self.cachedTokenFallback(for: refreshToken) {
+                    Logger.api.warning("Codex OAuth refresh 失败，回退缓存 token")
+                    finalResult = .success(fallback)
+                } else {
+                    finalResult = .failure(error)
+                }
+
+            case .success(let tokens):
+                // refresh_token 可能轮换：响应携带新值且与旧值不同时，静默写回账户
+                let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
+                if newRefresh != refreshToken {
+                    Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
+                    DispatchQueue.main.async {
+                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newRefresh)
+                    }
+                }
+
+                let accessToken = tokens.accessToken
+                let expiry = jwtExpiry(from: accessToken) ?? Date().addingTimeInterval(30 * 60)
+                self.cacheLock.lock()
+                self.cachedAccessToken = accessToken
+                self.cachedAccessTokenExpiry = expiry
+                // 缓存 key 跟随新 refresh_token，确保轮换后下次仍能命中缓存
+                self.cachedForSessionToken = newRefresh
+                self.cacheLock.unlock()
+                finalResult = .success(accessToken)
+            }
+
+            // 清理单飞状态并取出所有等待者（均为同一 refresh_token，可安全复用同一结果）
+            self.cacheLock.lock()
+            let waiters = self.oauthRefreshWaiters
+            self.oauthRefreshWaiters.removeAll()
+            self.oauthRefreshInFlight = false
+            self.oauthRefreshInFlightToken = nil
+            self.cacheLock.unlock()
+
+            completion(finalResult)
+            for waiter in waiters { waiter(finalResult) }
+        }
     }
 
     /// 跳过 session 步骤，直接用已获取的 accessToken 查询用量（用于刷新后重试）

@@ -575,6 +575,13 @@ class DataRefreshManager: ObservableObject {
             markCodexNeedsRelogin()
             return
         }
+        // OAuth 账户：refresh_token 已在 fetchUsage 内尝试续期，401 表示 refresh_token 失效。
+        // 旧的 chatgpt.com 三级刷新链针对 session-token，对 OAuth 凭据无意义且必然失败，直接要求重新登录。
+        if CodexAPIService.isOAuthRefreshToken(UserSettings.shared.codexSessionToken) {
+            Logger.menuBar.info("Codex OAuth refresh_token 失效，需重新登录")
+            markCodexNeedsRelogin()
+            return
+        }
         let prefix = UserSettings.shared.codexSessionToken.prefix(16)
         Logger.menuBar.info("Codex accessToken 已过期，启动三级刷新链（session prefix=\(prefix)…）")
         attemptLevel1SSRRefresh()

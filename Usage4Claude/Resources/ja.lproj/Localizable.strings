@@ -421,3 +421,14 @@
 "account.codex_accounts" = "Codex アカウント";
 "account.add_codex_account" = "Codex アカウントを追加";
 "account.codex_current_account" = "現在の Codex アカウント";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "サインインを準備しています…";
+"weblogin.codex_oauth_waiting_browser" = "ブラウザでサインインを続けてください";
+"weblogin.codex_oauth_waiting_hint" = "ブラウザで ChatGPT のサインインを完了してください（Google、Microsoft、企業 SSO、パスキーに対応）。完了すると自動的に戻ります。";
+"weblogin.codex_oauth_exchanging" = "サインインを完了しています…";
+"weblogin.codex_oauth_failed" = "サインインに失敗しました。もう一度お試しください。";
+"weblogin.codex_oauth_timeout" = "サインインがタイムアウトしました。もう一度お試しください。";
+"weblogin.codex_oauth_port_busy" = "ローカルポート 1455/1457 が使用中のため、サインインのコールバックを受信できません。使用中のアプリを終了して再試行してください。";
+"weblogin.codex_oauth_reopen_browser" = "ブラウザを再度開く";
+"weblogin.codex_oauth_retry" = "再試行";

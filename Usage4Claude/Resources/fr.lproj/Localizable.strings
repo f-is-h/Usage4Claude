@@ -421,3 +421,14 @@
 "account.codex_accounts" = "Comptes Codex";
 "account.add_codex_account" = "Ajouter un compte Codex";
 "account.codex_current_account" = "Compte Codex actuel";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "Préparation de la connexion…";
+"weblogin.codex_oauth_waiting_browser" = "Continuez dans votre navigateur";
+"weblogin.codex_oauth_waiting_hint" = "Terminez la connexion ChatGPT dans votre navigateur (Google, Microsoft, SSO d'entreprise et passkeys pris en charge). Vous reviendrez ici automatiquement.";
+"weblogin.codex_oauth_exchanging" = "Finalisation de la connexion…";
+"weblogin.codex_oauth_failed" = "Échec de la connexion. Veuillez réessayer.";
+"weblogin.codex_oauth_timeout" = "Délai de connexion dépassé. Veuillez réessayer.";
+"weblogin.codex_oauth_port_busy" = "Le port local 1455/1457 est occupé ; le rappel de connexion ne peut pas être reçu. Fermez l'application concernée et réessayez.";
+"weblogin.codex_oauth_reopen_browser" = "Rouvrir le navigateur";
+"weblogin.codex_oauth_retry" = "Réessayer";
