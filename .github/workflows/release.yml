@@ -397,8 +397,9 @@ jobs:
           DMG_URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/$DMG_FILE"
           RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
 
-          BUILD_NUMBER=$(grep -m1 'CURRENT_PROJECT_VERSION' ${{ env.XCODE_PROJECT }}/project.pbxproj \
-            | awk '{print $3}' | tr -d ';')
+          # CURRENT_PROJECT_VERSION is interpolated from MARKETING_VERSION at
+          # build time, so the build number always equals the version string.
+          BUILD_NUMBER="$VERSION"
 
           PUB_DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
 
