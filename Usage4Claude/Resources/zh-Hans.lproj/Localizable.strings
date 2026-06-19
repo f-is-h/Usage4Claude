@@ -430,3 +430,4 @@
 "weblogin.codex_oauth_port_busy" = "本地端口 1455/1457 被占用，无法接收登录回调。请关闭占用该端口的程序后重试。";
 "weblogin.codex_oauth_reopen_browser" = "重新打开浏览器";
 "weblogin.codex_oauth_retry" = "重试";
+"weblogin.claude_oauth_port_busy" = "无法启动本地登录回调服务，请稍后重试。";

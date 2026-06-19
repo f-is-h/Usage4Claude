@@ -47,7 +47,13 @@ final class OAuthCallbackServer {
         // 避免浏览器把 localhost 解析为 ::1 而服务器只绑 127.0.0.1 导致连接空白。
         // OAuth code 受 PKCE + state 保护且一次性、短时有效，监听回环可接受。
 
-        guard let listener = try? NWListener(using: params, on: nwPort) else { return false }
+        let listener: NWListener
+        do {
+            listener = try NWListener(using: params, on: nwPort)
+        } catch {
+            Logger.settings.error("OAuthCallbackServer: 端口 \(port) 创建监听失败 - \(error.localizedDescription, privacy: .public)")
+            return false
+        }
 
         let sema = DispatchSemaphore(value: 0)
         var ready = false
@@ -56,7 +62,15 @@ final class OAuthCallbackServer {
             case .ready:
                 ready = true
                 sema.signal()
-            case .failed, .cancelled:
+            case .waiting(let error):
+                // 端口被占用时 NWListener 进入 waiting（持续重试），不会 failed。
+                // 立即 signal 以便快速切换到下一个端口，并记录真实原因。
+                Logger.settings.error("OAuthCallbackServer: 端口 \(port) 不可用（\(error.localizedDescription, privacy: .public)），尝试下一个")
+                sema.signal()
+            case .failed(let error):
+                Logger.settings.error("OAuthCallbackServer: 端口 \(port) 监听失败 - \(error.localizedDescription, privacy: .public)")
+                sema.signal()
+            case .cancelled:
                 sema.signal()
             default:
                 break
@@ -75,6 +89,7 @@ final class OAuthCallbackServer {
             return true
         }
         listener.cancel()
+        Logger.settings.error("OAuthCallbackServer: 端口 \(port) 未能在超时内就绪")
         return false
     }
 

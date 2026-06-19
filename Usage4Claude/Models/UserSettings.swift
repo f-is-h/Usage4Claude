@@ -1015,9 +1015,12 @@ class UserSettings: ObservableObject {
     }
 
     /// 检查认证信息是否已配置
-    /// - Returns: 如果 Organization ID 和 Session Key 都不为空则返回 true
+    /// OAuth 账户仅凭 refresh_token（sk-ant-ort01- 前缀）即可认为有效；
+    /// session-cookie 账户仍需 organizationId + sessionKey 双非空。
     var hasValidCredentials: Bool {
-        return !organizationId.isEmpty && !sessionKey.isEmpty
+        guard !sessionKey.isEmpty else { return false }
+        if sessionKey.hasPrefix("sk-ant-ort01-") { return true }
+        return !organizationId.isEmpty
     }
 
     /// 检查任一 Provider 的认证信息是否已配置
@@ -1375,6 +1378,17 @@ class UserSettings: ObservableObject {
         // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
         codexAccounts[index].sessionKey = token
         Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+    }
+
+    /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
+    /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
+    func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
+        guard let id = currentAccountId,
+              let index = accounts.firstIndex(where: { $0.id == id }) else { return }
+        guard accounts[index].sessionKey != token else { return }
+        // Account 是 struct，下标赋值触发 accounts.didSet → saveAccounts()，自动持久化
+        accounts[index].sessionKey = token
+        Logger.settings.notice("Claude session-token 已静默更新（自动续期）")
     }
 
     private func postAccountChanged(provider: ProviderType) {

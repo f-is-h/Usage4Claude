@@ -485,6 +485,9 @@ enum L {
         static var cloudflareBlocked: String { localized("weblogin.cloudflare_blocked") }
         static var privacyNotice: String { localized("weblogin.privacy_notice") }
 
+        // MARK: Claude OAuth 登录（系统浏览器）
+        static var claudeOAuthPortBusy: String { localized("weblogin.claude_oauth_port_busy") }
+
         // MARK: Codex OAuth 登录（系统浏览器）
         static var codexOAuthPreparing: String { localized("weblogin.codex_oauth_preparing") }
         static var codexOAuthWaitingBrowser: String { localized("weblogin.codex_oauth_waiting_browser") }

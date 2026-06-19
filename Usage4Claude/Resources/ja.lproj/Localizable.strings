@@ -432,3 +432,4 @@
 "weblogin.codex_oauth_port_busy" = "ローカルポート 1455/1457 が使用中のため、サインインのコールバックを受信できません。使用中のアプリを終了して再試行してください。";
 "weblogin.codex_oauth_reopen_browser" = "ブラウザを再度開く";
 "weblogin.codex_oauth_retry" = "再試行";
+"weblogin.claude_oauth_port_busy" = "ローカルのサインインコールバックサーバーを起動できませんでした。しばらくしてからもう一度お試しください。";

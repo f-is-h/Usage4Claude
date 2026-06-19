@@ -432,3 +432,4 @@
 "weblogin.codex_oauth_port_busy" = "Local port 1455/1457 is in use, so the sign-in callback can't be received. Close the app using it and try again.";
 "weblogin.codex_oauth_reopen_browser" = "Reopen browser";
 "weblogin.codex_oauth_retry" = "Try again";
+"weblogin.claude_oauth_port_busy" = "Unable to start the local sign-in callback server. Please try again in a moment.";

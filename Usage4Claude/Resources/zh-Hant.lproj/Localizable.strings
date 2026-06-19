@@ -432,3 +432,4 @@
 "weblogin.codex_oauth_port_busy" = "本機連接埠 1455/1457 已被佔用，無法接收登入回呼。請關閉佔用程式後重試。";
 "weblogin.codex_oauth_reopen_browser" = "重新開啟瀏覽器";
 "weblogin.codex_oauth_retry" = "重試";
+"weblogin.claude_oauth_port_busy" = "無法啟動本機登入回呼服務，請稍後重試。";

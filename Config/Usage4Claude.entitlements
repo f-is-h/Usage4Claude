@@ -7,6 +7,13 @@
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<!--
+	  OAuth 登录在本地起一个短时 NWListener（loopback）接收系统浏览器
+	  重定向回来的授权码。App Sandbox 下监听传入连接需要此 entitlement，
+	  否则 NWListener 会进入 .failed（权限拒绝）。见 CodexOAuth/OAuthCallbackServer。
+	-->
+	<key>com.apple.security.network.server</key>
+	<true/>
+	<!--
 	  Sparkle 2.x under App Sandbox: lets the main app reach Sparkle's
 	  Installer (-spki) and Status (-spks) XPC services bundled inside
 	  the Sparkle framework. Without these the one-click install fails

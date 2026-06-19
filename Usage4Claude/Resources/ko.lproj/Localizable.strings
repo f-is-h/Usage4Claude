@@ -430,3 +430,4 @@
 "weblogin.codex_oauth_port_busy" = "로컬 포트 1455/1457이 사용 중이어서 로그인 콜백을 받을 수 없습니다. 해당 앱을 종료한 후 다시 시도하세요.";
 "weblogin.codex_oauth_reopen_browser" = "브라우저 다시 열기";
 "weblogin.codex_oauth_retry" = "다시 시도";
+"weblogin.claude_oauth_port_busy" = "로컬 로그인 콜백 서버를 시작할 수 없습니다. 잠시 후 다시 시도하세요.";

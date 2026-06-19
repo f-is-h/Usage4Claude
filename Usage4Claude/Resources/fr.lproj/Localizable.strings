@@ -432,3 +432,4 @@
 "weblogin.codex_oauth_port_busy" = "Le port local 1455/1457 est occupé ; le rappel de connexion ne peut pas être reçu. Fermez l'application concernée et réessayez.";
 "weblogin.codex_oauth_reopen_browser" = "Rouvrir le navigateur";
 "weblogin.codex_oauth_retry" = "Réessayer";
+"weblogin.claude_oauth_port_busy" = "Impossible de démarrer le serveur de rappel de connexion local. Veuillez réessayer dans un instant.";
