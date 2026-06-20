@@ -125,6 +125,8 @@
 "display.none" = "不显示";
 "display.show_icon" = "显示图标";
 "display.show_percentage" = "显示百分比";
+"display.menu_bar_countdown" = "重置倒计时";
+"display.menu_bar_countdown_description" = "在菜单栏每个用量圆环旁显示一个倒计时圆环，分别对应 5 小时和 7 天窗口的重置时间。";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "智能频率";

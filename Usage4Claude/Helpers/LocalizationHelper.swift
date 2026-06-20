@@ -198,6 +198,8 @@ enum L {
         static var none: String { localized("display.none") }
         static var showIcon: String { localized("display.show_icon") }
         static var showPercentage: String { localized("display.show_percentage") }
+        static var menuBarCountdown: String { localized("display.menu_bar_countdown") }
+        static var menuBarCountdownDescription: String { localized("display.menu_bar_countdown_description") }
     }
     
     // MARK: - Icon Style Mode

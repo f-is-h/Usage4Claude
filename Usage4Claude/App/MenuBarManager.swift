@@ -224,6 +224,9 @@ class MenuBarManager: ObservableObject {
                 // 立即更新图标，无需等待
                 self.updateMenuBarIcon()
 
+                // "菜单栏重置倒计时"开关可能变化，同步倒计时重绘定时器
+                self.syncMenuBarCountdownTimer()
+
                 #if DEBUG
                 // 调试模式下立即刷新数据（不使用防抖）
                 self.dataManager.fetchUsage()
@@ -436,6 +439,21 @@ class MenuBarManager: ObservableObject {
     /// 开始数据刷新
     func startRefreshing() {
         dataManager.startRefreshing()
+        // 按"菜单栏重置倒计时"开关启动 / 停止倒计时重绘定时器
+        syncMenuBarCountdownTimer()
+    }
+
+    /// 根据"菜单栏重置倒计时"开关启动或停止倒计时重绘定时器
+    /// 启用时定期重绘菜单栏以刷新倒计时文本；关闭时停止定时器，避免无谓重绘
+    /// （startMenuBarCountdownTimer 重复调用安全：同标识符定时器会先被取消再重建）
+    private func syncMenuBarCountdownTimer() {
+        if settings.menuBarCountdownEnabled {
+            dataManager.startMenuBarCountdownTimer { [weak self] in
+                self?.updateMenuBarIcon()
+            }
+        } else {
+            dataManager.stopMenuBarCountdownTimer()
+        }
     }
     
     // MARK: - Settings Window

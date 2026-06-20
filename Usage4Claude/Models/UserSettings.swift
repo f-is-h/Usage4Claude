@@ -560,6 +560,14 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 是否在菜单栏显示重置倒计时圆环（5小时 / 7天窗口）
+    @Published var menuBarCountdownEnabled: Bool {
+        didSet {
+            defaults.set(menuBarCountdownEnabled, forKey: "menuBarCountdownEnabled")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// Popover 端是否应该显示自定义模式的占位符（0% 空壳）
     /// 仅当显示模式为 custom 且未开启"仅应用于菜单栏"时为 true
     var shouldShowCustomPlaceholderInPopover: Bool {
@@ -953,6 +961,9 @@ class UserSettings: ObservableObject {
         // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
         self.customDisplayMenuBarOnly = defaults.bool(forKey: "customDisplayMenuBarOnly")
 
+        // 加载"菜单栏重置倒计时"开关，默认开启
+        self.menuBarCountdownEnabled = defaults.object(forKey: "menuBarCountdownEnabled") as? Bool ?? true
+
         // 检查是否首次启动（如果没有保存过认证信息，就是首次启动）
         if !defaults.bool(forKey: "hasLaunched") {
             self.isFirstLaunch = true
@@ -1090,6 +1101,7 @@ class UserSettings: ObservableObject {
         displayMode = .smart
         customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
         customDisplayMenuBarOnly = false
+        menuBarCountdownEnabled = true
         notificationsEnabled = true
 
         // 重置智能模式状态
