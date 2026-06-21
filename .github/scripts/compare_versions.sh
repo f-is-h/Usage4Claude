@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage4Claude - Version Comparison and Validation
+# UsagePaceCC - Version Comparison and Validation
 # This script compares semantic versions and validates new releases
 
 set -e

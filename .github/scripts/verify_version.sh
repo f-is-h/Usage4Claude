@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage4Claude - Version Verification Script
+# UsagePaceCC - Version Verification Script
 # This script extracts and verifies version numbers from CHANGELOG.md and Xcode project
 
 set -e

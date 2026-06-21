@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage4Claude 构建打包脚本
+# UsagePaceCC 构建打包脚本
 # 功能：编译 Xcode 项目，导出 .app，创建 DMG 安装包
 # 用法：./scripts/build.sh [--no-clean] [--config Release|Debug] [--verbose|-v]
 
@@ -45,9 +45,9 @@ print_info() {
 # 配置变量
 # ============================================
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROJECT_NAME="Usage4Claude"
+PROJECT_NAME="UsagePaceCC"
 SCHEME_NAME="Usage4Claude"
-XCODEPROJ="${PROJECT_ROOT}/${PROJECT_NAME}.xcodeproj"
+XCODEPROJ="${PROJECT_ROOT}/Usage4Claude.xcodeproj"
 BUILD_DIR="${PROJECT_ROOT}/build"
 
 # 默认参数

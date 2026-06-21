@@ -24,7 +24,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PROJECT_NAME: Usage4Claude
+  PROJECT_NAME: UsagePaceCC
+  SCHEME_NAME: Usage4Claude
   XCODE_PROJECT: Usage4Claude.xcodeproj
   BUILD_CONFIG: Release
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -216,7 +217,7 @@ jobs:
       
       - name: Build application
         run: |
-          echo "Building Usage4Claude..."
+          echo "Building UsagePaceCC..."
           ./scripts/build.sh --config ${{ env.BUILD_CONFIG }}
       
       - name: Generate SHA256 checksum

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage4Claude - Cleanup Failed Release
+# UsagePaceCC - Cleanup Failed Release
 # This script cleans up tags and releases when build fails
 
 set -e

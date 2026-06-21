@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage4Claude - Release Notes Generator
+# UsagePaceCC - Release Notes Generator
 # This script generates release notes from template
 
 set -e
