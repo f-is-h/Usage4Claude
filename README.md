@@ -23,6 +23,11 @@
 
 ---
 
+> **UsagePaceCC** is an open-source fork of [Usage4Claude](https://github.com/f-is-h/Usage4Claude) by f-is-h, distributed under the MIT License.
+> Not affiliated with, endorsed by, or sponsored by Anthropic. "Claude" is a trademark of Anthropic.
+
+---
+
 ## ✨ Features
 
 ### 🎯 Core Features

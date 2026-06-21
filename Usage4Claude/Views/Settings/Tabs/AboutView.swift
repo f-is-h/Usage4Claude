@@ -102,6 +102,27 @@ struct AboutView: View {
             Text(L.SettingsAbout.copyright)
                 .font(.caption)
                 .foregroundColor(.secondary)
+
+            // 归因信息 — 基于 f-is-h/Usage4Claude
+            Button(action: {
+                if let url = URL(string: "https://github.com/f-is-h/Usage4Claude") {
+                    NSWorkspace.shared.open(url)
+                }
+            }) {
+                Text(L.SettingsAbout.basedOn)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .underline()
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+
+            // 免责声明 — 与 Anthropic 无关联
+            Text(L.SettingsAbout.disclaimer)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
                 .padding(.bottom)
         }
         .padding()

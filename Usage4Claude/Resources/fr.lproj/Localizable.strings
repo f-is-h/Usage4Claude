@@ -100,6 +100,8 @@
 "settings.about.coffee" = "Offrir un café";
 "settings.about.github_sponsor" = "Sponsor GitHub";
 "settings.about.copyright" = "© 2025 Tous droits réservés";
+"settings.about.based_on" = "Basé sur Usage4Claude par f-is-h (licence MIT)";
+"settings.about.disclaimer" = "Non affilié à, approuvé par ou parrainé par Anthropic. \"Claude\" est une marque déposée d'Anthropic.";
 
 // MARK: - Welcome View
 "welcome.title" = "Bienvenue dans Usage4Claude";

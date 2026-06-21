@@ -100,6 +100,8 @@
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.based_on" = "f-is-h의 Usage4Claude를 기반으로 합니다 (MIT 라이선스)";
+"settings.about.disclaimer" = "Anthropic과 제휴, 보증 또는 후원 관계가 없습니다. \"Claude\"는 Anthropic의 상표입니다.";
 
 // MARK: - Welcome View
 "welcome.title" = "Usage4Claude에 오신 것을 환영합니다";

@@ -140,6 +140,8 @@ enum L {
         static var coffee: String { localized("settings.about.coffee") }
         static var githubSponsor: String { localized("settings.about.github_sponsor") }
         static var copyright: String { localized("settings.about.copyright") }
+        static var basedOn: String { localized("settings.about.based_on") }
+        static var disclaimer: String { localized("settings.about.disclaimer") }
     }
     
     // MARK: - Welcome View

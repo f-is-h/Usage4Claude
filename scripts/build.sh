@@ -211,7 +211,7 @@ if [ "$VERBOSE" = true ]; then
         -configuration "$BUILD_CONFIG" \
         -archivePath "$ARCHIVE_PATH" \
         -destination "generic/platform=macOS,name=Any Mac" \
-        CODE_SIGN_IDENTITY="Usage4Claude-CodeSigning" \
+        CODE_SIGN_IDENTITY="-" \
         CODE_SIGN_STYLE=Manual \
         DEVELOPMENT_TEAM=""
     ARCHIVE_RESULT=$?
@@ -224,7 +224,7 @@ else
         -configuration "$BUILD_CONFIG" \
         -archivePath "$ARCHIVE_PATH" \
         -destination "generic/platform=macOS,name=Any Mac" \
-        CODE_SIGN_IDENTITY="Usage4Claude-CodeSigning" \
+        CODE_SIGN_IDENTITY="-" \
         CODE_SIGN_STYLE=Manual \
         DEVELOPMENT_TEAM="" \
         >> "$LOG_FILE" 2>&1
@@ -300,6 +300,24 @@ if [ $EXPORT_RESULT -ne 0 ] || [ ! -d "${EXPORT_DIR}/${PROJECT_NAME}.app" ]; the
 fi
 
 print_success "导出完成: ${EXPORT_DIR}/${PROJECT_NAME}.app"
+
+# ============================================
+# 复制 LICENSE 文件（MIT 合规要求）
+# ============================================
+print_header "复制 LICENSE 文件"
+
+LICENSE_SRC="${PROJECT_ROOT}/LICENSE"
+LICENSE_RESOURCES="${EXPORT_DIR}/${PROJECT_NAME}.app/Contents/Resources/LICENSE"
+LICENSE_EXPORT="${EXPORT_DIR}/LICENSE"
+
+if [ -f "$LICENSE_SRC" ]; then
+    cp "$LICENSE_SRC" "$LICENSE_RESOURCES"
+    cp "$LICENSE_SRC" "$LICENSE_EXPORT"
+    print_success "LICENSE 已复制到 app bundle 和导出目录"
+else
+    print_error "未找到 LICENSE 文件: $LICENSE_SRC"
+    exit 1
+fi
 
 # ============================================
 # 创建 DMG

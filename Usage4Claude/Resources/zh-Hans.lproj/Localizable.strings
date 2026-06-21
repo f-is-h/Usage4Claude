@@ -100,6 +100,8 @@
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.based_on" = "基于 f-is-h 的 Usage4Claude（MIT 许可证）";
+"settings.about.disclaimer" = "本应用与 Anthropic 无任何关联、认可或赞助关系。\"Claude\" 是 Anthropic 的商标。";
 
 // MARK: - Welcome View
 "welcome.title" = "欢迎使用 Usage4Claude";
