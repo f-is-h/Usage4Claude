@@ -14,7 +14,7 @@
 "menu.web_usage" = "檢視 Claude 用量";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
-"menu.quit" = "結束 Usage4Claude";
+"menu.quit" = "結束 UsagePaceCC";
 "menu.account" = "帳戶";
 "menu.account_prefix" = "帳戶:";
 
@@ -99,12 +99,12 @@
 "settings.about.github" = "造訪 GitHub 儲存庫";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "基於 f-is-h 的 Usage4Claude（MIT 授權）";
 "settings.about.disclaimer" = "本應用與 Anthropic 無任何關聯、認可或贊助關係。\"Claude\" 是 Anthropic 的商標。";
 
 // MARK: - Welcome View
-"welcome.title" = "歡迎使用 Usage4Claude";
+"welcome.title" = "歡迎使用 UsagePaceCC";
 "welcome.subtitle" = "開始之前，請先設定您的認證資訊";
 "welcome.setup_button" = "前往設定認證資訊";
 "welcome.later_button" = "稍後設定";
@@ -158,7 +158,7 @@
 "language.french" = "Français";
 
 // MARK: - Window Titles
-"window.settings_title" = "Usage4Claude 設定";
+"window.settings_title" = "UsagePaceCC 設定";
 "window.welcome_title" = "歡迎";
 
 // MARK: - Usage Data Formatting
@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "請在上方欄位中設定組織 ID 和工作階段金鑰";
 "diagnostic.suggestion_check_org_id" = "檢查組織 ID 格式是否正確(應該是 UUID 格式)";
 "diagnostic.suggestion_export_and_share" = "匯出此診斷報告並在 GitHub Issues 上分享";
-"diagnostic.suggestion_contact_support" = "在 github.com/f-is-h/Usage4Claude/issues 聯絡開發者尋求協助";
+"diagnostic.suggestion_contact_support" = "在 github.com/quangyendn/Usage4Claude/issues 聯絡開發者尋求協助";
 "diagnostic.open_log_folder" = "開啟日誌資料夾";
 
 // MARK: - Limit Types (v2.0.0)

@@ -14,7 +14,7 @@
 "menu.web_usage" = "Voir l'utilisation de Claude";
 "menu.coffee" = "Offrir un café";
 "menu.github_sponsor" = "Sponsor GitHub";
-"menu.quit" = "Quitter Usage4Claude";
+"menu.quit" = "Quitter UsagePaceCC";
 "menu.account" = "Compte";
 "menu.account_prefix" = "Compte :";
 
@@ -99,12 +99,12 @@
 "settings.about.github" = "Visiter le dépôt GitHub";
 "settings.about.coffee" = "Offrir un café";
 "settings.about.github_sponsor" = "Sponsor GitHub";
-"settings.about.copyright" = "© 2025 Tous droits réservés";
+"settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "Basé sur Usage4Claude par f-is-h (licence MIT)";
 "settings.about.disclaimer" = "Non affilié à, approuvé par ou parrainé par Anthropic. \"Claude\" est une marque déposée d'Anthropic.";
 
 // MARK: - Welcome View
-"welcome.title" = "Bienvenue dans Usage4Claude";
+"welcome.title" = "Bienvenue dans UsagePaceCC";
 "welcome.subtitle" = "Veuillez configurer vos informations d'authentification avant de commencer";
 "welcome.setup_button" = "Configurer l'authentification";
 "welcome.later_button" = "Configurer plus tard";
@@ -158,7 +158,7 @@
 "language.french" = "Français";
 
 // MARK: - Window Titles
-"window.settings_title" = "Réglages Usage4Claude";
+"window.settings_title" = "Réglages UsagePaceCC";
 "window.welcome_title" = "Bienvenue";
 
 // MARK: - Usage Data Formatting
@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "Veuillez configurer l'identifiant d'organisation et la clé de session dans les champs ci-dessus";
 "diagnostic.suggestion_check_org_id" = "Vérifiez que le format de l'identifiant d'organisation est correct (doit être un UUID)";
 "diagnostic.suggestion_export_and_share" = "Exportez ce rapport de diagnostic et partagez-le sur GitHub Issues";
-"diagnostic.suggestion_contact_support" = "Contactez le développeur pour obtenir de l'aide sur github.com/f-is-h/Usage4Claude/issues";
+"diagnostic.suggestion_contact_support" = "Contactez le développeur pour obtenir de l'aide sur github.com/quangyendn/Usage4Claude/issues";
 "diagnostic.open_log_folder" = "Ouvrir le dossier des journaux";
 
 // MARK: - Limit Types (v2.0.0)

@@ -105,7 +105,7 @@ class DiagnosticManager: ObservableObject {
 
         // 创建临时文件
         let tempDir = FileManager.default.temporaryDirectory
-        let filename = "Usage4Claude_Diagnostic_\(formatFilenameDate()).md"
+        let filename = "UsagePaceCC_Diagnostic_\(formatFilenameDate()).md"
         let fileURL = tempDir.appendingPathComponent(filename)
 
         do {
@@ -126,7 +126,7 @@ class DiagnosticManager: ObservableObject {
         let savePanel = NSSavePanel()
         savePanel.title = L.Diagnostic.exportTitle
         savePanel.message = L.Diagnostic.exportMessage
-        savePanel.nameFieldStringValue = "Usage4Claude_Diagnostic_\(formatFilenameDate()).md"
+        savePanel.nameFieldStringValue = "UsagePaceCC_Diagnostic_\(formatFilenameDate()).md"
         savePanel.allowedContentTypes = [.plainText]
         savePanel.canCreateDirectories = true
 

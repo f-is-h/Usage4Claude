@@ -500,7 +500,7 @@ class MenuBarManager: ObservableObject {
             )
             settingsWindow?.title = L.Window.settingsTitle
             settingsWindow?.styleMask = [.titled, .closable, .miniaturizable]
-            settingsWindow?.setFrameAutosaveName("Usage4Claude.SettingsWindow")
+            settingsWindow?.setFrameAutosaveName("UsagePaceCC.SettingsWindow")
 
             // 移除旧的观察者（如果存在）
             if let observer = windowCloseObserver {

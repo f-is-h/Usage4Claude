@@ -16,7 +16,7 @@ class UpdateChecker {
     // MARK: - Properties
     
     /// GitHub 仓库所有者
-    private let repoOwner = "f-is-h"
+    private let repoOwner = "quangyendn"
     /// GitHub 仓库名称
     private let repoName = "Usage4Claude"
     
@@ -79,7 +79,7 @@ class UpdateChecker {
         var request = URLRequest(url: url)
         request.assumesHTTP3Capable = false
         request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
-        request.setValue("Usage4Claude/\(currentVersion)", forHTTPHeaderField: "User-Agent")
+        request.setValue("UsagePaceCC/\(currentVersion)", forHTTPHeaderField: "User-Agent")
 
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else {
@@ -129,7 +129,7 @@ class UpdateChecker {
         var request = URLRequest(url: url)
         request.assumesHTTP3Capable = false
         request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
-        request.setValue("Usage4Claude/\(currentVersion)", forHTTPHeaderField: "User-Agent")
+        request.setValue("UsagePaceCC/\(currentVersion)", forHTTPHeaderField: "User-Agent")
 
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else { return }

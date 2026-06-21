@@ -14,7 +14,7 @@
 "menu.web_usage" = "Claude 사용량 웹페이지";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
-"menu.quit" = "Usage4Claude 종료";
+"menu.quit" = "UsagePaceCC 종료";
 "menu.account" = "계정";
 "menu.account_prefix" = "계정:";
 
@@ -99,12 +99,12 @@
 "settings.about.github" = "GitHub 저장소 방문";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "f-is-h의 Usage4Claude를 기반으로 합니다 (MIT 라이선스)";
 "settings.about.disclaimer" = "Anthropic과 제휴, 보증 또는 후원 관계가 없습니다. \"Claude\"는 Anthropic의 상표입니다.";
 
 // MARK: - Welcome View
-"welcome.title" = "Usage4Claude에 오신 것을 환영합니다";
+"welcome.title" = "UsagePaceCC에 오신 것을 환영합니다";
 "welcome.subtitle" = "시작하기 전에 인증 정보를 설정하세요";
 "welcome.setup_button" = "인증 정보 설정하기";
 "welcome.later_button" = "나중에 설정";
@@ -158,7 +158,7 @@
 "language.french" = "Français";
 
 // MARK: - Window Titles
-"window.settings_title" = "Usage4Claude 설정";
+"window.settings_title" = "UsagePaceCC 설정";
 "window.welcome_title" = "환영합니다";
 
 // MARK: - Usage Data Formatting
@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "위 필드에 조직 ID와 세션 키를 설정하세요";
 "diagnostic.suggestion_check_org_id" = "조직 ID 형식이 올바른지 확인하세요(UUID 형식이어야 함)";
 "diagnostic.suggestion_export_and_share" = "이 진단 보고서를 내보내서 GitHub Issues에 공유하세요";
-"diagnostic.suggestion_contact_support" = "github.com/f-is-h/Usage4Claude/issues에서 개발자에게 도움을 요청하세요";
+"diagnostic.suggestion_contact_support" = "github.com/quangyendn/Usage4Claude/issues에서 개발자에게 도움을 요청하세요";
 "diagnostic.open_log_folder" = "로그 폴더 열기";
 
 // MARK: - Limit Types (v2.0.0)

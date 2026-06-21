@@ -14,7 +14,7 @@
 "menu.web_usage" = "Claude使用状況を表示";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
-"menu.quit" = "Usage4Claudeを終了";
+"menu.quit" = "UsagePaceCCを終了";
 "menu.account" = "アカウント";
 "menu.account_prefix" = "アカウント:";
 
@@ -99,12 +99,12 @@
 "settings.about.github" = "GitHubリポジトリを表示";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "f-is-h の Usage4Claude をベースにしています（MITライセンス）";
 "settings.about.disclaimer" = "Anthropic との提携・推薦・スポンサー関係はありません。\"Claude\" は Anthropic の商標です。";
 
 // MARK: - Welcome View
-"welcome.title" = "Usage4Claudeへようこそ";
+"welcome.title" = "UsagePaceCCへようこそ";
 "welcome.subtitle" = "使い始める前に認証情報を設定してください";
 "welcome.setup_button" = "認証情報を設定";
 "welcome.later_button" = "後で設定";
@@ -158,7 +158,7 @@
 "language.french" = "Français";
 
 // MARK: - Window Titles
-"window.settings_title" = "Usage4Claude 設定";
+"window.settings_title" = "UsagePaceCC 設定";
 "window.welcome_title" = "ようこそ";
 
 // MARK: - Usage Data Formatting
@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "上記のフィールドに組織IDとセッションキーを設定してください";
 "diagnostic.suggestion_check_org_id" = "組織IDの形式が正しいか確認してください(UUID形式である必要があります)";
 "diagnostic.suggestion_export_and_share" = "この診断レポートをエクスポートしてGitHub Issuesで共有してください";
-"diagnostic.suggestion_contact_support" = "github.com/f-is-h/Usage4Claude/issuesで開発者にお問い合わせください";
+"diagnostic.suggestion_contact_support" = "github.com/quangyendn/Usage4Claude/issuesで開発者にお問い合わせください";
 "diagnostic.open_log_folder" = "ログフォルダを開く";
 
 // MARK: - Limit Types (v2.0.0)

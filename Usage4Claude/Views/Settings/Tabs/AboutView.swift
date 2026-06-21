@@ -29,7 +29,7 @@ struct AboutView: View {
             
             // 应用名称和版本
             VStack(spacing: 4) {
-                Text("Usage4Claude")
+                Text("UsagePaceCC")
                     .font(.title)
                     .fontWeight(.bold)
                 
@@ -50,7 +50,7 @@ struct AboutView: View {
             
             // 信息列表
             VStack(alignment: .leading, spacing: 12) {
-                AboutInfoRow(icon: "person.fill", title: L.SettingsAbout.developer, value: "f-is-h")
+                AboutInfoRow(icon: "person.fill", title: L.SettingsAbout.developer, value: "Yen NQ")
                 AboutInfoRow(icon: "doc.text", title: L.SettingsAbout.license, value: L.SettingsAbout.licenseValue)
             }
             
@@ -59,7 +59,7 @@ struct AboutView: View {
             // 链接按钮
             VStack(spacing: 8) {
                 Button(action: {
-                    if let url = URL(string: "https://github.com/f-is-h/Usage4Claude") {
+                    if let url = URL(string: "https://github.com/quangyendn/Usage4Claude") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
