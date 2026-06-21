@@ -33,7 +33,7 @@ start until those tokens are resolved.
 | 02 | Confirm app name & bundle id (BLOCKER) | Done (2026-06-21) | 1h | [phase-02](./phase-02-confirm-name.md) |
 | 03 | Rebrand: Xcode identity + bundle id + keychain migration | Done (2026-06-21) | 4h | [phase-03-identity](./phase-03-identity-bundleid.md) |
 | 04 | Rebrand: UI/localization strings + About + URLs + UpdateChecker | Done (2026-06-21) | 5h | [phase-04-ui-strings](./phase-04-ui-strings-urls.md) |
-| 05 | Rebrand: icons & visual assets | Done (placeholder) (2026-06-21) | 3h | [phase-05-icons](./phase-05-icons-assets.md) |
+| 05 | Rebrand: icons & visual assets | Done (bespoke icon) (2026-06-21) | 3h | [phase-05-icons](./phase-05-icons-assets.md) |
 | 06 | Rebrand: build / release / CI tooling | Done (2026-06-21) | 3h | [phase-06-build-ci](./phase-06-build-ci.md) |
 | 07 | Rebrand: website (optional / deferrable) | Deferred (D5/D6) | 3h | [phase-07-website](./phase-07-website.md) |
 | 08 | Upstream-sync mechanism | Done (2026-06-21) | 4h | [phase-08-upstream-sync](./phase-08-upstream-sync.md) |
