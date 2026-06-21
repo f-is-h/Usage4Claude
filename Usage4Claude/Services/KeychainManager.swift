@@ -19,21 +19,25 @@ class KeychainManager {
     
     private init() {
         #if !DEBUG
-        // 动态获取 Bundle ID，如果获取失败则使用默认值
+        // init() overrides the fallback service with Bundle.main.bundleIdentifier in Release.
+        // D3 (silent re-auth): existing keychain entries stored under the previous fork's
+        // service identifier return nil under the new bundle id — users will be prompted to
+        // re-enter Org ID + Session Key once on first launch. No migration code.
+        // TODO Phase 04: surface one-time re-auth notice on first launch under new bundle id
         if let bundleID = Bundle.main.bundleIdentifier {
             service = bundleID
         }
         #endif
     }
-    
+
     // MARK: - Keychain 配置
-    
+
     #if DEBUG
     /// Debug 模式：UserDefaults key 前缀
     private let debugKeyPrefix = "DEBUG_"
     #else
     /// Keychain 服务标识符（自动从 Bundle 获取）
-    private var service: String = "xyz.fi5h.Usage4Claude"  // 默认值，会在 init 中更新
+    private var service: String = "com.quangyendn.usagepacecc"  // 默认值，会在 init 中更新
     #endif
     
     // MARK: - 保存方法

@@ -11,7 +11,7 @@ import OSLog
 
 extension Logger {
     /// 应用的统一 subsystem 标识符
-    private static var subsystem = Bundle.main.bundleIdentifier ?? "xyz.fi5h.Usage4Claude"
+    private static var subsystem = Bundle.main.bundleIdentifier ?? "com.quangyendn.usagepacecc"
 
     /// 菜单栏管理器日志
     /// 用于记录菜单栏、刷新、更新检查等相关操作
@@ -55,6 +55,6 @@ extension Logger {
 
  查看日志：
  1. Xcode Console (开发时)
- 2. Console.app (搜索 subsystem:xyz.fi5h.Usage4Claude)
- 3. 命令行: log show --predicate 'subsystem == "xyz.fi5h.Usage4Claude"' --last 1h
+ 2. Console.app (搜索 subsystem:com.quangyendn.usagepacecc)
+ 3. 命令行: log show --predicate 'subsystem == "com.quangyendn.usagepacecc"' --last 1h
  */

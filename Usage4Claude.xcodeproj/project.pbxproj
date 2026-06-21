@@ -66,7 +66,7 @@
 			name = Usage4Claude;
 			packageProductDependencies = (
 			);
-			productName = Usage4Claude;
+			productName = UsagePaceCC;
 			productReference = 8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -286,8 +286,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 3.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = xyz.fi5h.Usage4Claude;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.quangyendn.usagepacecc;
+				PRODUCT_NAME = UsagePaceCC;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -336,8 +336,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 3.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = xyz.fi5h.Usage4Claude;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.quangyendn.usagepacecc;
+				PRODUCT_NAME = UsagePaceCC;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

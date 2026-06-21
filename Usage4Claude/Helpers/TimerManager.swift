@@ -19,7 +19,7 @@ class TimerManager {
     private var timers: [String: Timer] = [:]
 
     /// 线程安全队列
-    private let queue = DispatchQueue(label: "com.usage4claude.timer", attributes: .concurrent)
+    private let queue = DispatchQueue(label: "com.quangyendn.usagepacecc.timer", attributes: .concurrent)
 
     // MARK: - Public Methods
 

@@ -32,7 +32,7 @@ class DiagnosticLogger {
     private var logFileURL: URL?
 
     /// 日志队列（用于异步写入）
-    private let logQueue = DispatchQueue(label: "com.f-is-h.Usage4Claude.logging", qos: .utility)
+    private let logQueue = DispatchQueue(label: "com.quangyendn.usagepacecc.logging", qos: .utility)
 
     /// 最大日志文件大小（5MB）
     private let maxLogFileSize: UInt64 = 5 * 1024 * 1024
@@ -41,7 +41,7 @@ class DiagnosticLogger {
     private var isEnabled: Bool = true
 
     /// 系统日志器
-    private let osLogger = Logger(subsystem: "com.f-is-h.Usage4Claude", category: "Diagnostics")
+    private let osLogger = Logger(subsystem: "com.quangyendn.usagepacecc", category: "Diagnostics")
 
     // MARK: - Initialization
 
@@ -120,7 +120,7 @@ class DiagnosticLogger {
             return
         }
 
-        let logDirectory = appSupport.appendingPathComponent("Usage4Claude/logs")
+        let logDirectory = appSupport.appendingPathComponent("UsagePaceCC/logs")
 
         // 创建日志目录
         do {

@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8873E4CE2E9F61C700ACFF5C"
-               BuildableName = "Usage4Claude.app"
+               BuildableName = "UsagePaceCC.app"
                BlueprintName = "Usage4Claude"
                ReferencedContainer = "container:Usage4Claude.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8873E4CE2E9F61C700ACFF5C"
-            BuildableName = "Usage4Claude.app"
+            BuildableName = "UsagePaceCC.app"
             BlueprintName = "Usage4Claude"
             ReferencedContainer = "container:Usage4Claude.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8873E4CE2E9F61C700ACFF5C"
-            BuildableName = "Usage4Claude.app"
+            BuildableName = "UsagePaceCC.app"
             BlueprintName = "Usage4Claude"
             ReferencedContainer = "container:Usage4Claude.xcodeproj">
          </BuildableReference>
