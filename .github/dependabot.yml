@@ -1,0 +1,22 @@
+version: 2
+
+# Note: Swift dependencies are managed directly in Xcode (no Package.swift /
+# Package.resolved at the repo root), so the "swift" ecosystem is NOT listed here.
+# If SPM dependencies are added in a future phase, add:
+#   - package-ecosystem: "swift"
+#     directory: "/"
+#     schedule:
+#       interval: "weekly"
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(actions)"

@@ -1,0 +1,221 @@
+name: Upstream Watch
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  watch:
+    name: Detect new upstream commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      UPSTREAM_REPO: f-is-h/Usage4Claude
+      UPSTREAM_BRANCH: main
+      MIRROR_BRANCH: upstream-mirror
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream "https://github.com/${{ env.UPSTREAM_REPO }}.git"
+          git fetch upstream "${{ env.UPSTREAM_BRANCH }}"
+          git fetch origin "${{ env.MIRROR_BRANCH }}"
+          git fetch origin main
+
+      - name: Compare upstream vs mirror
+        id: diff
+        run: |
+          NEW=$(git log "origin/${{ env.MIRROR_BRANCH }}..upstream/${{ env.UPSTREAM_BRANCH }}" --oneline)
+          COUNT=$(git rev-list --count "origin/${{ env.MIRROR_BRANCH }}..upstream/${{ env.UPSTREAM_BRANCH }}")
+
+          echo "new_count=$COUNT" >> "$GITHUB_OUTPUT"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "No new upstream commits. Exiting."
+            exit 0
+          fi
+
+          COMMITS_ESCAPED=$(echo "$NEW" | head -50)
+          {
+            echo "commits<<EOF"
+            echo "$COMMITS_ESCAPED"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          SECURITY_HITS=$(echo "$NEW" | grep -iE "(fix|security|vuln|patch|cve|crash|bug|sanitiz|escape|inject)" || true)
+          if [ -n "$SECURITY_HITS" ]; then
+            echo "has_security=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "security_hits<<EOF"
+              echo "$SECURITY_HITS"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "has_security=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fast-forward mirror branch (no merge into main)
+        if: steps.diff.outputs.new_count != '0'
+        run: |
+          git checkout -B "${{ env.MIRROR_BRANCH }}" "upstream/${{ env.UPSTREAM_BRANCH }}"
+          git push origin "${{ env.MIRROR_BRANCH }}" --force-with-lease
+
+      - name: Create sync branch and cherry-pick first upstream commit
+        if: steps.diff.outputs.new_count != '0'
+        id: branch
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          BRANCH="upstream-sync/${DATE}"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+
+          git checkout -b "${BRANCH}" origin/main
+
+          # Cherry-pick the first new upstream commit so the PR has a real diff.
+          # Without this, gh pr create may reject head==base with no diff (OQ5).
+          # Use origin/main..upstream/main as the range — this is the correct diff
+          # seed for a PR targeting main. The mirror ff already ran above, so using
+          # origin/upstream-mirror here would yield an empty range (mirror == upstream).
+          # On conflict: abort and leave the branch at main HEAD (fallback to issue).
+          FIRST=$(git rev-list --reverse \
+            "origin/main..upstream/${{ env.UPSTREAM_BRANCH }}" \
+            | head -1)
+          if [ -n "${FIRST}" ]; then
+            git cherry-pick -x "${FIRST}" || git cherry-pick --abort
+          fi
+
+          git push origin "${BRANCH}"
+
+      - name: Build PR body
+        if: steps.diff.outputs.new_count != '0'
+        id: pr_body
+        env:
+          COMMITS: ${{ steps.diff.outputs.commits }}
+          SECURITY_HITS: ${{ steps.diff.outputs.security_hits }}
+        run: |
+          DATE="${{ steps.branch.outputs.date }}"
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          COUNT="${{ steps.diff.outputs.new_count }}"
+          HAS_SECURITY="${{ steps.diff.outputs.has_security }}"
+
+          BODY_FILE="$(mktemp)"
+
+          {
+            echo "## Upstream Sync -- ${DATE}"
+            echo ""
+            echo "Upstream \`${{ env.UPSTREAM_REPO }}\` has **${COUNT} new commit(s)** since last mirror sync."
+            echo ""
+
+            if [ "${HAS_SECURITY}" = "true" ]; then
+              echo "## SECURITY/FIX COMMITS DETECTED"
+              echo ""
+              echo '```'
+              printf '%s\n' "${SECURITY_HITS}"
+              echo '```'
+              echo ""
+              echo "**Review these first.**"
+              echo ""
+            fi
+
+            echo "## All new commits"
+            echo ""
+            echo '```'
+            printf '%s\n' "${COMMITS}"
+            echo '```'
+            echo ""
+            echo "## How to cherry-pick into main"
+            echo ""
+            echo '```bash'
+            echo "git fetch origin"
+            echo "git checkout main"
+            echo "# Cherry-pick individual commits you want:"
+            echo "git cherry-pick <sha>"
+            echo "# Or pick a range from the mirror:"
+            echo "git cherry-pick origin/upstream-mirror~${COUNT}..origin/upstream-mirror"
+            echo "# If a commit was already applied via f3446b9 merge, skip it:"
+            echo "git cherry-pick --skip"
+            echo '```'
+            echo ""
+            echo "This branch (\`${BRANCH}\`) contains the first new upstream commit cherry-picked"
+            echo "in as a diff seed. Review, add more cherry-picks if desired, then merge when satisfied."
+            echo ""
+            echo "> Auto-generated by upstream-watch workflow. Do NOT auto-merge into main."
+          } >> "${BODY_FILE}"
+
+          {
+            echo "body_file=${BODY_FILE}"
+            if [ "${HAS_SECURITY}" = "true" ]; then
+              echo "label_security=true"
+            else
+              echo "label_security=false"
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open draft PR for human review
+        if: steps.diff.outputs.new_count != '0'
+        id: open_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE="${{ steps.branch.outputs.date }}"
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          COUNT="${{ steps.diff.outputs.new_count }}"
+          BODY_FILE="${{ steps.pr_body.outputs.body_file }}"
+          LABEL_SECURITY="${{ steps.pr_body.outputs.label_security }}"
+
+          LABEL_FLAGS="--label upstream-sync"
+          if [ "${LABEL_SECURITY}" = "true" ]; then
+            LABEL_FLAGS="${LABEL_FLAGS} --label security"
+          fi
+
+          # shellcheck disable=SC2086
+          gh pr create \
+            --draft \
+            --title "chore: upstream sync ${DATE} (${COUNT} new commits)" \
+            --body-file "${BODY_FILE}" \
+            --base main \
+            --head "${BRANCH}" \
+            ${LABEL_FLAGS}
+
+      - name: Open issue as fallback (PR creation failed or conflict)
+        if: steps.diff.outputs.new_count != '0' && (failure() || steps.open_pr.outcome == 'failure')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMITS: ${{ steps.diff.outputs.commits }}
+        run: |
+          COUNT="${{ steps.diff.outputs.new_count }}"
+          DATE=$(date +%Y-%m-%d)
+
+          ISSUE_BODY_FILE="$(mktemp)"
+          {
+            echo "New commits on upstream/main:"
+            echo '```'
+            printf '%s\n' "${COMMITS}"
+            echo '```'
+            echo ""
+            echo "See docs/UPSTREAM_SYNC.md for the cherry-pick recipe."
+          } >> "${ISSUE_BODY_FILE}"
+
+          gh issue create \
+            --title "Upstream has ${COUNT} new commits -- manual sync needed (${DATE})" \
+            --body-file "${ISSUE_BODY_FILE}" \
+            --label "upstream-sync"
