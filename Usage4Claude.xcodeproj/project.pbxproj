@@ -269,7 +269,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Config/Usage4Claude.entitlements;
 				CODE_SIGN_IDENTITY = "Usage4Claude-CodeSigning";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Usage4Claude-CodeSigning";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(MARKETING_VERSION)";
@@ -318,7 +318,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Config/Usage4Claude.entitlements;
 				CODE_SIGN_IDENTITY = "Usage4Claude-CodeSigning";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Usage4Claude-CodeSigning";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = "$(MARKETING_VERSION)";
