@@ -183,7 +183,7 @@ Codex 的位置应该在副标题/Features 区段而非头图，符合"作者本
 4. **阶段 4：菜单栏 + Popover multi-provider 自适应** — 激活双 provider 视觉：Provider 标识图标分组、Popover 290↔580pt 自适应动画、`ProviderColumn` 子视图抽离。
 5. **阶段 5：设置面板与文档** — AuthSettingsView 改造、Welcome 流程检查、本地化补全、`docs/PRODUCT_DESIGN_PHILOSOPHY.md` 与 `docs/IMPLEMENTATION_PLAN_CODEX.md`（本 plan 文件全文复制版）落地、README Features 增补。
 6. **阶段 6：本人长期试用** — 完整功能在 feature 分支上自用至少 1-2 周，覆盖系统休眠/唤醒、网络切换、代理开关、各种边界场景；期间发现的问题直接在分支上修复。
-7. **阶段 7：单次 PR 合并** — 试用稳定后，整理 commits（必要时 squash）、撰写详细 PR description（按 `docs/CHANGELOG_RELEASE_NOTES_COMMIT_MESSAGE_GUIDELINES.md` 规范，英文、无 emoji、无 Co-Authored-By），合并到 main 并发布新版本。
+7. **阶段 7：单次 PR 合并** — 试用稳定后，整理 commits（必要时 squash）、撰写详细 PR description（按 `docs/COMMIT_MESSAGE_GUIDELINES.md` 规范，英文、无 emoji、无 Co-Authored-By），合并到 main 并发布新版本。
 
 ## B.4 验证计划
 
