@@ -1,10 +1,4 @@
-<!-- 
-Please add your release description here:
-- Use emoji and formatted titles (e.g., 🐛 Bug Fix Release)
-- Describe the main changes
-- Add Technical Details and User Impact sections
-Delete this comment when done
--->
+{{RELEASE_NOTES}}
 
 ---
 

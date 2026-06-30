@@ -330,7 +330,8 @@ jobs:
           .github/scripts/generate_release_notes.sh \
             .github/RELEASE_TEMPLATE.md \
             "$VERSION" \
-            release_notes.md
+            release_notes.md \
+            CHANGELOG.md
 
           echo "✅ Release notes generated"
 
@@ -360,31 +361,52 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.validate.outputs.version }}
           IS_DRY_RUN: ${{ needs.validate.outputs.is_dry_run }}
+          IS_TEST: ${{ needs.validate.outputs.is_test }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
+          # 标题取 commit message 第一行，去掉 [release]/[RELEASE] 前缀后 trim。
+          # 用 env 传 COMMIT_MSG，避免直接插值导致的命令注入。
+          RAW_TITLE=$(printf '%s\n' "$COMMIT_MSG" | head -n1)
+          PARSED_TITLE=$(printf '%s' "$RAW_TITLE" \
+            | sed -E 's/^\[[Rr][Ee][Ll][Ee][Aa][Ss][Ee]\][[:space:]]*//' \
+            | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+          # 解析为空（如 workflow_dispatch 手动触发无 commit）时退回 vVERSION
+          if [[ -z "$PARSED_TITLE" ]]; then
+            PARSED_TITLE="v$VERSION"
+          fi
+
           if [[ "$IS_DRY_RUN" == "true" ]]; then
+            # Dry run 仍走 draft，避免测试产生正式发布
             TAG="test-v$VERSION"
-            TITLE="test-v$VERSION - ⚠️ DRY RUN TEST ⚠️"
+            TITLE="test: $PARSED_TITLE - ⚠️ DRY RUN ⚠️"
+            DRAFT_ARGS=(--draft)
+          elif [[ "$IS_TEST" == "true" ]]; then
+            # test-release 分支同样保持 draft，避免误触发正式发布
+            TAG="v$VERSION"
+            TITLE="$PARSED_TITLE"
+            DRAFT_ARGS=(--draft)
           else
             TAG="v$VERSION"
-            TITLE="v$VERSION - ❗️❗️❗️请在这里输入你的简短描述❗️❗️❗️"
+            TITLE="$PARSED_TITLE"
+            DRAFT_ARGS=()
           fi
           
-          echo "Creating draft release: $TAG"
+          echo "Creating release: $TAG (title: $TITLE)"
           
           gh release create "$TAG" \
-            --draft \
+            "${DRAFT_ARGS[@]}" \
             --title "$TITLE" \
             --notes-file release_notes.md \
             ./artifacts/${{ env.PROJECT_NAME }}-v$VERSION.dmg \
             ./artifacts/${{ env.PROJECT_NAME }}-v$VERSION.dmg.sha256
           
-          echo "✅ Draft release created: $TAG"
-          echo ""
-          echo "📝 Next steps:"
-          echo "1. Go to https://github.com/${{ github.repository }}/releases"
-          echo "2. Edit the draft release"
-          echo "3. Add your release description"
-          echo "4. Click 'Publish release'"
+          if [[ "$IS_DRY_RUN" == "true" ]]; then
+            echo "✅ Draft (dry run) release created: $TAG"
+          else
+            echo "✅ Release published: $TAG"
+            echo "📝 如需补充/精修 Release Notes，可到 GitHub 编辑该 release"
+            echo "   （不影响 Sparkle 更新说明，后者取自 CHANGELOG）"
+          fi
       
       - name: Update appcast.xml
         env:
