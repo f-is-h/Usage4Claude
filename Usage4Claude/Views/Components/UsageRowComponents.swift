@@ -244,9 +244,11 @@ struct UnifiedLimitRow: View {
         case .sevenDay, .codexSecondary:
             return L.DetailRow.sevenDay
         case .opusWeekly:
-            return L.DetailRow.opusWeekly
+            // Claude 5 时代：此槽位可能承载来自 limits 数组的具体模型每周限制（如 Fable）。
+            // 有真实模型名则优先展示，否则回退到默认的 “Opus Weekly” 文案。
+            return data?.opusModelName ?? L.DetailRow.opusWeekly
         case .sonnetWeekly:
-            return L.DetailRow.sonnetWeekly
+            return data?.sonnetModelName ?? L.DetailRow.sonnetWeekly
         case .extraUsage, .codexExtraUsage:
             return L.DetailRow.extraUsage
         }
