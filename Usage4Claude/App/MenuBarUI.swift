@@ -135,6 +135,11 @@ class MenuBarUI {
         // 设置窗口level，确保显示在其他窗口之上
         popoverWindow.level = .popUpMenu
 
+        // 允许 popover 出现在当前活动 Space（包括其他 App 的全屏 Space）之上。
+        // 默认 collectionBehavior 会把 popover 窗口锁在 App 自身的桌面 Space，
+        // 导致处于其他 App 全屏时点击状态栏图标看不到弹窗。
+        popoverWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+
         // 让窗口成为 key window，显示 Focus 状态
         popoverWindow.makeKey()
 
