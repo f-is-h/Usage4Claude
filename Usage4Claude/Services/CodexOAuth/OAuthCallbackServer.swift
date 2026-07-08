@@ -27,6 +27,9 @@ final class OAuthCallbackServer {
     /// - Returns: 成功绑定的端口；全部失败返回 nil
     func start(ports: [UInt16], onCallback: @escaping ([String: String]) -> Void) -> UInt16? {
         self.onCallback = onCallback
+        // 重置一次性投递标志：coordinator 复用同一个 server 实例做重试登录，
+        // 若不重置，第一次失败后的重试即使浏览器端真实拿到 code，回调也会被静默丢弃。
+        self.didDeliver = false
         for p in ports where startListener(on: p) {
             self.port = p
             return p

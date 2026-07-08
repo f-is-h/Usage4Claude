@@ -469,7 +469,10 @@ class ClaudeAPIService {
     // MARK: - OAuth Usage Path
 
     /// OAuth 账户专用：用 refresh_token 换 access_token 后调用 /api/oauth/usage
-    private func fetchOAuthUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
+    /// - Parameter retryOnUnauthorized: 收到 401 时是否清缓存后立即重试一次（强制换新 access_token）。
+    ///   仿照 Codex 侧 `DataRefreshManager.fetchCodexOnly(retryOnUnauthorized:)` 的既有模式，
+    ///   避免用户在下一个刷新周期到来前一直看到错误状态。
+    private func fetchOAuthUsage(retryOnUnauthorized: Bool = true, completion: @escaping (Result<UsageData, Error>) -> Void) {
         let refreshToken = settings.sessionKey
         fetchOAuthAccessToken(refreshToken: refreshToken) { [weak self] result in
             guard let self else { return }
@@ -477,7 +480,7 @@ class ClaudeAPIService {
             case .failure(let error):
                 DispatchQueue.main.async { completion(.failure(error)) }
             case .success(let accessToken):
-                self.fetchClaudeOAuthUsageData(accessToken: accessToken, completion: completion)
+                self.fetchClaudeOAuthUsageData(accessToken: accessToken, retryOnUnauthorized: retryOnUnauthorized, completion: completion)
             }
         }
     }
@@ -550,7 +553,7 @@ class ClaudeAPIService {
     }
 
     /// 用 access_token 调用 /api/oauth/usage，解析为 UsageData
-    private func fetchClaudeOAuthUsageData(accessToken: String, completion: @escaping (Result<UsageData, Error>) -> Void) {
+    private func fetchClaudeOAuthUsageData(accessToken: String, retryOnUnauthorized: Bool, completion: @escaping (Result<UsageData, Error>) -> Void) {
         guard let url = URL(string: ClaudeOAuthConfig.usageURL) else {
             completion(.failure(UsageError.invalidURL))
             return
@@ -578,7 +581,12 @@ class ClaudeAPIService {
                     // access_token 已失效，清缓存以便下次用 refresh_token 重新换取，
                     // 避免在 5 分钟缓存窗口内反复用坏 token 触发 401
                     self?.clearOAuthTokenCache()
-                    completion(.failure(UsageError.unauthorized))
+                    if retryOnUnauthorized {
+                        Logger.api.info("Claude OAuth usage 401，清缓存后立即用 refresh_token 换新 access_token 重试一次")
+                        self?.fetchOAuthUsage(retryOnUnauthorized: false, completion: completion)
+                    } else {
+                        completion(.failure(UsageError.unauthorized))
+                    }
                     return
                 case 429:
                     completion(.failure(UsageError.rateLimited))
@@ -599,19 +607,36 @@ class ClaudeAPIService {
                 var usageData = baseResponse.toUsageData()
 
                 // 尝试额外解码 extra_usage 字段
-                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let extraJson = json["extra_usage"] as? [String: Any],
-                   let extraData = try? JSONSerialization.data(withJSONObject: extraJson),
-                   let extraResponse = try? decoder.decode(ExtraUsageResponse.self, from: extraData) {
-                    usageData = UsageData(
-                        fiveHour: usageData.fiveHour,
-                        sevenDay: usageData.sevenDay,
-                        opus: usageData.opus,
-                        sonnet: usageData.sonnet,
-                        extraUsage: extraResponse.toExtraUsageData(),
-                        opusModelName: usageData.opusModelName,
-                        sonnetModelName: usageData.sonnetModelName
-                    )
+                // Issue #64: 此前四层 try? 静默吞掉失败原因，导致无法判断是
+                // 「字段不存在」「字段名不同」还是「结构不匹配」，这里改为显式分支打日志诊断。
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    if let extraJson = json["extra_usage"] as? [String: Any] {
+                        // 诊断用：即使解码成功也打一行 keys，因为 ExtraUsageResponse 全字段可选，
+                        // 字段名对不上时不会抛错，只会静默产出全 nil 的“已禁用”结果。
+                        Logger.api.debug("Claude OAuth usage extra_usage keys=\(Array(extraJson.keys).sorted())")
+                        if let extraData = try? JSONSerialization.data(withJSONObject: extraJson) {
+                            do {
+                                let extraResponse = try decoder.decode(ExtraUsageResponse.self, from: extraData)
+                                let extraUsageData = extraResponse.toExtraUsageData()
+                                Logger.api.debug("Claude OAuth usage extra_usage 解析结果: enabled=\(extraUsageData?.enabled ?? false)")
+                                usageData = UsageData(
+                                    fiveHour: usageData.fiveHour,
+                                    sevenDay: usageData.sevenDay,
+                                    opus: usageData.opus,
+                                    sonnet: usageData.sonnet,
+                                    extraUsage: extraUsageData,
+                                    opusModelName: usageData.opusModelName,
+                                    sonnetModelName: usageData.sonnetModelName
+                                )
+                            } catch {
+                                Logger.api.error("Claude OAuth usage extra_usage 解码失败: \(error.localizedDescription)，keys=\(Array(extraJson.keys))")
+                            }
+                        } else {
+                            Logger.api.error("Claude OAuth usage extra_usage 字段无法重新序列化为 JSON，keys=\(Array(extraJson.keys))")
+                        }
+                    } else {
+                        Logger.api.info("Claude OAuth usage 无 extra_usage 字段，顶层 keys=\(Array(json.keys))")
+                    }
                 }
 
                 DispatchQueue.main.async { completion(.success(usageData)) }

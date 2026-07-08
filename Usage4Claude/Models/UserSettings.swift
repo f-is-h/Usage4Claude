@@ -349,10 +349,13 @@ extension AppLanguage {
 /// 非敏感设置存储在 UserDefaults 中
 class UserSettings: ObservableObject {
     // MARK: - Singleton
-    
+
     /// 单例实例
     static let shared = UserSettings()
-    
+
+    /// customDisplayTypes 的默认值，init() 与 resetToDefaults() 共用，避免两处定义漂移不一致
+    static let defaultCustomDisplayTypes: Set<LimitType> = [.fiveHour, .sevenDay]
+
     // MARK: - Properties
     
     private let defaults = UserDefaults.standard
@@ -947,7 +950,7 @@ class UserSettings: ObservableObject {
         if let rawValues = defaults.array(forKey: "customDisplayTypes") as? [String] {
             self.customDisplayTypes = Set(rawValues.compactMap { LimitType(rawValue: $0) })
         } else {
-            self.customDisplayTypes = [.fiveHour, .sevenDay]
+            self.customDisplayTypes = Self.defaultCustomDisplayTypes
         }
 
         // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
@@ -1004,6 +1007,8 @@ class UserSettings: ObservableObject {
         ) { [weak self] _ in
             guard let self = self, self.appearance == .system else { return }
             self.applyAppearance()
+            // 外观依赖的图标渲染（如彩色带背景样式）需要跟着重绘，否则图标缓存会显示陈旧外观
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
     
@@ -1088,7 +1093,7 @@ class UserSettings: ObservableObject {
         language = Self.detectSystemLanguage()
         timeFormatPreference = .system
         displayMode = .smart
-        customDisplayTypes = [.fiveHour, .sevenDay, .extraUsage]
+        customDisplayTypes = Self.defaultCustomDisplayTypes
         customDisplayMenuBarOnly = false
         notificationsEnabled = true
 
