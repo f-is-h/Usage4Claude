@@ -162,7 +162,7 @@ final class WebLoginCoordinator: ObservableObject {
     private func validateSessionKey(_ sessionKey: String, cookieHeader: String) {
         loginState = .validating
 
-        let apiService = ClaudeAPIService()
+        let apiService = ClaudeAPIService.shared
         apiService.fetchOrganizations(sessionKey: sessionKey, cookieHeader: cookieHeader) { [weak self] result in
             guard let self = self else { return }
 

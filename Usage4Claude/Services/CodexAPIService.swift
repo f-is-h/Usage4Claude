@@ -22,6 +22,9 @@ class CodexAPIService {
     private let session: URLSession
 
     /// 当前进行中的任务（最多两个：session + usage）
+    /// - Note: append 发生在主线程（session 请求发起）和 URLSession 回调线程（usage 请求发起，
+    ///   由 fetchAccessToken 的 completion 触发）两处，cancelAllRequests 在主线程清空，
+    ///   并发读写需靠 cacheLock 保护（见 trackTask/cancelAllRequests）。
     private var activeTasks: [URLSessionDataTask] = []
 
     // MARK: - Access Token Cache
@@ -66,6 +69,13 @@ class CodexAPIService {
               cachedForSessionToken == sessionToken,
               expiry > Date() else { return nil }
         return token
+    }
+
+    /// 线程安全地记录进行中的任务，供 cancelAllRequests 统一取消
+    private func trackTask(_ task: URLSessionDataTask) {
+        cacheLock.lock()
+        activeTasks.append(task)
+        cacheLock.unlock()
     }
 
     /// 账户切换或 401 时清除缓存，确保下次立即重新拉取
@@ -277,7 +287,7 @@ class CodexAPIService {
             }
         }
 
-        activeTasks.append(task)
+        trackTask(task)
         task.resume()
     }
 
@@ -305,9 +315,9 @@ class CodexAPIService {
         oauthRefreshInFlightToken = refreshToken
         cacheLock.unlock()
 
-        CodexOAuthService.refresh(refreshToken: refreshToken) { [weak self] result in
-            guard let self else { return }
-
+        // 强引用 self：此闭包持有期间必须保证 self 存活到刷新完成，
+        // 否则挂在 oauthRefreshWaiters 里的等待者会随 self 一起被释放、永远收不到结果
+        CodexOAuthService.refresh(refreshToken: refreshToken) { [self] result in
             let finalResult: Result<String, Error>
             switch result {
             case .failure(let error):
@@ -418,7 +428,7 @@ class CodexAPIService {
             }
         }
 
-        activeTasks.append(task)
+        trackTask(task)
         task.resume()
     }
 
@@ -500,7 +510,7 @@ class CodexAPIService {
             }
         }
 
-        activeTasks.append(task)
+        trackTask(task)
         task.resume()
     }
 
@@ -546,8 +556,11 @@ extension CodexAPIService: UsageProvider {
     var providerType: ProviderType { .codex }
 
     func cancelAllRequests() {
-        activeTasks.forEach { $0.cancel() }
+        cacheLock.lock()
+        let tasks = activeTasks
         activeTasks.removeAll()
+        cacheLock.unlock()
+        tasks.forEach { $0.cancel() }
         Logger.api.debug("Codex: 已取消所有网络请求")
     }
 }

@@ -15,6 +15,12 @@ import OSLog
 class ClaudeAPIService {
     // MARK: - Properties
 
+    /// 一次性校验场景（登录页/设置页验证 sessionKey）复用的共享实例。
+    /// 这类调用点过去各自 `ClaudeAPIService()` 创建局部实例，其 URLSession 从不
+    /// `finishTasksAndInvalidate()`；若实例在请求进行中被释放，`[weak self]` 闭包
+    /// 里挂起的单飞等待者也会随之丢失。复用同一长生命周期实例可一并避免这两个问题。
+    static let shared = ClaudeAPIService()
+
     /// API 基础 URL
     private let baseURL = "https://claude.ai/api/organizations"
 
@@ -97,7 +103,7 @@ class ClaudeAPIService {
 
         // 检查认证信息
         guard settings.hasValidCredentials else {
-            completion(.failure(UsageError.noCredentials))
+            DispatchQueue.main.async { completion(.failure(UsageError.noCredentials)) }
             return
         }
 
@@ -170,10 +176,15 @@ class ClaudeAPIService {
     /// 获取主 Usage API 数据（内部方法）
     /// - Parameter completion: 完成回调
     private func fetchMainUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<UsageData, Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         let urlString = "\(baseURL)/\(settings.organizationId)/usage"
 
         guard let url = URL(string: urlString) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
 
@@ -192,12 +203,12 @@ class ClaudeAPIService {
         currentTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
                 Logger.api.debug("Network error: \(error.localizedDescription)")
-                completion(.failure(UsageError.networkError))
+                complete(.failure(UsageError.networkError))
                 return
             }
 
             guard let data = data else {
-                completion(.failure(UsageError.noData))
+                complete(.failure(UsageError.noData))
                 return
             }
 
@@ -208,7 +219,7 @@ class ClaudeAPIService {
                 // 检查是否是HTML响应（Cloudflare拦截）
                 if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
                     Logger.api.debug("⚠️ Received HTML response, possibly intercepted by Cloudflare.")
-                    completion(.failure(UsageError.cloudflareBlocked))
+                    complete(.failure(UsageError.cloudflareBlocked))
                     return
                 }
             }
@@ -224,20 +235,20 @@ class ClaudeAPIService {
                     break
                 case 401:
                     // 未授权，通常是认证信息无效
-                    completion(.failure(UsageError.unauthorized))
+                    complete(.failure(UsageError.unauthorized))
                     return
                 case 403:
                     // HTML 已在上方提前返回 cloudflareBlocked，此处 403 均为 JSON 鉴权失败
-                    completion(.failure(UsageError.unauthorized))
+                    complete(.failure(UsageError.unauthorized))
                     return
                 case 429:
                     // 请求频率过高
-                    completion(.failure(UsageError.rateLimited))
+                    complete(.failure(UsageError.rateLimited))
                     return
                 default:
                     // 其他 HTTP 错误
                     Logger.api.error("HTTP error: \(httpResponse.statusCode)")
-                    completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
+                    complete(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
                 }
             }
@@ -248,7 +259,7 @@ class ClaudeAPIService {
             // 检查是否是错误响应
             if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data),
                errorResponse.error.type == "permission_error" {
-                completion(.failure(UsageError.sessionExpired))
+                complete(.failure(UsageError.sessionExpired))
                 return
             }
 
@@ -256,10 +267,10 @@ class ClaudeAPIService {
             do {
                 let response = try decoder.decode(UsageResponse.self, from: data)
                 let usageData = response.toUsageData()
-                completion(.success(usageData))
+                complete(.success(usageData))
             } catch {
                 Logger.api.debug("Decoding error: \(error.localizedDescription)")
-                completion(.failure(UsageError.decodingError))
+                complete(.failure(UsageError.decodingError))
             }
         }
 
@@ -274,10 +285,15 @@ class ClaudeAPIService {
     ///   - completion: 完成回调，包含成功的组织数组或失败的 Error
     /// - Note: 用于自动获取 Organization ID，简化用户配置流程
     func fetchOrganizations(sessionKey: String? = nil, cookieHeader: String? = nil, completion: @escaping (Result<[Organization], Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<[Organization], Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         let urlString = "\(baseURL.replacingOccurrences(of: "/organizations", with: ""))/organizations"
 
         guard let url = URL(string: urlString) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
 
@@ -302,16 +318,12 @@ class ClaudeAPIService {
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
                 Logger.api.debug("Network error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.networkError))
-                }
+                complete(.failure(UsageError.networkError))
                 return
             }
 
             guard let data = data else {
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.noData))
-                }
+                complete(.failure(UsageError.noData))
                 return
             }
 
@@ -329,24 +341,18 @@ class ClaudeAPIService {
                     // 成功响应，继续处理
                     break
                 case 401:
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.unauthorized))
-                    }
+                    complete(.failure(UsageError.unauthorized))
                     return
                 case 403:
                     // Cloudflare 拦截返回 HTML；API 鉴权失败返回 JSON
                     let isHTML = String(data: data, encoding: .utf8).map {
                         $0.contains("<!DOCTYPE html>") || $0.contains("<html")
                     } ?? false
-                    DispatchQueue.main.async {
-                        completion(.failure(isHTML ? UsageError.cloudflareBlocked : UsageError.unauthorized))
-                    }
+                    complete(.failure(isHTML ? UsageError.cloudflareBlocked : UsageError.unauthorized))
                     return
                 default:
                     Logger.api.error("HTTP error: \(httpResponse.statusCode)")
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
-                    }
+                    complete(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
                 }
             }
@@ -355,14 +361,10 @@ class ClaudeAPIService {
             let decoder = JSONDecoder()
             do {
                 let organizations = try decoder.decode([Organization].self, from: data)
-                DispatchQueue.main.async {
-                    completion(.success(organizations))
-                }
+                complete(.success(organizations))
             } catch {
                 Logger.api.debug("Decoding error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.decodingError))
-                }
+                complete(.failure(UsageError.decodingError))
             }
         }
 
@@ -373,16 +375,21 @@ class ClaudeAPIService {
     /// - Parameter completion: 完成回调，包含成功的 ExtraUsageData 或失败的 Error
     /// - Note: 此方法是可选的，即使失败也不应影响主要功能
     func fetchExtraUsage(completion: @escaping (Result<ExtraUsageData?, Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<ExtraUsageData?, Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         // 检查认证信息
         guard settings.hasValidCredentials else {
-            completion(.failure(UsageError.noCredentials))
+            complete(.failure(UsageError.noCredentials))
             return
         }
 
         let urlString = "\(baseURL)/\(settings.organizationId)/overage_spend_limit"
 
         guard let url = URL(string: urlString) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
 
@@ -400,16 +407,12 @@ class ClaudeAPIService {
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
                 Logger.api.debug("Extra Usage API network error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.networkError))
-                }
+                complete(.failure(UsageError.networkError))
                 return
             }
 
             guard let data = data else {
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.noData))
-                }
+                complete(.failure(UsageError.noData))
                 return
             }
 
@@ -429,20 +432,14 @@ class ClaudeAPIService {
                 case 403, 404:
                     // Extra Usage 未启用或无权限，返回 nil 表示功能不可用
                     Logger.api.info("Extra Usage not available (HTTP \(httpResponse.statusCode))")
-                    DispatchQueue.main.async {
-                        completion(.success(nil))
-                    }
+                    complete(.success(nil))
                     return
                 case 401:
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.unauthorized))
-                    }
+                    complete(.failure(UsageError.unauthorized))
                     return
                 default:
                     Logger.api.warning("Extra Usage HTTP error: \(httpResponse.statusCode)")
-                    DispatchQueue.main.async {
-                        completion(.success(nil))  // 优雅降级
-                    }
+                    complete(.success(nil))  // 优雅降级
                     return
                 }
             }
@@ -452,14 +449,10 @@ class ClaudeAPIService {
             do {
                 let extraUsageResponse = try decoder.decode(ExtraUsageResponse.self, from: data)
                 let extraUsageData = extraUsageResponse.toExtraUsageData()
-                DispatchQueue.main.async {
-                    completion(.success(extraUsageData))
-                }
+                complete(.success(extraUsageData))
             } catch {
                 Logger.api.debug("Extra Usage decoding error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.success(nil))  // 优雅降级
-                }
+                complete(.success(nil))  // 优雅降级
             }
         }
 
@@ -496,7 +489,7 @@ class ClaudeAPIService {
             let remaining = Int(expiry.timeIntervalSinceNow / 60)
             oauthLock.unlock()
             Logger.api.debug("Claude OAuth: 使用缓存 access_token（剩余约 \(remaining) 分钟）")
-            completion(.success(cached))
+            DispatchQueue.main.async { completion(.success(cached)) }
             return
         }
         // 同一 refresh_token 已有刷新在进行：挂队等待复用结果
@@ -509,9 +502,10 @@ class ClaudeAPIService {
         oauthRefreshInFlightToken = refreshToken
         oauthLock.unlock()
 
-        ClaudeOAuthService.refresh(refreshToken: refreshToken) { [weak self] result in
-            guard let self else { return }
-
+        // 强引用 self：此闭包持有期间必须保证 self 存活到刷新完成，
+        // 否则挂在 oauthRefreshWaiters 里的等待者会随 self 一起被释放、永远收不到结果
+        // （WebLoginCoordinator.validateSessionKey 等短生命周期用法尤其依赖这一点）。
+        ClaudeOAuthService.refresh(refreshToken: refreshToken) { [self] result in
             let finalResult: Result<String, Error>
             switch result {
             case .failure(let error):
@@ -547,15 +541,22 @@ class ClaudeAPIService {
             self.oauthRefreshInFlightToken = nil
             self.oauthLock.unlock()
 
-            completion(finalResult)
-            for waiter in waiters { waiter(finalResult) }
+            DispatchQueue.main.async {
+                completion(finalResult)
+                for waiter in waiters { waiter(finalResult) }
+            }
         }
     }
 
     /// 用 access_token 调用 /api/oauth/usage，解析为 UsageData
     private func fetchClaudeOAuthUsageData(accessToken: String, retryOnUnauthorized: Bool, completion: @escaping (Result<UsageData, Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<UsageData, Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         guard let url = URL(string: ClaudeOAuthConfig.usageURL) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
         var request = URLRequest(url: url)
@@ -566,11 +567,11 @@ class ClaudeAPIService {
         session.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
                 Logger.api.error("Claude OAuth usage 网络错误: \(error.localizedDescription)")
-                completion(.failure(UsageError.networkError))
+                complete(.failure(UsageError.networkError))
                 return
             }
             guard let data = data else {
-                completion(.failure(UsageError.noData))
+                complete(.failure(UsageError.noData))
                 return
             }
             if let http = response as? HTTPURLResponse {
@@ -585,14 +586,14 @@ class ClaudeAPIService {
                         Logger.api.info("Claude OAuth usage 401，清缓存后立即用 refresh_token 换新 access_token 重试一次")
                         self?.fetchOAuthUsage(retryOnUnauthorized: false, completion: completion)
                     } else {
-                        completion(.failure(UsageError.unauthorized))
+                        complete(.failure(UsageError.unauthorized))
                     }
                     return
                 case 429:
-                    completion(.failure(UsageError.rateLimited))
+                    complete(.failure(UsageError.rateLimited))
                     return
                 default:
-                    completion(.failure(UsageError.httpError(statusCode: http.statusCode)))
+                    complete(.failure(UsageError.httpError(statusCode: http.statusCode)))
                     return
                 }
             }
@@ -639,10 +640,10 @@ class ClaudeAPIService {
                     }
                 }
 
-                DispatchQueue.main.async { completion(.success(usageData)) }
+                complete(.success(usageData))
             } catch {
                 Logger.api.error("Claude OAuth usage 解析失败: \(error.localizedDescription)")
-                completion(.failure(UsageError.decodingError))
+                complete(.failure(UsageError.decodingError))
             }
         }.resume()
     }

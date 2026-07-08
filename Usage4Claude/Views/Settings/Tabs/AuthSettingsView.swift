@@ -712,7 +712,7 @@ struct AuthSettingsView: View {
         isValidating = true
         validationError = nil
 
-        let apiService = ClaudeAPIService()
+        let apiService = ClaudeAPIService.shared
         apiService.fetchOrganizations(sessionKey: newSessionKey) { result in
             DispatchQueue.main.async {
                 isValidating = false

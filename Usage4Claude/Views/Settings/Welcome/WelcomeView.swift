@@ -140,7 +140,7 @@ struct WelcomeView: View {
     ///   - sessionKey: Session Key
     ///   - completion: 完成回调，返回是否成功
     private func fetchOrganizationAndCreateAccount(sessionKey: String, completion: @escaping (Bool) -> Void) {
-        let apiService = ClaudeAPIService()
+        let apiService = ClaudeAPIService.shared
         apiService.fetchOrganizations(sessionKey: sessionKey) { result in
             switch result {
             case .success(let organizations):

@@ -486,33 +486,32 @@ class DataRefreshManager: ObservableObject {
         errorMessage = nil
         lastAPIFetchTime = Date()
 
+        // ClaudeAPIService.fetchUsage 保证 completion 一律在主线程回调，此处无需再包一层 DispatchQueue.main.async
         apiService.fetchUsage { [weak self] result in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.isLoading = false
-                self.endRefreshAnimationWithMinimumDuration { }
+            guard let self = self else { return }
+            self.isLoading = false
+            self.endRefreshAnimationWithMinimumDuration { }
 
-                switch result {
-                case .success(let data):
-                    let previousData = self.usageData
-                    self.usageData = data
-                    self.errorMessage = nil
-                    if self.settings.notificationsEnabled {
-                        NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
-                    }
-                    self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
-                    let newResetsAt = data.resetsAt
-                    if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
-                        self.cancelResetVerification()
-                    } else if let resetsAt = newResetsAt {
-                        self.scheduleResetVerification(resetsAt: resetsAt)
-                    }
-                    self.lastResetsAt = newResetsAt
-                case .failure(let error):
-                    self.clearClaudeUsageState()
-                    self.errorMessage = error.localizedDescription
-                    Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
+            switch result {
+            case .success(let data):
+                let previousData = self.usageData
+                self.usageData = data
+                self.errorMessage = nil
+                if self.settings.notificationsEnabled {
+                    NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                 }
+                self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
+                let newResetsAt = data.resetsAt
+                if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
+                    self.cancelResetVerification()
+                } else if let resetsAt = newResetsAt {
+                    self.scheduleResetVerification(resetsAt: resetsAt)
+                }
+                self.lastResetsAt = newResetsAt
+            case .failure(let error):
+                self.clearClaudeUsageState()
+                self.errorMessage = error.localizedDescription
+                Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
             }
         }
     }

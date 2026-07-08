@@ -52,12 +52,11 @@ jobs:
       
       - name: Check commit message for release trigger
         id: check
+        env:
+          # 用 env 传 COMMIT_MSG，避免直接插值到 shell 导致的命令/heredoc 注入
+          # （commit message 中若含独立一行 EOF，原 heredoc 写法会被提前截断）
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          # Use heredoc to handle multi-line commit messages
-          read -r -d '' COMMIT_MSG << 'EOF' || true
-          ${{ github.event.head_commit.message }}
-          EOF
-          
           BRANCH="${{ github.ref_name }}"
           IS_DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
           

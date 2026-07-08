@@ -107,22 +107,38 @@ final class OAuthCallbackServer {
             }
 
             let query = self.parseQuery(fromRequestLine: request)
+            // 只有携带 code 或 error 的才是真正的 OAuth 回调；其余（比如浏览器误发的
+            // favicon 请求）语义上应该 404，而不是回一个成功/失败页面。
+            let isOAuthCallback = query["code"] != nil || query["error"] != nil
 
-            let body = Self.responseHTML(success: query["code"] != nil)
-            let response = """
-            HTTP/1.1 200 OK\r
-            Content-Type: text/html; charset=utf-8\r
-            Content-Length: \(body.utf8.count)\r
-            Connection: close\r
-            \r
-            \(body)
-            """
+            let response: String
+            if isOAuthCallback {
+                let body = Self.responseHTML(success: query["code"] != nil)
+                response = """
+                HTTP/1.1 200 OK\r
+                Content-Type: text/html; charset=utf-8\r
+                Content-Length: \(body.utf8.count)\r
+                Connection: close\r
+                \r
+                \(body)
+                """
+            } else {
+                let body = Self.notFoundHTML()
+                response = """
+                HTTP/1.1 404 Not Found\r
+                Content-Type: text/html; charset=utf-8\r
+                Content-Length: \(body.utf8.count)\r
+                Connection: close\r
+                \r
+                \(body)
+                """
+            }
             connection.send(content: response.data(using: .utf8), completion: .contentProcessed { _ in
                 connection.cancel()
             })
 
             // 仅投递第一次有效回调（code 或 error）
-            if !self.didDeliver, query["code"] != nil || query["error"] != nil {
+            if !self.didDeliver, isOAuthCallback {
                 self.didDeliver = true
                 DispatchQueue.main.async { self.onCallback?(query) }
             }
@@ -161,6 +177,15 @@ final class OAuthCallbackServer {
         <body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding-top:80px;color:#1d1d1f;background:#f5f5f7">
         <h2>\(heading)</h2>
         <p>\(message)</p>
+        </body></html>
+        """
+    }
+
+    private static func notFoundHTML() -> String {
+        """
+        <!DOCTYPE html><html><head><meta charset="utf-8"><title>Not Found</title></head>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding-top:80px;color:#1d1d1f;background:#f5f5f7">
+        <h2>404 Not Found</h2>
         </body></html>
         """
     }

@@ -215,7 +215,10 @@ class MenuBarManager: ObservableObject {
     /// 设置设置变更观察者
     /// 监听设置变更、刷新频率变更等通知
     private func setupSettingsObservers() {
+        // NotificationCenter 的 post 发生在哪个线程，publisher 就在哪个线程收，不能假定是主线程
+        // （TimerManager 等下游依赖主 RunLoop），统一 receive(on:) 到主线程再处理。
         NotificationCenter.default.publisher(for: .settingsChanged)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 // 设置改变时清除图标缓存（显示模式可能改变）
@@ -245,6 +248,7 @@ class MenuBarManager: ObservableObject {
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .refreshIntervalChanged)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 // 重启数据刷新定时器
                 self?.dataManager.stopRefreshing()
@@ -253,6 +257,7 @@ class MenuBarManager: ObservableObject {
             .store(in: &cancellables)
         
         NotificationCenter.default.publisher(for: .openSettings)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 let tab = notification.userInfo?["tab"] as? Int ?? 0
                 self?.openSettingsWindow(tab: tab)
@@ -261,6 +266,7 @@ class MenuBarManager: ObservableObject {
 
         // 监听账户变更通知
         NotificationCenter.default.publisher(for: .accountChanged)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 Logger.menuBar.notice("账户已切换，刷新数据")

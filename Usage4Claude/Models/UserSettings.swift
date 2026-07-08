@@ -1219,9 +1219,10 @@ class UserSettings: ObservableObject {
 
     /// 保存账户列表到 Keychain
     private func saveAccounts() {
+        // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
+        let snapshot = accounts
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            self.keychain.saveAccounts(self.accounts)
+            self?.keychain.saveAccounts(snapshot)
         }
     }
 
@@ -1303,9 +1304,10 @@ class UserSettings: ObservableObject {
     // MARK: - Codex Account Management
 
     private func saveCodexAccounts() {
+        // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
+        let snapshot = codexAccounts
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            self.keychain.saveCodexAccounts(self.codexAccounts)
+            self?.keychain.saveCodexAccounts(snapshot)
         }
     }
 
