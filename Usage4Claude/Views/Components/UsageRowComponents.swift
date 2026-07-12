@@ -218,16 +218,20 @@ struct UnifiedLimitRow: View {
             Spacer(minLength: 8)
 
             // 右侧：重置时间或剩余额度
-            Text(displayValue)
-                .font(.system(size: 12))
-                .fontWeight(.medium)
-                .lineLimit(1)
-                .minimumScaleFactor(0.9)
-                .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
-                .transition(.asymmetric(
-                    insertion: .move(edge: .top).combined(with: .opacity),
-                    removal: .move(edge: .bottom).combined(with: .opacity)
-                ))
+            // TimelineView 让这行文字自己按分钟粒度刷新，不再依赖外层每秒 objectWillChange
+            // 触发整个 popover 重建（displayValue 精度只到分钟，60s 间隔足够）
+            TimelineView(.periodic(from: .now, by: 60)) { _ in
+                Text(displayValue)
+                    .font(.system(size: 12))
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+            }
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 12)

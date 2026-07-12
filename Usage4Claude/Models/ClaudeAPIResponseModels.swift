@@ -26,11 +26,17 @@ nonisolated struct Organization: Codable, Sendable, Identifiable, Equatable {
     /// 组织名称
     let name: String
     /// 创建时间
-    let created_at: String?
+    let createdAt: String?
     /// 更新时间
-    let updated_at: String?
+    let updatedAt: String?
     /// 组织权限列表
     let capabilities: [String]?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, uuid, name, capabilities
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
 
     static func == (lhs: Organization, rhs: Organization) -> Bool {
         return lhs.uuid == rhs.uuid
@@ -406,18 +412,14 @@ struct ExtraUsageData: Sendable {
         return (used / limit) * 100.0
     }
 
-    /// 货币符号（根据 ISO 4217 货币代码映射）
+    /// 货币符号（根据 ISO 4217 货币代码解析）
+    /// - Note: 用 NumberFormatter 而非手工映射表，一劳永逸覆盖所有货币（含 KRW/CNY/CHF 等），
+    ///   固定用 en_US locale 解析以获得稳定符号（如 "$"、"CA$"），不随系统语言变化。
     var currencySymbol: String {
-        switch currency.uppercased() {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "GBP": return "£"
-        case "JPY": return "¥"
-        case "CAD": return "CA$"
-        case "AUD": return "A$"
-        case "BRL": return "R$"
-        case "INR": return "₹"
-        default: return currency
-        }
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currency.uppercased()
+        return formatter.currencySymbol ?? currency
     }
 }

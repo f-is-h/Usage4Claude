@@ -37,17 +37,9 @@ class ClaudeAPIService {
     //
     // Claude OAuth refresh_token 每次续期后都会轮换（旧值立即失效）。
     // 多个并发刷新调用可能用同一个 refresh_token，导致后到者触发 401。
-    // 通过单飞合并确保同一 refresh_token 只发起一次 network 请求；其余调用挂队等待复用结果。
-
-    private let oauthLock = NSLock()
-    private var oauthRefreshInFlight = false
-    private var oauthRefreshInFlightToken: String?
-    private var oauthRefreshWaiters: [(Result<String, Error>) -> Void] = []
-
-    /// 缓存的 access_token 及其过期时间（避免每60秒均触发 refresh）
-    private var cachedOAuthAccessToken: String?
-    private var cachedOAuthTokenExpiry: Date?
-    private var cachedOAuthForRefreshToken: String?
+    // 单飞合并 + 缓存都委托给 OAuthTokenCache（actor，见 Services/OAuthTokenCache.swift），
+    // 用 actor 的串行化天然替代手写 NSLock + 等待者数组。
+    private let oauthTokenCache = OAuthTokenCache()
 
     // MARK: - Initialization
 
@@ -70,13 +62,10 @@ class ClaudeAPIService {
         credential.hasPrefix("sk-ant-ort01-")
     }
 
-    /// 清除 OAuth access_token 缓存（账户切换或收到 401 时调用）
+    /// 清除 OAuth access_token 缓存（账户切换时调用；401 重试路径见 fetchClaudeOAuthUsageData，
+    /// 那里需要等 clear 完成后再重试，走的是 oauthTokenCache.clear() 的 await 版本）
     func clearOAuthTokenCache() {
-        oauthLock.lock()
-        cachedOAuthAccessToken = nil
-        cachedOAuthTokenExpiry = nil
-        cachedOAuthForRefreshToken = nil
-        oauthLock.unlock()
+        Task { await oauthTokenCache.clear() }
     }
     
     // MARK: - Public Methods
@@ -478,73 +467,46 @@ class ClaudeAPIService {
         }
     }
 
-    /// 用 refresh_token 获取 access_token，带缓存 + 单飞合并
+    /// 用 refresh_token 获取 access_token，带缓存 + 单飞合并（委托给 OAuthTokenCache actor）
     private func fetchOAuthAccessToken(refreshToken: String, completion: @escaping (Result<String, Error>) -> Void) {
-        // 缓存命中：token 未过期（留 5 分钟余量）
-        oauthLock.lock()
-        if let cached = cachedOAuthAccessToken, !cached.isEmpty,
-           let expiry = cachedOAuthTokenExpiry,
-           cachedOAuthForRefreshToken == refreshToken,
-           expiry > Date().addingTimeInterval(5 * 60) {
-            let remaining = Int(expiry.timeIntervalSinceNow / 60)
-            oauthLock.unlock()
-            Logger.api.debug("Claude OAuth: 使用缓存 access_token（剩余约 \(remaining) 分钟）")
-            DispatchQueue.main.async { completion(.success(cached)) }
-            return
-        }
-        // 同一 refresh_token 已有刷新在进行：挂队等待复用结果
-        if oauthRefreshInFlight, oauthRefreshInFlightToken == refreshToken {
-            oauthRefreshWaiters.append(completion)
-            oauthLock.unlock()
-            return
-        }
-        oauthRefreshInFlight = true
-        oauthRefreshInFlightToken = refreshToken
-        oauthLock.unlock()
-
-        // 强引用 self：此闭包持有期间必须保证 self 存活到刷新完成，
-        // 否则挂在 oauthRefreshWaiters 里的等待者会随 self 一起被释放、永远收不到结果
-        // （WebLoginCoordinator.validateSessionKey 等短生命周期用法尤其依赖这一点）。
-        ClaudeOAuthService.refresh(refreshToken: refreshToken) { [self] result in
-            let finalResult: Result<String, Error>
-            switch result {
-            case .failure(let error):
-                Logger.api.error("Claude OAuth refresh 失败: \(error.localizedDescription)")
-                finalResult = .failure(error)
-
-            case .success(let tokens):
-                // refresh_token 轮换：若响应携带新值则静默写回账户
-                let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
-                if newRefresh != refreshToken {
-                    Logger.api.notice("Claude OAuth: refresh_token 已轮换，静默写回")
-                    DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentClaudeSessionToken(newRefresh)
-                    }
+        Task {
+            do {
+                let accessToken = try await oauthTokenCache.accessToken(refreshToken: refreshToken) { [weak self] token in
+                    guard let self else { throw UsageError.decodingError }
+                    return try await self.refreshClaudeOAuthTokens(refreshToken: token)
                 }
+                await MainActor.run { completion(.success(accessToken)) }
+            } catch {
+                await MainActor.run { completion(.failure(error)) }
+            }
+        }
+    }
 
-                let accessToken = tokens.accessToken
-                // expires_in 通常为 3600 秒；未给出时保守使用 30 分钟
-                let expiry = tokens.expiresAt ?? Date().addingTimeInterval(30 * 60)
-                self.oauthLock.lock()
-                self.cachedOAuthAccessToken = accessToken
-                self.cachedOAuthTokenExpiry = expiry
-                self.cachedOAuthForRefreshToken = newRefresh
-                self.oauthLock.unlock()
-                finalResult = .success(accessToken)
+    /// 实际发起网络请求向 Claude OAuth 端点换取新 token；处理 refresh_token 轮换的静默写回。
+    /// 只会在 OAuthTokenCache 判定"确实需要发起新刷新"时才被调用一次（并发调用者共享同一次结果）。
+    private func refreshClaudeOAuthTokens(refreshToken: String) async throws -> OAuthTokenCache.Tokens {
+        do {
+            let tokens = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ClaudeOAuthTokens, Error>) in
+                ClaudeOAuthService.refresh(refreshToken: refreshToken) { result in
+                    continuation.resume(with: result)
+                }
             }
 
-            // 解除单飞状态，唤醒等待者
-            self.oauthLock.lock()
-            let waiters = self.oauthRefreshWaiters
-            self.oauthRefreshWaiters.removeAll()
-            self.oauthRefreshInFlight = false
-            self.oauthRefreshInFlightToken = nil
-            self.oauthLock.unlock()
-
-            DispatchQueue.main.async {
-                completion(finalResult)
-                for waiter in waiters { waiter(finalResult) }
+            // refresh_token 轮换：若响应携带新值则静默写回账户
+            let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
+            if newRefresh != refreshToken {
+                Logger.api.notice("Claude OAuth: refresh_token 已轮换，静默写回")
+                await MainActor.run {
+                    UserSettings.shared.silentlyUpdateCurrentClaudeSessionToken(newRefresh)
+                }
             }
+
+            // expires_in 通常为 3600 秒；未给出时保守使用 30 分钟
+            let expiry = tokens.expiresAt ?? Date().addingTimeInterval(30 * 60)
+            return OAuthTokenCache.Tokens(accessToken: tokens.accessToken, refreshToken: newRefresh, expiresAt: expiry)
+        } catch {
+            Logger.api.error("Claude OAuth refresh 失败: \(error.localizedDescription)")
+            throw error
         }
     }
 
@@ -580,12 +542,17 @@ class ClaudeAPIService {
                 case 200...299: break
                 case 401:
                     // access_token 已失效，清缓存以便下次用 refresh_token 重新换取，
-                    // 避免在 5 分钟缓存窗口内反复用坏 token 触发 401
-                    self?.clearOAuthTokenCache()
+                    // 避免在 5 分钟缓存窗口内反复用坏 token 触发 401。
+                    // 用 Task 顺序 await 清缓存再重试，避免 clear 与重试的缓存读取产生竞态
+                    // （二者都要进 actor，若各开一个 Task 无法保证 clear 先于重试执行）。
                     if retryOnUnauthorized {
                         Logger.api.info("Claude OAuth usage 401，清缓存后立即用 refresh_token 换新 access_token 重试一次")
-                        self?.fetchOAuthUsage(retryOnUnauthorized: false, completion: completion)
+                        Task {
+                            await self?.oauthTokenCache.clear()
+                            self?.fetchOAuthUsage(retryOnUnauthorized: false, completion: completion)
+                        }
                     } else {
+                        Task { await self?.oauthTokenCache.clear() }
                         complete(.failure(UsageError.unauthorized))
                     }
                     return

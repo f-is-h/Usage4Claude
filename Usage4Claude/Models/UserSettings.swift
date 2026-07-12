@@ -115,32 +115,6 @@ enum RefreshInterval: Int, CaseIterable, Codable {
     }
 }
 
-/// 监控模式（内部使用，智能频率下的4级模式）
-enum MonitoringMode: String, Codable {
-    /// 活跃模式 - 1分钟刷新
-    case active = "active"
-    /// 短期静默 - 3分钟刷新
-    case idleShort = "idle_short"
-    /// 中期静默 - 5分钟刷新
-    case idleMedium = "idle_medium"
-    /// 长期静默 - 10分钟刷新
-    case idleLong = "idle_long"
-    
-    /// 获取对应的刷新间隔（秒）
-    var interval: Int {
-        switch self {
-        case .active:
-            return 60      // 1分钟
-        case .idleShort:
-            return 180     // 3分钟
-        case .idleMedium:
-            return 300     // 5分钟
-        case .idleLong:
-            return 600     // 10分钟
-        }
-    }
-}
-
 // MARK: - Limit Types
 
 /// 限制类型
@@ -357,99 +331,44 @@ class UserSettings: ObservableObject {
     static let defaultCustomDisplayTypes: Set<LimitType> = [.fiveHour, .sevenDay]
 
     // MARK: - Properties
-    
+
     private let defaults = UserDefaults.standard
     private let keychain = KeychainManager.shared
-    
-    // MARK: - 多账户支持（v2.1.0）
 
-    /// 账户列表（存储在 Keychain 中）
-    @Published var accounts: [Account] = [] {
-        didSet {
-            saveAccounts()
-        }
-    }
+    /// Combine 订阅集合：转发 accountStore 的 objectWillChange，让绑定 UserSettings 的 SwiftUI 视图
+    /// 在账户数据变化时也能收到更新（见 init() 中的订阅）
+    private var cancellables = Set<AnyCancellable>()
 
-    /// 当前激活账户的 ID（存储在 UserDefaults 中）
-    @Published var currentAccountId: UUID? {
-        didSet {
-            #if DEBUG
-            let key = "DEBUG_currentAccountId"
-            #else
-            let key = "currentAccountId"
-            #endif
-            if let id = currentAccountId {
-                defaults.set(id.uuidString, forKey: key)
-            } else {
-                defaults.removeObject(forKey: key)
-            }
-        }
-    }
+    // MARK: - 多账户支持（v2.1.0，拆分到 AccountStore，见审计报告 4.1）
 
-    /// 当前激活的账户
-    var currentAccount: Account? {
-        guard let id = currentAccountId else { return accounts.first }
-        return accounts.first { $0.id == id } ?? accounts.first
-    }
+    /// 账户 CRUD、持久化、当前账户 ID 均已迁移到 AccountStore，这里只做门面转发，
+    /// 保持外部调用点（settings.accounts、settings.addAccount(...) 等）零改动。
+    let accountStore = AccountStore()
 
-    /// Claude Session Key（计算属性，指向当前账户）
+    var accounts: [Account] { accountStore.accounts }
+    var currentAccountId: UUID? { accountStore.currentAccountId }
+    var currentAccount: Account? { accountStore.currentAccount }
+
     var sessionKey: String {
-        get { currentAccount?.sessionKey ?? "" }
-        set {
-            guard let id = currentAccountId,
-                  let index = accounts.firstIndex(where: { $0.id == id }) else { return }
-            accounts[index].sessionKey = newValue
-        }
+        get { accountStore.sessionKey }
+        set { accountStore.sessionKey = newValue }
     }
 
-    /// Claude Organization ID（计算属性，指向当前账户）
     var organizationId: String {
-        get { currentAccount?.organizationId ?? "" }
-        set {
-            guard let id = currentAccountId,
-                  let index = accounts.firstIndex(where: { $0.id == id }) else { return }
-            accounts[index].organizationId = newValue
-        }
+        get { accountStore.organizationId }
+        set { accountStore.organizationId = newValue }
     }
 
     /// Claude 账户列表的语义别名（等同于 accounts，用于 provider-aware 代码中保持对称）
-    var claudeAccounts: [Account] { accounts }
+    var claudeAccounts: [Account] { accountStore.claudeAccounts }
 
     // MARK: - Codex 账户支持
 
-    /// Codex 账户列表（存储在独立 Keychain key "accounts_codex" 中，不干扰 Claude 数据）
-    @Published var codexAccounts: [Account] = [] {
-        didSet {
-            saveCodexAccounts()
-        }
-    }
-
-    /// 当前激活的 Codex 账户 ID（存储在 UserDefaults 中）
-    @Published var currentCodexAccountId: UUID? {
-        didSet {
-            #if DEBUG
-            let key = "DEBUG_currentCodexAccountId"
-            #else
-            let key = "currentCodexAccountId"
-            #endif
-            if let id = currentCodexAccountId {
-                defaults.set(id.uuidString, forKey: key)
-            } else {
-                defaults.removeObject(forKey: key)
-            }
-        }
-    }
-
-    /// 当前激活的 Codex 账户
-    var currentCodexAccount: Account? {
-        guard let id = currentCodexAccountId else { return codexAccounts.first }
-        return codexAccounts.first { $0.id == id } ?? codexAccounts.first
-    }
-
-    /// Codex Session Token（计算属性，指向当前 Codex 账户的 sessionKey 字段）
-    var codexSessionToken: String {
-        currentCodexAccount?.sessionKey ?? ""
-    }
+    var codexAccounts: [Account] { accountStore.codexAccounts }
+    var currentCodexAccountId: UUID? { accountStore.currentCodexAccountId }
+    var currentCodexAccount: Account? { accountStore.currentCodexAccount }
+    var codexSessionToken: String { accountStore.codexSessionToken }
+    var hasValidCodexCredentials: Bool { accountStore.hasValidCodexCredentials }
 
     /// 是否同时存在 Claude 和 Codex 账户（决定 UI 进入 multi-provider 形态）
     var isMultiProviderActive: Bool {
@@ -466,21 +385,8 @@ class UserSettings: ObservableObject {
         return !accounts.isEmpty && !codexAccounts.isEmpty
     }
 
-    /// Codex 认证信息是否已配置
-    var hasValidCodexCredentials: Bool {
-        !codexSessionToken.isEmpty
-    }
-
     // MARK: - 非敏感设置（存储在UserDefaults中）
 
-    /// 组织列表（保留用于向后兼容，现已废弃）
-    /// 从 v2.1.0 开始，组织信息包含在 Account 中
-    @Published var organizations: [Organization] = [] {
-        didSet {
-            saveOrganizations()
-        }
-    }
-    
     /// 菜单栏图标显示模式
     @Published var iconDisplayMode: IconDisplayMode {
         didSet {
@@ -521,13 +427,13 @@ class UserSettings: ObservableObject {
         }
     }
 
-    /// 应用外观模式
-    @Published var appearance: AppAppearance {
-        didSet {
-            defaults.set(appearance.rawValue, forKey: "appearance")
-            applyAppearance()
-            NotificationCenter.default.post(name: .settingsChanged, object: nil)
-        }
+    /// 外观模式的持久化、应用到 NSApp、系统主题监听都在 AppearanceManager 里，这里只做门面转发。
+    /// 计算属性也能形成 ReferenceWritableKeyPath，$settings.appearance 双向绑定不受影响。
+    let appearanceManager = AppearanceManager()
+
+    var appearance: AppAppearance {
+        get { appearanceManager.appearance }
+        set { appearanceManager.appearance = newValue }
     }
 
     /// 时间格式偏好
@@ -583,25 +489,18 @@ class UserSettings: ObservableObject {
         }
     }
 
-    /// 开机启动设置
-    @Published var launchAtLogin: Bool {
-        didSet {
-            // 在同步状态时不触发启用/禁用操作，避免无限循环
-            guard !isSyncingLaunchStatus else { return }
+    /// 开机启动的注册/注销/状态同步都在 LaunchAtLoginManager 里，这里只做门面转发。
+    /// isEnabled 直接派生自 SMAppService.mainApp.status（唯一事实来源），
+    /// 不再需要存储 Bool + 标志位防递归，失败时 Toggle 会随 status 不变而自动弹回。
+    let launchAtLoginManager = LaunchAtLoginManager()
 
-            if launchAtLogin {
-                enableLaunchAtLogin()
-            } else {
-                disableLaunchAtLogin()
-            }
-        }
+    var launchAtLogin: Bool {
+        get { launchAtLoginManager.isEnabled }
+        set { launchAtLoginManager.isEnabled = newValue }
     }
-    
-    /// 开机启动状态（用于UI显示）
-    @Published var launchAtLoginStatus: SMAppService.Status = .notRegistered
 
-    /// 防止同步状态时触发递归调用的标志
-    private var isSyncingLaunchStatus: Bool = false
+    /// 开机启动状态（用于UI显示）
+    var launchAtLoginStatus: SMAppService.Status { launchAtLoginManager.status }
 
     // MARK: - Debug Mode (仅Debug编译时可用)
 
@@ -758,20 +657,29 @@ class UserSettings: ObservableObject {
     }
     #endif
 
-    // MARK: - 智能模式内部状态（不持久化）
-    
-    /// 上次检测的百分比（用于检测变化）
-    var lastUtilization: Double?
+    // MARK: - 智能模式内部状态（不持久化，委托给 SmartRefreshPolicy 纯逻辑状态机）
 
-    /// 各 Provider 上次检测的百分比（用于 Codex/Claude 共同驱动智能刷新）
-    var lastUtilizationByProvider: [ProviderType: Double] = [:]
-    
+    /// 智能刷新的 4 级监控模式状态机（纯逻辑，可独立单测，见 Helpers/SmartRefreshPolicy.swift）
+    private let smartRefreshPolicy = SmartRefreshPolicy()
+
+    /// 上次检测的百分比（用于检测变化）
+    var lastUtilization: Double? {
+        get { smartRefreshPolicy.lastUtilization }
+        set { smartRefreshPolicy.lastUtilization = newValue }
+    }
+
     /// 连续无变化次数
-    var unchangedCount: Int = 0
-    
+    var unchangedCount: Int {
+        get { smartRefreshPolicy.unchangedCount }
+        set { smartRefreshPolicy.unchangedCount = newValue }
+    }
+
     /// 当前监控模式（智能模式下使用）
-    var currentMonitoringMode: MonitoringMode = .active
-    
+    var currentMonitoringMode: MonitoringMode {
+        get { smartRefreshPolicy.currentMode }
+        set { smartRefreshPolicy.currentMode = newValue }
+    }
+
     // MARK: - Initialization
     
     /// 检测系统语言并映射到应用支持的语言
@@ -798,97 +706,8 @@ class UserSettings: ObservableObject {
     /// 私有初始化方法（单例模式）
     /// 从 Keychain 加载敏感信息，从 UserDefaults 加载其他设置
     private init() {
-        // MARK: - 加载多账户数据（v2.1.0）
-
-        // 从 Keychain 加载账户列表（使用局部变量避免初始化顺序问题）
-        var loadedAccounts = keychain.loadAccounts() ?? []
-        var loadedCurrentAccountId: UUID? = nil
-
-        // 加载当前账户 ID
-        #if DEBUG
-        let currentAccountIdKey = "DEBUG_currentAccountId"
-        #else
-        let currentAccountIdKey = "currentAccountId"
-        #endif
-        if let idString = defaults.string(forKey: currentAccountIdKey),
-           let id = UUID(uuidString: idString) {
-            loadedCurrentAccountId = id
-        } else if let firstAccount = loadedAccounts.first {
-            // 如果没有保存当前账户 ID，默认使用第一个账户
-            loadedCurrentAccountId = firstAccount.id
-        }
-
-        // MARK: - 数据迁移（v2.0.x → v2.1.0 多账户）
-
-        // 检查是否需要从单账户迁移到多账户
-        if loadedAccounts.isEmpty && !defaults.bool(forKey: "multiAccountMigrated") {
-            // 尝试从旧的单账户数据迁移
-            let oldSessionKey = keychain.loadSessionKey() ?? ""
-            let oldOrgId = defaults.string(forKey: "organizationId") ?? ""
-
-            if !oldSessionKey.isEmpty && !oldOrgId.isEmpty {
-                Logger.settings.notice("[Migration] Migrating single account to multi-account system")
-
-                // 获取组织名称（如果有缓存）
-                let cachedOrgs = Self.loadOrganizations(from: defaults)
-                let orgName = cachedOrgs.first { $0.uuid == oldOrgId }?.name ?? "Account 1"
-
-                // 创建第一个账户
-                let migratedAccount = Account(
-                    sessionKey: oldSessionKey,
-                    organizationId: oldOrgId,
-                    organizationName: orgName
-                )
-                loadedAccounts = [migratedAccount]
-                loadedCurrentAccountId = migratedAccount.id
-
-                // 清理旧的单账户数据
-                keychain.deleteSessionKey()
-                defaults.removeObject(forKey: "organizationId")
-
-                Logger.settings.notice("[Migration] Multi-account migration completed")
-            }
-
-            defaults.set(true, forKey: "multiAccountMigrated")
-        }
-
-        // 设置 accounts 和 currentAccountId
-        self.accounts = loadedAccounts
-        self.currentAccountId = loadedCurrentAccountId
-
-        // MARK: - 加载 Codex 账户数据
-
-        let loadedCodexAccounts = keychain.loadCodexAccounts() ?? []
-        self.codexAccounts = loadedCodexAccounts
-
-        #if DEBUG
-        let codexCurrentAccountIdKey = "DEBUG_currentCodexAccountId"
-        #else
-        let codexCurrentAccountIdKey = "currentCodexAccountId"
-        #endif
-        if let idString = defaults.string(forKey: codexCurrentAccountIdKey),
-           let id = UUID(uuidString: idString) {
-            self.currentCodexAccountId = id
-        } else {
-            self.currentCodexAccountId = loadedCodexAccounts.first?.id
-        }
-
-        // MARK: - 旧版迁移（v1.x → v2.0.0，保留向后兼容）
-
-        // 迁移 Organization ID 从 Keychain 到 UserDefaults（旧版迁移，现已包含在上面的多账户迁移中）
-        if !defaults.bool(forKey: "organizationIdMigrated") {
-            if let oldOrgId = keychain.loadOrganizationId(), !oldOrgId.isEmpty {
-                Logger.settings.notice("[Migration] Found Organization ID in old Keychain location")
-                keychain.deleteOrganizationId()
-            }
-            defaults.set(true, forKey: "organizationIdMigrated")
-        }
-
         // MARK: - 从UserDefaults加载非敏感设置
 
-        // 加载缓存的组织列表（保留向后兼容）
-        self.organizations = Self.loadOrganizations(from: defaults)
-        
         if let modeString = defaults.string(forKey: "iconDisplayMode"),
            let mode = IconDisplayMode(rawValue: modeString) {
             self.iconDisplayMode = mode
@@ -922,13 +741,7 @@ class UserSettings: ObservableObject {
             self.language = Self.detectSystemLanguage()
         }
 
-        // 加载外观模式，默认跟随系统
-        if let appearanceString = defaults.string(forKey: "appearance"),
-           let loadedAppearance = AppAppearance(rawValue: appearanceString) {
-            self.appearance = loadedAppearance
-        } else {
-            self.appearance = .system
-        }
+        // 外观模式的加载已搬进 AppearanceManager.init()
 
         // 加载时间格式偏好，默认跟随系统
         if let timeFormatString = defaults.string(forKey: "timeFormatPreference"),
@@ -967,8 +780,7 @@ class UserSettings: ObservableObject {
         // 加载通知设置，默认开启
         self.notificationsEnabled = defaults.object(forKey: "notificationsEnabled") as? Bool ?? true
 
-        // 初始化开机启动设置
-        self.launchAtLogin = defaults.bool(forKey: "launchAtLogin")
+        // 开机启动状态的加载已搬进 LaunchAtLoginManager.init()
 
         // MARK: - 初始化调试模式设置
 
@@ -993,23 +805,19 @@ class UserSettings: ObservableObject {
         self.debugKeepDetailWindowOpen = defaults.bool(forKey: "debugKeepDetailWindowOpen")
         #endif
 
-        // 同步系统实际状态
-        syncLaunchAtLoginStatus()
-
-        // 应用外观设置到 NSApp
-        applyAppearance()
-
-        // 监听系统外观变化，「跟随系统」模式下自动更新
-        DistributedNotificationCenter.default().addObserver(
-            forName: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            guard let self = self, self.appearance == .system else { return }
-            self.applyAppearance()
-            // 外观依赖的图标渲染（如彩色带背景样式）需要跟着重绘，否则图标缓存会显示陈旧外观
-            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        // 账户加载/迁移、开机启动注册状态、外观应用与系统主题监听都已分别搬进
+        // AccountStore / LaunchAtLoginManager / AppearanceManager 各自的 init()；
+        // 这里只需转发它们的 objectWillChange，让 @ObservedObject var settings =
+        // UserSettings.shared 的 SwiftUI 视图在这些子对象变化时也能收到刷新。
+        for publisher in [accountStore.objectWillChange, launchAtLoginManager.objectWillChange, appearanceManager.objectWillChange] {
+            publisher
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+                .store(in: &cancellables)
         }
+
+        // 同步系统实际的开机启动状态（LaunchAtLoginManager.init 只读了一次快照，
+        // 这里主动刷新一次以防应用启动前用户在系统设置里手动改过）
+        syncLaunchAtLoginStatus()
     }
     
     // MARK: - Computed Properties
@@ -1064,23 +872,6 @@ class UserSettings: ObservableObject {
     }
     
     // MARK: - Public Methods
-    
-    /// 将当前外观设置应用到 NSApp，全局生效
-    /// 注意：对于菜单栏应用（accessory 激活策略），NSApp.appearance = nil 不能可靠地跟随系统外观
-    /// 因此「跟随系统」模式下主动读取系统外观并显式设置
-    func applyAppearance() {
-        DispatchQueue.main.async {
-            switch self.appearance {
-            case .system:
-                let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
-                NSApp.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
-            case .light:
-                NSApp.appearance = NSAppearance(named: .aqua)
-            case .dark:
-                NSApp.appearance = NSAppearance(named: .darkAqua)
-            }
-        }
-    }
 
     /// 重置为默认设置
     /// 只重置非敏感设置，不影响认证信息
@@ -1121,74 +912,18 @@ class UserSettings: ObservableObject {
 
     /// 更新智能监控模式
     /// 任一 Provider 用量变化会切回活跃模式；全部无变化才累计静默次数。
+    /// 状态机本身在 SmartRefreshPolicy 中（纯逻辑、可单测），这里只处理日志和通知这两个副作用。
     /// - Parameter providerUtilizations: 本轮成功获取的 Provider 用量百分比
     func updateSmartMonitoringMode(providerUtilizations: [ProviderType: Double]) {
         // 只在智能模式下工作
         guard refreshMode == .smart else { return }
-        guard !providerUtilizations.isEmpty else { return }
 
-        // 检查是否有变化
-        if hasProviderUtilizationChanged(providerUtilizations) {
-            switchToActiveMode()
-        } else {
-            handleNoChange()
-        }
+        let previousMode = smartRefreshPolicy.currentMode
+        let modeChanged = smartRefreshPolicy.update(providerUtilizations: providerUtilizations)
 
-        for (provider, utilization) in providerUtilizations {
-            lastUtilizationByProvider[provider] = utilization
-        }
-        // 保留旧字段的语义，便于旧代码和调试观察。
-        lastUtilization = providerUtilizations[.claude] ?? providerUtilizations.values.first
-    }
-
-    private func hasProviderUtilizationChanged(_ current: [ProviderType: Double]) -> Bool {
-        current.contains { provider, utilization in
-            guard let last = lastUtilizationByProvider[provider] else { return false }
-            return abs(utilization - last) > 0.01
-        }
-    }
-
-    /// 切换到活跃模式
-    private func switchToActiveMode() {
-        guard currentMonitoringMode != .active else { return }
-
-        Logger.settings.debug("检测到使用变化，切换到活跃模式 (1分钟)")
-        currentMonitoringMode = .active
-        unchangedCount = 0
-        NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
-    }
-
-    /// 处理无变化情况
-    private func handleNoChange() {
-        unchangedCount += 1
-
-        let previousMode = currentMonitoringMode
-        let newMode = calculateNewMode()
-
-        if let mode = newMode {
-            currentMonitoringMode = mode
-            unchangedCount = 0
-            logModeTransition(from: previousMode, to: mode)
+        if modeChanged {
+            logModeTransition(from: previousMode, to: smartRefreshPolicy.currentMode)
             NotificationCenter.default.post(name: .refreshIntervalChanged, object: nil)
-        }
-    }
-
-    /// 根据当前模式和无变化次数计算新模式
-    /// - Returns: 如果需要切换，返回新模式；否则返回 nil
-    private func calculateNewMode() -> MonitoringMode? {
-        switch currentMonitoringMode {
-        case .active:
-            // 活跃模式：连续3次无变化（3分钟） -> 短期静默
-            return unchangedCount >= 3 ? .idleShort : nil
-        case .idleShort:
-            // 短期静默：连续6次无变化（18分钟） -> 中期静默
-            return unchangedCount >= 6 ? .idleMedium : nil
-        case .idleMedium:
-            // 中期静默：连续12次无变化（60分钟） -> 长期静默
-            return unchangedCount >= 12 ? .idleLong : nil
-        case .idleLong:
-            // 长期静默：保持当前模式
-            return nil
         }
     }
 
@@ -1205,78 +940,34 @@ class UserSettings: ObservableObject {
         ]
         Logger.settings.debug("监控模式切换: \(modeNames[from] ?? "") -> \(modeNames[to] ?? "")")
     }
-    
+
     /// 重置智能监控模式状态
     /// 在切换到固定模式或用户手动刷新时调用
     func resetSmartMonitoringState() {
-        lastUtilization = nil
-        lastUtilizationByProvider.removeAll()
-        unchangedCount = 0
-        currentMonitoringMode = .active
+        smartRefreshPolicy.reset()
     }
 
     // MARK: - Account Management (v2.1.0)
-
-    /// 保存账户列表到 Keychain
-    private func saveAccounts() {
-        // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
-        let snapshot = accounts
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.keychain.saveAccounts(snapshot)
-        }
-    }
+    // 实际存取/持久化都在 AccountStore（Models/AccountStore.swift），这里只是门面转发，
+    // 保持外部调用点不变。addCodexAccount 额外处理"首次接入 Codex"的展示类型初始化，
+    // 因为那部分要读 displayMode/customDisplayTypes，属于 UserSettings 自己的地盘。
 
     /// 添加新账户
     /// - Parameter account: 要添加的账户
     func addAccount(_ account: Account) {
-        // 检查是否已存在相同 organizationId 的账户
-        if accounts.contains(where: { $0.organizationId == account.organizationId }) {
-            Logger.settings.notice("账户已存在，跳过: \(account.displayName)")
-            return
-        }
-        let wasFirstClaudeAccount = accounts.isEmpty
-        accounts.append(account)
-        // 如果是第一个账户，自动设为当前账户
-        if accounts.count == 1 {
-            currentAccountId = account.id
-        }
-        Logger.settings.notice("添加账户: \(account.displayName)")
-
-        if wasFirstClaudeAccount {
-            postAccountChanged(provider: .claude)
-        }
+        accountStore.addAccount(account)
     }
 
     /// 删除账户
     /// - Parameter account: 要删除的账户
     func removeAccount(_ account: Account) {
-        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else { return }
-
-        let wasCurrentAccount = (currentAccountId == account.id)
-        accounts.remove(at: index)
-        NotificationManager.shared.resetNotificationStates(for: .claude, accountId: account.id)
-
-        // 如果删除的是当前账户，切换到第一个账户
-        if wasCurrentAccount {
-            currentAccountId = accounts.first?.id
-            // 发送账户变更通知
-            postAccountChanged(provider: .claude)
-        }
-
-        Logger.settings.notice("删除账户: \(account.displayName)")
+        accountStore.removeAccount(account)
     }
 
     /// 切换到指定账户
     /// - Parameter account: 要切换到的账户
     func switchToAccount(_ account: Account) {
-        guard account.id != currentAccountId else { return }
-        guard accounts.contains(where: { $0.id == account.id }) else { return }
-
-        currentAccountId = account.id
-        Logger.settings.notice("切换到账户: \(account.displayName)")
-
-        // 发送账户变更通知
-        postAccountChanged(provider: .claude)
+        accountStore.switchToAccount(account)
     }
 
     /// 更新账户信息
@@ -1284,126 +975,48 @@ class UserSettings: ObservableObject {
     ///   - account: 要更新的账户
     ///   - alias: 新的别名（可选）
     func updateAccount(_ account: Account, alias: String?) {
-        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else { return }
-        accounts[index].alias = alias
-        let displayName = accounts[index].displayName
-        Logger.settings.notice("更新账户别名: \(displayName)")
+        accountStore.updateAccount(account, alias: alias)
     }
 
     /// 用于显示的账户列表
-    /// - Returns: 账户列表
-    var displayAccounts: [Account] {
-        return accounts
-    }
+    var displayAccounts: [Account] { accountStore.displayAccounts }
 
     /// 当前账户的显示名称
-    var currentAccountName: String? {
-        return currentAccount?.displayName
-    }
+    var currentAccountName: String? { accountStore.currentAccountName }
 
     // MARK: - Codex Account Management
 
-    private func saveCodexAccounts() {
-        // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
-        let snapshot = codexAccounts
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.keychain.saveCodexAccounts(snapshot)
-        }
-    }
-
     @discardableResult
     func addCodexAccount(_ account: Account) -> Account {
-        let stableId = account.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let existingIndex = codexAccounts.firstIndex { existing in
-            if !stableId.isEmpty {
-                let existingStableId = existing.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                return existingStableId == stableId || existing.sessionKey == account.sessionKey
-            }
-            return existing.sessionKey == account.sessionKey
-        }
-
-        if let index = existingIndex {
-            codexAccounts[index].sessionKey = account.sessionKey
-            codexAccounts[index].organizationId = account.organizationId
-            codexAccounts[index].organizationName = account.organizationName
-            codexAccounts[index].provider = .codex
-            if currentCodexAccountId == nil {
-                currentCodexAccountId = codexAccounts[index].id
-            }
-            Logger.settings.notice("更新已存在的 Codex 账户: \(self.codexAccounts[index].displayName)")
-            postAccountChanged(provider: .codex)
-            return codexAccounts[index]
-        }
-
-        let wasFirstCodexAccount = codexAccounts.isEmpty
-        var storedAccount = account
-        storedAccount.provider = .codex
-        codexAccounts.append(storedAccount)
-        if codexAccounts.count == 1 {
-            currentCodexAccountId = storedAccount.id
-        }
+        let (stored, wasFirstCodexAccount) = accountStore.addCodexAccount(account)
         if wasFirstCodexAccount {
             ensureDefaultCodexDisplayTypesForCustomMode()
         }
-        Logger.settings.notice("添加 Codex 账户: \(storedAccount.displayName)")
-        postAccountChanged(provider: .codex)
-        return storedAccount
+        return stored
     }
 
     func removeCodexAccount(_ account: Account) {
-        guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
-        let wasCurrent = (currentCodexAccountId == account.id)
-        codexAccounts.remove(at: index)
-        NotificationManager.shared.resetNotificationStates(for: .codex, accountId: account.id)
-        if wasCurrent {
-            currentCodexAccountId = codexAccounts.first?.id
-            postAccountChanged(provider: .codex)
-        }
-        Logger.settings.notice("删除 Codex 账户: \(account.displayName)")
+        accountStore.removeCodexAccount(account)
     }
 
     func switchToCodexAccount(_ account: Account) {
-        guard account.id != currentCodexAccountId else { return }
-        guard codexAccounts.contains(where: { $0.id == account.id }) else { return }
-        currentCodexAccountId = account.id
-        Logger.settings.notice("切换到 Codex 账户: \(account.displayName)")
-        postAccountChanged(provider: .codex)
+        accountStore.switchToCodexAccount(account)
     }
 
     func updateCodexAccount(_ account: Account, alias: String?) {
-        guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
-        codexAccounts[index].alias = alias
-        Logger.settings.notice("更新 Codex 账户别名: \(self.codexAccounts[index].displayName)")
+        accountStore.updateCodexAccount(account, alias: alias)
     }
 
     /// 静默更新当前 Codex 账户的 session-token（不触发 accountChanged 通知）
     /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
     func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
-        guard let id = currentCodexAccountId,
-              let index = codexAccounts.firstIndex(where: { $0.id == id }) else { return }
-        guard codexAccounts[index].sessionKey != token else { return }
-        // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
-        codexAccounts[index].sessionKey = token
-        Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+        accountStore.silentlyUpdateCurrentCodexSessionToken(token)
     }
 
     /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
     /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
     func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
-        guard let id = currentAccountId,
-              let index = accounts.firstIndex(where: { $0.id == id }) else { return }
-        guard accounts[index].sessionKey != token else { return }
-        // Account 是 struct，下标赋值触发 accounts.didSet → saveAccounts()，自动持久化
-        accounts[index].sessionKey = token
-        Logger.settings.notice("Claude session-token 已静默更新（自动续期）")
-    }
-
-    private func postAccountChanged(provider: ProviderType) {
-        NotificationCenter.default.post(
-            name: .accountChanged,
-            object: nil,
-            userInfo: [Notification.UserInfoKey.provider: provider.rawValue]
-        )
+        accountStore.silentlyUpdateCurrentClaudeSessionToken(token)
     }
 
     private func ensureDefaultCodexDisplayTypesForCustomMode() {
@@ -1413,112 +1026,13 @@ class UserSettings: ObservableObject {
         customDisplayTypes.formUnion([.codexPrimary, .codexSecondary])
     }
 
-    // MARK: - Organization Management (保留向后兼容)
-
-    /// 保存组织列表到 UserDefaults（保留向后兼容）
-    private func saveOrganizations() {
-        let encoder = JSONEncoder()
-        if let data = try? encoder.encode(organizations) {
-            defaults.set(data, forKey: "cachedOrganizations")
-        }
-    }
-
-    /// 从 UserDefaults 加载组织列表（保留向后兼容）
-    /// - Parameter defaults: UserDefaults 实例
-    /// - Returns: 组织列表，如果加载失败则返回空数组
-    private static func loadOrganizations(from defaults: UserDefaults) -> [Organization] {
-        guard let data = defaults.data(forKey: "cachedOrganizations") else {
-            return []
-        }
-        let decoder = JSONDecoder()
-        return (try? decoder.decode([Organization].self, from: data)) ?? []
-    }
-
     // MARK: - Launch at Login Management
-    
-    /// 启用开机启动
-    private func enableLaunchAtLogin() {
-        do {
-            try SMAppService.mainApp.register()
-            defaults.set(true, forKey: "launchAtLogin")
-            syncLaunchAtLoginStatus()
-            Logger.settings.notice("开机启动已启用")
-        } catch {
-            Logger.settings.error("启用开机启动失败: \(error.localizedDescription)")
-            // 注册失败，恢复状态（避免触发didSet）
-            isSyncingLaunchStatus = true
-            DispatchQueue.main.async {
-                self.launchAtLogin = false
-                // 在异步块内重置标志，避免 race condition
-                self.isSyncingLaunchStatus = false
-                self.syncLaunchAtLoginStatus()
-            }
+    // 注册/注销/状态同步都在 LaunchAtLoginManager 里，这里只保留一个转发方法，
+    // 供 ClaudeUsageMonitorApp（didBecomeActive）和设置页（onAppear）调用。
 
-            // 发送错误通知
-            NotificationCenter.default.post(
-                name: .launchAtLoginError,
-                object: nil,
-                userInfo: ["error": error, "operation": "enable"]
-            )
-        }
-    }
-    
-    /// 禁用开机启动
-    private func disableLaunchAtLogin() {
-        let currentStatus = SMAppService.mainApp.status
-
-        // 如果服务未注册或未找到，直接更新设置，不执行unregister操作
-        if currentStatus == .notRegistered || currentStatus == .notFound {
-            defaults.set(false, forKey: "launchAtLogin")
-            syncLaunchAtLoginStatus()
-            Logger.settings.notice("开机启动服务未注册，已更新设置")
-            return
-        }
-
-        do {
-            try SMAppService.mainApp.unregister()
-            defaults.set(false, forKey: "launchAtLogin")
-            syncLaunchAtLoginStatus()
-            Logger.settings.notice("开机启动已禁用")
-        } catch {
-            Logger.settings.error("禁用开机启动失败: \(error.localizedDescription)")
-            // 取消注册失败，恢复状态（避免触发didSet）
-            isSyncingLaunchStatus = true
-            DispatchQueue.main.async {
-                self.launchAtLogin = true
-                // 在异步块内重置标志，避免 race condition
-                self.isSyncingLaunchStatus = false
-                self.syncLaunchAtLoginStatus()
-            }
-
-            // 发送错误通知
-            NotificationCenter.default.post(
-                name: .launchAtLoginError,
-                object: nil,
-                userInfo: ["error": error, "operation": "disable"]
-            )
-        }
-    }
-    
-    /// 同步开机启动状态
-    /// 从系统读取实际状态并更新UI
+    /// 从系统读取实际的开机启动状态并更新UI
     func syncLaunchAtLoginStatus() {
-        let status = SMAppService.mainApp.status
-        DispatchQueue.main.async {
-            self.launchAtLoginStatus = status
-
-            // 同步实际状态到设置
-            let isActuallyEnabled = (status == .enabled)
-            if self.launchAtLogin != isActuallyEnabled {
-                // 设置同步标志，避免触发 didSet 中的启用/禁用操作
-                self.isSyncingLaunchStatus = true
-                self.defaults.set(isActuallyEnabled, forKey: "launchAtLogin")
-                self.launchAtLogin = isActuallyEnabled
-                self.isSyncingLaunchStatus = false
-            }
-        }
-
-        Logger.settings.debug("开机启动状态: \(String(describing: status))")
+        launchAtLoginManager.refreshStatus()
     }
 
     // MARK: - Display Logic Helper Methods (v2.0)

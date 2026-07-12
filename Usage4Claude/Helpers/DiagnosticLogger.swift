@@ -101,7 +101,7 @@ class DiagnosticLogger {
             do {
                 try "".write(to: logFileURL, atomically: true, encoding: .utf8)
             } catch {
-                print("Failed to clear logs: \(error)")
+                self.osLogger.error("Failed to clear logs: \(error.localizedDescription)")
             }
         }
     }
@@ -116,7 +116,7 @@ class DiagnosticLogger {
     /// 设置日志文件
     private func setupLogFile() {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            print("❌ Failed to get Application Support directory")
+            osLogger.error("Failed to get Application Support directory")
             return
         }
 
@@ -126,7 +126,7 @@ class DiagnosticLogger {
         do {
             try FileManager.default.createDirectory(at: logDirectory, withIntermediateDirectories: true)
         } catch {
-            print("❌ Failed to create log directory: \(error)")
+            osLogger.error("Failed to create log directory: \(error.localizedDescription)")
             return
         }
 
@@ -203,7 +203,7 @@ class DiagnosticLogger {
                     self.checkAndRotateLogIfNeeded()
                 }
             } catch {
-                print("❌ Failed to write log: \(error)")
+                self.osLogger.error("Failed to write log: \(error.localizedDescription)")
             }
         }
     }
@@ -241,7 +241,7 @@ class DiagnosticLogger {
             // 删除旧的归档文件（保留最近5个）
             cleanupOldLogs()
         } catch {
-            print("❌ Failed to rotate log: \(error)")
+            osLogger.error("Failed to rotate log: \(error.localizedDescription)")
         }
     }
 
@@ -275,7 +275,7 @@ class DiagnosticLogger {
                 }
             }
         } catch {
-            print("❌ Failed to cleanup old logs: \(error)")
+            osLogger.error("Failed to cleanup old logs: \(error.localizedDescription)")
         }
     }
 

@@ -30,11 +30,23 @@ class NotificationManager {
 
     // MARK: - State
 
+    /// 已通知记录持久化的 UserDefaults key
+    private static let notifiedWarningsKey = "notifiedWarnings"
+
     /// 已通知记录（防止同一账号同一周期内重复通知）
     /// key = provider + accountId + limitType，value = true 表示已发送过警告
-    private var notifiedWarnings: [String: Bool] = [:]
+    /// 持久化到 UserDefaults：否则应用重启后同一周期内会重复发送已经发过的 90%/75% 警告
+    private var notifiedWarnings: [String: Bool] = [:] {
+        didSet {
+            UserDefaults.standard.set(notifiedWarnings, forKey: Self.notifiedWarningsKey)
+        }
+    }
 
-    private init() {}
+    private init() {
+        if let saved = UserDefaults.standard.dictionary(forKey: Self.notifiedWarningsKey) as? [String: Bool] {
+            notifiedWarnings = saved
+        }
+    }
 
     // MARK: - Permission
 

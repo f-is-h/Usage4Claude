@@ -24,7 +24,14 @@ let package = Package(
             name: "Usage4ClaudeCore",
             path: "Usage4Claude",
             exclude: ["Resources"],
-            sources: ["Models/ClaudeAPIResponseModels.swift", "Helpers/JWT.swift"]
+            sources: [
+                "Models/ClaudeAPIResponseModels.swift",
+                "Helpers/JWT.swift",
+                "Models/MonitoringMode.swift",
+                "Models/ProviderType.swift",
+                "Helpers/SmartRefreshPolicy.swift",
+                "Services/OAuthTokenCache.swift"
+            ]
         ),
         .testTarget(
             name: "Usage4ClaudeCoreTests",

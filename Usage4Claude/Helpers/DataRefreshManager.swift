@@ -109,20 +109,8 @@ class DataRefreshManager: ObservableObject {
         #endif
     }
 
-    // MARK: - Timer Identifiers
-
-    /// 定时器标识符
-    private enum TimerID {
-        static let mainRefresh = "mainRefresh"
-        static let popoverRefresh = "popoverRefresh"
-        static let resetVerify1 = "resetVerify1"
-        static let resetVerify2 = "resetVerify2"
-        static let resetVerify3 = "resetVerify3"
-        static let codexResetVerify1 = "codexResetVerify1"
-        static let codexResetVerify2 = "codexResetVerify2"
-        static let codexResetVerify3 = "codexResetVerify3"
-        static let codexTokenRefresh = "codexTokenRefresh"
-    }
+    /// 定时器标识符统一定义在 TimerManager.Identifier，避免两处各自为政
+    private typealias TimerID = TimerManager.Identifier
 
     // MARK: - Initialization
 

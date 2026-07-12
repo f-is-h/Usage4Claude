@@ -131,8 +131,12 @@ extension TimerManager {
         static let resetVerify2 = "resetVerify2"
         /// 重置验证定时器 - 重置后30秒
         static let resetVerify3 = "resetVerify3"
-        /// 每日更新检查定时器
-        static let dailyUpdate = "dailyUpdate"
+        /// Codex 重置验证定时器 - 重置后1秒
+        static let codexResetVerify1 = "codexResetVerify1"
+        /// Codex 重置验证定时器 - 重置后10秒
+        static let codexResetVerify2 = "codexResetVerify2"
+        /// Codex 重置验证定时器 - 重置后30秒
+        static let codexResetVerify3 = "codexResetVerify3"
         /// Codex accessToken 主动续期定时器（独立于用量拉取计时器）
         static let codexTokenRefresh = "codexTokenRefresh"
     }

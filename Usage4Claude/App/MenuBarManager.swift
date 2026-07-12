@@ -303,8 +303,6 @@ class MenuBarManager: ObservableObject {
         // 显示更新通知（如果有）
         showUpdateNotificationIfNeeded()
 
-        ui.setPopoverContentSize(usageDetailContentSize())
-
         // 创建并设置内容视图
         ui.setPopoverContent(UsageDetailView(
             usageData: Binding(
@@ -346,63 +344,6 @@ class MenuBarManager: ObservableObject {
 
         // 启动刷新定时器
         startPopoverRefreshTimer()
-    }
-
-    private func usageDetailContentSize() -> NSSize {
-        let baseHeight: CGFloat = 190
-        let rowHeight: CGFloat = 26
-        let spacing: CGFloat = 5
-
-        if settings.isMultiProviderActive && (codexUsageData != nil || codexErrorMessage != nil || settings.hasValidCodexCredentials) {
-            let claudeRowCount: Int
-            if let data = usageData {
-                let types = settings.getActiveDisplayTypes(usageData: data)
-                    .filter { $0.provider == .claude }
-                claudeRowCount = types.count == 1 ? 2 : max(types.count, 1)
-            } else {
-                claudeRowCount = 2
-            }
-
-            let codexRowCount: Int
-            if let codex = codexUsageData {
-                let codexTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
-                    .filter { $0.provider == .codex }
-                codexRowCount = max(codexTypes.count, 1)
-            } else {
-                codexRowCount = 2
-            }
-            let maxRows = max(claudeRowCount, codexRowCount)
-            let rowsHeight = CGFloat(maxRows) * rowHeight + CGFloat(max(0, maxRows - 1)) * spacing
-            return NSSize(width: 580, height: baseHeight + rowsHeight)
-        }
-
-        let shouldUseCodexOnlyLayout = (!settings.hasValidCredentials && settings.hasValidCodexCredentials)
-            || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil))
-        if shouldUseCodexOnlyLayout {
-            let activeCount: Int
-            if let codex = codexUsageData {
-                activeCount = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
-                    .filter { $0.provider == .codex }
-                    .count
-            } else {
-                activeCount = 0
-            }
-            let rowCount = activeCount == 1 ? 2 : max(activeCount, codexUsageData == nil ? 0 : 1)
-            let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
-            return NSSize(width: 290, height: baseHeight + rowsHeight)
-        }
-
-        let activeCount: Int
-        if let data = usageData {
-            activeCount = settings.getActiveDisplayTypes(usageData: data)
-                .filter { $0.provider == .claude }
-                .count
-        } else {
-            activeCount = 0
-        }
-        let rowCount = activeCount == 1 ? 2 : activeCount
-        let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
-        return NSSize(width: 290, height: baseHeight + rowsHeight)
     }
 
     /// 显示更新通知（如果需要）

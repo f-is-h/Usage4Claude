@@ -92,14 +92,12 @@ class MenuBarUI {
 
     /// 设置 Popover 内容视图
     /// - Parameter contentView: SwiftUI 视图
+    /// - Note: sizingOptions = .preferredContentSize 让 NSHostingController 自动把
+    ///   SwiftUI 内容的理想尺寸同步给 popover，无需再手工估算行数/高度。
     func setPopoverContent<Content: View>(_ contentView: Content) {
         let hostingController = NSHostingController(rootView: contentView)
+        hostingController.sizingOptions = [.preferredContentSize]
         popover.contentViewController = hostingController
-    }
-
-    /// 设置 popover 内容尺寸，确保 AppKit 在定位箭头前拿到真实宽高
-    func setPopoverContentSize(_ size: NSSize) {
-        popover.contentSize = size
     }
 
     // MARK: - Popover Control
