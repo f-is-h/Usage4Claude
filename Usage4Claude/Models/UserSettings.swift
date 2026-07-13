@@ -1073,9 +1073,13 @@ class UserSettings: ObservableObject {
                 }
             }
 
-            // Codex 类型：有 Codex 数据时追加
+            // Codex 类型：仅在对应窗口确有数据时追加
+            // （Codex 曾临时取消5小时窗口，此时 API 只返回7天窗口，
+            //  不能像 Claude 的 fiveHour/sevenDay 那样假定 primary 必然存在）
             if let codex = codexUsageData {
-                types.append(.codexPrimary)
+                if codex.primary != nil {
+                    types.append(.codexPrimary)
+                }
                 if codex.secondary != nil {
                     types.append(.codexSecondary)
                 }
