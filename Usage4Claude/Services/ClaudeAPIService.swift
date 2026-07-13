@@ -152,13 +152,15 @@ class ClaudeAPIService {
                 return
             }
 
-            // 创建包含 Extra Usage 的完整数据
+            // 创建包含 Extra Usage 的完整数据（保留 scoped 模型名，如 Fable）
             finalData = UsageData(
                 fiveHour: finalData.fiveHour,
                 sevenDay: finalData.sevenDay,
                 opus: finalData.opus,
                 sonnet: finalData.sonnet,
-                extraUsage: extraUsageData  // 可能为 nil
+                extraUsage: extraUsageData,  // 可能为 nil
+                opusModelName: finalData.opusModelName,
+                sonnetModelName: finalData.sonnetModelName
             )
 
             completion(.success(finalData))
@@ -606,7 +608,9 @@ class ClaudeAPIService {
                         sevenDay: usageData.sevenDay,
                         opus: usageData.opus,
                         sonnet: usageData.sonnet,
-                        extraUsage: extraResponse.toExtraUsageData()
+                        extraUsage: extraResponse.toExtraUsageData(),
+                        opusModelName: usageData.opusModelName,
+                        sonnetModelName: usageData.sonnetModelName
                     )
                 }
 
