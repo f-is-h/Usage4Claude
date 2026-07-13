@@ -147,15 +147,12 @@ class ClaudeAPIService {
                 return
             }
 
-            // 创建包含 Extra Usage 的完整数据（保留 scoped 模型名，如 Fable）
+            // 创建包含 Extra Usage 的完整数据（整体保留所有模型槽，如 Fable / Opus / Sonnet）
             finalData = UsageData(
                 fiveHour: finalData.fiveHour,
                 sevenDay: finalData.sevenDay,
-                opus: finalData.opus,
-                sonnet: finalData.sonnet,
-                extraUsage: extraUsageData,  // 可能为 nil
-                opusModelName: finalData.opusModelName,
-                sonnetModelName: finalData.sonnetModelName
+                weeklyModels: finalData.weeklyModels,
+                extraUsage: extraUsageData  // 可能为 nil
             )
 
             completion(.success(finalData))
@@ -590,11 +587,8 @@ class ClaudeAPIService {
                                 usageData = UsageData(
                                     fiveHour: usageData.fiveHour,
                                     sevenDay: usageData.sevenDay,
-                                    opus: usageData.opus,
-                                    sonnet: usageData.sonnet,
-                                    extraUsage: extraUsageData,
-                                    opusModelName: usageData.opusModelName,
-                                    sonnetModelName: usageData.sonnetModelName
+                                    weeklyModels: usageData.weeklyModels,
+                                    extraUsage: extraUsageData
                                 )
                             } catch {
                                 Logger.api.error("Claude OAuth usage extra_usage 解码失败: \(error.localizedDescription)，keys=\(Array(extraJson.keys))")

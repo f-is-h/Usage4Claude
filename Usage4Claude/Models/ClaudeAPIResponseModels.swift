@@ -142,39 +142,33 @@ nonisolated struct UsageResponse: Codable, Sendable {
         // 这些限制不再走 seven_day_opus / seven_day_sonnet 独立字段，而是以带
         // scope.model 的条目出现在 limits 中。保留出现顺序，过滤掉没有模型名
         // 或没有百分比的条目。
-        var scopedModels: [(name: String, limit: UsageData.LimitData)] = (limits ?? []).compactMap { entry in
+        let scopedModels: [(name: String, limit: UsageData.LimitData)] = (limits ?? []).compactMap { entry in
             guard let name = entry.scope?.model?.display_name, !name.isEmpty,
                   let percent = entry.percent else { return nil }
             let limit = UsageData.LimitData(percentage: percent, resetsAt: parseResetDate(entry.resets_at))
             return (name, limit)
         }
 
-        // 旧字段优先；缺失时用 limits 里的模型限制回填 opus / sonnet 两个展示槽位，
-        // 并记录对应的真实模型名，以便 UI 动态显示（如用 "Fable" 取代 "Opus Weekly"）。
-        var opusData = legacyOpus
-        var opusModelName: String? = nil
-        var sonnetData = legacySonnet
-        var sonnetModelName: String? = nil
-
-        if opusData == nil, !scopedModels.isEmpty {
-            let first = scopedModels.removeFirst()
-            opusData = first.limit
-            opusModelName = first.name
+        // 归并每周模型限制：旧版 seven_day_opus / seven_day_sonnet 独立字段作为前两项，
+        // 其后接新版 limits 数组里的模型条目。完全按来源顺序、不本地重排、不截断——
+        // 排序与模型名均以 Claude API 返回为准。旧字段无 display_name，置 nil 由 UI 按槽位
+        // 回退到 “Opus/Sonnet Weekly” 文案。
+        var weeklyModels: [UsageData.WeeklyModelLimit] = []
+        if let legacyOpus = legacyOpus {
+            weeklyModels.append(UsageData.WeeklyModelLimit(modelName: nil, limit: legacyOpus))
         }
-        if sonnetData == nil, !scopedModels.isEmpty {
-            let second = scopedModels.removeFirst()
-            sonnetData = second.limit
-            sonnetModelName = second.name
+        if let legacySonnet = legacySonnet {
+            weeklyModels.append(UsageData.WeeklyModelLimit(modelName: nil, limit: legacySonnet))
         }
+        weeklyModels.append(contentsOf: scopedModels.map {
+            UsageData.WeeklyModelLimit(modelName: $0.name, limit: $0.limit)
+        })
 
         return UsageData(
             fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
             sevenDay: sevenDayData,
-            opus: opusData,
-            sonnet: sonnetData,
-            extraUsage: nil,  // Extra Usage 将在阶段5通过单独的 API 获取
-            opusModelName: opusModelName,
-            sonnetModelName: sonnetModelName
+            weeklyModels: weeklyModels,
+            extraUsage: nil  // Extra Usage 将在阶段5通过单独的 API 获取
         )
     }
 
@@ -305,22 +299,39 @@ struct UsageData: Sendable {
     let fiveHour: LimitData?
     /// 7天限制数据（可选）
     let sevenDay: LimitData?
-    /// Opus 每周限制数据（可选）。在 Claude 5 时代，此槽位可承载来自新版
-    /// `limits` 数组的“针对具体模型的每周限制”（如 Fable），真实模型名见 `opusModelName`。
-    let opus: LimitData?
-    /// Sonnet 每周限制数据（可选）。同上，可承载第二个模型的每周限制。
-    let sonnet: LimitData?
+    /// 每周针对具体模型的限制，按 Claude API `limits` 返回顺序排列（如 Fable / Opus / Sonnet）。
+    /// 承载任意数量的模型限制，不做本地重排或截断——排序与模型名均以 API 返回为准；
+    /// 旧版 seven_day_opus / seven_day_sonnet 独立字段会作为前两项归入此数组。
+    /// 菜单栏受空间所限只显示前两项（见 `opus` / `sonnet` 计算属性），popover 则遍历全部。
+    let weeklyModels: [WeeklyModelLimit]
     /// Extra Usage 限额数据（可选）
     let extraUsage: ExtraUsageData?
 
-    /// opus 槽位对应的真实模型显示名（如 "Fable"）。为 nil 时 UI 回退到默认的
-    /// “Opus Weekly” 本地化文案；非 nil 时按此名称展示。
-    let opusModelName: String?
-    /// sonnet 槽位对应的真实模型显示名。语义同 `opusModelName`。
-    let sonnetModelName: String?
+    /// 第一个模型槽（菜单栏圆角方图标）。派生自 `weeklyModels` 首项，供菜单栏与旧代码复用。
+    var opus: LimitData? { weeklyModels.first?.limit }
+    /// 第二个模型槽（菜单栏斜切方图标）。派生自 `weeklyModels` 第二项。
+    var sonnet: LimitData? { weeklyModels.count > 1 ? weeklyModels[1].limit : nil }
+    /// opus 槽对应的真实模型显示名（如 "Fable"）。为 nil 时 UI 回退到默认的 “Opus Weekly” 文案。
+    var opusModelName: String? { weeklyModels.first?.modelName }
+    /// sonnet 槽对应的真实模型显示名。为 nil 时 UI 回退到默认的 “Sonnet Weekly” 文案。
+    var sonnetModelName: String? { weeklyModels.count > 1 ? weeklyModels[1].modelName : nil }
 
-    /// 显式成员初始化器。新增的 `opusModelName` / `sonnetModelName` 提供默认值，
-    /// 这样既能在 toUsageData() 中传入模型名，又不破坏其它以旧标签调用的构造点。
+    /// 主初始化器：直接提供有序的模型限制数组（保留全部模型，供真实数据路径使用）。
+    init(
+        fiveHour: LimitData?,
+        sevenDay: LimitData?,
+        weeklyModels: [WeeklyModelLimit],
+        extraUsage: ExtraUsageData?
+    ) {
+        self.fiveHour = fiveHour
+        self.sevenDay = sevenDay
+        self.weeklyModels = weeklyModels
+        self.extraUsage = extraUsage
+    }
+
+    /// 兼容初始化器：以旧的 opus / sonnet 槽位参数构造（供 mock / 预览 / DEBUG 复用）。
+    /// 仅把非 nil 的槽位按 opus→sonnet 顺序放入 `weeklyModels`。真实数据请改用主初始化器，
+    /// 以免丢失第三个及以后的模型。
     init(
         fiveHour: LimitData?,
         sevenDay: LimitData?,
@@ -330,13 +341,14 @@ struct UsageData: Sendable {
         opusModelName: String? = nil,
         sonnetModelName: String? = nil
     ) {
-        self.fiveHour = fiveHour
-        self.sevenDay = sevenDay
-        self.opus = opus
-        self.sonnet = sonnet
-        self.extraUsage = extraUsage
-        self.opusModelName = opusModelName
-        self.sonnetModelName = sonnetModelName
+        var models: [WeeklyModelLimit] = []
+        if let opus = opus {
+            models.append(WeeklyModelLimit(modelName: opusModelName, limit: opus))
+        }
+        if let sonnet = sonnet {
+            models.append(WeeklyModelLimit(modelName: sonnetModelName, limit: sonnet))
+        }
+        self.init(fiveHour: fiveHour, sevenDay: sevenDay, weeklyModels: models, extraUsage: extraUsage)
     }
 
     /// 单个限制的数据（5小时、7天、Opus、Sonnet）
@@ -352,6 +364,14 @@ struct UsageData: Sendable {
             guard let resetsAt = resetsAt else { return nil }
             return resetsAt.timeIntervalSinceNow
         }
+    }
+
+    /// 每周针对具体模型的限制条目（模型名 + 用量数据）。
+    /// `modelName` 来自 Claude API 的 `scope.model.display_name`（如 "Fable"）；
+    /// 旧版 seven_day_opus / seven_day_sonnet 无此字段，置 nil 由 UI 按槽位回退默认文案。
+    struct WeeklyModelLimit: Sendable {
+        let modelName: String?
+        let limit: LimitData
     }
 
     /// 便捷访问：当前主要显示的数据（优先5小时，否则7天）

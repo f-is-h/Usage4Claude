@@ -202,6 +202,10 @@ struct UnifiedLimitRow: View {
     var data: UsageData? = nil
     var codexData: CodexUsageData? = nil
     let showRemainingMode: Bool
+    /// 溢出模型行覆盖：提供时，行的百分比/标签/重置时间直接取自这个模型条目，
+    /// `type` 仅用于决定外观（圆角方/斜切方形状与配色的槽位）。用于 popover 展示
+    /// 超出前两个槽位的第三个及以后的模型（如同时出现 Fable / Opus / Sonnet）。
+    var weeklyModelOverride: UsageData.WeeklyModelLimit? = nil
 
     var body: some View {
         HStack(spacing: 8) {
@@ -242,6 +246,9 @@ struct UnifiedLimitRow: View {
     // MARK: - Computed Properties
 
     private var limitName: String {
+        if let override = weeklyModelOverride {
+            return override.modelName ?? L.DetailRow.opusWeekly
+        }
         switch type {
         case .fiveHour, .codexPrimary:
             return L.DetailRow.fiveHour
@@ -280,6 +287,9 @@ struct UnifiedLimitRow: View {
     }
 
     private var percentageValue: Double? {
+        if let override = weeklyModelOverride {
+            return override.limit.percentage
+        }
         switch type {
         case .fiveHour:       return data?.fiveHour?.percentage
         case .sevenDay:       return data?.sevenDay?.percentage
@@ -293,6 +303,11 @@ struct UnifiedLimitRow: View {
     }
 
     private var displayValue: String {
+        if let override = weeklyModelOverride {
+            return showRemainingMode
+                ? override.limit.formattedCompactRemaining
+                : override.limit.formattedCompactResetDate
+        }
         switch type {
         case .fiveHour:
             guard let fiveHour = data?.fiveHour else { return "-" }

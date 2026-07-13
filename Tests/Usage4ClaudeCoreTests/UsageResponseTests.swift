@@ -323,6 +323,38 @@ final class UsageResponseTests: XCTestCase {
         XCTAssertEqual(usage.sonnetModelName, "Opus")
     }
 
+    func testThreeScopedModelsAllPreservedInWeeklyModels() throws {
+        // Regression guard for the array refactor: a third (and beyond)
+        // model-scoped weekly limit is no longer dropped. All entries flow into
+        // `weeklyModels` in API order; the first two still derive the legacy
+        // opus/sonnet slots for the menu-bar and older read paths.
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null,
+            "limits": [
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 21,
+                  "scope": { "model": { "display_name": "Fable" } } },
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 8,
+                  "scope": { "model": { "display_name": "Opus" } } },
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 3,
+                  "scope": { "model": { "display_name": "Sonnet" } } }
+            ]
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertEqual(usage.weeklyModels.count, 3)
+        XCTAssertEqual(usage.weeklyModels.map(\.modelName), ["Fable", "Opus", "Sonnet"])
+        XCTAssertEqual(usage.weeklyModels.map { $0.limit.percentage }, [21, 8, 3])
+        // 前两个仍派生到 opus / sonnet 槽位
+        XCTAssertEqual(usage.opus?.percentage, 21)
+        XCTAssertEqual(usage.opusModelName, "Fable")
+        XCTAssertEqual(usage.sonnet?.percentage, 8)
+        XCTAssertEqual(usage.sonnetModelName, "Opus")
+    }
+
     func testNonModelScopedLimitsAreIgnored() throws {
         // session / weekly_all entries carry no scope.model — they must not
         // create phantom model rows.

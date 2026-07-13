@@ -346,6 +346,21 @@ struct UsageDetailView: View {
                                     showRemainingMode: showRemainingMode
                                 )
                             }
+                            // 前两个模型走上面的 opus / sonnet 槽位；第三个及以后的模型
+                            // （如同时出现 Fable + Opus + Sonnet）在此按 Claude API 顺序补齐，
+                            // 形状在圆角方 / 斜切方之间轮换，标签用 API 返回的模型名。
+                            // 仅智能模式展开全部；自定义模式尊重用户勾选的固定槽位。
+                            if UserSettings.shared.displayMode == .smart {
+                                let overflow = Array(data.weeklyModels.enumerated()).dropFirst(2)
+                                ForEach(overflow, id: \.offset) { entry in
+                                    UnifiedLimitRow(
+                                        type: entry.offset % 2 == 0 ? .opusWeekly : .sonnetWeekly,
+                                        data: data,
+                                        showRemainingMode: showRemainingMode,
+                                        weeklyModelOverride: entry.element
+                                    )
+                                }
+                            }
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
