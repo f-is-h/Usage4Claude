@@ -153,17 +153,20 @@ jobs:
     name: Build Application
     needs: validate
     if: needs.validate.outputs.should_release == 'true'
-    runs-on: macos-latest
+    # 钉死 runner + Xcode 版本，避免 GitHub 更新镜像后构建产物漂移、出问题无法复现旧版本构建。
+    # 升级时作为显式提交（同时更新本行注释里的日期）。
+    # 当前对齐本机开发环境 Xcode 26.6（2026-07-13 核实 macos-26 镜像已收录该版本）。
+    runs-on: macos-26
     timeout-minutes: 15
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: "26.6"
       
       - name: Verify version consistency
         run: |
@@ -446,7 +449,33 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add appcast.xml
             git commit -m "chore: update appcast.xml for v$VERSION"
-            git push origin main
+
+            # 发布运行期间（约 15 分钟）main 上若有其他手动 push，这里的 push 会因
+            # non-fast-forward 失败；此时 Release 已发出但 appcast 未更新，Sparkle
+            # 用户收不到更新。失败时 rebase 到最新 main 后重试，最多重试 2 次。
+            PUSH_SUCCEEDED=false
+            for attempt in 1 2 3; do
+              if [[ "$attempt" -gt 1 ]]; then
+                echo "⚠️  推送 main 失败，拉取最新 main 并 rebase 后重试（第 $attempt 次）..."
+                git fetch origin main
+                if ! git rebase origin/main; then
+                  git rebase --abort
+                  echo "❌ rebase 到最新 main 时发生冲突，需要人工介入更新 appcast.xml"
+                  exit 1
+                fi
+              fi
+
+              if git push origin main; then
+                PUSH_SUCCEEDED=true
+                break
+              fi
+            done
+
+            if [[ "$PUSH_SUCCEEDED" != "true" ]]; then
+              echo "❌ appcast.xml 推送失败，已重试 3 次仍与 main 冲突"
+              exit 1
+            fi
+
             echo "✅ appcast.xml pushed to main"
           fi
 
