@@ -38,8 +38,9 @@ class TimerManager {
     ) {
         // Timer.scheduledTimer 注册到调用线程的 RunLoop；若 schedule 从没有运行 RunLoop
         // 的后台线程调用（例如未指定 receive(on:) 的 Combine 订阅），定时器会永不触发。
-        // 显式派发到主线程，保证创建时机始终有主 RunLoop 在运行。
-        DispatchQueue.main.async { [weak self] in
+        // 保证在主线程创建。已在主线程时同步执行——若异步推迟一个 runloop turn，
+        // 「schedule(X) 后同一 turn 内 invalidate(X)」会让 X 在 invalidate 之后才被创建（定时器复活）。
+        runOnMain { [weak self] in
             guard let self else { return }
 
             // 同步取消旧定时器并创建新定时器，避免竞态条件
@@ -63,6 +64,15 @@ class TimerManager {
             }
 
             Logger.menuBar.info("⏰ Timer scheduled: \(identifier) (interval: \(interval)s, repeats: \(repeats))")
+        }
+    }
+
+    /// 已在主线程则同步执行，否则派发到主线程
+    private func runOnMain(_ body: @escaping () -> Void) {
+        if Thread.isMainThread {
+            body()
+        } else {
+            DispatchQueue.main.async(execute: body)
         }
     }
 

@@ -72,6 +72,17 @@ actor OAuthTokenCache {
         return tokens.accessToken
     }
 
+    /// 返回尚未过期的缓存 token（不触发刷新）
+    /// 供刷新失败（网络瞬断/服务端抖动）时回退使用：默认 margin 0——
+    /// 哪怕 token 已进入提前刷新窗口，只要还没真正过期就可以顶用一轮。
+    func validCachedToken(refreshToken: String, margin: TimeInterval = 0) -> String? {
+        guard let cached = cachedAccessToken, !cached.isEmpty,
+              let expiry = cachedExpiry,
+              cachedForRefreshToken == refreshToken,
+              expiry > Date().addingTimeInterval(margin) else { return nil }
+        return cached
+    }
+
     /// 清除缓存（账户切换或收到 401 时调用，强制下次重新走网络刷新）
     func clear() {
         cachedAccessToken = nil

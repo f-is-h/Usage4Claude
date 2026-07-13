@@ -34,17 +34,21 @@ class NotificationManager {
     private static let notifiedWarningsKey = "notifiedWarnings"
 
     /// 已通知记录（防止同一账号同一周期内重复通知）
-    /// key = provider + accountId + limitType，value = true 表示已发送过警告
-    /// 持久化到 UserDefaults：否则应用重启后同一周期内会重复发送已经发过的 90%/75% 警告
-    private var notifiedWarnings: [String: Bool] = [:] {
+    /// key = provider + accountId + limitType，value = 发送警告时所属周期的 resetsAt epoch（未知时为 0）
+    /// 持久化到 UserDefaults：否则应用重启后同一周期内会重复发送已经发过的 90%/75% 警告。
+    /// 值记录周期标识而非 Bool：应用未运行期间发生的重置无法被 isReset 的内存对比捕获，
+    /// 若不带周期标识，旧周期的标志会永久抑制新周期的警告（见 checkLimit 的陈旧标志清理）。
+    private var notifiedWarnings: [String: Double] = [:] {
         didSet {
             UserDefaults.standard.set(notifiedWarnings, forKey: Self.notifiedWarningsKey)
         }
     }
 
     private init() {
-        if let saved = UserDefaults.standard.dictionary(forKey: Self.notifiedWarningsKey) as? [String: Bool] {
-            notifiedWarnings = saved
+        if let saved = UserDefaults.standard.dictionary(forKey: Self.notifiedWarningsKey) {
+            // 兼容旧的 [String: Bool] 格式：Bool 转成 1.0，与任何真实 resetsAt 都不同，
+            // 会在首次检查时被当作陈旧标志清理，行为等同于重新开始记录
+            notifiedWarnings = saved.compactMapValues { ($0 as? NSNumber)?.doubleValue }
         }
     }
 
@@ -162,22 +166,35 @@ class NotificationManager {
 
         let previousPct = previous ?? 0
 
+        // 陈旧标志清理：持久化的标志若属于旧周期（resetsAt 已变），直接作废。
+        // 覆盖"应用未运行期间配额已重置"的场景——那种重置不会走上面的 isReset 分支。
+        // currentResetsAt 为 nil（如 Extra Usage）或标志无周期信息（0）时跳过，维持原有行为。
+        let currentCycle = currentResetsAt?.timeIntervalSince1970 ?? 0
+        func clearIfStale(_ key: String) {
+            guard currentCycle != 0,
+                  let firedCycle = notifiedWarnings[key], firedCycle != 0,
+                  abs(firedCycle - currentCycle) > 1 else { return }
+            notifiedWarnings.removeValue(forKey: key)
+        }
+
         // 7天限制额外检查 75% 阈值
         if type == .sevenDay || type == .codexSecondary {
             let earlyKey = notificationKey(for: type, suffix: "75")
-            let alreadyNotifiedEarly = notifiedWarnings[earlyKey] ?? false
+            clearIfStale(earlyKey)
+            let alreadyNotifiedEarly = notifiedWarnings[earlyKey] != nil
             if !alreadyNotifiedEarly && previousPct < sevenDayEarlyWarningThreshold && currentPct >= sevenDayEarlyWarningThreshold {
                 sendUsageWarning(limitType: type, percentage: currentPct)
-                notifiedWarnings[earlyKey] = true
+                notifiedWarnings[earlyKey] = currentCycle
             }
         }
 
         // 检测是否跨越 90% 阈值
         let warningKey = notificationKey(for: type)
-        let alreadyNotified = notifiedWarnings[warningKey] ?? false
+        clearIfStale(warningKey)
+        let alreadyNotified = notifiedWarnings[warningKey] != nil
         if !alreadyNotified && previousPct < warningThreshold && currentPct >= warningThreshold {
             sendUsageWarning(limitType: type, percentage: currentPct)
-            notifiedWarnings[warningKey] = true
+            notifiedWarnings[warningKey] = currentCycle
         }
     }
 

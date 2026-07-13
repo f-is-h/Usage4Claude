@@ -623,6 +623,16 @@ class ClaudeAPIService {
         Logger.api.debug("已取消所有网络请求")
     }
 
+    // MARK: - Async 包装
+
+    /// `fetchUsage(completion:)` 的 async 包装，供结构化并发调用方使用。
+    /// 结果用 Result 表达而非 throws，与 completion 版本的错误语义保持一致。
+    func fetchUsageResult() async -> Result<UsageData, Error> {
+        await withCheckedContinuation { continuation in
+            fetchUsage { continuation.resume(returning: $0) }
+        }
+    }
+
     // MARK: - Debug Mock Data
 
     #if DEBUG

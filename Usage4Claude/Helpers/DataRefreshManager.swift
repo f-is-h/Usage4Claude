@@ -144,32 +144,17 @@ class DataRefreshManager: ObservableObject {
             return
         }
 
-        let group = DispatchGroup()
-        var claudeResult: Result<UsageData, Error>?
-        var codexResult: Result<CodexUsageData, Error>?
+        // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
+        // （审计报告 4.2：替代 DispatchGroup + 跨线程共享可变结果变量的旧写法）
+        let claudeTask: Task<Result<UsageData, Error>, Never>? =
+            fetchClaude ? Task { await self.apiService.fetchUsageResult() } : nil
+        let codexTask: Task<Result<CodexUsageData, Error>, Never>? =
+            fetchCodex ? Task { await self.codexApiService.fetchUsageResult() } : nil
 
-        // Claude 请求
-        if fetchClaude {
-            group.enter()
-            apiService.fetchUsage { result in
-                claudeResult = result
-                group.leave()
-            }
-        }
+        Task { @MainActor [weak self] in
+            let claudeResult = await claudeTask?.value
+            let codexResult = await codexTask?.value
 
-        // Codex 请求（仅当有凭证时）
-        if fetchCodex {
-            group.enter()
-            codexApiService.fetchUsage { result in
-                codexResult = result
-                if case .failure(let error) = result {
-                    Logger.menuBar.info("Codex 请求失败（不影响主功能）: \(error.localizedDescription)")
-                }
-                group.leave()
-            }
-        }
-
-        group.notify(queue: .main) { [weak self] in
             guard let self = self else { return }
             self.isLoading = false
             self.endRefreshAnimationWithMinimumDuration { }
@@ -184,6 +169,7 @@ class DataRefreshManager: ObservableObject {
                     self.processCodexSuccess(codex)
 
                 case .failure(let error):
+                    Logger.menuBar.info("Codex 请求失败（不影响主功能）: \(error.localizedDescription)")
                     if case UsageError.unauthorized = error {
                         self.attemptTokenRefreshAndRetry()
                     } else {

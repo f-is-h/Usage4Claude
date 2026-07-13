@@ -24,77 +24,45 @@ class CodexAPIService {
     /// 当前进行中的任务（最多两个：session + usage）
     /// - Note: append 发生在主线程（session 请求发起）和 URLSession 回调线程（usage 请求发起，
     ///   由 fetchAccessToken 的 completion 触发）两处，cancelAllRequests 在主线程清空，
-    ///   并发读写需靠 cacheLock 保护（见 trackTask/cancelAllRequests）。
+    ///   并发读写需靠 tasksLock 保护（见 trackTask/cancelAllRequests）。
     private var activeTasks: [URLSessionDataTask] = []
+
+    /// 保护 activeTasks 的锁
+    private let tasksLock = NSLock()
 
     // MARK: - Access Token Cache
 
-    private var cachedAccessToken: String?
-    private var cachedAccessTokenExpiry: Date?
-    private var cachedForSessionToken: String?
     /// 主动刷新窗口：距过期不足20分钟时触发重新拉取
     /// 设为最大刷新间隔(15min) + 5min buffer，确保任意间隔下都能主动刷新而不依赖三级链兜底
     private static let tokenRefreshMargin: TimeInterval = 20 * 60
 
-    /// 保护缓存三属性的锁：主线程读（计时器/fetchAccessToken 入口），URLSession 后台线程写
-    private let cacheLock = NSLock()
-
-    // MARK: - OAuth refresh 单飞（in-flight 合并）
-
-    /// OAuth refresh_token 是一次性的（每次刷新都会轮换、旧值立即作废）。
-    /// 多个计时器可能并发用同一 refresh_token 发起刷新，导致后到者用已作废的 token 被服务端拒绝。
-    /// 这里做单飞合并：同一 refresh_token 的刷新进行中时，后续调用挂入等待队列复用其结果。
-    /// 复用 cacheLock 保护以下三个属性。
-    private var oauthRefreshInFlight = false
-    private var oauthRefreshInFlightToken: String?
-    private var oauthRefreshWaiters: [(Result<String, Error>) -> Void] = []
-
-    /// 缓存是否在刷新窗口外（剩余 > 20 分钟）。调用方必须在主线程。
-    private var hasCachedValidToken: Bool {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        guard let token = cachedAccessToken, !token.isEmpty,
-              let expiry = cachedAccessTokenExpiry,
-              let forToken = cachedForSessionToken else { return false }
-        return forToken == settings.codexSessionToken
-            && expiry > Date().addingTimeInterval(Self.tokenRefreshMargin)
-    }
-
-    /// 缓存 token 是否尚未过期（即使已进入主动刷新窗口）。可在任意线程调用。
-    private func cachedTokenFallback(for sessionToken: String) -> String? {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        guard let token = cachedAccessToken, !token.isEmpty,
-              let expiry = cachedAccessTokenExpiry,
-              cachedForSessionToken == sessionToken,
-              expiry > Date() else { return nil }
-        return token
-    }
+    /// access_token 缓存 + 单飞合并（actor，见 Services/OAuthTokenCache.swift；审计报告 4.2）。
+    /// cookie session 路径与 OAuth refresh 路径共用：缓存键为账户凭据
+    /// （session-token 或 "rt." 前缀的 OAuth refresh_token），互不串扰。
+    private let tokenCache = OAuthTokenCache()
 
     /// 线程安全地记录进行中的任务，供 cancelAllRequests 统一取消
     private func trackTask(_ task: URLSessionDataTask) {
-        cacheLock.lock()
+        tasksLock.lock()
         activeTasks.append(task)
-        cacheLock.unlock()
+        tasksLock.unlock()
     }
 
-    /// 账户切换或 401 时清除缓存，确保下次立即重新拉取
+    /// 账户切换时清除缓存，确保下次立即重新拉取
+    /// - Note: 异步生效。401 路径的清缓存在 fetchWhamUsage 内部完成（保证先于错误传播），
+    ///   账户切换场景则依赖缓存按凭据键控——旧账户的缓存不会误配新账户的凭据。
     func clearAccessTokenCache() {
-        cacheLock.lock()
-        cachedAccessToken = nil
-        cachedAccessTokenExpiry = nil
-        cachedForSessionToken = nil
-        cacheLock.unlock()
+        Task { await tokenCache.clear() }
     }
 
-    /// 由独立计时器调用：仅在缓存即将过期时主动调用 session API 续期，不触发用量拉取
+    /// 由独立计时器调用：仅在缓存即将过期时主动续期，不触发用量拉取。
+    /// fetchAccessToken 内部先查缓存（20 分钟余量），缓存仍新鲜时不会发起网络请求。
     func proactivelyRefreshIfNeeded() {
-        guard settings.hasValidCodexCredentials, !hasCachedValidToken else { return }
-        let sessionToken = settings.codexSessionToken
-        fetchAccessToken(sessionToken: sessionToken) { result in
+        guard settings.hasValidCodexCredentials else { return }
+        fetchAccessToken(sessionToken: settings.codexSessionToken) { result in
             switch result {
             case .success:
-                Logger.api.notice("Codex accessToken: 独立计时器主动续期成功")
+                Logger.api.debug("Codex accessToken: 主动续期检查完成")
             case .failure(let error):
                 Logger.api.warning("Codex accessToken: 主动续期失败（\(error.localizedDescription)），用量拉取时再试")
             }
@@ -135,12 +103,13 @@ class CodexAPIService {
 
         let sessionToken = settings.codexSessionToken
 
+        // fetchAccessToken 的 completion 已保证主线程回调
         fetchAccessToken(sessionToken: sessionToken) { [weak self] result in
             guard let self = self else { return }
 
             switch result {
             case .failure(let error):
-                DispatchQueue.main.async { completion(.failure(error)) }
+                completion(.failure(error))
 
             case .success(let accessToken):
                 self.fetchWhamUsage(accessToken: accessToken) { usageResult in
@@ -150,148 +119,7 @@ class CodexAPIService {
         }
     }
 
-    // MARK: - Private: Step 1 — Session → accessToken
-
-    /// 第一步：用 session-token Cookie 换取 accessToken
-    /// 缓存有效时（距过期 > 5 分钟）跳过网络请求，避免每60秒调用 session API
-    private func fetchAccessToken(sessionToken: String, completion: @escaping (Result<String, Error>) -> Void) {
-        // 原子性读取缓存，避免 hasCachedValidToken 和 cachedAccessToken 之间的 TOCTOU 竞争
-        cacheLock.lock()
-        let cachedEntry: (token: String, remaining: Int)?
-        if let token = cachedAccessToken, !token.isEmpty,
-           let expiry = cachedAccessTokenExpiry,
-           cachedForSessionToken == sessionToken,
-           expiry > Date().addingTimeInterval(Self.tokenRefreshMargin) {
-            cachedEntry = (token, Int(expiry.timeIntervalSinceNow / 60))
-        } else {
-            cachedEntry = nil
-        }
-        cacheLock.unlock()
-
-        if let entry = cachedEntry {
-            Logger.api.debug("Codex accessToken: 使用缓存（剩余约 \(entry.remaining) 分钟）")
-            completion(.success(entry.token))
-            return
-        }
-
-        // OAuth 账户：sessionKey 实为 OAuth refresh_token，用它向 auth.openai.com 换 access_token，
-        // 不再走 chatgpt.com 的 /api/auth/session（cookie）路径。旧 session-token 账户继续走下方逻辑。
-        if Self.isOAuthRefreshToken(sessionToken) {
-            fetchAccessTokenViaOAuth(refreshToken: sessionToken, completion: completion)
-            return
-        }
-
-        guard let url = URL(string: "\(baseURL)/api/auth/session") else {
-            completion(.failure(UsageError.invalidURL))
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.assumesHTTP3Capable = false
-        CodexAPIHeaderBuilder.applySessionHeaders(to: &request, sessionToken: sessionToken)
-
-        let task = session.dataTask(with: request) { [weak self] data, response, error in
-            guard let self else { return }
-            if let error = error {
-                Logger.api.debug("Codex session error: \(error.localizedDescription)")
-                // 网络失败时，若旧 token 尚未真正过期则回退使用，避免瞬断影响用量拉取
-                if let fallback = self.cachedTokenFallback(for: sessionToken) {
-                    let remaining = Int((self.cachedAccessTokenExpiry?.timeIntervalSinceNow ?? 0) / 60)
-                    Logger.api.warning("Codex session API 失败，回退缓存 token（剩余约 \(remaining) 分钟）")
-                    completion(.success(fallback))
-                } else {
-                    completion(.failure(UsageError.networkError))
-                }
-                return
-            }
-
-            guard let data = data else {
-                if let fallback = self.cachedTokenFallback(for: sessionToken) {
-                    completion(.success(fallback))
-                } else {
-                    completion(.failure(UsageError.noData))
-                }
-                return
-            }
-
-            if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Codex session response received: \(data.count) bytes")
-                if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
-                    completion(.failure(UsageError.cloudflareBlocked))
-                    return
-                }
-            }
-
-            if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("Codex session HTTP status: \(httpResponse.statusCode)")
-                // Phase 0 诊断：检查 /api/auth/session 是否下发新 session-token
-                let setCookieHeaders = httpResponse.allHeaderFields
-                    .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
-                    .compactMap { $0.value as? String }
-                Logger.api.debug("Codex session Set-Cookie 数量=\(setCookieHeaders.count)")
-                for cookieStr in setCookieHeaders {
-                    if cookieStr.contains("next-auth.session-token") {
-                        Logger.api.info("Codex session Set-Cookie [SESSION-TOKEN] \(cookieStr.prefix(80))")
-                    }
-                }
-
-                switch httpResponse.statusCode {
-                case 200...299: break
-                case 401: completion(.failure(UsageError.unauthorized)); return
-                case 403: completion(.failure(UsageError.cloudflareBlocked)); return
-                case 429: completion(.failure(UsageError.rateLimited)); return
-                default:
-                    completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
-                    return
-                }
-            }
-
-            // Level 1：检查 HTTPCookieStorage 是否收到新的 session-token
-            let chatgptURL = URL(string: "https://chatgpt.com")!
-            let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
-            if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies) {
-                // 用已捕获的 sessionToken 参数比较，避免在后台线程读取 @Published 属性
-                if newToken != sessionToken {
-                    Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
-                    DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
-                    }
-                }
-            }
-
-            let decoder = JSONDecoder()
-            do {
-                let sessionResponse = try decoder.decode(CodexSessionResponse.self, from: data)
-                guard let accessToken = sessionResponse.accessToken, !accessToken.isEmpty else {
-                    Logger.api.error("Codex session response missing accessToken")
-                    completion(.failure(UsageError.sessionExpired))
-                    return
-                }
-                let exp = jwtExpiry(from: accessToken)
-                let expiry = exp ?? Date().addingTimeInterval(30 * 60)
-                if let exp {
-                    Logger.api.info("Codex accessToken expires at \(exp) (in \(Int(exp.timeIntervalSinceNow / 60)) min)")
-                } else {
-                    Logger.api.debug("Codex accessToken: exp 不可解析，缓存30分钟")
-                }
-                self.cacheLock.lock()
-                self.cachedAccessToken = accessToken
-                self.cachedAccessTokenExpiry = expiry
-                self.cachedForSessionToken = sessionToken
-                self.cacheLock.unlock()
-                completion(.success(accessToken))
-            } catch {
-                Logger.api.debug("Codex session decode error: \(error.localizedDescription)")
-                completion(.failure(UsageError.decodingError))
-            }
-        }
-
-        trackTask(task)
-        task.resume()
-    }
-
-    // MARK: - Private: OAuth refresh → accessToken
+    // MARK: - Private: Step 1 — 凭据 → accessToken
 
     /// 判断账户凭据是否为 OAuth refresh_token（OpenAI 格式以 "rt." 开头）
     /// 旧 session-token 是 next-auth 加密串，不会命中此前缀
@@ -299,74 +127,177 @@ class CodexAPIService {
         credential.hasPrefix("rt.")
     }
 
-    /// 用 OAuth refresh_token 向 auth.openai.com 换取 access_token
-    /// 成功后缓存 access_token；若 refresh_token 发生轮换，则静默写回账户存储
-    /// 通过单飞合并避免并发刷新（见 oauthRefreshInFlight 注释）
-    private func fetchAccessTokenViaOAuth(refreshToken: String, completion: @escaping (Result<String, Error>) -> Void) {
-        cacheLock.lock()
-        // 同一 refresh_token 已有刷新在进行：挂入等待队列复用其结果，不再重复发起
-        if oauthRefreshInFlight, oauthRefreshInFlightToken == refreshToken {
-            oauthRefreshWaiters.append(completion)
-            cacheLock.unlock()
-            return
-        }
-        // 成为发起者（不同账户的并发刷新极罕见——仅账户切换瞬间，此处不特殊合并，各自独立刷新）
-        oauthRefreshInFlight = true
-        oauthRefreshInFlightToken = refreshToken
-        cacheLock.unlock()
-
-        // 强引用 self：此闭包持有期间必须保证 self 存活到刷新完成，
-        // 否则挂在 oauthRefreshWaiters 里的等待者会随 self 一起被释放、永远收不到结果
-        CodexOAuthService.refresh(refreshToken: refreshToken) { [self] result in
-            let finalResult: Result<String, Error>
-            switch result {
-            case .failure(let error):
-                // 网络瞬断时，若旧 access_token 尚未过期则回退使用
-                if let fallback = self.cachedTokenFallback(for: refreshToken) {
-                    Logger.api.warning("Codex OAuth refresh 失败，回退缓存 token")
-                    finalResult = .success(fallback)
-                } else {
-                    finalResult = .failure(error)
+    /// 第一步：用账户凭据换取 accessToken
+    /// - cookie 账户：GET /api/auth/session（session-token Cookie）
+    /// - OAuth 账户（"rt." 前缀）：向 auth.openai.com 用 refresh_token 换取
+    ///
+    /// 缓存有效时（距过期 > 20 分钟）跳过网络请求；同一凭据的并发调用由
+    /// OAuthTokenCache 合并为一次网络请求。completion 一律主线程回调。
+    private func fetchAccessToken(sessionToken: String, completion: @escaping (Result<String, Error>) -> Void) {
+        Task {
+            do {
+                let accessToken = try await tokenCache.accessToken(
+                    refreshToken: sessionToken,
+                    margin: Self.tokenRefreshMargin
+                ) { [weak self] credential in
+                    guard let self else { throw UsageError.networkError }
+                    if Self.isOAuthRefreshToken(credential) {
+                        return try await self.refreshOAuthTokens(refreshToken: credential)
+                    }
+                    return try await self.fetchSessionTokens(sessionToken: credential)
                 }
-
-            case .success(let tokens):
-                // refresh_token 可能轮换：响应携带新值且与旧值不同时，静默写回账户
-                let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
-                if newRefresh != refreshToken {
-                    Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
-                    DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newRefresh)
+                await MainActor.run { completion(.success(accessToken)) }
+            } catch {
+                // 刷新失败回退：旧 token 尚未真正过期（哪怕已进入提前刷新窗口）时顶用一轮，
+                // 避免网络瞬断/服务端抖动影响用量拉取。凭据失效类错误不回退——
+                // 必须让 401 传播出去触发三级刷新链 / 重新登录提示。
+                switch error {
+                case UsageError.unauthorized, UsageError.sessionExpired:
+                    break
+                default:
+                    if let fallback = await tokenCache.validCachedToken(refreshToken: sessionToken) {
+                        Logger.api.warning("Codex token 刷新失败（\(error.localizedDescription)），回退未过期的缓存 token")
+                        await MainActor.run { completion(.success(fallback)) }
+                        return
                     }
                 }
+                await MainActor.run { completion(.failure(error)) }
+            }
+        }
+    }
 
-                let accessToken = tokens.accessToken
-                let expiry = jwtExpiry(from: accessToken) ?? Date().addingTimeInterval(30 * 60)
-                self.cacheLock.lock()
-                self.cachedAccessToken = accessToken
-                self.cachedAccessTokenExpiry = expiry
-                // 缓存 key 跟随新 refresh_token，确保轮换后下次仍能命中缓存
-                self.cachedForSessionToken = newRefresh
-                self.cacheLock.unlock()
-                finalResult = .success(accessToken)
+    /// cookie 账户：调用 /api/auth/session 换取 accessToken，返回统一的 Tokens 三元组。
+    /// 若响应通过 Set-Cookie 轮换了 session-token，静默写回账户存储，并把新值作为
+    /// 返回的 refreshToken——缓存键跟随新凭据，下次用新 session-token 查询可直接命中。
+    private func fetchSessionTokens(sessionToken: String) async throws -> OAuthTokenCache.Tokens {
+        guard let url = URL(string: "\(baseURL)/api/auth/session") else {
+            throw UsageError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.assumesHTTP3Capable = false
+        CodexAPIHeaderBuilder.applySessionHeaders(to: &request, sessionToken: sessionToken)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let task = session.dataTask(with: request) { data, response, error in
+                let result: Result<OAuthTokenCache.Tokens, Error> = {
+                    if let error {
+                        Logger.api.debug("Codex session error: \(error.localizedDescription)")
+                        return .failure(UsageError.networkError)
+                    }
+                    guard let data else { return .failure(UsageError.noData) }
+
+                    Logger.api.debug("Codex session response received: \(data.count) bytes")
+                    if let jsonString = String(data: data, encoding: .utf8),
+                       jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
+                        return .failure(UsageError.cloudflareBlocked)
+                    }
+
+                    if let httpResponse = response as? HTTPURLResponse {
+                        Logger.api.debug("Codex session HTTP status: \(httpResponse.statusCode)")
+                        // Phase 0 诊断：检查 /api/auth/session 是否下发新 session-token
+                        let setCookieHeaders = httpResponse.allHeaderFields
+                            .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
+                            .compactMap { $0.value as? String }
+                        Logger.api.debug("Codex session Set-Cookie 数量=\(setCookieHeaders.count)")
+                        for cookieStr in setCookieHeaders where cookieStr.contains("next-auth.session-token") {
+                            Logger.api.info("Codex session Set-Cookie [SESSION-TOKEN] \(cookieStr.prefix(80))")
+                        }
+
+                        switch httpResponse.statusCode {
+                        case 200...299: break
+                        case 401: return .failure(UsageError.unauthorized)
+                        case 403: return .failure(UsageError.cloudflareBlocked)
+                        case 429: return .failure(UsageError.rateLimited)
+                        default:
+                            return .failure(UsageError.httpError(statusCode: httpResponse.statusCode))
+                        }
+                    }
+
+                    // 检查 HTTPCookieStorage 是否收到轮换后的新 session-token
+                    // （用已捕获的 sessionToken 参数比较，避免在后台线程读取 @Published 属性）
+                    var effectiveSessionToken = sessionToken
+                    let chatgptURL = URL(string: "https://chatgpt.com")!
+                    let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
+                    if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies),
+                       newToken != sessionToken {
+                        Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
+                        effectiveSessionToken = newToken
+                        DispatchQueue.main.async {
+                            UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                        }
+                    }
+
+                    do {
+                        let sessionResponse = try JSONDecoder().decode(CodexSessionResponse.self, from: data)
+                        guard let accessToken = sessionResponse.accessToken, !accessToken.isEmpty else {
+                            Logger.api.error("Codex session response missing accessToken")
+                            return .failure(UsageError.sessionExpired)
+                        }
+                        let exp = jwtExpiry(from: accessToken)
+                        if let exp {
+                            Logger.api.info("Codex accessToken expires at \(exp) (in \(Int(exp.timeIntervalSinceNow / 60)) min)")
+                        } else {
+                            Logger.api.debug("Codex accessToken: exp 不可解析，缓存30分钟")
+                        }
+                        return .success(OAuthTokenCache.Tokens(
+                            accessToken: accessToken,
+                            refreshToken: effectiveSessionToken,
+                            expiresAt: exp ?? Date().addingTimeInterval(30 * 60)
+                        ))
+                    } catch {
+                        Logger.api.debug("Codex session decode error: \(error.localizedDescription)")
+                        return .failure(UsageError.decodingError)
+                    }
+                }()
+                continuation.resume(with: result)
             }
 
-            // 清理单飞状态并取出所有等待者（均为同一 refresh_token，可安全复用同一结果）
-            self.cacheLock.lock()
-            let waiters = self.oauthRefreshWaiters
-            self.oauthRefreshWaiters.removeAll()
-            self.oauthRefreshInFlight = false
-            self.oauthRefreshInFlightToken = nil
-            self.cacheLock.unlock()
-
-            completion(finalResult)
-            for waiter in waiters { waiter(finalResult) }
+            trackTask(task)
+            task.resume()
         }
+    }
+
+    /// OAuth 账户：用 refresh_token 向 auth.openai.com 换取 access_token。
+    /// 只会在 OAuthTokenCache 判定「确实需要发起新刷新」时被调用一次（并发调用共享同一次结果）。
+    /// refresh_token 轮换时静默写回账户存储，并作为返回的 refreshToken（缓存键跟随新值）。
+    private func refreshOAuthTokens(refreshToken: String) async throws -> OAuthTokenCache.Tokens {
+        let tokens = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CodexOAuthTokens, Error>) in
+            CodexOAuthService.refresh(refreshToken: refreshToken) { result in
+                continuation.resume(with: result)
+            }
+        }
+
+        let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
+        if newRefresh != refreshToken {
+            Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
+            await MainActor.run {
+                UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newRefresh)
+            }
+        }
+
+        return OAuthTokenCache.Tokens(
+            accessToken: tokens.accessToken,
+            refreshToken: newRefresh,
+            expiresAt: jwtExpiry(from: tokens.accessToken) ?? Date().addingTimeInterval(30 * 60)
+        )
     }
 
     /// 跳过 session 步骤，直接用已获取的 accessToken 查询用量（用于刷新后重试）
     func fetchUsageWithAccessToken(_ accessToken: String, completion: @escaping (Result<CodexUsageData, Error>) -> Void) {
         fetchWhamUsage(accessToken: accessToken) { result in
             DispatchQueue.main.async { completion(result) }
+        }
+    }
+
+    // MARK: - Async 包装
+
+    /// `fetchUsage(completion:)` 的 async 包装，供结构化并发调用方使用。
+    /// 结果用 Result 表达而非 throws，与 completion 版本的错误语义保持一致。
+    func fetchUsageResult() async -> Result<CodexUsageData, Error> {
+        await withCheckedContinuation { continuation in
+            fetchUsage { continuation.resume(returning: $0) }
         }
     }
 
@@ -408,7 +339,14 @@ class CodexAPIService {
                 Logger.api.debug("Codex usage HTTP status: \(httpResponse.statusCode)")
                 switch httpResponse.statusCode {
                 case 200...299: break
-                case 401: completion(.failure(UsageError.unauthorized)); return
+                case 401:
+                    // 缓存的 accessToken 已失效。await 清缓存后再传播错误，
+                    // 保证调用方收到 unauthorized 后立即发起的重试不会再命中这枚坏 token
+                    Task { [weak self] in
+                        await self?.tokenCache.clear()
+                        completion(.failure(UsageError.unauthorized))
+                    }
+                    return
                 case 403: completion(.failure(UsageError.cloudflareBlocked)); return
                 case 429: completion(.failure(UsageError.rateLimited)); return
                 default:
@@ -556,10 +494,10 @@ extension CodexAPIService: UsageProvider {
     var providerType: ProviderType { .codex }
 
     func cancelAllRequests() {
-        cacheLock.lock()
+        tasksLock.lock()
         let tasks = activeTasks
         activeTasks.removeAll()
-        cacheLock.unlock()
+        tasksLock.unlock()
         tasks.forEach { $0.cancel() }
         Logger.api.debug("Codex: 已取消所有网络请求")
     }

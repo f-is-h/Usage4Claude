@@ -186,6 +186,49 @@ final class OAuthTokenCacheTests: XCTestCase {
         XCTAssertEqual(third, "access-2")
     }
 
+    // MARK: - validCachedToken（刷新失败时的回退查询）
+
+    func testValidCachedTokenReturnsUnexpiredTokenEvenInsideRefreshMargin() async throws {
+        let cache = OAuthTokenCache()
+
+        // Cache a token that expires in 60s — inside a 20-minute refresh margin,
+        // but not actually expired yet.
+        _ = try await cache.accessToken(refreshToken: "rt-1") { rt in
+            OAuthTokenCache.Tokens(accessToken: "access-1", refreshToken: rt, expiresAt: Date().addingTimeInterval(60))
+        }
+
+        // With margin 0 (the fallback query), the token still counts as usable.
+        let fallback = await cache.validCachedToken(refreshToken: "rt-1")
+        XCTAssertEqual(fallback, "access-1", "a not-yet-expired token must be available as fallback even inside the refresh margin")
+
+        // With a 20-minute margin it does NOT count (that's what forces the refresh attempt).
+        let strict = await cache.validCachedToken(refreshToken: "rt-1", margin: 20 * 60)
+        XCTAssertNil(strict)
+    }
+
+    func testValidCachedTokenReturnsNilForExpiredOrForeignToken() async throws {
+        let cache = OAuthTokenCache()
+
+        // Nothing cached yet.
+        let empty = await cache.validCachedToken(refreshToken: "rt-1")
+        XCTAssertNil(empty)
+
+        // Cache a token that is already expired.
+        _ = try await cache.accessToken(refreshToken: "rt-1") { rt in
+            OAuthTokenCache.Tokens(accessToken: "access-expired", refreshToken: rt, expiresAt: Date().addingTimeInterval(-1))
+        }
+        let expired = await cache.validCachedToken(refreshToken: "rt-1")
+        XCTAssertNil(expired, "an expired token must never be offered as fallback")
+
+        // Cache a valid token for rt-1; querying with a different refresh_token must miss.
+        await cache.clear()
+        _ = try await cache.accessToken(refreshToken: "rt-1") { rt in
+            OAuthTokenCache.Tokens(accessToken: "access-1", refreshToken: rt, expiresAt: Date().addingTimeInterval(3600))
+        }
+        let foreign = await cache.validCachedToken(refreshToken: "rt-other")
+        XCTAssertNil(foreign, "fallback must be keyed to the same credential")
+    }
+
     func testExpiredCacheTriggersRefresh() async throws {
         let cache = OAuthTokenCache()
         let counter = CallCounter()
