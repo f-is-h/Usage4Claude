@@ -217,8 +217,11 @@ class MenuBarManager: ObservableObject {
     private func setupSettingsObservers() {
         // NotificationCenter 的 post 发生在哪个线程，publisher 就在哪个线程收，不能假定是主线程
         // （TimerManager 等下游依赖主 RunLoop），统一 receive(on:) 到主线程再处理。
-        NotificationCenter.default.publisher(for: .settingsChanged)
+        let settingsChanged = NotificationCenter.default.publisher(for: .settingsChanged)
             .receive(on: DispatchQueue.main)
+
+        // 图标缓存清理 + 重绘需要即时反馈，不做防抖
+        settingsChanged
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 // 设置改变时清除图标缓存（显示模式可能改变）
@@ -226,10 +229,24 @@ class MenuBarManager: ObservableObject {
 
                 // 立即更新图标，无需等待
                 self.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
 
-                #if DEBUG
-                // 调试模式下立即刷新数据（不使用防抖）
-                self.dataManager.fetchUsage()
+        #if DEBUG
+        // customDisplayTypes/iconStyleMode 等几乎所有设置项改动都会 post settingsChanged，
+        // 但只有"调试模拟模式"（debugModeEnabled）下改动才需要立即刷新——那条路径读的是本地
+        // mock 数据（ClaudeAPIService.createMockData），不产生真实网络请求。
+        // 若开发者正用真实账号联调 UI（debugModeEnabled 为 false），customDisplayTypes 这类
+        // 与用量数据无关的设置不该触发真实 API 请求；此前无条件 fetchUsage() 会导致连续勾选/
+        // 取消指标时打出一串真实请求，被 API 判定请求过于频繁（429）。
+        // 防抖仅作为同一批 mock 场景改动（如拖动滑块）的兜底合并，不是本次修复的关键。
+        settingsChanged
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                if self.settings.debugModeEnabled {
+                    self.dataManager.fetchUsage()
+                }
 
                 // 模拟更新开关变化时，直接驱动 Sparkle 徽章状态机（无需真实 appcast）
                 if self.settings.simulateUpdateAvailable {
@@ -243,9 +260,9 @@ class MenuBarManager: ObservableObject {
                     self.updateMenuBarIcon()
                     Logger.menuBar.debug("模拟更新已禁用")
                 }
-                #endif
             }
             .store(in: &cancellables)
+        #endif
 
         NotificationCenter.default.publisher(for: .refreshIntervalChanged)
             .receive(on: DispatchQueue.main)

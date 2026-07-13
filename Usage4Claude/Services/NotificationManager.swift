@@ -12,7 +12,8 @@ import OSLog
 
 /// 用量通知管理器
 /// 负责在用量达到阈值或重置时发送 macOS 系统通知
-class NotificationManager {
+/// 继承 NSObject 是 UNUserNotificationCenterDelegate 的协议要求
+final class NotificationManager: NSObject {
     // MARK: - Singleton
 
     static let shared = NotificationManager()
@@ -44,12 +45,16 @@ class NotificationManager {
         }
     }
 
-    private init() {
+    private override init() {
+        super.init()
         if let saved = UserDefaults.standard.dictionary(forKey: Self.notifiedWarningsKey) {
             // 兼容旧的 [String: Bool] 格式：Bool 转成 1.0，与任何真实 resetsAt 都不同，
             // 会在首次检查时被当作陈旧标志清理，行为等同于重新开始记录
             notifiedWarnings = saved.compactMapValues { ($0 as? NSNumber)?.doubleValue }
         }
+        // 不设置 delegate 时，macOS 会静默丢弃前台应用的通知（add 成功、无任何报错）。
+        // 本应用打开设置窗口/弹窗时恰好处于前台激活状态——用量警告最常在这时触发。
+        UNUserNotificationCenter.current().delegate = self
     }
 
     // MARK: - Permission
@@ -336,4 +341,18 @@ class NotificationManager {
         }
     }
 
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension NotificationManager: UNUserNotificationCenterDelegate {
+    /// 应用处于前台时也照常显示横幅和声音
+    /// （系统默认行为是前台静默丢弃；菜单栏应用打开设置窗口或弹窗时即为前台）
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
 }
