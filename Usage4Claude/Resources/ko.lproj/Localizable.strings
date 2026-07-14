@@ -141,6 +141,7 @@
 "language.chinese_traditional" = "中文（繁体）";
 "language.korean" = "한국어";
 "language.french" = "Français";
+"language.german" = "Deutsch";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 설정";

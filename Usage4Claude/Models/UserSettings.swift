@@ -276,6 +276,8 @@ enum AppLanguage: String, CaseIterable, Codable {
     case korean = "ko"
     /// 法语
     case french = "fr"
+    /// German
+    case german = "de"
 
     var localizedName: String {
         switch self {
@@ -291,6 +293,8 @@ enum AppLanguage: String, CaseIterable, Codable {
             return L.Language.korean
         case .french:
             return L.Language.french
+        case .german:
+            return L.Language.german
         }
     }
 }
@@ -311,6 +315,8 @@ extension AppLanguage {
             return Locale(identifier: "ko_KR")
         case .french:
             return Locale(identifier: "fr_FR")
+        case .german:
+            return Locale(identifier: "de_DE")
         }
     }
 }
@@ -698,6 +704,8 @@ class UserSettings: ObservableObject {
             return .korean
         } else if systemLanguage.hasPrefix("fr") {
             return .french
+        } else if systemLanguage.hasPrefix("de") {
+            return .german
         } else {
             return .english  // 默认英语
         }
