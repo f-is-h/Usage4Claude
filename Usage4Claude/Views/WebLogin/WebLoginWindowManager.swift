@@ -32,7 +32,7 @@ final class WebLoginWindowManager {
         // 改用 OAuth（系统浏览器）登录，替代内嵌 WKWebView，
         // 以支持 Google / 微软 / 企业 SSO / passkey 等在嵌入式 WebView 中受限的登录方式（Issue #49）
         let loginView = ClaudeOAuthLoginView(onAccountCreated: onAccountCreated)
-        let window = makeCompactWindow(title: L.WebLogin.windowTitle, content: loginView, width: 440, height: 300)
+        let window = makeCompactWindow(title: L.WebLogin.windowTitle, content: loginView, width: 440, height: 380)
         self.loginWindow = window
 
         NotificationCenter.default.addObserver(

@@ -434,3 +434,7 @@
 "weblogin.codex_oauth_reopen_browser" = "ブラウザを再度開く";
 "weblogin.codex_oauth_retry" = "再試行";
 "weblogin.claude_oauth_port_busy" = "ローカルのサインインコールバックサーバーを起動できませんでした。しばらくしてからもう一度お試しください。";
+"weblogin.claude_oauth_manual_hint" = "自動的に戻らない場合";
+"weblogin.claude_oauth_manual_prompt" = "ブラウザのアドレスバーのリンクを貼り付けてください（http://localhost で始まります）";
+"weblogin.claude_oauth_manual_submit" = "このリンクでサインイン";
+"weblogin.claude_oauth_manual_invalid" = "認証コードが見つかりませんでした。ブラウザのアドレスバーの完全なリンクをコピーして、もう一度お試しください。";

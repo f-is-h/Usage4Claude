@@ -82,6 +82,26 @@ final class ClaudeOAuthCoordinator: ObservableObject {
         NSWorkspace.shared.open(url)
     }
 
+    /// 手动回退（Issue #68）：接收用户从系统浏览器地址栏粘回的回调链接，
+    /// 解析出 code / state 后走与自动 loopback 回调完全相同的处理路径
+    /// （包括 state 校验，并用同一 loopback redirect_uri 交换 token，无需重开浏览器）。
+    /// 适用于浏览器已跳到 localhost 回调页、但本地回调服务器收不到请求的环境（如某些 Chromium 变体）。
+    /// - Returns: 是否成功解析出 code 并进入后续流程；false 表示粘贴内容里没有可用的 code。
+    @discardableResult
+    func submitManualCallback(_ pasted: String) -> Bool {
+        guard !finished else { return false }
+        let query = Self.parseManualCallback(pasted)
+        // code 或 error 至少有其一才交给 handleCallback：error 场景由其给出准确的失败原因，
+        // 两者皆无（粘贴内容无效）则返回 false，由 UI 内联提示重新粘完整链接。
+        guard query["code"] != nil || query["error"] != nil else {
+            Logger.settings.error("ClaudeOAuth: 手动粘贴内容未解析出 code")
+            return false
+        }
+        Logger.settings.notice("ClaudeOAuth: 使用手动粘贴的回调链接完成登录")
+        handleCallback(query)
+        return true
+    }
+
     func cancel() {
         cleanup()
     }
@@ -100,6 +120,36 @@ final class ClaudeOAuthCoordinator: ObservableObject {
             URLQueryItem(name: "state", value: pkce.state)
         ]
         return comps?.url
+    }
+
+    /// 从用户手动粘贴的内容里解析 OAuth 回调参数（code / state）。
+    /// 兼容三种形态：完整回调 URL（含 ?code=...&state=...）、`code#state`、以及纯 code。
+    static func parseManualCallback(_ raw: String) -> [String: String] {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return [:] }
+
+        // 1) 带 query 的 URL：一律以 query 解析为准（含 code / state / error，queryItems 已做百分号解码），
+        //    避免把整条 URL 误当成 code（例如授权被拒时回调只带 error 不带 code）。
+        if let items = URLComponents(string: text)?.queryItems, !items.isEmpty {
+            var result: [String: String] = [:]
+            for key in ["code", "state", "error"] {
+                if let value = items.first(where: { $0.name == key })?.value, !value.isEmpty {
+                    result[key] = value
+                }
+            }
+            return result
+        }
+
+        // 2) `code#state` 形态
+        if text.contains("#"), !text.contains("?"), !text.contains("/") {
+            let parts = text.split(separator: "#", maxSplits: 1).map(String.init)
+            var result = ["code": parts[0]]
+            if parts.count > 1, !parts[1].isEmpty { result["state"] = parts[1] }
+            return result
+        }
+
+        // 3) 纯 code（无 state；handleCallback 的 state 校验会拦下并提示重新粘完整链接）
+        return ["code": text]
     }
 
     private func handleCallback(_ query: [String: String]) {

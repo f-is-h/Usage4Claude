@@ -434,3 +434,7 @@
 "weblogin.codex_oauth_reopen_browser" = "重新開啟瀏覽器";
 "weblogin.codex_oauth_retry" = "重試";
 "weblogin.claude_oauth_port_busy" = "無法啟動本機登入回呼服務，請稍後重試。";
+"weblogin.claude_oauth_manual_hint" = "沒有自動返回？";
+"weblogin.claude_oauth_manual_prompt" = "將瀏覽器網址列的連結貼到這裡（以 http://localhost 開頭）";
+"weblogin.claude_oauth_manual_submit" = "以此連結登入";
+"weblogin.claude_oauth_manual_invalid" = "無法從貼上的內容中找到授權碼。請複製瀏覽器網址列的完整連結後重試。";

@@ -488,6 +488,10 @@ enum L {
 
         // MARK: Claude OAuth 登录（系统浏览器）
         static var claudeOAuthPortBusy: String { localized("weblogin.claude_oauth_port_busy") }
+        static var claudeOAuthManualHint: String { localized("weblogin.claude_oauth_manual_hint") }
+        static var claudeOAuthManualPrompt: String { localized("weblogin.claude_oauth_manual_prompt") }
+        static var claudeOAuthManualSubmit: String { localized("weblogin.claude_oauth_manual_submit") }
+        static var claudeOAuthManualInvalid: String { localized("weblogin.claude_oauth_manual_invalid") }
 
         // MARK: Codex OAuth 登录（系统浏览器）
         static var codexOAuthPreparing: String { localized("weblogin.codex_oauth_preparing") }

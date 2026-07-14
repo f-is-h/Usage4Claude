@@ -18,12 +18,16 @@ struct ClaudeOAuthLoginView: View {
 
     private let purple = Color(red: 122 / 255.0, green: 90 / 255.0, blue: 195 / 255.0)
 
+    @State private var showManualInput = false
+    @State private var manualPastedLink = ""
+    @State private var manualError: String?
+
     var body: some View {
         VStack(spacing: 18) {
             content
         }
         .padding(32)
-        .frame(width: 440, height: 300)
+        .frame(width: 440, height: 380)
         .onAppear { coordinator.start(onAccountCreated: onAccountCreated) }
         .onDisappear { coordinator.cancel() }
         .onChange(of: coordinator.loginState) { state in
@@ -55,6 +59,8 @@ struct ClaudeOAuthLoginView: View {
                     .multilineTextAlignment(.center)
                 Button(L.WebLogin.codexOAuthReopenBrowser) { coordinator.reopenBrowser() }
                     .buttonStyle(.link)
+
+                manualFallback
             }
 
         case .exchanging:
@@ -84,6 +90,42 @@ struct ClaudeOAuthLoginView: View {
                 }
                 .keyboardShortcut(.defaultAction)
             }
+        }
+    }
+
+    /// 手动回退区（Issue #68）：部分浏览器/环境下系统浏览器已跳到 localhost 回调页，
+    /// 但本地回调服务器收不到该请求，导致停在 localhost 页面无法自动返回。
+    /// 这里让用户把地址栏那条 http://localhost 链接直接粘回来完成登录。
+    @ViewBuilder
+    private var manualFallback: some View {
+        if showManualInput {
+            VStack(spacing: 8) {
+                TextField(L.WebLogin.claudeOAuthManualPrompt, text: $manualPastedLink)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 340)
+                    .onSubmit(submitManualLink)
+                if let manualError {
+                    Text(manualError)
+                        .font(.footnote)
+                        .foregroundColor(.orange)
+                        .multilineTextAlignment(.center)
+                }
+                Button(L.WebLogin.claudeOAuthManualSubmit, action: submitManualLink)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(manualPastedLink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .padding(.top, 4)
+        } else {
+            Button(L.WebLogin.claudeOAuthManualHint) { showManualInput = true }
+                .buttonStyle(.link)
+                .font(.footnote)
+        }
+    }
+
+    private func submitManualLink() {
+        manualError = nil
+        if !coordinator.submitManualCallback(manualPastedLink) {
+            manualError = L.WebLogin.claudeOAuthManualInvalid
         }
     }
 

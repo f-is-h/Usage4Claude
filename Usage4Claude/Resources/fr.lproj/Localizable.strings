@@ -434,3 +434,7 @@
 "weblogin.codex_oauth_reopen_browser" = "Rouvrir le navigateur";
 "weblogin.codex_oauth_retry" = "Réessayer";
 "weblogin.claude_oauth_port_busy" = "Impossible de démarrer le serveur de rappel de connexion local. Veuillez réessayer dans un instant.";
+"weblogin.claude_oauth_manual_hint" = "Pas de retour automatique ?";
+"weblogin.claude_oauth_manual_prompt" = "Collez le lien depuis la barre d'adresse de votre navigateur (commence par http://localhost)";
+"weblogin.claude_oauth_manual_submit" = "Se connecter avec ce lien";
+"weblogin.claude_oauth_manual_invalid" = "Aucun code d'autorisation trouvé. Copiez le lien complet depuis la barre d'adresse et réessayez.";
