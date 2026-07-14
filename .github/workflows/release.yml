@@ -7,6 +7,7 @@ on:
       - test-release
     paths:
       - 'CHANGELOG.md'
+      - 'RELEASE_NOTES.md'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -107,6 +108,19 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ Detected version: $VERSION"
       
+      - name: Verify RELEASE_NOTES.md has this version section
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # RELEASE_NOTES.md 是 Sparkle 弹窗 + GitHub Release 正文的共同来源。
+          # 漏写当前版本段落会让两处正文为空，这里在最前面 fail-fast。
+          if ! grep -q "^## \[$VERSION\]" RELEASE_NOTES.md; then
+            echo "❌ RELEASE_NOTES.md is missing the '## [$VERSION]' section"
+            echo "   Add a user-facing section for v$VERSION before releasing."
+            exit 1
+          fi
+          echo "✅ RELEASE_NOTES.md has the v$VERSION section"
+
       - name: Check if version already released
         if: steps.check.outputs.should_release == 'true' && steps.check.outputs.is_test == 'false'
         run: |
@@ -333,7 +347,7 @@ jobs:
             .github/RELEASE_TEMPLATE.md \
             "$VERSION" \
             release_notes.md \
-            CHANGELOG.md
+            RELEASE_NOTES.md
 
           echo "✅ Release notes generated"
 
@@ -434,7 +448,7 @@ jobs:
             "$PUB_DATE" \
             "$DMG_URL" \
             "$RELEASE_URL" \
-            CHANGELOG.md \
+            RELEASE_NOTES.md \
             ./artifacts/sparkle_enclosure.txt
 
           echo ""

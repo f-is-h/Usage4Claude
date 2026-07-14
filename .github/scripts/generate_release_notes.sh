@@ -2,8 +2,8 @@
 
 # Usage4Claude - Release Notes Generator
 # 从模板生成 GitHub Release Notes。
-# 若提供 CHANGELOG 路径，则把当前版本段落填入模板的 {{RELEASE_NOTES}} 占位，
-# 作为 Release Notes 正文的默认内容（发布后仍可在 GitHub 上手工编辑覆盖）。
+# 若提供 RELEASE_NOTES.md 路径，则把当前版本段落填入模板的 {{RELEASE_NOTES}} 占位，
+# 作为 GitHub Release 正文（与 Sparkle 弹窗同源，见 update_appcast.py）。
 
 set -e
 
@@ -68,12 +68,12 @@ get_previous_version() {
 }
 
 # ============================================
-# Extract the CHANGELOG section for a version
+# Extract the release-notes section for a version
 # 提取 "## [X.Y.Z]" 到下一个 "## [" 之间的内容，并去掉首尾空行。
 # 用 index() 做字面匹配，避免版本号里的 "." 被当作正则。
 # ============================================
-extract_changelog_section() {
-    local changelog_path="$1"
+extract_release_notes_section() {
+    local notes_path="$1"
     local version="$2"
 
     awk -v ver="$version" '
@@ -87,7 +87,7 @@ extract_changelog_section() {
             while (end >= 0 && lines[end] ~ /^[[:space:]]*$/) end--
             for (i = start; i <= end; i++) print lines[i]
         }
-    ' "$changelog_path"
+    ' "$notes_path"
 }
 
 # ============================================
@@ -97,7 +97,7 @@ generate_notes() {
     local template_path="$1"
     local version="$2"
     local output_path="$3"
-    local changelog_path="$4"
+    local notes_path="$4"
 
     # Validate inputs
     if [ ! -f "$template_path" ]; then
@@ -116,14 +116,14 @@ generate_notes() {
     print_info "Current version: $version"
     print_info "Previous version: $previous_version"
 
-    # 提取 CHANGELOG 段落作为 Release Notes 正文的兜底内容
+    # 提取 RELEASE_NOTES 当前版本段落作为 Release 正文
     local release_notes=""
-    if [ -n "$changelog_path" ] && [ -f "$changelog_path" ]; then
-        release_notes=$(extract_changelog_section "$changelog_path" "$version")
+    if [ -n "$notes_path" ] && [ -f "$notes_path" ]; then
+        release_notes=$(extract_release_notes_section "$notes_path" "$version")
         if [ -n "$release_notes" ]; then
-            print_info "Release notes body filled from CHANGELOG section"
+            print_info "Release notes body filled from RELEASE_NOTES section"
         else
-            print_info "No CHANGELOG section for $version; leaving body empty"
+            print_info "No RELEASE_NOTES section for $version; leaving body empty"
         fi
     fi
 
@@ -146,16 +146,16 @@ generate_notes() {
 # ============================================
 
 show_usage() {
-    echo "Usage: $0 <template_path> <version> <output_path> [changelog_path]"
+    echo "Usage: $0 <template_path> <version> <output_path> [notes_path]"
     echo ""
     echo "Arguments:"
     echo "  template_path   Path to RELEASE_TEMPLATE.md"
     echo "  version         Current version (e.g., 1.1.3)"
     echo "  output_path     Output file path for generated notes"
-    echo "  changelog_path  (optional) CHANGELOG.md used to fill {{RELEASE_NOTES}}"
+    echo "  notes_path      (optional) RELEASE_NOTES.md used to fill {{RELEASE_NOTES}}"
     echo ""
     echo "Example:"
-    echo "  $0 .github/RELEASE_TEMPLATE.md 1.1.3 release_notes.md CHANGELOG.md"
+    echo "  $0 .github/RELEASE_TEMPLATE.md 1.1.3 release_notes.md RELEASE_NOTES.md"
 }
 
 # Check arguments

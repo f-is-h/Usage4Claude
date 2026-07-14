@@ -2,17 +2,21 @@
 """
 Insert a new release item into appcast.xml.
 
+The <description> feed to Sparkle is taken from RELEASE_NOTES.md (user-facing),
+not CHANGELOG.md. Both files share the same "## [X.Y.Z]" section layout, so the
+extraction logic is identical.
+
 Usage:
     update_appcast.py <appcast.xml> <version> <build> <pub_date>
-                      <dmg_url> <release_url> <changelog.md> <enclosure.txt>
+                      <dmg_url> <release_url> <release_notes.md> <enclosure.txt>
 """
 
 import re
 import sys
 
 
-def extract_changelog_section(changelog_path: str, version: str) -> str:
-    with open(changelog_path, "r") as f:
+def extract_release_notes_section(notes_path: str, version: str) -> str:
+    with open(notes_path, "r") as f:
         content = f.read()
 
     # Match the section starting with ## [X.Y.Z] up to the next ## heading
@@ -31,13 +35,13 @@ def update_appcast(
     pub_date: str,
     dmg_url: str,
     release_url: str,
-    changelog_path: str,
+    notes_path: str,
     enclosure_path: str,
 ) -> None:
     with open(enclosure_path, "r") as f:
         enclosure = f.read().strip()
 
-    release_notes = extract_changelog_section(changelog_path, version)
+    release_notes = extract_release_notes_section(notes_path, version)
 
     new_item = f"""
         <item>
@@ -74,7 +78,7 @@ if __name__ == "__main__":
     if len(sys.argv) != 9:
         print(
             f"Usage: {sys.argv[0]} <appcast.xml> <version> <build> <pub_date>"
-            " <dmg_url> <release_url> <changelog.md> <enclosure.txt>"
+            " <dmg_url> <release_url> <release_notes.md> <enclosure.txt>"
         )
         sys.exit(1)
 
@@ -85,6 +89,6 @@ if __name__ == "__main__":
         pub_date=sys.argv[4],
         dmg_url=sys.argv[5],
         release_url=sys.argv[6],
-        changelog_path=sys.argv[7],
+        notes_path=sys.argv[7],
         enclosure_path=sys.argv[8],
     )
