@@ -36,29 +36,44 @@ class TimerManager {
         repeats: Bool = true,
         block: @escaping () -> Void
     ) {
-        // 同步取消旧定时器并创建新定时器，避免竞态条件
-        queue.sync(flags: .barrier) {
-            // 取消同标识符的旧定时器
-            if let oldTimer = self.timers[identifier] {
-                oldTimer.invalidate()
-                self.timers.removeValue(forKey: identifier)
+        // Timer.scheduledTimer 注册到调用线程的 RunLoop；若 schedule 从没有运行 RunLoop
+        // 的后台线程调用（例如未指定 receive(on:) 的 Combine 订阅），定时器会永不触发。
+        // 保证在主线程创建。已在主线程时同步执行——若异步推迟一个 runloop turn，
+        // 「schedule(X) 后同一 turn 内 invalidate(X)」会让 X 在 invalidate 之后才被创建（定时器复活）。
+        runOnMain { [weak self] in
+            guard let self else { return }
+
+            // 同步取消旧定时器并创建新定时器，避免竞态条件
+            self.queue.sync(flags: .barrier) {
+                if let oldTimer = self.timers[identifier] {
+                    oldTimer.invalidate()
+                    self.timers.removeValue(forKey: identifier)
+                }
             }
-        }
 
-        // 在主线程创建定时器（Timer.scheduledTimer 需要 RunLoop）
-        let timer = Timer.scheduledTimer(
-            withTimeInterval: interval,
-            repeats: repeats
-        ) { _ in
-            block()
-        }
+            let timer = Timer.scheduledTimer(
+                withTimeInterval: interval,
+                repeats: repeats
+            ) { _ in
+                block()
+            }
 
-        // 保存新定时器
-        queue.async(flags: .barrier) {
-            self.timers[identifier] = timer
-        }
+            // 保存新定时器
+            self.queue.async(flags: .barrier) {
+                self.timers[identifier] = timer
+            }
 
-        Logger.menuBar.info("⏰ Timer scheduled: \(identifier) (interval: \(interval)s, repeats: \(repeats))")
+            Logger.menuBar.info("⏰ Timer scheduled: \(identifier) (interval: \(interval)s, repeats: \(repeats))")
+        }
+    }
+
+    /// 已在主线程则同步执行，否则派发到主线程
+    private func runOnMain(_ body: @escaping () -> Void) {
+        if Thread.isMainThread {
+            body()
+        } else {
+            DispatchQueue.main.async(execute: body)
+        }
     }
 
     /// 取消指定定时器
@@ -126,8 +141,12 @@ extension TimerManager {
         static let resetVerify2 = "resetVerify2"
         /// 重置验证定时器 - 重置后30秒
         static let resetVerify3 = "resetVerify3"
-        /// 每日更新检查定时器
-        static let dailyUpdate = "dailyUpdate"
+        /// Codex 重置验证定时器 - 重置后1秒
+        static let codexResetVerify1 = "codexResetVerify1"
+        /// Codex 重置验证定时器 - 重置后10秒
+        static let codexResetVerify2 = "codexResetVerify2"
+        /// Codex 重置验证定时器 - 重置后30秒
+        static let codexResetVerify3 = "codexResetVerify3"
         /// Codex accessToken 主动续期定时器（独立于用量拉取计时器）
         static let codexTokenRefresh = "codexTokenRefresh"
     }

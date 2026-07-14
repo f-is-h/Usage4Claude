@@ -215,7 +215,13 @@ class MenuBarManager: ObservableObject {
     /// 设置设置变更观察者
     /// 监听设置变更、刷新频率变更等通知
     private func setupSettingsObservers() {
-        NotificationCenter.default.publisher(for: .settingsChanged)
+        // NotificationCenter 的 post 发生在哪个线程，publisher 就在哪个线程收，不能假定是主线程
+        // （TimerManager 等下游依赖主 RunLoop），统一 receive(on:) 到主线程再处理。
+        let settingsChanged = NotificationCenter.default.publisher(for: .settingsChanged)
+            .receive(on: DispatchQueue.main)
+
+        // 图标缓存清理 + 重绘需要即时反馈，不做防抖
+        settingsChanged
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 // 设置改变时清除图标缓存（显示模式可能改变）
@@ -223,10 +229,24 @@ class MenuBarManager: ObservableObject {
 
                 // 立即更新图标，无需等待
                 self.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
 
-                #if DEBUG
-                // 调试模式下立即刷新数据（不使用防抖）
-                self.dataManager.fetchUsage()
+        #if DEBUG
+        // customDisplayTypes/iconStyleMode 等几乎所有设置项改动都会 post settingsChanged，
+        // 但只有"调试模拟模式"（debugModeEnabled）下改动才需要立即刷新——那条路径读的是本地
+        // mock 数据（ClaudeAPIService.createMockData），不产生真实网络请求。
+        // 若开发者正用真实账号联调 UI（debugModeEnabled 为 false），customDisplayTypes 这类
+        // 与用量数据无关的设置不该触发真实 API 请求；此前无条件 fetchUsage() 会导致连续勾选/
+        // 取消指标时打出一串真实请求，被 API 判定请求过于频繁（429）。
+        // 防抖仅作为同一批 mock 场景改动（如拖动滑块）的兜底合并，不是本次修复的关键。
+        settingsChanged
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                if self.settings.debugModeEnabled {
+                    self.dataManager.fetchUsage()
+                }
 
                 // 模拟更新开关变化时，直接驱动 Sparkle 徽章状态机（无需真实 appcast）
                 if self.settings.simulateUpdateAvailable {
@@ -240,11 +260,12 @@ class MenuBarManager: ObservableObject {
                     self.updateMenuBarIcon()
                     Logger.menuBar.debug("模拟更新已禁用")
                 }
-                #endif
             }
             .store(in: &cancellables)
+        #endif
 
         NotificationCenter.default.publisher(for: .refreshIntervalChanged)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 // 重启数据刷新定时器
                 self?.dataManager.stopRefreshing()
@@ -253,6 +274,7 @@ class MenuBarManager: ObservableObject {
             .store(in: &cancellables)
         
         NotificationCenter.default.publisher(for: .openSettings)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 let tab = notification.userInfo?["tab"] as? Int ?? 0
                 self?.openSettingsWindow(tab: tab)
@@ -261,6 +283,7 @@ class MenuBarManager: ObservableObject {
 
         // 监听账户变更通知
         NotificationCenter.default.publisher(for: .accountChanged)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 Logger.menuBar.notice("账户已切换，刷新数据")
@@ -296,8 +319,6 @@ class MenuBarManager: ObservableObject {
 
         // 显示更新通知（如果有）
         showUpdateNotificationIfNeeded()
-
-        ui.setPopoverContentSize(usageDetailContentSize())
 
         // 创建并设置内容视图
         ui.setPopoverContent(UsageDetailView(
@@ -340,63 +361,6 @@ class MenuBarManager: ObservableObject {
 
         // 启动刷新定时器
         startPopoverRefreshTimer()
-    }
-
-    private func usageDetailContentSize() -> NSSize {
-        let baseHeight: CGFloat = 190
-        let rowHeight: CGFloat = 26
-        let spacing: CGFloat = 5
-
-        if settings.isMultiProviderActive && (codexUsageData != nil || codexErrorMessage != nil || settings.hasValidCodexCredentials) {
-            let claudeRowCount: Int
-            if let data = usageData {
-                let types = settings.getActiveDisplayTypes(usageData: data)
-                    .filter { $0.provider == .claude }
-                claudeRowCount = types.count == 1 ? 2 : max(types.count, 1)
-            } else {
-                claudeRowCount = 2
-            }
-
-            let codexRowCount: Int
-            if let codex = codexUsageData {
-                let codexTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
-                    .filter { $0.provider == .codex }
-                codexRowCount = max(codexTypes.count, 1)
-            } else {
-                codexRowCount = 2
-            }
-            let maxRows = max(claudeRowCount, codexRowCount)
-            let rowsHeight = CGFloat(maxRows) * rowHeight + CGFloat(max(0, maxRows - 1)) * spacing
-            return NSSize(width: 580, height: baseHeight + rowsHeight)
-        }
-
-        let shouldUseCodexOnlyLayout = (!settings.hasValidCredentials && settings.hasValidCodexCredentials)
-            || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil))
-        if shouldUseCodexOnlyLayout {
-            let activeCount: Int
-            if let codex = codexUsageData {
-                activeCount = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
-                    .filter { $0.provider == .codex }
-                    .count
-            } else {
-                activeCount = 0
-            }
-            let rowCount = activeCount == 1 ? 2 : max(activeCount, codexUsageData == nil ? 0 : 1)
-            let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
-            return NSSize(width: 290, height: baseHeight + rowsHeight)
-        }
-
-        let activeCount: Int
-        if let data = usageData {
-            activeCount = settings.getActiveDisplayTypes(usageData: data)
-                .filter { $0.provider == .claude }
-                .count
-        } else {
-            activeCount = 0
-        }
-        let rowCount = activeCount == 1 ? 2 : activeCount
-        let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
-        return NSSize(width: 290, height: baseHeight + rowsHeight)
     }
 
     /// 显示更新通知（如果需要）

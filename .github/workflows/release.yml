@@ -52,12 +52,11 @@ jobs:
       
       - name: Check commit message for release trigger
         id: check
+        env:
+          # 用 env 传 COMMIT_MSG，避免直接插值到 shell 导致的命令/heredoc 注入
+          # （commit message 中若含独立一行 EOF，原 heredoc 写法会被提前截断）
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          # Use heredoc to handle multi-line commit messages
-          read -r -d '' COMMIT_MSG << 'EOF' || true
-          ${{ github.event.head_commit.message }}
-          EOF
-          
           BRANCH="${{ github.ref_name }}"
           IS_DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
           
@@ -154,17 +153,20 @@ jobs:
     name: Build Application
     needs: validate
     if: needs.validate.outputs.should_release == 'true'
-    runs-on: macos-latest
+    # 钉死 runner + Xcode 版本，避免 GitHub 更新镜像后构建产物漂移、出问题无法复现旧版本构建。
+    # 升级时作为显式提交（同时更新本行注释里的日期）。
+    # 当前对齐本机开发环境 Xcode 26.6（2026-07-13 核实 macos-26 镜像已收录该版本）。
+    runs-on: macos-26
     timeout-minutes: 15
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: "26.6"
       
       - name: Verify version consistency
         run: |
@@ -330,7 +332,8 @@ jobs:
           .github/scripts/generate_release_notes.sh \
             .github/RELEASE_TEMPLATE.md \
             "$VERSION" \
-            release_notes.md
+            release_notes.md \
+            CHANGELOG.md
 
           echo "✅ Release notes generated"
 
@@ -360,31 +363,52 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.validate.outputs.version }}
           IS_DRY_RUN: ${{ needs.validate.outputs.is_dry_run }}
+          IS_TEST: ${{ needs.validate.outputs.is_test }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
+          # 标题取 commit message 第一行，去掉 [release]/[RELEASE] 前缀后 trim。
+          # 用 env 传 COMMIT_MSG，避免直接插值导致的命令注入。
+          RAW_TITLE=$(printf '%s\n' "$COMMIT_MSG" | head -n1)
+          PARSED_TITLE=$(printf '%s' "$RAW_TITLE" \
+            | sed -E 's/^\[[Rr][Ee][Ll][Ee][Aa][Ss][Ee]\][[:space:]]*//' \
+            | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+          # 解析为空（如 workflow_dispatch 手动触发无 commit）时退回 vVERSION
+          if [[ -z "$PARSED_TITLE" ]]; then
+            PARSED_TITLE="v$VERSION"
+          fi
+
           if [[ "$IS_DRY_RUN" == "true" ]]; then
+            # Dry run 仍走 draft，避免测试产生正式发布
             TAG="test-v$VERSION"
-            TITLE="test-v$VERSION - ⚠️ DRY RUN TEST ⚠️"
+            TITLE="test: $PARSED_TITLE - ⚠️ DRY RUN ⚠️"
+            DRAFT_ARGS=(--draft)
+          elif [[ "$IS_TEST" == "true" ]]; then
+            # test-release 分支同样保持 draft，避免误触发正式发布
+            TAG="v$VERSION"
+            TITLE="$PARSED_TITLE"
+            DRAFT_ARGS=(--draft)
           else
             TAG="v$VERSION"
-            TITLE="v$VERSION - ❗️❗️❗️请在这里输入你的简短描述❗️❗️❗️"
+            TITLE="$PARSED_TITLE"
+            DRAFT_ARGS=()
           fi
           
-          echo "Creating draft release: $TAG"
+          echo "Creating release: $TAG (title: $TITLE)"
           
           gh release create "$TAG" \
-            --draft \
+            "${DRAFT_ARGS[@]}" \
             --title "$TITLE" \
             --notes-file release_notes.md \
             ./artifacts/${{ env.PROJECT_NAME }}-v$VERSION.dmg \
             ./artifacts/${{ env.PROJECT_NAME }}-v$VERSION.dmg.sha256
           
-          echo "✅ Draft release created: $TAG"
-          echo ""
-          echo "📝 Next steps:"
-          echo "1. Go to https://github.com/${{ github.repository }}/releases"
-          echo "2. Edit the draft release"
-          echo "3. Add your release description"
-          echo "4. Click 'Publish release'"
+          if [[ "$IS_DRY_RUN" == "true" ]]; then
+            echo "✅ Draft (dry run) release created: $TAG"
+          else
+            echo "✅ Release published: $TAG"
+            echo "📝 如需补充/精修 Release Notes，可到 GitHub 编辑该 release"
+            echo "   （不影响 Sparkle 更新说明，后者取自 CHANGELOG）"
+          fi
       
       - name: Update appcast.xml
         env:
@@ -425,7 +449,33 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add appcast.xml
             git commit -m "chore: update appcast.xml for v$VERSION"
-            git push origin main
+
+            # 发布运行期间（约 15 分钟）main 上若有其他手动 push，这里的 push 会因
+            # non-fast-forward 失败；此时 Release 已发出但 appcast 未更新，Sparkle
+            # 用户收不到更新。失败时 rebase 到最新 main 后重试，最多重试 2 次。
+            PUSH_SUCCEEDED=false
+            for attempt in 1 2 3; do
+              if [[ "$attempt" -gt 1 ]]; then
+                echo "⚠️  推送 main 失败，拉取最新 main 并 rebase 后重试（第 $attempt 次）..."
+                git fetch origin main
+                if ! git rebase origin/main; then
+                  git rebase --abort
+                  echo "❌ rebase 到最新 main 时发生冲突，需要人工介入更新 appcast.xml"
+                  exit 1
+                fi
+              fi
+
+              if git push origin main; then
+                PUSH_SUCCEEDED=true
+                break
+              fi
+            done
+
+            if [[ "$PUSH_SUCCEEDED" != "true" ]]; then
+              echo "❌ appcast.xml 推送失败，已重试 3 次仍与 main 冲突"
+              exit 1
+            fi
+
             echo "✅ appcast.xml pushed to main"
           fi
 

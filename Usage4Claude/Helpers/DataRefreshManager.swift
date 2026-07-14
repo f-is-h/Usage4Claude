@@ -109,20 +109,8 @@ class DataRefreshManager: ObservableObject {
         #endif
     }
 
-    // MARK: - Timer Identifiers
-
-    /// 定时器标识符
-    private enum TimerID {
-        static let mainRefresh = "mainRefresh"
-        static let popoverRefresh = "popoverRefresh"
-        static let resetVerify1 = "resetVerify1"
-        static let resetVerify2 = "resetVerify2"
-        static let resetVerify3 = "resetVerify3"
-        static let codexResetVerify1 = "codexResetVerify1"
-        static let codexResetVerify2 = "codexResetVerify2"
-        static let codexResetVerify3 = "codexResetVerify3"
-        static let codexTokenRefresh = "codexTokenRefresh"
-    }
+    /// 定时器标识符统一定义在 TimerManager.Identifier，避免两处各自为政
+    private typealias TimerID = TimerManager.Identifier
 
     // MARK: - Initialization
 
@@ -156,32 +144,17 @@ class DataRefreshManager: ObservableObject {
             return
         }
 
-        let group = DispatchGroup()
-        var claudeResult: Result<UsageData, Error>?
-        var codexResult: Result<CodexUsageData, Error>?
+        // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
+        // （审计报告 4.2：替代 DispatchGroup + 跨线程共享可变结果变量的旧写法）
+        let claudeTask: Task<Result<UsageData, Error>, Never>? =
+            fetchClaude ? Task { await self.apiService.fetchUsageResult() } : nil
+        let codexTask: Task<Result<CodexUsageData, Error>, Never>? =
+            fetchCodex ? Task { await self.codexApiService.fetchUsageResult() } : nil
 
-        // Claude 请求
-        if fetchClaude {
-            group.enter()
-            apiService.fetchUsage { result in
-                claudeResult = result
-                group.leave()
-            }
-        }
+        Task { @MainActor [weak self] in
+            let claudeResult = await claudeTask?.value
+            let codexResult = await codexTask?.value
 
-        // Codex 请求（仅当有凭证时）
-        if fetchCodex {
-            group.enter()
-            codexApiService.fetchUsage { result in
-                codexResult = result
-                if case .failure(let error) = result {
-                    Logger.menuBar.info("Codex 请求失败（不影响主功能）: \(error.localizedDescription)")
-                }
-                group.leave()
-            }
-        }
-
-        group.notify(queue: .main) { [weak self] in
             guard let self = self else { return }
             self.isLoading = false
             self.endRefreshAnimationWithMinimumDuration { }
@@ -196,6 +169,7 @@ class DataRefreshManager: ObservableObject {
                     self.processCodexSuccess(codex)
 
                 case .failure(let error):
+                    Logger.menuBar.info("Codex 请求失败（不影响主功能）: \(error.localizedDescription)")
                     if case UsageError.unauthorized = error {
                         self.attemptTokenRefreshAndRetry()
                     } else {
@@ -486,33 +460,32 @@ class DataRefreshManager: ObservableObject {
         errorMessage = nil
         lastAPIFetchTime = Date()
 
+        // ClaudeAPIService.fetchUsage 保证 completion 一律在主线程回调，此处无需再包一层 DispatchQueue.main.async
         apiService.fetchUsage { [weak self] result in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.isLoading = false
-                self.endRefreshAnimationWithMinimumDuration { }
+            guard let self = self else { return }
+            self.isLoading = false
+            self.endRefreshAnimationWithMinimumDuration { }
 
-                switch result {
-                case .success(let data):
-                    let previousData = self.usageData
-                    self.usageData = data
-                    self.errorMessage = nil
-                    if self.settings.notificationsEnabled {
-                        NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
-                    }
-                    self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
-                    let newResetsAt = data.resetsAt
-                    if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
-                        self.cancelResetVerification()
-                    } else if let resetsAt = newResetsAt {
-                        self.scheduleResetVerification(resetsAt: resetsAt)
-                    }
-                    self.lastResetsAt = newResetsAt
-                case .failure(let error):
-                    self.clearClaudeUsageState()
-                    self.errorMessage = error.localizedDescription
-                    Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
+            switch result {
+            case .success(let data):
+                let previousData = self.usageData
+                self.usageData = data
+                self.errorMessage = nil
+                if self.settings.notificationsEnabled {
+                    NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                 }
+                self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
+                let newResetsAt = data.resetsAt
+                if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
+                    self.cancelResetVerification()
+                } else if let resetsAt = newResetsAt {
+                    self.scheduleResetVerification(resetsAt: resetsAt)
+                }
+                self.lastResetsAt = newResetsAt
+            case .failure(let error):
+                self.clearClaudeUsageState()
+                self.errorMessage = error.localizedDescription
+                Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
             }
         }
     }

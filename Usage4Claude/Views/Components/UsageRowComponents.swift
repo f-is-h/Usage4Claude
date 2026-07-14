@@ -218,16 +218,20 @@ struct UnifiedLimitRow: View {
             Spacer(minLength: 8)
 
             // 右侧：重置时间或剩余额度
-            Text(displayValue)
-                .font(.system(size: 12))
-                .fontWeight(.medium)
-                .lineLimit(1)
-                .minimumScaleFactor(0.9)
-                .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
-                .transition(.asymmetric(
-                    insertion: .move(edge: .top).combined(with: .opacity),
-                    removal: .move(edge: .bottom).combined(with: .opacity)
-                ))
+            // TimelineView 让这行文字自己按分钟粒度刷新，不再依赖外层每秒 objectWillChange
+            // 触发整个 popover 重建（displayValue 精度只到分钟，60s 间隔足够）
+            TimelineView(.periodic(from: .now, by: 60)) { _ in
+                Text(displayValue)
+                    .font(.system(size: 12))
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+            }
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 12)
@@ -244,9 +248,11 @@ struct UnifiedLimitRow: View {
         case .sevenDay, .codexSecondary:
             return L.DetailRow.sevenDay
         case .opusWeekly:
-            return L.DetailRow.opusWeekly
+            // Claude 5 时代：此槽位可能承载来自 limits 数组的具体模型每周限制（如 Fable）。
+            // 有真实模型名则优先展示，否则回退到默认的 “Opus Weekly” 文案。
+            return data?.opusModelName ?? L.DetailRow.opusWeekly
         case .sonnetWeekly:
-            return L.DetailRow.sonnetWeekly
+            return data?.sonnetModelName ?? L.DetailRow.sonnetWeekly
         case .extraUsage, .codexExtraUsage:
             return L.DetailRow.extraUsage
         }

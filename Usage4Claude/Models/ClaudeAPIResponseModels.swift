@@ -26,11 +26,17 @@ nonisolated struct Organization: Codable, Sendable, Identifiable, Equatable {
     /// 组织名称
     let name: String
     /// 创建时间
-    let created_at: String?
+    let createdAt: String?
     /// 更新时间
-    let updated_at: String?
+    let updatedAt: String?
     /// 组织权限列表
     let capabilities: [String]?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, uuid, name, capabilities
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
 
     static func == (lhs: Organization, rhs: Organization) -> Bool {
         return lhs.uuid == rhs.uuid
@@ -53,12 +59,42 @@ nonisolated struct UsageResponse: Codable, Sendable {
     /// 7天 Sonnet 用量限制数据（新字段）
     let seven_day_sonnet: LimitUsage?
 
+    /// 新版 API 的统一限制数组（Claude 5 时代）。
+    /// 每周针对具体模型的限制（如 Fable）不再走 `seven_day_opus` / `seven_day_sonnet`
+    /// 独立字段，而是以 `kind == "weekly_scoped"` 的条目出现在这里，
+    /// 通过 `scope.model.display_name` 标识具体模型。
+    let limits: [LimitEntry]?
+
     /// 通用限制用量详情（适用于5小时、7天等各种限制）
     struct LimitUsage: Codable, Sendable {
         /// 当前使用率 (0-100，可以是浮点数)
         let utilization: Double
         /// 重置时间（ISO 8601 格式），nil 表示尚未开始使用
         let resets_at: String?
+    }
+
+    /// 新版 `limits` 数组中的单个条目。
+    /// - `kind`: "session" / "weekly_all" / "weekly_scoped" 等
+    /// - `percent`: 使用百分比 (0-100)
+    /// - `scope.model.display_name`: 当限制针对具体模型时给出模型名（如 "Fable"）
+    struct LimitEntry: Codable, Sendable {
+        let kind: String?
+        let group: String?
+        let percent: Double?
+        let severity: String?
+        let resets_at: String?
+        let is_active: Bool?
+        let scope: Scope?
+
+        struct Scope: Codable, Sendable {
+            let model: Model?
+            let surface: String?
+
+            struct Model: Codable, Sendable {
+                let id: String?
+                let display_name: String?
+            }
+        }
     }
 
     /// 将 API 响应转换为应用内部使用的 UsageData 模型
@@ -78,8 +114,8 @@ nonisolated struct UsageResponse: Codable, Sendable {
             return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
         }()
 
-        // 解析 Opus 限制数据（仅当存在且有效时）
-        let opusData: UsageData.LimitData? = {
+        // 解析 Opus 限制数据（旧版独立字段，仅当存在且有效时）
+        let legacyOpus: UsageData.LimitData? = {
             guard let opus = seven_day_opus else {
                 return nil
             }
@@ -90,8 +126,8 @@ nonisolated struct UsageResponse: Codable, Sendable {
             return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
         }()
 
-        // 解析 Sonnet 限制数据（仅当存在且有效时）
-        let sonnetData: UsageData.LimitData? = {
+        // 解析 Sonnet 限制数据（旧版独立字段，仅当存在且有效时）
+        let legacySonnet: UsageData.LimitData? = {
             guard let sonnet = seven_day_sonnet else {
                 return nil
             }
@@ -102,13 +138,55 @@ nonisolated struct UsageResponse: Codable, Sendable {
             return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
         }()
 
+        // 解析新版 `limits` 数组里针对具体模型的每周限制（Claude 5 时代，如 Fable）。
+        // 这些限制不再走 seven_day_opus / seven_day_sonnet 独立字段，而是以带
+        // scope.model 的条目出现在 limits 中。保留出现顺序，过滤掉没有模型名
+        // 或没有百分比的条目。
+        var scopedModels: [(name: String, limit: UsageData.LimitData)] = (limits ?? []).compactMap { entry in
+            guard let name = entry.scope?.model?.display_name, !name.isEmpty,
+                  let percent = entry.percent else { return nil }
+            let limit = UsageData.LimitData(percentage: percent, resetsAt: parseResetDate(entry.resets_at))
+            return (name, limit)
+        }
+
+        // 旧字段优先；缺失时用 limits 里的模型限制回填 opus / sonnet 两个展示槽位，
+        // 并记录对应的真实模型名，以便 UI 动态显示（如用 "Fable" 取代 "Opus Weekly"）。
+        var opusData = legacyOpus
+        var opusModelName: String? = nil
+        var sonnetData = legacySonnet
+        var sonnetModelName: String? = nil
+
+        if opusData == nil, !scopedModels.isEmpty {
+            let first = scopedModels.removeFirst()
+            opusData = first.limit
+            opusModelName = first.name
+        }
+        if sonnetData == nil, !scopedModels.isEmpty {
+            let second = scopedModels.removeFirst()
+            sonnetData = second.limit
+            sonnetModelName = second.name
+        }
+
         return UsageData(
             fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
             sevenDay: sevenDayData,
             opus: opusData,
             sonnet: sonnetData,
-            extraUsage: nil  // Extra Usage 将在阶段5通过单独的 API 获取
+            extraUsage: nil,  // Extra Usage 将在阶段5通过单独的 API 获取
+            opusModelName: opusModelName,
+            sonnetModelName: sonnetModelName
         )
+    }
+
+    /// 解析 ISO 8601 重置时间字符串为 Date（四舍五入到秒）。
+    /// 与 parseLimitData 内的时间解析逻辑保持一致，供 limits 数组条目复用。
+    private func parseResetDate(_ resetString: String?) -> Date? {
+        guard let resetString = resetString else { return nil }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = formatter.date(from: resetString) else { return nil }
+        let rounded = round(date.timeIntervalSinceReferenceDate)
+        return Date(timeIntervalSinceReferenceDate: rounded)
     }
 
     /// 解析单个限制的数据（5小时或7天）
@@ -227,12 +305,39 @@ struct UsageData: Sendable {
     let fiveHour: LimitData?
     /// 7天限制数据（可选）
     let sevenDay: LimitData?
-    /// Opus 每周限制数据（可选）
+    /// Opus 每周限制数据（可选）。在 Claude 5 时代，此槽位可承载来自新版
+    /// `limits` 数组的“针对具体模型的每周限制”（如 Fable），真实模型名见 `opusModelName`。
     let opus: LimitData?
-    /// Sonnet 每周限制数据（可选）
+    /// Sonnet 每周限制数据（可选）。同上，可承载第二个模型的每周限制。
     let sonnet: LimitData?
     /// Extra Usage 限额数据（可选）
     let extraUsage: ExtraUsageData?
+
+    /// opus 槽位对应的真实模型显示名（如 "Fable"）。为 nil 时 UI 回退到默认的
+    /// “Opus Weekly” 本地化文案；非 nil 时按此名称展示。
+    let opusModelName: String?
+    /// sonnet 槽位对应的真实模型显示名。语义同 `opusModelName`。
+    let sonnetModelName: String?
+
+    /// 显式成员初始化器。新增的 `opusModelName` / `sonnetModelName` 提供默认值，
+    /// 这样既能在 toUsageData() 中传入模型名，又不破坏其它以旧标签调用的构造点。
+    init(
+        fiveHour: LimitData?,
+        sevenDay: LimitData?,
+        opus: LimitData?,
+        sonnet: LimitData?,
+        extraUsage: ExtraUsageData?,
+        opusModelName: String? = nil,
+        sonnetModelName: String? = nil
+    ) {
+        self.fiveHour = fiveHour
+        self.sevenDay = sevenDay
+        self.opus = opus
+        self.sonnet = sonnet
+        self.extraUsage = extraUsage
+        self.opusModelName = opusModelName
+        self.sonnetModelName = sonnetModelName
+    }
 
     /// 单个限制的数据（5小时、7天、Opus、Sonnet）
     struct LimitData: Sendable {
@@ -307,18 +412,14 @@ struct ExtraUsageData: Sendable {
         return (used / limit) * 100.0
     }
 
-    /// 货币符号（根据 ISO 4217 货币代码映射）
+    /// 货币符号（根据 ISO 4217 货币代码解析）
+    /// - Note: 用 NumberFormatter 而非手工映射表，一劳永逸覆盖所有货币（含 KRW/CNY/CHF 等），
+    ///   固定用 en_US locale 解析以获得稳定符号（如 "$"、"CA$"），不随系统语言变化。
     var currencySymbol: String {
-        switch currency.uppercased() {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "GBP": return "£"
-        case "JPY": return "¥"
-        case "CAD": return "CA$"
-        case "AUD": return "A$"
-        case "BRL": return "R$"
-        case "INR": return "₹"
-        default: return currency
-        }
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currency.uppercased()
+        return formatter.currencySymbol ?? currency
     }
 }

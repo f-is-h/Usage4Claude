@@ -247,4 +247,116 @@ final class UsageResponseTests: XCTestCase {
         let usage = try decode(json).toUsageData()
         XCTAssertNil(usage.extraUsage)
     }
+
+    // MARK: - Scoped model weekly limits (Claude 5 `limits[]`)
+    //
+    // In the Claude 5 era the API stopped populating `seven_day_opus` /
+    // `seven_day_sonnet` and moved per-model weekly limits into a `limits`
+    // array. Each model-scoped entry carries `scope.model.display_name`
+    // (e.g. "Fable") + `percent`. These flow into the opus/sonnet display
+    // slots so the existing weekly-limit UI lights up, with the real model
+    // name surfaced via `opusModelName` / `sonnetModelName`.
+
+    func testScopedModelWeeklyLimitPopulatesOpusSlotWithName() throws {
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": { "utilization": 13, "resets_at": "2026-07-08T16:59:59.000Z" },
+            "seven_day_opus": null,
+            "seven_day_sonnet": null,
+            "limits": [
+                { "kind": "session",     "group": "session", "percent": 20, "scope": null },
+                { "kind": "weekly_all",  "group": "weekly",  "percent": 13, "scope": null },
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 21,
+                  "resets_at": "2026-07-08T16:59:59.000Z",
+                  "scope": { "model": { "id": null, "display_name": "Fable" } },
+                  "is_active": true }
+            ]
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertEqual(usage.opus?.percentage, 21)
+        XCTAssertEqual(usage.opusModelName, "Fable")
+        XCTAssertNotNil(usage.opus?.resetsAt)
+        XCTAssertNil(usage.sonnet)
+    }
+
+    func testLegacyOpusFieldTakesPrecedenceOverScopedModel() throws {
+        // If the API ever returns both the legacy field and a limits entry,
+        // the dedicated field wins and no model-name override is applied.
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null,
+            "seven_day_opus": { "utilization": 40, "resets_at": "2026-07-08T16:59:59.000Z" },
+            "seven_day_sonnet": null,
+            "limits": [
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 21,
+                  "scope": { "model": { "display_name": "Fable" } } }
+            ]
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertEqual(usage.opus?.percentage, 40)
+        XCTAssertNil(usage.opusModelName)
+    }
+
+    func testTwoScopedModelsFillOpusThenSonnet() throws {
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null,
+            "limits": [
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 21,
+                  "scope": { "model": { "display_name": "Fable" } } },
+                { "kind": "weekly_scoped", "group": "weekly", "percent": 8,
+                  "scope": { "model": { "display_name": "Opus" } } }
+            ]
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertEqual(usage.opus?.percentage, 21)
+        XCTAssertEqual(usage.opusModelName, "Fable")
+        XCTAssertEqual(usage.sonnet?.percentage, 8)
+        XCTAssertEqual(usage.sonnetModelName, "Opus")
+    }
+
+    func testNonModelScopedLimitsAreIgnored() throws {
+        // session / weekly_all entries carry no scope.model — they must not
+        // create phantom model rows.
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null,
+            "limits": [
+                { "kind": "session",    "group": "session", "percent": 20, "scope": null },
+                { "kind": "weekly_all", "group": "weekly",  "percent": 13, "scope": null }
+            ]
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertNil(usage.opus)
+        XCTAssertNil(usage.sonnet)
+        XCTAssertNil(usage.opusModelName)
+    }
+
+    func testMissingLimitsArrayLeavesScopedSlotsNil() throws {
+        // Backward compatibility: responses without a `limits` array behave
+        // exactly as before.
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertNil(usage.opus)
+        XCTAssertNil(usage.opusModelName)
+    }
 }

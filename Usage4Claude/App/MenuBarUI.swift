@@ -28,8 +28,12 @@ class MenuBarUI {
 
     // MARK: - Icon Cache
 
-    /// 图标缓存：键为 "mode_style_percentage_appearance"，值为缓存的图标
+    /// 图标缓存：键包含 mode/style/百分比等渲染参数（不含外观，外观变化时由
+    /// UserSettings 的 AppleInterfaceThemeChangedNotification 观察者统一 post
+    /// `.settingsChanged` 清空缓存，见 UserSettings.swift）
     private var iconCache: [String: NSImage] = [:]
+    /// 缓存键的插入顺序，用于 FIFO 驱逐（Swift Dictionary 无序，不能直接靠 keys.first）
+    private var iconCacheOrder: [String] = []
     /// 缓存的最大条目数
     private let maxCacheSize = 50
 
@@ -88,14 +92,12 @@ class MenuBarUI {
 
     /// 设置 Popover 内容视图
     /// - Parameter contentView: SwiftUI 视图
+    /// - Note: sizingOptions = .preferredContentSize 让 NSHostingController 自动把
+    ///   SwiftUI 内容的理想尺寸同步给 popover，无需再手工估算行数/高度。
     func setPopoverContent<Content: View>(_ contentView: Content) {
         let hostingController = NSHostingController(rootView: contentView)
+        hostingController.sizingOptions = [.preferredContentSize]
         popover.contentViewController = hostingController
-    }
-
-    /// 设置 popover 内容尺寸，确保 AppKit 在定位箭头前拿到真实宽高
-    func setPopoverContentSize(_ size: NSSize) {
-        popover.contentSize = size
     }
 
     // MARK: - Popover Control
@@ -565,11 +567,13 @@ class MenuBarUI {
             button: button
         )
 
-        // 存入缓存
-        if iconCache.count >= maxCacheSize {
-            iconCache.removeValue(forKey: iconCache.keys.first!)
+        // 存入缓存（FIFO 驱逐：先进先出，而非 Dictionary 无序遍历的随机驱逐）
+        if iconCache.count >= maxCacheSize, !iconCacheOrder.isEmpty {
+            let oldestKey = iconCacheOrder.removeFirst()
+            iconCache.removeValue(forKey: oldestKey)
         }
         iconCache[cacheKey] = icon
+        iconCacheOrder.append(cacheKey)
 
         button.image = icon
     }
@@ -577,6 +581,7 @@ class MenuBarUI {
     /// 清除图标缓存
     func clearIconCache() {
         iconCache.removeAll()
+        iconCacheOrder.removeAll()
     }
 
     /// 生成图标缓存键
