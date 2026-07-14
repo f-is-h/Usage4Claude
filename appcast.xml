@@ -40,6 +40,32 @@
         <language>en</language>
         <!-- Items go here. Top item is the latest version. -->
         <item>
+            <title>v3.3.0</title>
+            <pubDate>Tue, 14 Jul 2026 08:22:49 +0000</pubDate>
+            <sparkle:version>3.3.0</sparkle:version>
+            <sparkle:shortVersionString>3.3.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.3.0</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Added
+- **German localization**: Full German UI translation, README with language switcher entry, and polished wording for reset-time strings
+- **Per-model weekly usage rows**: Show weekly usage for any number of models returned by the API (e.g. Opus, Sonnet, Fable), no longer limited to two fixed slots
+- **Claude OAuth manual paste fallback**: Paste the callback link to complete sign-in when the local server doesn't receive the browser redirect
+
+### Fixed
+- **Codex rate limit window mislabeling**: Classify the 5-hour/7-day window by its actual duration instead of JSON field position
+- **Missed usage warning notifications**: Notifications now show while the app is in the foreground, instead of being silently dropped
+- **Codex token expiry miscalculation**: Decode JWT payloads using the base64url alphabet, fixing expiry checks for tokens containing `-` or `_`
+- **Stuck OAuth retry after failed login**: Reset the callback flag on retry so a second sign-in attempt is no longer silently dropped
+- **Stale menu bar icon after appearance change**: Invalidate the icon cache when switching between light and dark mode
+- **Claude account intermittent auth errors**: Retry the usage fetch once after an unexpected 401 by refreshing the access token, matching existing Codex behavior
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.3.0/Usage4Claude-v3.3.0.dmg"
+              sparkle:edSignature="UE2mGKYvMpSjhz8N1NK4SylkMXPw2FwULyjLoPY3A5USjESCdZtbvO+HMrWwdJCd8PEmLDGKy2YS/iaDeJkJDg==" length="5683598"
+              type="application/octet-stream"/>
+        </item>
+        <item>
             <title>v3.2.2</title>
             <pubDate>Fri, 19 Jun 2026 14:59:17 +0000</pubDate>
             <sparkle:version>3.2.2</sparkle:version>
