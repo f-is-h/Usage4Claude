@@ -431,3 +431,7 @@
 "weblogin.codex_oauth_reopen_browser" = "Browser erneut öffnen";
 "weblogin.codex_oauth_retry" = "Erneut versuchen";
 "weblogin.claude_oauth_port_busy" = "Der lokale Anmelde-Callback-Server konnte nicht gestartet werden. Bitte erneut versuchen.";
+"weblogin.claude_oauth_manual_hint" = "Nicht automatisch zurückgekehrt?";
+"weblogin.claude_oauth_manual_prompt" = "Den Link aus der Adressleiste des Browsers einfügen (beginnt mit http://localhost)";
+"weblogin.claude_oauth_manual_submit" = "Mit diesem Link anmelden";
+"weblogin.claude_oauth_manual_invalid" = "Kein Autorisierungscode gefunden. Den vollständigen Link aus der Adressleiste des Browsers kopieren und erneut versuchen.";
