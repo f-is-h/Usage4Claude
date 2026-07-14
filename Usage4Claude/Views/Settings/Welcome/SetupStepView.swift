@@ -401,9 +401,13 @@ struct SetupStepView: View {
         let language = settings.language
 
         switch language {
-        case .english, .german:
+        case .english:
             let anchor = section == .initialSetup ? "#initial-setup" : "#-faq"
             return "\(baseURL)/README.md\(anchor)"
+
+        case .german:
+            let anchor = section == .initialSetup ? "#erste-konfiguration" : "#-faq"
+            return "\(baseURL)/docs/README.de.md\(anchor)"
 
         case .chinese:
             let anchor = section == .initialSetup ? "#首次配置" : "#-常见问题"
