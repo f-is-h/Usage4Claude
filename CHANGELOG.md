@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-07-14
+
+### Added
+- **German localization**: Full German UI translation, README with language switcher entry, and polished wording for reset-time strings
+- **Per-model weekly usage rows**: Show weekly usage for any number of models returned by the API (e.g. Opus, Sonnet, Fable), no longer limited to two fixed slots
+- **Claude OAuth manual paste fallback**: Paste the callback link to complete sign-in when the local server doesn't receive the browser redirect
+
+### Fixed
+- **Codex rate limit window mislabeling**: Classify the 5-hour/7-day window by its actual duration instead of JSON field position
+- **Missed usage warning notifications**: Notifications now show while the app is in the foreground, instead of being silently dropped
+- **Codex token expiry miscalculation**: Decode JWT payloads using the base64url alphabet, fixing expiry checks for tokens containing `-` or `_`
+- **Stuck OAuth retry after failed login**: Reset the callback flag on retry so a second sign-in attempt is no longer silently dropped
+- **Stale menu bar icon after appearance change**: Invalidate the icon cache when switching between light and dark mode
+- **Claude account intermittent auth errors**: Retry the usage fetch once after an unexpected 401 by refreshing the access token, matching existing Codex behavior
+
 ## [3.2.2] - 2026-06-19
 
 ### Fixed
@@ -514,6 +529,7 @@ Key, Organization ID)
 
 ---
 
+[3.3.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.3.0
 [3.2.2]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.2
 [3.2.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.1
 [3.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.0
