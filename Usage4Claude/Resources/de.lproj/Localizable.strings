@@ -27,13 +27,13 @@
 "usage.loading" = "Lade...";
 "usage.not_configured" = "Anmeldung nicht konfiguriert";
 "usage.go_to_settings" = "Gehe zu den Einstellungen";
-"usage.reset_time" = "Reset Zeit";
+"usage.reset_time" = "Reset-Zeit";
 "usage.used" = "Verwendet";
 "usage.five_hour_limit" = "5-Stunden-Limit";
 "usage.seven_day_limit" = "7-Tage-Limit";
 "usage.five_hour_limit_short" = "5h";
 "usage.seven_day_limit_short" = "7d";
-"usage.reset_date" = "Datum zurücksetzen";
+"usage.reset_date" = "Reset-Datum";
 "usage.refresh" = "Aktualisieren";
 "usage.refresh_cooldown" = "Moment kurz";
 "usage.run_diagnostic" = "Diagnose starten";
@@ -167,7 +167,7 @@
 "error.decoding_failed" = "Antwortdaten konnten nicht verarbeitet werden. Bitte prüfen, ob die Anmeldedaten korrekt sind.";
 "error.no_organizations_found" = "Keine Organisationen gefunden";
 "error.unauthorized" = "Anmeldung fehlgeschlagen, bitte die Anmeldedaten prüfen";
-"error.rate_limited" = "Zu viele Anfragen, bitte versuche es später erneut";
+"error.rate_limited" = "Zu viele Anfragen, bitte später erneut versuchen";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Aktiviert";
@@ -198,7 +198,7 @@
 "diagnostic.suggestions" = "Vorschläge";
 "diagnostic.privacy_notice" = "Alle sensiblen Daten werden zum Schutz der Privatsphäre automatisch geschwärzt";
 "diagnostic.detailed_report_title" = "Detaillierter Diagnosebericht";
-"diagnostic.no_report_available" = "Kein Bericht verfügbar. Bitte führe zuerst einen Test durch.";
+"diagnostic.no_report_available" = "Kein Bericht verfügbar. Bitte zuerst einen Test durchführen.";
 "diagnostic.copy_to_clipboard" = "In die Zwischenablage kopieren";
 "diagnostic.export_title" = "Diagnosebericht exportieren";
 "diagnostic.export_message" = "Dieser Bericht enthält keine sensiblen Informationen und kann gefahrlos geteilt werden.";
@@ -425,8 +425,8 @@
 "weblogin.codex_oauth_waiting_browser" = "Im Browser fortsetzen";
 "weblogin.codex_oauth_waiting_hint" = "Die ChatGPT-Anmeldung im Browser abschließen (Google, Microsoft, Enterprise SSO oder Passkey). Die Rückkehr hierher erfolgt automatisch.";
 "weblogin.codex_oauth_exchanging" = "Anmeldung wird vorbereitet…";
-"weblogin.codex_oauth_failed" = "Anmeldung fehlgeschlagen. Bitte nochmal probieren.";
-"weblogin.codex_oauth_timeout" = "Anmeldung fehlgeschlagen. Bitte nochmal probieren.";
+"weblogin.codex_oauth_failed" = "Anmeldung fehlgeschlagen. Bitte erneut versuchen.";
+"weblogin.codex_oauth_timeout" = "Anmeldung fehlgeschlagen. Bitte erneut versuchen.";
 "weblogin.codex_oauth_port_busy" = "Lokale Ports 1455/1457 sind belegt, daher kann der Anmelde-Callback nicht empfangen werden. Die Anwendung, welche diese Ports verwendet, schließen und erneut versuchen.";
 "weblogin.codex_oauth_reopen_browser" = "Browser erneut öffnen";
 "weblogin.codex_oauth_retry" = "Erneut versuchen";
