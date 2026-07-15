@@ -8,8 +8,6 @@
 !/README.md
 !/CHANGELOG.md
 !/CONTRIBUTING.md
-!/RELEASE_NOTES.md
-!/NEXT_RELEASE.md
 
 # Xcode
 *.xcodeproj/*

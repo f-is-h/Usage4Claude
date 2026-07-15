@@ -103,7 +103,7 @@ in your keychain. Public key: hGTiB0kyn45HOB8WWKdAHc28+Bthe8Rv8O7asa4nG2c=
 
 3. **将上述内容写入 `appcast.xml`**：作为新的顶部 `<item>`（置于所有现有条目之上），并填写 `<title>`、`<pubDate>`、`<sparkle:version>`、`<sparkle:shortVersionString>`、`<link>` 和 `<description>`。`appcast.xml` 顶部的模板注释展示了完整结构。`<description>` 支持 `sparkle:format="markdown"`，可直接用 Markdown 编写（Sparkle 2.9+ 可渲染）。
 
-   > 💡 **日常发版无需手动做这步。** CI（`update_appcast.py`）会从 `RELEASE_NOTES.md`
+   > 💡 **日常发版无需手动做这步。** CI（`update_appcast.py`）会从 `docs/RELEASE_NOTES.md`
    > 的当前版本段落自动填充 `<description>`，并追加签名后的 `<enclosure>`。因此 Sparkle
    > 弹窗显示的是**面向用户的 RELEASE_NOTES 内容**，不是 CHANGELOG。上面的手动步骤仅用于
    > 应急（CI 不可用时）。

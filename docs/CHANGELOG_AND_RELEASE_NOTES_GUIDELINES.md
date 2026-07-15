@@ -3,7 +3,7 @@
 本项目用**两份独立文件**承载发布信息，发版前都要写好：
 
 - **`CHANGELOG.md`** — 完整技术档案 + 版本号权威源。**不进 Sparkle。**
-- **`RELEASE_NOTES.md`** — 面向用户的发布说明。CI 提取当前版本段落后**同时**喂给
+- **`docs/RELEASE_NOTES.md`** — 面向用户的发布说明。CI 提取当前版本段落后**同时**喂给
   Sparkle 应用内更新弹窗和 GitHub Release 正文。
 
 ## 注意事项
@@ -18,7 +18,7 @@
 
 ## 两份材料的分工
 
-| | CHANGELOG.md | RELEASE_NOTES.md |
+| | CHANGELOG.md | docs/RELEASE_NOTES.md |
 |---|---|---|
 | 定位 | 完整技术档案 + 版本号权威源 | 面向用户的发布说明 |
 | 收录范围 | **所有改动**，含内部重构、CI、安全加固 | **只留用户可感知的现象** |
@@ -30,7 +30,7 @@
 数据流：
 
 ```
-RELEASE_NOTES.md 的 ## [X.Y.Z] 段落
+docs/RELEASE_NOTES.md 的 ## [X.Y.Z] 段落
    ├─(update_appcast.py)────────────────────► appcast.xml <description> ─► Sparkle 更新弹窗
    └─(generate_release_notes.sh + 模板)─────► GitHub Release 正文
 
@@ -49,7 +49,7 @@ CHANGELOG.md ─► 版本号权威源 + 技术档案（不进 Sparkle）
 - 输出后提醒更新最下方链接，如
   `[1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0`
 
-## RELEASE_NOTES.md
+## docs/RELEASE_NOTES.md
 
 面向用户的发布说明，按版本分段（`## [X.Y.Z] - 日期`，结构同 CHANGELOG）。
 

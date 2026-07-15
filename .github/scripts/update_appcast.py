@@ -2,7 +2,7 @@
 """
 Insert a new release item into appcast.xml.
 
-The <description> feed to Sparkle is taken from RELEASE_NOTES.md (user-facing),
+The <description> feed to Sparkle is taken from docs/RELEASE_NOTES.md (user-facing),
 not CHANGELOG.md. Both files share the same "## [X.Y.Z]" section layout, so the
 extraction logic is identical.
 

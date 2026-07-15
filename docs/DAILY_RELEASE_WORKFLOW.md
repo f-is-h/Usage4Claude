@@ -52,7 +52,7 @@ Cmd + R
 发版要准备**两份**文件（详见 [CHANGELOG_AND_RELEASE_NOTES_GUIDELINES.md](./CHANGELOG_AND_RELEASE_NOTES_GUIDELINES.md)）：
 
 - `CHANGELOG.md` — 完整技术档案 + 版本号权威源
-- `RELEASE_NOTES.md` — 面向用户的发布说明（含致谢），CI 用它同时填 **Sparkle 弹窗**和 **GitHub Release 正文**
+- `docs/RELEASE_NOTES.md` — 面向用户的发布说明（含致谢），CI 用它同时填 **Sparkle 弹窗**和 **GitHub Release 正文**
 
 **提示词示例：**
 ```
@@ -65,14 +65,14 @@ Cmd + R
 
 **输出结果：**
 - ✅ CHANGELOG.md 的新版本条目（技术细节）
-- ✅ RELEASE_NOTES.md 的新版本条目（面向用户 + 致谢）
+- ✅ docs/RELEASE_NOTES.md 的新版本条目（面向用户 + 致谢）
 
 > 💡 **发版 commit message 需手工编写**（格式见步骤 4）。**Release Notes 也不用发布后手写**：
-> 发版前写好 `RELEASE_NOTES.md`，CI 自动用它生成 GitHub Release 正文和 Sparkle 弹窗内容。
+> 发版前写好 `docs/RELEASE_NOTES.md`，CI 自动用它生成 GitHub Release 正文和 Sparkle 弹窗内容。
 
 ---
 
-### 步骤 3：更新 CHANGELOG.md 与 RELEASE_NOTES.md
+### 步骤 3：更新 CHANGELOG.md 与 docs/RELEASE_NOTES.md
 
 **CHANGELOG.md：**
 1. 在文件顶部添加新版本条目（完整技术改动）
@@ -81,7 +81,7 @@ Cmd + R
    [1.X.X]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.X.X
    ```
 
-**RELEASE_NOTES.md：**
+**docs/RELEASE_NOTES.md：**
 1. 在文件顶部添加同版本号的 `## [X.Y.Z] - 日期` 段落（只留用户可感知的现象 + 致谢）
 2. 版本号必须与 CHANGELOG 一致，否则 CI validate 会 fail-fast
 
@@ -118,7 +118,7 @@ git add .
 
 # 提交（发版 commit message 手工编写，不走 COMMIT_MESSAGE_GUIDELINES 那套）
 # 只写一行标题，不要正文：CI 只取第一行（去掉 [release]）作为 Release 标题，
-# 正文不被使用（Release 正文来自 RELEASE_NOTES.md）
+# 正文不被使用（Release 正文来自 docs/RELEASE_NOTES.md）
 git commit -m "[release] v1.X.X - 简短标题"
 
 # 推送到 GitHub（触发 Workflow）
@@ -127,7 +127,7 @@ git push origin main
 
 **触发条件验证：**
 - ✅ Commit message 包含 `[release]` 或 `[RELEASE]`
-- ✅ 修改了 `CHANGELOG.md` 或 `RELEASE_NOTES.md`
+- ✅ 修改了 `CHANGELOG.md` 或 `docs/RELEASE_NOTES.md`
 - ✅ 推送到 `main` 分支
 
 ---
@@ -144,7 +144,7 @@ https://github.com/f-is-h/Usage4Claude/actions
 ```
 ✅ validate (ubuntu, ~30秒)
    └─ 提取版本号、验证格式、确认版本号高于已发布版本
-   └─ 校验 RELEASE_NOTES.md 有当前版本段落（缺则 fail-fast）
+   └─ 校验 docs/RELEASE_NOTES.md 有当前版本段落（缺则 fail-fast）
    
 ✅ build (macos, ~8分钟)  
    └─ 验证版本一致性
@@ -154,9 +154,9 @@ https://github.com/f-is-h/Usage4Claude/actions
    
 ✅ release (ubuntu, ~1分钟)
    └─ 创建 Git Tag
-   └─ 生成 Release Notes（标题取自 commit、正文用 RELEASE_NOTES.md 段落）
+   └─ 生成 Release Notes（标题取自 commit、正文用 docs/RELEASE_NOTES.md 段落）
    └─ 直接发布 Release（非草稿）+ 上传 DMG 和 SHA256
-   └─ 更新 appcast.xml 并推送到 main（description 也取自 RELEASE_NOTES.md）
+   └─ 更新 appcast.xml 并推送到 main（description 也取自 docs/RELEASE_NOTES.md）
 ```
 
 **收到邮件通知：**
@@ -172,7 +172,7 @@ https://github.com/f-is-h/Usage4Claude/actions
 
 ### 步骤 6：（可选）装饰 GitHub Release 页面
 
-CI 已经**自动发布**了 release——标题来自 commit 第一行，正文用 `RELEASE_NOTES.md`
+CI 已经**自动发布**了 release——标题来自 commit 第一行，正文用 `docs/RELEASE_NOTES.md`
 段落（面向用户，与 Sparkle 弹窗同源）。**这一步不是必须的**，只在想让 Release 页面
 有更精致外观时才做。
 
@@ -182,7 +182,7 @@ CI 已经**自动发布**了 release——标题来自 commit 第一行，正文
    ```
 2. **润色正文**：补充总览段落、emoji 标题等，更新后点 "Update release"。
 
-> 💡 **不回流 Sparkle**：应用内更新弹窗的说明在发布时已从 `RELEASE_NOTES.md` 注入
+> 💡 **不回流 Sparkle**：应用内更新弹窗的说明在发布时已从 `docs/RELEASE_NOTES.md` 注入
 > appcast，此处网页装饰只影响 GitHub 页面外观，不改变用户的更新弹窗内容。
 
 ---
@@ -271,7 +271,7 @@ git show vX.Y.Z
 
 **必须确保：**
 1. ✅ Xcode 版本号与 CHANGELOG 版本号**完全一致**
-2. ✅ `RELEASE_NOTES.md` 有当前版本段落（同版本号），否则 CI validate fail-fast
+2. ✅ `docs/RELEASE_NOTES.md` 有当前版本段落（同版本号），否则 CI validate fail-fast
 3. ✅ Commit message 用发版格式 `[release] vX.Y.Z - 标题`
 4. ✅ CHANGELOG.md 底部链接已更新
 5. ✅ 所有代码已编译测试通过
@@ -279,7 +279,7 @@ git show vX.Y.Z
 
 **常见错误：**
 - ❌ 版本号不一致 → CI 构建失败
-- ❌ 忘记写 `RELEASE_NOTES.md` 段落 → Sparkle 弹窗 / Release 正文为空（CI 会拦截）
+- ❌ 忘记写 `docs/RELEASE_NOTES.md` 段落 → Sparkle 弹窗 / Release 正文为空（CI 会拦截）
 - ❌ 忘记 `[release]` → Workflow 不触发
 - ❌ 忘记更新链接 → CHANGELOG 链接失效
 - ❌ 把 Build 号固定成 `1` → Sparkle 无法识别新版本（更新失效或死循环）

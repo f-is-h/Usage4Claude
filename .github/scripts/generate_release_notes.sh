@@ -2,7 +2,7 @@
 
 # Usage4Claude - Release Notes Generator
 # 从模板生成 GitHub Release Notes。
-# 若提供 RELEASE_NOTES.md 路径，则把当前版本段落填入模板的 {{RELEASE_NOTES}} 占位，
+# 若提供 docs/RELEASE_NOTES.md 路径，则把当前版本段落填入模板的 {{RELEASE_NOTES}} 占位，
 # 作为 GitHub Release 正文（与 Sparkle 弹窗同源，见 update_appcast.py）。
 
 set -e
@@ -152,10 +152,10 @@ show_usage() {
     echo "  template_path   Path to RELEASE_TEMPLATE.md"
     echo "  version         Current version (e.g., 1.1.3)"
     echo "  output_path     Output file path for generated notes"
-    echo "  notes_path      (optional) RELEASE_NOTES.md used to fill {{RELEASE_NOTES}}"
+    echo "  notes_path      (optional) docs/RELEASE_NOTES.md used to fill {{RELEASE_NOTES}}"
     echo ""
     echo "Example:"
-    echo "  $0 .github/RELEASE_TEMPLATE.md 1.1.3 release_notes.md RELEASE_NOTES.md"
+    echo "  $0 .github/RELEASE_TEMPLATE.md 1.1.3 release_notes.md docs/RELEASE_NOTES.md"
 }
 
 # Check arguments
