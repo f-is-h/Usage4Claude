@@ -198,7 +198,7 @@ class DataRefreshManager: ObservableObject {
                     }
 
                     let newResetsAt = data.resetsAt
-                    let hasResetChanged = self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
+                    let hasResetChanged = hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
                     if hasResetChanged {
                         self.cancelResetVerification()
                     } else if let resetsAt = newResetsAt {
@@ -476,7 +476,7 @@ class DataRefreshManager: ObservableObject {
                 }
                 self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
                 let newResetsAt = data.resetsAt
-                if self.hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
+                if hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
                     self.cancelResetVerification()
                 } else if let resetsAt = newResetsAt {
                     self.scheduleResetVerification(resetsAt: resetsAt)
@@ -698,30 +698,6 @@ class DataRefreshManager: ObservableObject {
     }
 
     // MARK: - Reset Verification
-
-    /// 检测重置时间是否发生变化
-    /// - Parameters:
-    ///   - oldTime: 上次的重置时间
-    ///   - newTime: 新的重置时间
-    /// - Returns: 如果重置时间发生了变化则返回 true
-    private func hasResetTimeChanged(from oldTime: Date?, to newTime: Date?) -> Bool {
-        // 如果两者都为 nil，没有变化
-        if oldTime == nil && newTime == nil {
-            return false
-        }
-
-        // 如果一个为 nil 另一个不为 nil，有变化
-        if (oldTime == nil) != (newTime == nil) {
-            return true
-        }
-
-        // 如果两者都不为 nil，比较时间值（允许1秒误差）
-        if let old = oldTime, let new = newTime {
-            return abs(old.timeIntervalSince(new)) > 1.0
-        }
-
-        return false
-    }
 
     /// 取消所有重置验证定时器
     private func cancelResetVerification() {

@@ -30,7 +30,11 @@ let package = Package(
                 "Models/MonitoringMode.swift",
                 "Models/ProviderType.swift",
                 "Helpers/SmartRefreshPolicy.swift",
-                "Services/OAuthTokenCache.swift"
+                "Services/OAuthTokenCache.swift",
+                "Helpers/SensitiveDataRedactor.swift",
+                "Helpers/ResetTimeChange.swift",
+                "Helpers/NotificationDecisionEngine.swift",
+                "Models/CodexUsageData.swift"
             ]
         ),
         .testTarget(

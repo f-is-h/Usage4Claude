@@ -25,3 +25,15 @@ jobs:
 
       - name: Run swift test
         run: swift test
+
+  python-script-tests:
+    name: Python Script Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run update_appcast.py tests
+        run: python3 .github/scripts/test_update_appcast.py -v

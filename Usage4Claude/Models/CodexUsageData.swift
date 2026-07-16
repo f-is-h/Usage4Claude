@@ -5,6 +5,12 @@
 //  Created by f-is-h on 2026-04-24.
 //  Copyright © 2025 f-is-h. All rights reserved.
 //
+//  Pure-data types + parsing for the Codex /backend-api/wham/usage response.
+//  Lives here (not Helpers/) so it can be cherry-picked into a SwiftPM test
+//  target — every symbol here must stay free of `L.*`/`Logger`/UI dependency.
+//  The `L.*`-dependent display formatting lives in
+//  `CodexUsageData+Formatting.swift`.
+//
 
 import Foundation
 
@@ -222,47 +228,9 @@ nonisolated struct CodexExtraUsageData: Sendable {
         return nil
     }
 
-    @MainActor var formattedCompactAmount: String {
-        if unlimited {
-            return L.ExtraUsage.unlimited
-        }
-        if overageLimitReached || spendControlReached {
-            return L.ExtraUsage.limitReached
-        }
-        guard enabled, let balanceValue else {
-            return L.ExtraUsage.notEnabled
-        }
-        return L.ExtraUsage.creditsBalance(balanceValue)
-    }
-
-    @MainActor var formattedRemainingAmount: String {
-        guard let balanceValue else {
-            return formattedCompactAmount
-        }
-        return L.ExtraUsage.creditsRemaining(balanceValue)
-    }
-
-    @MainActor var formattedDetailCompactAmount: String {
-        if unlimited {
-            return L.ExtraUsage.unlimited
-        }
-        if overageLimitReached || spendControlReached {
-            return L.ExtraUsage.limitReached
-        }
-        guard enabled, let balanceValue else {
-            return L.ExtraUsage.notEnabled
-        }
-        return L.DetailRow.creditsBalance(balanceValue)
-    }
-
-    @MainActor var formattedDetailRemainingAmount: String {
-        guard let balanceValue else {
-            return formattedDetailCompactAmount
-        }
-        return L.DetailRow.creditsRemaining(balanceValue)
-    }
-
-    private var balanceValue: Double? {
+    /// 供 `CodexUsageData+Formatting.swift` 的 `L.*` 格式化属性复用，
+    /// 因此不能是 `private`（跨文件 extension 访问不到）
+    var balanceValue: Double? {
         guard let balance else { return nil }
         return NSDecimalNumber(decimal: balance).doubleValue
     }

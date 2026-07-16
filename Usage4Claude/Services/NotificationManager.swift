@@ -18,17 +18,6 @@ final class NotificationManager: NSObject {
 
     static let shared = NotificationManager()
 
-    // MARK: - Constants
-
-    /// 用量警告阈值（90%）
-    private let warningThreshold: Double = 90.0
-
-    /// 7天限制的早期警告阈值（75%）
-    private let sevenDayEarlyWarningThreshold: Double = 75.0
-
-    /// 重置检测阈值：百分比骤降超过此值视为重置
-    private let resetDropThreshold: Double = 30.0
-
     // MARK: - State
 
     /// 已通知记录持久化的 UserDefaults key
@@ -147,6 +136,8 @@ final class NotificationManager: NSObject {
     // MARK: - Private Methods
 
     /// 检查单个限制类型的用量变化
+    /// 状态判定交给纯函数 `NotificationDecisionEngine.evaluate`（见该文件），
+    /// 这里只负责拼 key、把返回的 actions 落地成真实的系统通知
     private func checkLimit(
         type: LimitType,
         current: Double?,
@@ -154,52 +145,34 @@ final class NotificationManager: NSObject {
         currentResetsAt: Date?,
         previousResetsAt: Date?
     ) {
-        guard let currentPct = current else { return }
-
-        // 检测重置：百分比骤降 或 resetsAt 发生变化
-        if let previousPct = previous, isReset(
-            currentPct: currentPct,
-            previousPct: previousPct,
-            currentResetsAt: currentResetsAt,
-            previousResetsAt: previousResetsAt
-        ) {
-            sendResetNotification(limitType: type)
-            notifiedWarnings.removeValue(forKey: notificationKey(for: type))
-            notifiedWarnings.removeValue(forKey: notificationKey(for: type, suffix: "75"))
-            return
-        }
-
-        let previousPct = previous ?? 0
-
-        // 陈旧标志清理：持久化的标志若属于旧周期（resetsAt 已变），直接作废。
-        // 覆盖"应用未运行期间配额已重置"的场景——那种重置不会走上面的 isReset 分支。
-        // currentResetsAt 为 nil（如 Extra Usage）或标志无周期信息（0）时跳过，维持原有行为。
-        let currentCycle = currentResetsAt?.timeIntervalSince1970 ?? 0
-        func clearIfStale(_ key: String) {
-            guard currentCycle != 0,
-                  let firedCycle = notifiedWarnings[key], firedCycle != 0,
-                  abs(firedCycle - currentCycle) > 1 else { return }
-            notifiedWarnings.removeValue(forKey: key)
-        }
-
-        // 7天限制额外检查 75% 阈值
-        if type == .sevenDay || type == .codexSecondary {
-            let earlyKey = notificationKey(for: type, suffix: "75")
-            clearIfStale(earlyKey)
-            let alreadyNotifiedEarly = notifiedWarnings[earlyKey] != nil
-            if !alreadyNotifiedEarly && previousPct < sevenDayEarlyWarningThreshold && currentPct >= sevenDayEarlyWarningThreshold {
-                sendUsageWarning(limitType: type, percentage: currentPct)
-                notifiedWarnings[earlyKey] = currentCycle
-            }
-        }
-
-        // 检测是否跨越 90% 阈值
         let warningKey = notificationKey(for: type)
-        clearIfStale(warningKey)
-        let alreadyNotified = notifiedWarnings[warningKey] != nil
-        if !alreadyNotified && previousPct < warningThreshold && currentPct >= warningThreshold {
-            sendUsageWarning(limitType: type, percentage: currentPct)
-            notifiedWarnings[warningKey] = currentCycle
+        // 7天限制额外检查 75% 阈值，其余类型不做早期预警
+        let earlyWarningKey = (type == .sevenDay || type == .codexSecondary)
+            ? notificationKey(for: type, suffix: "75")
+            : nil
+
+        let (actions, updatedWarnings) = NotificationDecisionEngine.evaluate(
+            current: current,
+            previous: previous,
+            currentResetsAt: currentResetsAt,
+            previousResetsAt: previousResetsAt,
+            warningKey: warningKey,
+            earlyWarningKey: earlyWarningKey,
+            notifiedWarnings: notifiedWarnings
+        )
+        // 只在真正变化时赋值：notifiedWarnings 的 didSet 会写 UserDefaults，
+        // 无条件赋值会导致每次 checkLimit 调用都触发一次磁盘写入
+        if updatedWarnings != notifiedWarnings {
+            notifiedWarnings = updatedWarnings
+        }
+
+        for action in actions {
+            switch action {
+            case .reset:
+                sendResetNotification(limitType: type)
+            case .warning(let percentage):
+                sendUsageWarning(limitType: type, percentage: percentage)
+            }
         }
     }
 
@@ -234,31 +207,6 @@ final class NotificationManager: NSObject {
 
     static func makeAccountNotificationKeyPrefix(provider: ProviderType, accountId: UUID?) -> String {
         "\(provider.rawValue):\(accountId?.uuidString ?? "none"):"
-    }
-
-    /// 判断是否发生了重置
-    private func isReset(
-        currentPct: Double,
-        previousPct: Double,
-        currentResetsAt: Date?,
-        previousResetsAt: Date?
-    ) -> Bool {
-        // 百分比骤降（从较高值降到较低值）
-        if previousPct >= warningThreshold && (previousPct - currentPct) > resetDropThreshold {
-            return true
-        }
-
-        // resetsAt 发生了变化（新的重置周期）
-        if let current = currentResetsAt, let previous = previousResetsAt {
-            if abs(current.timeIntervalSince(previous)) > 1.0 {
-                // resetsAt 变了，且百分比也下降了，确认是重置
-                if currentPct < previousPct {
-                    return true
-                }
-            }
-        }
-
-        return false
     }
 
     /// 发送用量警告通知
