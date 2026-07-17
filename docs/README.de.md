@@ -76,7 +76,7 @@ Alle Plattformen teilen sich dasselbe Nutzungskontingent – überwache es an ei
   - 한국어
   - Français
   - Deutsch
-  - Weitere Sprachen in Arbeit …
+  - Weitere Sprachen in Arbeit … (Lokalisierungs-PRs sind willkommen!)
 
 ### 🔧 Praktische Funktionen
 
@@ -579,6 +579,7 @@ und/oder Kopien davon zu verkaufen.
 
 - Dank an Claude/Codex – der Großteil des Codes wurde von KI geschrieben
 - Dank an alle Mitwirkenden und Nutzer für ihre Unterstützung
+- Dank an [@mtreize](https://github.com/mtreize) für die französische Lokalisierung und an [@schaitl](https://github.com/schaitl) für die deutsche Lokalisierung
 - Die Gestaltung der Symbole ist von den offiziellen Marken von Claude/Codex inspiriert
 
 ---

@@ -75,14 +75,15 @@ All platforms share the same usage quota, monitored in one place!
   - 繁体中文
   - 한국어
   - Français
-  - More languages coming soon...
+  - Deutsch
+  - More languages coming soon... (Localization PRs are welcome!)
 
 ### 🔧 Convenient Features
 
 - **⚙️ Visual Settings** - No code modification needed, GUI configuration for all options
 - **🆕 Smart Update Alerts** - Menu bar badge and rainbow animation notify new versions
 - **🚀 Launch at Login** - Optional automatic startup when system boots
-- **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R, ⌘,, ⌘Q)
+- **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R | ⌘, | ⌘Q)
 - **👋 Friendly Onboarding** - Detailed setup wizard on first launch
 - **… Menu Display** - Multiple menu access methods, detail view and right-click
 - **🔔 Usage Notifications** - Claude usage warning and reset notifications, configurable in settings
@@ -302,7 +303,7 @@ A: Very lightweight:
 <details>
 <summary><b>Q: Which macOS versions are supported?</b></summary>
 
-A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon (M1/M2/M3) chips.
+A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon (M1/M2/M3/M4/M5) chips.
 
 </details>
 
@@ -577,6 +578,7 @@ and/or sell copies of the Software.
 
 - Thanks to Claude/Codex - Most code written by AI
 - Thanks to all contributors and users for their support
+- Thanks to [@mtreize](https://github.com/mtreize) for the French localization and [@schaitl](https://github.com/schaitl) for the German localization
 - Icon design inspired by Claude/Codex official branding
 
 ---

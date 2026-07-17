@@ -75,7 +75,8 @@ Toutes les plateformes partagent le meme quota d'utilisation, surveille en un se
   - 繁体中文
   - 한국어
   - Français
-  - D'autres langues a venir...
+  - Deutsch
+  - D'autres langues a venir... (Les PR de localisation sont les bienvenues !)
 
 ### 🔒 Securite et confidentialite
 
@@ -269,7 +270,7 @@ R : Tres leger :
 <details>
 <summary><b>Q : Quelles versions de macOS sont supportees ?</b></summary>
 
-R : Necessite macOS 13.0 (Ventura) ou ulterieur. Supporte les puces Intel et Apple Silicon (M1/M2/M3).
+R : Necessite macOS 13.0 (Ventura) ou ulterieur. Supporte les puces Intel et Apple Silicon (M1/M2/M3/M4/M5).
 
 </details>
 
@@ -502,6 +503,7 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](../LICENSE) pour plus
 
 - Merci a Claude/Codex - La majeure partie du code a ete ecrite par l'IA
 - Merci a tous les contributeurs et utilisateurs pour leur soutien
+- Merci à [@mtreize](https://github.com/mtreize) pour la localisation française et à [@schaitl](https://github.com/schaitl) pour la localisation allemande
 - Le design des icones s'inspire des marques officielles Claude/Codex
 
 ---

@@ -75,14 +75,15 @@
   - 繁體中文
   - 한국어
   - Français
-  - 更多語言適配中……
+  - Deutsch
+  - 更多語言適配中……（歡迎提交本地化 PR！）
 
 ### 🔧 便捷功能
 
 - **⚙️ 視覺化設定** - 無需修改程式碼，圖形化設定所有選項
 - **🆕 智慧更新提醒** - 選單列徽章和彩虹動畫提示新版本
 - **🚀 開機啟動選項** - 可選擇系統啟動時自動執行
-- **⌨️ 鍵盤快速鍵支援** - 常用操作支援鍵盤快速鍵（⌘R、⌘,、⌘Q）
+- **⌨️ 鍵盤快速鍵支援** - 常用操作支援鍵盤快速鍵（⌘R | ⌘, | ⌘Q）
 - **👋 友善引導** - 首次啟動提供詳細的設定精靈
 - **… 選單顯示** - 多種選單存取方式，詳情檢視和右鍵
 - **🔔 用量通知** - 支援 Claude 用量警告和重置通知，可在設定中開關
@@ -300,7 +301,7 @@ A: 非常輕量：
 <details>
 <summary><b>Q: 支援哪些 macOS 版本？</b></summary>
 
-A: 需要 macOS 13.0 (Ventura) 或更高版本。支援 Intel 和 Apple Silicon (M1/M2/M3) 晶片。
+A: 需要 macOS 13.0 (Ventura) 或更高版本。支援 Intel 和 Apple Silicon (M1/M2/M3/M4/M5) 晶片。
 
 </details>
 
@@ -574,6 +575,7 @@ Copyright (c) 2025 f-is-h
 
 - 感謝 Claude/Codex 大部分程式碼均由 AI 撰寫
 - 感謝所有貢獻者和使用者的支持
+- 感謝 [@mtreize](https://github.com/mtreize) 貢獻法語本地化、[@schaitl](https://github.com/schaitl) 貢獻德語本地化
 - 圖示設計靈感來自 Claude/Codex 官方品牌
 
 ---
