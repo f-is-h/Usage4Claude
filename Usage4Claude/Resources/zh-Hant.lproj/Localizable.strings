@@ -304,9 +304,7 @@
 "welcome.display_subtitle" = "選擇要顯示的限制類型";
 "welcome.preview" = "預覽";
 "welcome.back" = "返回";
-"welcome.skip" = "跳過";
 "welcome.continue" = "繼續";
-"welcome.finish" = "完成";
 "welcome.how_to_get_session_key" = "如何取得 Session Key？";
 "welcome.configuring" = "正在設定...";
 "welcome.fetch_org_id_failed" = "無法取得 Organization ID，請稍後在設定中重試";

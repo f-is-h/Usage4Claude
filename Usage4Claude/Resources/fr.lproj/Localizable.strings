@@ -304,9 +304,7 @@
 "welcome.display_subtitle" = "Choisissez les types de limites à afficher";
 "welcome.preview" = "Aperçu";
 "welcome.back" = "Retour";
-"welcome.skip" = "Passer";
 "welcome.continue" = "Continuer";
-"welcome.finish" = "Terminer";
 "welcome.how_to_get_session_key" = "Comment obtenir la clé de session ?";
 "welcome.configuring" = "Configuration…";
 "welcome.fetch_org_id_failed" = "Impossible de récupérer l'identifiant d'organisation, veuillez réessayer dans les Réglages";

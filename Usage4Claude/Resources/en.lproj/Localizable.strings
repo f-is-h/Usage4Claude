@@ -304,9 +304,7 @@
 "welcome.display_subtitle" = "Choose which limit types to display";
 "welcome.preview" = "Preview";
 "welcome.back" = "Back";
-"welcome.skip" = "Skip";
 "welcome.continue" = "Continue";
-"welcome.finish" = "Finish";
 "welcome.how_to_get_session_key" = "How to get Session Key?";
 "welcome.configuring" = "Configuring...";
 "welcome.fetch_org_id_failed" = "Unable to fetch Organization ID, please retry in Settings later";

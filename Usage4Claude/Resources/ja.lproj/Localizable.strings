@@ -304,9 +304,7 @@
 "welcome.display_subtitle" = "表示する制限タイプを選択してください";
 "welcome.preview" = "プレビュー";
 "welcome.back" = "戻る";
-"welcome.skip" = "スキップ";
 "welcome.continue" = "続ける";
-"welcome.finish" = "完了";
 "welcome.how_to_get_session_key" = "Session Key の取得方法は？";
 "welcome.configuring" = "設定中...";
 "welcome.fetch_org_id_failed" = "Organization ID を取得できませんでした。後で設定で再試行してください";

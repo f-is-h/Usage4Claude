@@ -37,3 +37,9 @@ jobs:
 
       - name: Run update_appcast.py tests
         run: python3 .github/scripts/test_update_appcast.py -v
+
+      - name: Run check_l10n.py tests
+        run: python3 scripts/test_check_l10n.py -v
+
+      - name: Check localization consistency
+        run: python3 scripts/check_l10n.py
