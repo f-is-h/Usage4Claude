@@ -83,7 +83,7 @@ Alle Plattformen teilen sich dasselbe Nutzungskontingent – überwache es an ei
 - **⚙️ Grafische Einstellungen** – Alle Optionen grafisch konfigurieren, ohne Code zu ändern
 - **🆕 Intelligente Update-Hinweise** – Menüleisten-Badge und Regenbogen-Animation weisen auf neue Versionen hin
 - **🚀 Start beim Login** – Optional automatisch beim Systemstart ausführen
-- **⌨️ Tastenkürzel** – Häufige Aktionen per Tastenkürzel (⌘R, ⌘, ⌘Q)
+- **⌨️ Tastenkürzel** – Häufige Aktionen per Tastenkürzel (⌘R | ⌘, | ⌘Q)
 - **👋 Freundliche Einführung** – Beim ersten Start führt ein ausführlicher Assistent durch die Konfiguration
 - **… Menüanzeige** – Mehrere Wege, das Menü zu öffnen: Detailfenster und Rechtsklick
 - **🔔 Nutzungsbenachrichtigungen** – Claude-Warnungen und Reset-Benachrichtigungen, in den Einstellungen ein-/ausschaltbar
@@ -92,7 +92,7 @@ Alle Plattformen teilen sich dasselbe Nutzungskontingent – überwache es an ei
 ### 🔒 Sicherheit & Datenschutz
 
 - 🏠 **Nur lokale Speicherung** – Alle Daten werden ausschließlich lokal gespeichert; es werden niemals persönliche Informationen erhoben oder hochgeladen
-- 🔐 **Schlüsselbund-Schutz** – Der Claude Session Key und die Codex-Authentifizierungs-Token werden im Schlüsselbund gespeichert, ohne Klartext-Schlüssel
+- 🔐 **Schlüsselbund-Schutz** – Der Claude Session Key und die Codex-Authentifizierungs-Token werden ausschließlich im Schlüsselbund gespeichert, nie als Klartext
 - 📖 **Open Source & transparent** – Der Code ist vollständig einsehbar und für jeden überprüfbar
 - 🛡️ **Sandbox-Schutz** – App Sandbox aktiviert für zusätzliche Sicherheit
 
@@ -303,7 +303,7 @@ A: Sehr wenig:
 <details>
 <summary><b>F: Welche macOS-Versionen werden unterstützt?</b></summary>
 
-A: Erforderlich ist macOS 13.0 (Ventura) oder neuer. Unterstützt werden Intel- und Apple-Silicon-Chips (M1/M2/M3).
+A: Erforderlich ist macOS 13.0 (Ventura) oder neuer. Unterstützt werden Intel- und Apple-Silicon-Chips (M1/M2/M3/M4/M5).
 
 </details>
 
