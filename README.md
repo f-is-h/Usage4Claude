@@ -28,7 +28,7 @@
 ### 🎯 Core Features
 
 - **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex monitoring
-- **🎯 Multi-Limit Support** - Claude supports up to 5 limits (5-hour/7-day/Extra/7-day Opus/7-day Sonnet), while Codex supports 5-hour, 7-day, and Extra Usage/credits
+- **🎯 Multi-Limit Support** - Claude supports 5-hour, 7-day, and Extra Usage limits plus weekly per-model usage for any number of models (e.g. Opus, Sonnet, Fable), while Codex supports 5-hour, 7-day, and Extra Usage/credits
 - **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
 - **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
 - **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
@@ -74,8 +74,8 @@ All platforms share the same usage quota, monitored in one place!
   - 简体中文
   - 繁体中文
   - 한국어
-  - Français
-  - Deutsch
+  - Français (contributed by [@mtreize](https://github.com/mtreize))
+  - Deutsch (contributed by [@schaitl](https://github.com/schaitl))
   - More languages coming soon... (Localization PRs are welcome!)
 
 ### 🔧 Convenient Features
@@ -240,6 +240,7 @@ open Usage4Claude.xcodeproj
   - ⌘R - Manual refresh data
   - ⌘, - Open General Settings
   - ⌘⇧A - Open Authentication Settings
+  - ⌘U - Check for updates
   - ⌘Q - Quit app
 - **Update Alerts** - When a new version is available, the menu bar icon shows a badge and menu items display rainbow text
 - **Check Updates** - Menu → Check for Updates. New versions download, verify (EdDSA signature), and install in-app — no manual re-download needed (powered by [Sparkle](https://sparkle-project.org))
@@ -566,7 +567,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 You are free to use, copy, modify, merge, publish, distribute, sublicense, 
 and/or sell copies of the Software.
@@ -578,7 +579,6 @@ and/or sell copies of the Software.
 
 - Thanks to Claude/Codex - Most code written by AI
 - Thanks to all contributors and users for their support
-- Thanks to [@mtreize](https://github.com/mtreize) for the French localization and [@schaitl](https://github.com/schaitl) for the German localization
 - Icon design inspired by Claude/Codex official branding
 
 ---

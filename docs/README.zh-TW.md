@@ -28,7 +28,7 @@
 ### 🎯 核心功能
 
 - **📊 即時監控** - 在選單列即時顯示 Claude 訂閱（Free/Pro/Team/Max）的使用配額，並可選監控 Codex 用量
-- **🎯 多限制支援** - Claude 支援最多5種限制（5小時/7天/額外用量/7天Opus/7天Sonnet），Codex 支援 5小時、7天與額外用量/credits
+- **🎯 多限制支援** - Claude 支援 5小時、7天與額外用量限制，並支援任意數量模型的每週用量（如 Opus、Sonnet、Fable），Codex 支援 5小時、7天與額外用量/credits
 - **🎨 智慧顯示模式** - 自動檢測並顯示所有有數據的限制類型
 - **⚙️ 自訂顯示** - 手動選擇要顯示的限制類型，支援任意組合
 - **🎨 智慧色彩** - 根據使用率自動變色提醒，不同限制類型擁有各自的色彩方案
@@ -74,8 +74,8 @@
   - 简体中文
   - 繁體中文
   - 한국어
-  - Français
-  - Deutsch
+  - Français（由 [@mtreize](https://github.com/mtreize) 貢獻）
+  - Deutsch（由 [@schaitl](https://github.com/schaitl) 貢獻）
   - 更多語言適配中……（歡迎提交本地化 PR！）
 
 ### 🔧 便捷功能
@@ -238,6 +238,7 @@ open Usage4Claude.xcodeproj
   - ⌘R - 手動重新整理資料
   - ⌘, - 開啟一般設定
   - ⌘⇧A - 開啟認證設定
+  - ⌘U - 檢查更新
   - ⌘Q - 結束應用程式
 - **更新提醒** - 有新版本時選單列圖示顯示徽章，選單項目顯示彩虹文字
 - **檢查更新** - 選單 → 檢查更新
@@ -564,7 +565,7 @@ A: 在設定 → 一般設定中可以開關 Claude 用量通知功能：
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 您可以自由地使用、複製、修改、合併、發布、分發、再授權和/或販售本軟體的副本。
 ```
@@ -575,7 +576,6 @@ Copyright (c) 2025 f-is-h
 
 - 感謝 Claude/Codex 大部分程式碼均由 AI 撰寫
 - 感謝所有貢獻者和使用者的支持
-- 感謝 [@mtreize](https://github.com/mtreize) 貢獻法語本地化、[@schaitl](https://github.com/schaitl) 貢獻德語本地化
 - 圖示設計靈感來自 Claude/Codex 官方品牌
 
 ---

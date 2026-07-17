@@ -28,7 +28,7 @@
 ### 🎯 Kernfunktionen
 
 - **📊 Echtzeit-Überwachung** – Zeigt das Nutzungskontingent deines Claude-Abonnements (Free/Pro/Team/Max) live in der Menüleiste an, optional auch die Codex-Nutzung
-- **🎯 Mehrere Limits** – Claude unterstützt bis zu 5 Limits (5 Stunden / 7 Tage / Zusätzliche Nutzung / 7 Tage Opus / 7 Tage Sonnet), Codex unterstützt 5-Stunden-, 7-Tage- und Zusätzliche-Nutzung/Credits
+- **🎯 Mehrere Limits** – Claude unterstützt die Limits 5 Stunden / 7 Tage / Zusätzliche Nutzung sowie die wöchentliche Nutzung pro Modell für beliebig viele Modelle (z. B. Opus, Sonnet, Fable), Codex unterstützt 5-Stunden-, 7-Tage- und Zusätzliche-Nutzung/Credits
 - **🎨 Intelligenter Anzeigemodus** – Erkennt und zeigt automatisch alle Limit-Typen mit vorhandenen Daten an
 - **⚙️ Benutzerdefinierte Anzeige** – Wähle manuell aus, welche Limit-Typen angezeigt werden, in beliebiger Kombination
 - **🎨 Intelligente Farben** – Warnt durch automatischen Farbwechsel je nach Auslastung; jeder Limit-Typ hat sein eigenes Farbschema
@@ -74,8 +74,8 @@ Alle Plattformen teilen sich dasselbe Nutzungskontingent – überwache es an ei
   - 简体中文
   - 繁体中文
   - 한국어
-  - Français
-  - Deutsch
+  - Français (beigetragen von [@mtreize](https://github.com/mtreize))
+  - Deutsch (beigetragen von [@schaitl](https://github.com/schaitl))
   - Weitere Sprachen in Arbeit … (Lokalisierungs-PRs sind willkommen!)
 
 ### 🔧 Praktische Funktionen
@@ -240,6 +240,7 @@ open Usage4Claude.xcodeproj
   - ⌘R – Daten manuell aktualisieren
   - ⌘, – Allgemeine Einstellungen öffnen
   - ⌘⇧A – Anmeldeeinstellungen öffnen
+  - ⌘U – Auf Updates prüfen
   - ⌘Q – App beenden
 - **Update-Hinweis** – Bei einer neuen Version zeigt das Menüleisten-Symbol ein Badge und der Menüpunkt einen Regenbogen-Text
 - **Auf Updates prüfen** – Menü → Auf Updates prüfen
@@ -485,15 +486,15 @@ Dieses Projekt basiert auf einem modernen, nativen macOS-Technologie-Stack:
     - Weitere Sprachlokalisierungen
 
 ### Langfristige Vision
-3. **Weitere Anzeigeformen**
+2. **Weitere Anzeigeformen**
    - Desktop-Widget
    - Nutzungsanzeige über ein Browser-Plugin-Symbol
 
-4. **Datenanalyse**
+3. **Datenanalyse**
    - Verlauf der Nutzung
    - Trenddiagramme
 
-5. **Plattformübergreifende Unterstützung**
+4. **Plattformübergreifende Unterstützung**
    - iOS / iPadOS-Version
    - Apple-Watch-Version
    - Windows-Version
@@ -566,7 +567,7 @@ Dieses Projekt steht unter der MIT-Lizenz – siehe die Datei [LICENSE](../LICEN
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 Es ist gestattet, diese Software frei zu verwenden, zu kopieren, zu ändern,
 zusammenzuführen, zu veröffentlichen, zu verbreiten, unterzulizenzieren
@@ -579,7 +580,6 @@ und/oder Kopien davon zu verkaufen.
 
 - Dank an Claude/Codex – der Großteil des Codes wurde von KI geschrieben
 - Dank an alle Mitwirkenden und Nutzer für ihre Unterstützung
-- Dank an [@mtreize](https://github.com/mtreize) für die französische Lokalisierung und an [@schaitl](https://github.com/schaitl) für die deutsche Lokalisierung
 - Die Gestaltung der Symbole ist von den offiziellen Marken von Claude/Codex inspiriert
 
 ---
