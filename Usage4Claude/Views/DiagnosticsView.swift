@@ -104,6 +104,7 @@ private struct ProviderResultCard: View {
         switch result.providerType {
         case .claude: return "c.circle.fill"
         case .codex: return "sparkle"
+        case .grok: return "sparkles"
         }
     }
 

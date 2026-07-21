@@ -41,6 +41,7 @@ class MenuBarIconRenderer {
     func createIcon(
         usageData: UsageData?,
         codexUsageData: CodexUsageData? = nil,
+        grokUsageData: GrokUsageData? = nil,
         hasUpdate: Bool,
         button: NSStatusBarButton?
     ) -> NSImage {
@@ -56,18 +57,62 @@ class MenuBarIconRenderer {
 
         var icon: NSImage
 
-        if let codex = codexUsageData {
-            // 有 Codex 数据路径
-            let allTypes = settings.getActiveDisplayTypes(usageData: usageData, codexUsageData: codex, forMenuBar: true)
-            let codexTypes = allTypes.filter { $0.provider == .codex }
+        // Prefer multi-provider composition when any non-Claude provider is present
+        if codexUsageData != nil || grokUsageData != nil {
+            let allTypes = settings.getActiveDisplayTypes(
+                usageData: usageData,
+                codexUsageData: codexUsageData,
+                grokUsageData: grokUsageData,
+                forMenuBar: true
+            )
+            var icons: [NSImage] = []
 
-            if settings.isMultiProviderActive, let data = usageData {
-                // 双 Provider 模式
+            if let data = usageData {
                 let claudeTypes = allTypes.filter { $0.provider == .claude }
-                icon = createMultiProviderIcon(data: data, codex: codex, claudeTypes: claudeTypes, codexTypes: codexTypes, isMonochrome: isMonochrome, button: button)
+                let claudeIcons = claudeTypes.compactMap {
+                    createIconForType($0, data: data, isMonochrome: isMonochrome, button: button)
+                }
+                if !claudeIcons.isEmpty {
+                    if settings.iconDisplayMode == .both || settings.iconDisplayMode == .iconOnly {
+                        let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
+                        if let copy = ImageHelper.createSquareIcon(named: iconName, size: providerBrandIconSize, isTemplate: isMonochrome) {
+                            icons.append(copy)
+                        }
+                    }
+                    if settings.iconDisplayMode != .iconOnly {
+                        icons.append(contentsOf: claudeIcons)
+                    }
+                }
+            }
+
+            if let codex = codexUsageData {
+                let codexTypes = allTypes.filter { $0.provider == .codex }
+                let codexIcons = buildCodexIcons(codex: codex, types: codexTypes, isMonochrome: isMonochrome, button: button)
+                if !codexIcons.isEmpty {
+                    if !icons.isEmpty, settings.iconDisplayMode == .percentageOnly {
+                        icons.append(createMenuBarDividerIcon(isMonochrome: isMonochrome))
+                    }
+                    icons.append(contentsOf: codexIcons)
+                }
+            }
+
+            if let grok = grokUsageData {
+                let grokTypes = allTypes.filter { $0.provider == .grok }
+                let grokIcons = buildGrokIcons(grok: grok, types: grokTypes, isMonochrome: isMonochrome, button: button)
+                if !grokIcons.isEmpty {
+                    if !icons.isEmpty, settings.iconDisplayMode == .percentageOnly {
+                        icons.append(createMenuBarDividerIcon(isMonochrome: isMonochrome))
+                    }
+                    icons.append(contentsOf: grokIcons)
+                }
+            }
+
+            if icons.isEmpty {
+                icon = createSimpleCircleIcon()
+            } else if icons.count == 1 {
+                icon = icons[0]
             } else {
-                // Codex-only（无 Claude 账号）或降级路径
-                icon = createCodexOnlyIcon(codex: codex, codexTypes: codexTypes, isMonochrome: isMonochrome, button: button)
+                icon = combineIcons(icons)
             }
         } else {
             // Claude-only 路径（原有逻辑）
@@ -227,6 +272,26 @@ class MenuBarIconRenderer {
         case .codex:
             let iconName = isMonochrome ? "CodexIconReverse" : "CodexIcon"
             return ImageHelper.createSquareIcon(named: iconName, size: size, isTemplate: isMonochrome, sourceInset: isMonochrome ? 0 : 2)
+        case .grok:
+            // No asset yet — synthesize a simple SF-symbol-like circle badge via template text
+            let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+                let color: NSColor = isMonochrome ? .labelColor : NSColor(red: 100/255, green: 116/255, blue: 139/255, alpha: 1)
+                color.setStroke()
+                let inset = rect.insetBy(dx: 1.5, dy: 1.5)
+                let path = NSBezierPath(ovalIn: inset)
+                path.lineWidth = 1.5
+                path.stroke()
+                let attrs: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.systemFont(ofSize: size * 0.45, weight: .bold),
+                    .foregroundColor: color
+                ]
+                let str = NSString(string: "G")
+                let s = str.size(withAttributes: attrs)
+                str.draw(at: NSPoint(x: rect.midX - s.width/2, y: rect.midY - s.height/2), withAttributes: attrs)
+                return true
+            }
+            image.isTemplate = isMonochrome
+            return image
         }
     }
 
@@ -577,9 +642,9 @@ class MenuBarIconRenderer {
             guard let percentage = percentage else { return nil }
             return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
-        case .codexPrimary, .codexSecondary, .codexExtraUsage:
-            // Codex 数据在 Phase 4 通过 createCodexIcon 独立渲染
-            // createIconForType 仅处理 Claude UsageData，此处返回 nil
+        case .codexPrimary, .codexSecondary, .codexExtraUsage,
+             .grokWeekly, .grokMonthly, .grokCredits:
+            // Codex / Grok data rendered via dedicated icon builders
             return nil
         }
     }
@@ -612,8 +677,41 @@ class MenuBarIconRenderer {
             let color = UsageColorScheme.codexExtraUsageColorAdaptive(percentage, for: button)
             return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
 
+        case .grokWeekly:
+            if isMonochrome {
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
+            }
+            let color = UsageColorScheme.grokWeeklyColorAdaptive(percentage, for: button)
+            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), colorOverride: color, button: button, removeBackground: removeBackground)
+
+        case .grokMonthly:
+            if isMonochrome {
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
+            }
+            let color = UsageColorScheme.grokMonthlyColorAdaptive(percentage, for: button)
+            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
+
+        case .grokCredits:
+            let color = UsageColorScheme.grokCreditsColorAdaptive(percentage, for: button)
+            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
+
         default:
             return nil
+        }
+    }
+
+    /// Build Grok menu-bar icons for active Grok limit types
+    func buildGrokIcons(grok: GrokUsageData, types: [LimitType], isMonochrome: Bool, button: NSStatusBarButton?) -> [NSImage] {
+        types.compactMap { type -> NSImage? in
+            let percentage: Double?
+            switch type {
+            case .grokWeekly: percentage = grok.weekly?.percentage
+            case .grokMonthly: percentage = grok.monthly?.percentage
+            case .grokCredits: percentage = grok.credits?.percentage
+            default: percentage = nil
+            }
+            guard let percentage else { return nil }
+            return createCodexIcon(type: type, percentage: percentage, isMonochrome: isMonochrome, button: button)
         }
     }
 

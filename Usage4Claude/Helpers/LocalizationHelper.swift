@@ -52,6 +52,16 @@ enum L {
         static var codexAccounts: String { localized("account.codex_accounts") }
         static var addCodexAccount: String { localized("account.add_codex_account") }
         static var codexCurrentAccount: String { localized("account.codex_current_account") }
+        static var grokAccounts: String { localized("account.grok_accounts") }
+        static var grokCurrentAccount: String { localized("account.grok_current_account") }
+        static var importGrokAuth: String { localized("account.import_grok_auth") }
+        static var importGrokAuthHelp: String { localized("account.import_grok_auth_help") }
+        static var grokDeviceLogin: String { localized("account.grok_device_login") }
+        static var grokDeviceLoginHelp: String { localized("account.grok_device_login_help") }
+        static var grokDeviceCodeHint: String { localized("account.grok_device_code_hint") }
+        static var grokOpenBrowser: String { localized("account.grok_open_browser") }
+        static var grokDevicePreparing: String { localized("account.grok_device_preparing") }
+        static var grokImportSuccess: String { localized("account.grok_import_success") }
     }
     
     // MARK: - Usage Detail View
@@ -76,6 +86,7 @@ enum L {
         static var runDiagnostic: String { localized("usage.run_diagnostic") }
         static var codexTitle: String { localized("usage.codex_title") }
         static var codexRelogin: String { localized("usage.codex_relogin") }
+        static var grokTitle: String { localized("usage.grok_title") }
     }
     
     // MARK: - Settings Tabs
@@ -247,6 +258,9 @@ enum L {
         static var codexPrimary: String { localized("codex_primary_limit") }
         static var codexSecondary: String { localized("codex_secondary_limit") }
         static var codexExtraUsage: String { localized("codex_extra_usage") }
+        static var grokWeekly: String { localized("grok_weekly_limit") }
+        static var grokMonthly: String { localized("grok_monthly_limit") }
+        static var grokCredits: String { localized("grok_credits") }
     }
 
     // MARK: - Detail Rows
@@ -387,6 +401,9 @@ enum L {
         static var codexPrimary: String { localized("codex_primary_limit") }
         static var codexSecondary: String { localized("codex_secondary_limit") }
         static var codexExtraUsage: String { localized("codex_extra_usage") }
+        static var grokWeekly: String { localized("grok_weekly_limit") }
+        static var grokMonthly: String { localized("grok_monthly_limit") }
+        static var grokCredits: String { localized("grok_credits") }
     }
 
     // MARK: - Display Options (v2.0.0)

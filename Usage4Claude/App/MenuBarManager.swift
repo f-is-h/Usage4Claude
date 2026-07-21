@@ -61,12 +61,16 @@ class MenuBarManager: ObservableObject {
     @Published var usageData: UsageData?
     /// Codex 用量数据（从 dataManager 同步）
     @Published var codexUsageData: CodexUsageData?
+    /// Grok 用量数据（从 dataManager 同步）
+    @Published var grokUsageData: GrokUsageData?
     /// 加载状态（从 dataManager 同步）
     @Published var isLoading = false
     /// 错误消息（从 dataManager 同步）
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude）
     @Published var codexErrorMessage: String?
+    /// Grok 错误消息
+    @Published var grokErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Published var codexNeedsRelogin = false
     /// 是否有可用更新（由 Sparkle 的 SPUUpdaterDelegate 回调驱动）
@@ -112,6 +116,13 @@ class MenuBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        dataManager.$grokUsageData
+            .sink { [weak self] data in
+                self?.grokUsageData = data
+                self?.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
         dataManager.$isLoading
             .assign(to: &$isLoading)
 
@@ -120,6 +131,9 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexErrorMessage
             .assign(to: &$codexErrorMessage)
+
+        dataManager.$grokErrorMessage
+            .assign(to: &$grokErrorMessage)
 
         dataManager.$codexNeedsRelogin
             .assign(to: &$codexNeedsRelogin)
@@ -178,6 +192,8 @@ class MenuBarManager: ObservableObject {
             dataManager.handleClaudeOnlyRefresh()
         case .refreshCodex:
             dataManager.handleCodexOnlyRefresh()
+        case .refreshGrok:
+            dataManager.handleGrokOnlyRefresh()
         case .generalSettings:
             closePopover()
             openSettingsWindow(tab: 0)
@@ -330,6 +346,10 @@ class MenuBarManager: ObservableObject {
                 get: { self.codexUsageData },
                 set: { self.codexUsageData = $0 }
             ),
+            grokUsageData: Binding(
+                get: { self.grokUsageData },
+                set: { self.grokUsageData = $0 }
+            ),
             errorMessage: Binding(
                 get: { self.errorMessage },
                 set: { self.errorMessage = $0 }
@@ -337,6 +357,10 @@ class MenuBarManager: ObservableObject {
             codexErrorMessage: Binding(
                 get: { self.codexErrorMessage },
                 set: { self.codexErrorMessage = $0 }
+            ),
+            grokErrorMessage: Binding(
+                get: { self.grokErrorMessage },
+                set: { self.grokErrorMessage = $0 }
             ),
             codexNeedsRelogin: Binding(
                 get: { self.codexNeedsRelogin },
@@ -573,7 +597,13 @@ class MenuBarManager: ObservableObject {
 
     /// 更新菜单栏图标
     private func updateMenuBarIcon() {
-        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
+        ui.updateMenuBarIcon(
+            usageData: usageData,
+            codexUsageData: codexUsageData,
+            grokUsageData: grokUsageData,
+            hasUpdate: hasAvailableUpdate,
+            shouldShowBadge: shouldShowUpdateBadge
+        )
     }
     
     // MARK: - Cleanup

@@ -145,6 +145,7 @@ struct DiagnosticReport: Codable {
         switch result.providerType {
         case .claude: title = "## Claude Diagnostic"
         case .codex: title = "## Codex (ChatGPT) Diagnostic"
+        case .grok: title = "## Grok Diagnostic"
         }
 
         var section = "\n\(title)\n\n"

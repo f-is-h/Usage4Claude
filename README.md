@@ -13,9 +13,9 @@
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
 [![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
 
-**Track your Claude (and Codex) subscription quota — beautifully, in your menu bar.**
+**Track your Claude, Codex, and Grok subscription quota — beautifully, in your menu bar.**
 
-✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
+✨ **Monitors Claude platforms (Web • Claude Code • Desktop • Mobile • Cowork) plus Codex and Grok Build** ✨
 
 [Features](#-features) • [Installation](#-installation) • [User Guide](#-user-guide) • [FAQ](#-faq) • [Support](#-support)
 
@@ -27,15 +27,16 @@
 
 ### 🎯 Core Features
 
-- **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex monitoring
-- **🎯 Multi-Limit Support** - Claude supports 5-hour, 7-day, and Extra Usage limits plus weekly per-model usage for any number of models (e.g. Opus, Sonnet, Fable), while Codex supports 5-hour, 7-day, and Extra Usage/credits
+- **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex and Grok monitoring
+- **🎯 Multi-Limit Support** - Claude supports 5-hour, 7-day, and Extra Usage limits plus weekly per-model usage for any number of models (e.g. Opus, Sonnet, Fable); Codex supports 5-hour, 7-day, and Extra Usage/credits; Grok supports weekly, monthly, and credits
 - **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
 - **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
 - **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
 - **🔔 Usage Notifications** - Warning notification at 90% usage, reset notification when quota resets
-- **👥 Multi-Account Management** - Support multiple Claude accounts / multiple organizations per account, plus independent Codex account management and quick switching
+- **👥 Multi-Account Management** - Support multiple Claude accounts / multiple organizations per account, plus independent Codex and Grok account management and quick switching
 - **🧩 Codex Support** - Optional Codex quota monitoring; use Codex alone or show it alongside Claude in a dual-column view (add a Codex account in settings to enable)
-- **🌐 Built-in Browser Login** - Claude login automatically extracts Session Key; Codex uses built-in browser login for ChatGPT authentication
+- **⚡ Grok Support** - Optional Grok Build / SuperGrok monitoring (weekly + monthly + credits). Import `~/.grok/auth.json` or sign in with device-code OAuth
+- **🌐 Built-in Browser Login** - Claude login automatically extracts Session Key; Codex uses built-in browser login for ChatGPT authentication; Grok supports device-code login
 - **🎨 Appearance Settings** - Support system default / light / dark appearance modes
 - **🕐 Time Format** - Support system default / 12-hour / 24-hour format
 - **⏰ Precise Timing** - Quota reset time displayed with minute precision
@@ -60,6 +61,17 @@ All platforms share the same usage quota, monitored in one place!
 - Supports Codex 5-hour, 7-day, and Extra Usage/credits information
 - Add a Codex account by logging in to ChatGPT with the built-in browser
 - Claude-only users need no extra setup; the existing experience stays unchanged until a Codex account is added
+
+### ⚡ Grok Support
+
+- Monitor Grok Build / SuperGrok weekly usage, monthly included allowance, and credits
+- Data source: Grok billing API (`cli-chat-proxy.grok.com/v1/billing`), same path used by the official Grok CLI `/usage`
+- Add a Grok account in **Settings → Authentication**:
+  - **Import Grok Auth** — pick Grok CLI’s `~/.grok/auth.json` (recommended if you already use `grok login`)
+  - **Grok Device Login** — browser device-code flow via `auth.x.ai`
+- Works alone or side-by-side with Claude and/or Codex
+- Existing Claude/Codex users need no extra setup until a Grok account is added
+
 
 ### 🎨 Personalization
 
@@ -160,7 +172,7 @@ Codex current colors:
 ### Settings
 
 **General** - Display options, menu bar theme, notification settings, appearance (system/light/dark), refresh mode, time format, language options, launch at login
-**Authentication** - Claude/Codex account management (add/delete/switch/alias editing), built-in browser login, Claude manual input, connection diagnostics
+**Authentication** - Claude/Codex/Grok account management (add/delete/switch/alias editing), Claude browser or manual input, Codex browser login, Grok auth.json import or device-code login, connection diagnostics
 **About** - Version info and related links
 
 ### Welcome Screen
@@ -593,7 +605,7 @@ and/or sell copies of the Software.
 
 ## ⚖️ Disclaimer
 
-This project is an independent third-party tool with no official affiliation with Anthropic, Claude AI, OpenAI, or Codex. Please comply with the relevant Terms of Service when using this software.
+This project is an independent third-party tool with no official affiliation with Anthropic, Claude AI, OpenAI, Codex, xAI, or Grok. Please comply with the relevant Terms of Service when using this software.
 
 ---
 

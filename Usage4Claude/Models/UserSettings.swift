@@ -135,6 +135,12 @@ enum LimitType: String, CaseIterable, Codable {
     case codexSecondary = "codex_secondary"
     /// Codex Extra Usage / credits
     case codexExtraUsage = "codex_extra_usage"
+    /// Grok weekly subscription window
+    case grokWeekly = "grok_weekly"
+    /// Grok monthly included allowance
+    case grokMonthly = "grok_monthly"
+    /// Grok prepaid / on-demand credits
+    case grokCredits = "grok_credits"
 
     /// 所属 Provider
     var provider: ProviderType {
@@ -143,12 +149,16 @@ enum LimitType: String, CaseIterable, Codable {
             return .claude
         case .codexPrimary, .codexSecondary, .codexExtraUsage:
             return .codex
+        case .grokWeekly, .grokMonthly, .grokCredits:
+            return .grok
         }
     }
 
     /// 是否为圆形图标（5小时、7天和 Codex 两项）
     var isCircular: Bool {
-        return self == .fiveHour || self == .sevenDay || self == .codexPrimary || self == .codexSecondary
+        return self == .fiveHour || self == .sevenDay
+            || self == .codexPrimary || self == .codexSecondary
+            || self == .grokWeekly || self == .grokMonthly
     }
 
     /// 是否为矩形图标（Opus和Sonnet）
@@ -158,12 +168,12 @@ enum LimitType: String, CaseIterable, Codable {
 
     /// 是否为六边形图标（Extra Usage）
     var isHexagonal: Bool {
-        return self == .extraUsage || self == .codexExtraUsage
+        return self == .extraUsage || self == .codexExtraUsage || self == .grokCredits
     }
 
     /// 是否使用虚线样式（7天类型）
     var usesDashedStyle: Bool {
-        return self == .sevenDay || self == .codexSecondary
+        return self == .sevenDay || self == .codexSecondary || self == .grokMonthly
     }
 
     /// 显示名称
@@ -185,6 +195,12 @@ enum LimitType: String, CaseIterable, Codable {
             return L.LimitTypes.codexSecondary
         case .codexExtraUsage:
             return L.LimitTypes.codexExtraUsage
+        case .grokWeekly:
+            return L.LimitTypes.grokWeekly
+        case .grokMonthly:
+            return L.LimitTypes.grokMonthly
+        case .grokCredits:
+            return L.LimitTypes.grokCredits
         }
     }
 }
@@ -376,19 +392,47 @@ class UserSettings: ObservableObject {
     var codexSessionToken: String { accountStore.codexSessionToken }
     var hasValidCodexCredentials: Bool { accountStore.hasValidCodexCredentials }
 
+    // MARK: - Grok 账户支持
+
+    var grokAccounts: [Account] { accountStore.grokAccounts }
+    var currentGrokAccountId: UUID? { accountStore.currentGrokAccountId }
+    var currentGrokAccount: Account? { accountStore.currentGrokAccount }
+    var grokRefreshToken: String { accountStore.grokRefreshToken }
+    var hasValidGrokCredentials: Bool { accountStore.hasValidGrokCredentials }
+
+    /// Number of active providers with credentials (Claude / Codex / Grok)
+    var activeProviderCount: Int {
+        #if DEBUG
+        if debugModeEnabled {
+            if displayMode == .custom {
+                var count = 0
+                if customDisplayTypes.contains(where: { $0.provider == .claude }) { count += 1 }
+                if customDisplayTypes.contains(where: { $0.provider == .codex }) { count += 1 }
+                if customDisplayTypes.contains(where: { $0.provider == .grok }) { count += 1 }
+                return max(count, 1)
+            }
+            return 3
+        }
+        #endif
+        var count = 0
+        if !accounts.isEmpty { count += 1 }
+        if !codexAccounts.isEmpty { count += 1 }
+        if !grokAccounts.isEmpty { count += 1 }
+        return count
+    }
+
     /// 是否同时存在 Claude 和 Codex 账户（决定 UI 进入 multi-provider 形态）
     var isMultiProviderActive: Bool {
         #if DEBUG
         if debugModeEnabled {
             if displayMode == .custom {
-                let hasClaudeDisplayTypes = customDisplayTypes.contains { $0.provider == .claude }
-                let hasCodexDisplayTypes = customDisplayTypes.contains { $0.provider == .codex }
-                return hasClaudeDisplayTypes && hasCodexDisplayTypes
+                let providers = Set(customDisplayTypes.map(\.provider))
+                return providers.count >= 2
             }
             return true
         }
         #endif
-        return !accounts.isEmpty && !codexAccounts.isEmpty
+        return activeProviderCount >= 2
     }
 
     // MARK: - 非敏感设置（存储在UserDefaults中）
@@ -579,6 +623,22 @@ class UserSettings: ObservableObject {
     @Published var debugCodexExtraUsagePercentage: Double {
         didSet {
             defaults.set(debugCodexExtraUsagePercentage, forKey: "debugCodexExtraUsagePercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// Debug: Grok weekly usage percent (0-100)
+    @Published var debugGrokWeeklyPercentage: Double {
+        didSet {
+            defaults.set(debugGrokWeeklyPercentage, forKey: "debugGrokWeeklyPercentage")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// Debug: Grok monthly usage percent (0-100)
+    @Published var debugGrokMonthlyPercentage: Double {
+        didSet {
+            defaults.set(debugGrokMonthlyPercentage, forKey: "debugGrokMonthlyPercentage")
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -804,6 +864,8 @@ class UserSettings: ObservableObject {
         self.debugCodexPrimaryPercentage = defaults.object(forKey: "debugCodexPrimaryPercentage") as? Double ?? 42.0
         self.debugCodexSecondaryPercentage = defaults.object(forKey: "debugCodexSecondaryPercentage") as? Double ?? 58.0
         self.debugCodexExtraUsagePercentage = defaults.object(forKey: "debugCodexExtraUsagePercentage") as? Double ?? 35.0
+        self.debugGrokWeeklyPercentage = defaults.object(forKey: "debugGrokWeeklyPercentage") as? Double ?? 28.0
+        self.debugGrokMonthlyPercentage = defaults.object(forKey: "debugGrokMonthlyPercentage") as? Double ?? 53.0
         self.debugExtraUsageEnabled = defaults.object(forKey: "debugExtraUsageEnabled") as? Bool ?? true
         self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 3050.0
         self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Int ?? 5000
@@ -846,7 +908,7 @@ class UserSettings: ObservableObject {
 
     /// 检查任一 Provider 的认证信息是否已配置
     var hasAnyValidCredentials: Bool {
-        return hasValidCredentials || hasValidCodexCredentials
+        return hasValidCredentials || hasValidCodexCredentials || hasValidGrokCredentials
     }
 
     /// 验证 Organization ID 格式
@@ -1021,6 +1083,41 @@ class UserSettings: ObservableObject {
         accountStore.silentlyUpdateCurrentCodexSessionToken(token)
     }
 
+    // MARK: - Grok Account Management
+
+    @discardableResult
+    func addGrokAccount(_ account: Account) -> Account {
+        let (stored, wasFirst) = accountStore.addGrokAccount(account)
+        if wasFirst {
+            ensureDefaultGrokDisplayTypesForCustomMode()
+        }
+        return stored
+    }
+
+    func removeGrokAccount(_ account: Account) {
+        accountStore.removeGrokAccount(account)
+    }
+
+    func switchToGrokAccount(_ account: Account) {
+        accountStore.switchToGrokAccount(account)
+    }
+
+    func updateGrokAccount(_ account: Account, alias: String?) {
+        accountStore.updateGrokAccount(account, alias: alias)
+    }
+
+    func silentlyUpdateCurrentGrokRefreshToken(_ token: String) {
+        accountStore.silentlyUpdateCurrentGrokRefreshToken(token)
+    }
+
+    private func ensureDefaultGrokDisplayTypesForCustomMode() {
+        guard displayMode == .custom else { return }
+        let grokTypes: Set<LimitType> = [.grokWeekly, .grokMonthly, .grokCredits]
+        guard customDisplayTypes.isDisjoint(with: grokTypes) else { return }
+        customDisplayTypes.formUnion(grokTypes)
+        Logger.settings.notice("Added default Grok display types for custom mode")
+    }
+
     /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
     /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
     func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
@@ -1049,10 +1146,16 @@ class UserSettings: ObservableObject {
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据（可选，有 Codex 账号时传入）
+    ///   - grokUsageData: Grok 用量数据（可选）
     ///   - forMenuBar: 是否用于菜单栏渲染。当 customDisplayMenuBarOnly 开启时，
     ///                 仅菜单栏走 custom 分支，Popover 自动 fallback 到 smart 分支
     /// - Returns: 要显示的限制类型数组，按显示顺序排列
-    func getActiveDisplayTypes(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, forMenuBar: Bool = false) -> [LimitType] {
+    func getActiveDisplayTypes(
+        usageData: UsageData?,
+        codexUsageData: CodexUsageData? = nil,
+        grokUsageData: GrokUsageData? = nil,
+        forMenuBar: Bool = false
+    ) -> [LimitType] {
         // 当"仅应用于菜单栏"开启且当前是为 Popover 渲染时，强制走智能分支
         let effectiveMode: DisplayMode = {
             if displayMode == .custom && customDisplayMenuBarOnly && !forMenuBar {
@@ -1096,20 +1199,37 @@ class UserSettings: ObservableObject {
                 }
             }
 
+            if let grok = grokUsageData {
+                if grok.weekly != nil {
+                    types.append(.grokWeekly)
+                }
+                if grok.monthly != nil {
+                    types.append(.grokMonthly)
+                }
+                if grok.credits?.enabled == true {
+                    types.append(.grokCredits)
+                }
+            }
+
             return types
 
         case .custom:
             // 自定义模式：按用户选择排序，无论数据是否存在都显示
-            // Codex 类型仅在有 Codex 账号时纳入候选；Debug mock 模式例外
+            // Codex / Grok 类型仅在有对应账号时纳入候选；Debug mock 模式例外
             var orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
             var shouldIncludeCodexTypes = !codexAccounts.isEmpty
+            var shouldIncludeGrokTypes = !grokAccounts.isEmpty
             #if DEBUG
             if debugModeEnabled {
                 shouldIncludeCodexTypes = true
+                shouldIncludeGrokTypes = true
             }
             #endif
             if shouldIncludeCodexTypes {
                 orderedTypes.append(contentsOf: [.codexPrimary, .codexSecondary, .codexExtraUsage])
+            }
+            if shouldIncludeGrokTypes {
+                orderedTypes.append(contentsOf: [.grokWeekly, .grokMonthly, .grokCredits])
             }
             return orderedTypes.filter { customDisplayTypes.contains($0) }
         }

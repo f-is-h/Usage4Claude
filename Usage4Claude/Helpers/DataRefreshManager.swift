@@ -21,6 +21,8 @@ class DataRefreshManager: ObservableObject {
     private let apiService = ClaudeAPIService()
     /// Codex API 服务实例
     private let codexApiService = CodexAPIService()
+    /// Grok API 服务实例
+    private let grokApiService = GrokAPIService()
     /// 定时器管理器
     private let timerManager = TimerManager()
     /// 用户设置实例
@@ -32,12 +34,16 @@ class DataRefreshManager: ObservableObject {
     @Published var usageData: UsageData?
     /// Codex 用量数据（nil 表示无 Codex 账号或拉取失败）
     @Published var codexUsageData: CodexUsageData?
+    /// Grok 用量数据
+    @Published var grokUsageData: GrokUsageData?
     /// 加载状态
     @Published var isLoading = false
     /// 错误消息
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
     @Published var codexErrorMessage: String?
+    /// Grok 错误消息
+    @Published var grokErrorMessage: String?
     /// 刷新状态管理器
     let refreshState = RefreshState()
 
@@ -47,6 +53,8 @@ class DataRefreshManager: ObservableObject {
     private var lastResetsAt: Date?
     /// Codex 上次的重置时间
     private var lastCodexResetsAt: Date?
+    /// Grok 上次的重置时间
+    private var lastGrokResetsAt: Date?
     /// 上次手动刷新时间
     private var lastManualRefreshTime: Date?
     /// 上次API请求时间
@@ -109,6 +117,28 @@ class DataRefreshManager: ObservableObject {
         #endif
     }
 
+    private var shouldSuppressDebugGrokUsageForDisplayOptions: Bool {
+        #if DEBUG
+        return settings.debugModeEnabled
+            && settings.displayMode == .custom
+            && !settings.customDisplayMenuBarOnly
+            && !settings.customDisplayTypes.contains { $0.provider == .grok }
+        #else
+        return false
+        #endif
+    }
+
+    private var shouldFetchGrokUsage: Bool {
+        #if DEBUG
+        if shouldSuppressDebugGrokUsageForDisplayOptions {
+            return false
+        }
+        return settings.debugModeEnabled || settings.hasValidGrokCredentials
+        #else
+        return settings.hasValidGrokCredentials
+        #endif
+    }
+
     /// 定时器标识符统一定义在 TimerManager.Identifier，避免两处各自为政
     private typealias TimerID = TimerManager.Identifier
 
@@ -120,15 +150,17 @@ class DataRefreshManager: ObservableObject {
 
     // MARK: - Data Fetching
 
-    /// 获取用量数据（Claude + Codex 并发）
+    /// 获取用量数据（Claude + Codex + Grok 并发）
     func fetchUsage() {
         isLoading = true
         errorMessage = nil
         codexErrorMessage = nil
+        grokErrorMessage = nil
         lastAPIFetchTime = Date()
 
         let fetchClaude = shouldFetchClaudeUsage
         let fetchCodex = shouldFetchCodexUsage
+        let fetchGrok = shouldFetchGrokUsage
 
         if !fetchClaude {
             clearClaudeUsageState()
@@ -136,24 +168,29 @@ class DataRefreshManager: ObservableObject {
         if !fetchCodex {
             clearCodexUsageState()
         }
+        if !fetchGrok {
+            clearGrokUsageState()
+        }
 
-        guard fetchClaude || fetchCodex else {
+        guard fetchClaude || fetchCodex || fetchGrok else {
             isLoading = false
             endRefreshAnimationWithMinimumDuration { }
             errorMessage = UsageError.noCredentials.localizedDescription
             return
         }
 
-        // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
-        // （审计报告 4.2：替代 DispatchGroup + 跨线程共享可变结果变量的旧写法）
+        // Claude / Codex / Grok 并发拉取：子任务立即启动，结果在 MainActor 上合并
         let claudeTask: Task<Result<UsageData, Error>, Never>? =
             fetchClaude ? Task { await self.apiService.fetchUsageResult() } : nil
         let codexTask: Task<Result<CodexUsageData, Error>, Never>? =
             fetchCodex ? Task { await self.codexApiService.fetchUsageResult() } : nil
+        let grokTask: Task<Result<GrokUsageData, Error>, Never>? =
+            fetchGrok ? Task { await self.grokApiService.fetchUsageResult() } : nil
 
         Task { @MainActor [weak self] in
             let claudeResult = await claudeTask?.value
             let codexResult = await codexTask?.value
+            let grokResult = await grokTask?.value
 
             guard let self = self else { return }
             self.isLoading = false
@@ -182,6 +219,26 @@ class DataRefreshManager: ObservableObject {
                 }
             } else {
                 self.clearCodexUsageState()
+            }
+
+            if fetchGrok {
+                switch grokResult {
+                case .success(let grok):
+                    if let utilization = self.monitoringUtilization(for: grok) {
+                        monitoringUtilizations[.grok] = utilization
+                    }
+                    self.processGrokSuccess(grok)
+
+                case .failure(let error):
+                    Logger.menuBar.info("Grok request failed: \(error.localizedDescription)")
+                    self.grokErrorMessage = error.localizedDescription
+                    self.clearGrokUsageState(clearError: false)
+
+                case .none:
+                    self.clearGrokUsageState()
+                }
+            } else {
+                self.clearGrokUsageState()
             }
 
             // 处理 Claude 结果
@@ -234,6 +291,14 @@ class DataRefreshManager: ObservableObject {
         cancelCodexResetVerification()
     }
 
+    private func clearGrokUsageState(clearError: Bool = true) {
+        grokUsageData = nil
+        if clearError {
+            grokErrorMessage = nil
+        }
+        lastGrokResetsAt = nil
+    }
+
     private func monitoringUtilization(for codex: CodexUsageData) -> Double? {
         [
             codex.primary?.percentage,
@@ -242,6 +307,56 @@ class DataRefreshManager: ObservableObject {
         ]
         .compactMap { $0 }
         .max()
+    }
+
+    private func monitoringUtilization(for grok: GrokUsageData) -> Double? {
+        [
+            grok.weekly?.percentage,
+            grok.monthly?.percentage,
+            grok.credits?.percentage
+        ]
+        .compactMap { $0 }
+        .max()
+    }
+
+    private func processGrokSuccess(_ data: GrokUsageData) {
+        let previous = grokUsageData
+        grokUsageData = data
+        grokErrorMessage = nil
+        if let utilization = monitoringUtilization(for: data) {
+            settings.updateSmartMonitoringMode(providerUtilizations: [.grok: utilization])
+        }
+        if settings.notificationsEnabled {
+            NotificationManager.shared.checkAndNotify(grokUsageData: data, previousData: previous)
+        }
+        let newResetsAt = data.weekly?.resetsAt ?? data.monthly?.resetsAt
+        lastGrokResetsAt = newResetsAt
+    }
+
+    /// Grok-only refresh
+    func fetchGrokOnly() {
+        guard shouldFetchGrokUsage else {
+            clearGrokUsageState()
+            return
+        }
+        isLoading = true
+        grokErrorMessage = nil
+        lastAPIFetchTime = Date()
+        grokApiService.fetchUsage { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isLoading = false
+                self.endRefreshAnimationWithMinimumDuration { }
+                switch result {
+                case .success(let data):
+                    self.processGrokSuccess(data)
+                case .failure(let error):
+                    self.grokErrorMessage = error.localizedDescription
+                    self.clearGrokUsageState(clearError: false)
+                    Logger.menuBar.info("Grok request failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     /// 开始数据刷新
@@ -451,6 +566,26 @@ class DataRefreshManager: ObservableObject {
         fetchCodexOnly()
     }
 
+    /// Grok-only refresh (ring click)
+    func handleGrokOnlyRefresh() {
+        guard shouldFetchGrokUsage else {
+            clearGrokUsageState()
+            return
+        }
+        let now = Date()
+        if let lastManual = lastManualRefreshTime,
+           now.timeIntervalSince(lastManual) < 10 { return }
+        lastManualRefreshTime = now
+        refreshAnimationStartTime = now
+        refreshState.refreshingProvider = .grok
+        refreshState.isRefreshing = true
+        refreshState.canRefresh = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            self?.refreshState.canRefresh = true
+        }
+        fetchGrokOnly()
+    }
+
     private func fetchClaudeOnly() {
         guard shouldFetchClaudeUsage else {
             clearClaudeUsageState()
@@ -657,9 +792,17 @@ class DataRefreshManager: ObservableObject {
                 fetchCodexOnly()
             }
 
+        case .grok:
+            grokApiService.clearAccessTokenCache()
+            clearGrokUsageState()
+            if shouldFetchGrokUsage {
+                fetchGrokOnly()
+            }
+
         case .none:
             clearClaudeUsageState()
             clearCodexUsageState()
+            clearGrokUsageState()
             NotificationManager.shared.resetAllNotificationStates()
             fetchUsage()
         }

@@ -1,6 +1,6 @@
 # Usage4Claude — Project Overview
 
-A macOS menu bar app that monitors Claude / Codex subscription usage. Swift + SwiftUI + AppKit, targeting macOS 13+.
+A macOS menu bar app that monitors Claude / Codex / Grok subscription usage. Swift + SwiftUI + AppKit, targeting macOS 13+.
 
 ## Build & Test
 
@@ -12,8 +12,9 @@ A macOS menu bar app that monitors Claude / Codex subscription usage. Swift + Sw
 
 - `App/`: entry point, `MenuBarManager` (coordinates UI and data), icon rendering (`MenuBarIconRenderer`/`ShapeIconRenderer`)
 - `Services/`: `ClaudeAPIService` (cookie and OAuth dual paths), `CodexAPIService` (two-step auth),
+  `GrokAPIService` (OIDC refresh_token → access_token → billing API),
   `OAuthTokenCache` (actor: token caching + refresh single-flight), `KeychainManager` (uses UserDefaults in DEBUG!),
-  `*OAuth/` (PKCE + local callback server)
+  `*OAuth/` (PKCE + local callback server; Grok also supports device-code + auth.json import)
 - `Models/`: `UserSettings` is the settings facade; accounts/refresh policy/launch-at-login/appearance have been
   split out into `AccountStore`/`SmartRefreshPolicy`/`LaunchAtLoginManager`/`AppearanceManager`
 - `Helpers/DataRefreshManager.swift`: scheduled refresh, Codex's three-tier token refresh chain, reset verification

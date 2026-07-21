@@ -202,6 +202,22 @@ class KeychainManager {
         storage.delete(key: "accounts_codex")
     }
 
+    // MARK: - Grok 账户列表存储
+
+    @discardableResult
+    func saveGrokAccounts(_ accounts: [Account]) -> Bool {
+        saveAccountsList(accounts, key: "accounts_grok")
+    }
+
+    func loadGrokAccounts() -> [Account]? {
+        loadAccountsList(key: "accounts_grok")
+    }
+
+    @discardableResult
+    func deleteGrokAccounts() -> Bool {
+        storage.delete(key: "accounts_grok")
+    }
+
     // MARK: - 账户列表的 JSON 编解码封装
 
     @discardableResult

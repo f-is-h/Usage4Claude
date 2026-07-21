@@ -20,7 +20,7 @@ struct SetupStepView: View {
 
     /// 判断是否应该禁用某个checkbox
     private func shouldDisableCheckbox(for limitType: LimitType) -> Bool {
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
+        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary, .grokWeekly, .grokMonthly]
 
         // 如果这是最后一个选中的圆形图标，则禁用
         if circularTypes.contains(limitType) {
