@@ -196,11 +196,12 @@ struct ProviderDivider: View {
 
 // MARK: - Unified Limit Row Component
 
-/// 统一的限制行组件（支持所有 Claude 和 Codex 限制类型）
+/// 统一的限制行组件（支持 Claude / Codex / Grok 限制类型）
 struct UnifiedLimitRow: View {
     let type: LimitType
     var data: UsageData? = nil
     var codexData: CodexUsageData? = nil
+    var grokData: GrokUsageData? = nil
     let showRemainingMode: Bool
     /// 溢出模型行覆盖：提供时，行的百分比/标签/重置时间直接取自这个模型条目，
     /// `type` 仅用于决定外观（圆角方/斜切方形状与配色的槽位）。用于 popover 展示
@@ -254,14 +255,18 @@ struct UnifiedLimitRow: View {
             return L.DetailRow.fiveHour
         case .sevenDay, .codexSecondary:
             return L.DetailRow.sevenDay
+        case .grokWeekly:
+            return L.LimitTypes.grokWeekly
+        case .grokMonthly:
+            return L.LimitTypes.grokMonthly
         case .opusWeekly:
             // Claude 5 时代：此槽位可能承载来自 limits 数组的具体模型每周限制（如 Fable）。
             // 有真实模型名则优先展示，否则回退到默认的 “Opus Weekly” 文案。
             return data?.opusModelName ?? L.DetailRow.opusWeekly
         case .sonnetWeekly:
             return data?.sonnetModelName ?? L.DetailRow.sonnetWeekly
-        case .extraUsage, .codexExtraUsage:
-            return L.DetailRow.extraUsage
+        case .extraUsage, .codexExtraUsage, .grokCredits:
+            return type == .grokCredits ? L.LimitTypes.grokCredits : L.DetailRow.extraUsage
         }
     }
 
@@ -283,6 +288,12 @@ struct UnifiedLimitRow: View {
             return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
         case .codexExtraUsage:
             return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)    // #F59E0B
+        case .grokWeekly:
+            return Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0)  // #64748B
+        case .grokMonthly:
+            return Color(red: 244/255.0, green: 114/255.0, blue: 182/255.0)  // #F472B6
+        case .grokCredits:
+            return Color(red: 250/255.0, green: 204/255.0, blue: 21/255.0)   // #FACC15
         }
     }
 
@@ -299,6 +310,9 @@ struct UnifiedLimitRow: View {
         case .codexPrimary:   return codexData?.primary?.percentage
         case .codexSecondary: return codexData?.secondary?.percentage
         case .codexExtraUsage: return codexData?.extraUsage?.percentage
+        case .grokWeekly:     return grokData?.weekly?.percentage
+        case .grokMonthly:    return grokData?.monthly?.percentage
+        case .grokCredits:    return grokData?.credits?.percentage
         }
     }
 
@@ -340,6 +354,23 @@ struct UnifiedLimitRow: View {
         case .codexExtraUsage:
             guard let extra = codexData?.extraUsage else { return "-" }
             return showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount
+
+        case .grokWeekly:
+            guard let limitData = grokData?.weekly?.asUsageLimitData() else { return "-" }
+            return showRemainingMode ? limitData.formattedCompactRemaining : detailCompactResetTime(limitData)
+
+        case .grokMonthly:
+            guard let limitData = grokData?.monthly?.asUsageLimitData() else { return "-" }
+            return showRemainingMode ? limitData.formattedCompactRemainingWithMinutes : limitData.formattedCompactResetDateWithMinutes
+
+        case .grokCredits:
+            if let pct = grokData?.credits?.percentage {
+                return String(format: "%.0f%%", pct)
+            }
+            if let balance = grokData?.credits?.prepaidBalance {
+                return String(format: "$%.2f", balance)
+            }
+            return "-"
         }
     }
 

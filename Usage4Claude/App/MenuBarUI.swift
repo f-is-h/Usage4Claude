@@ -544,14 +544,25 @@ class MenuBarUI {
     ///   - codexUsageData: Codex 用量数据
     ///   - hasUpdate: 是否有可用更新
     ///   - shouldShowBadge: 是否显示更新徽章
-    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
+    func updateMenuBarIcon(
+        usageData: UsageData?,
+        codexUsageData: CodexUsageData? = nil,
+        grokUsageData: GrokUsageData? = nil,
+        hasUpdate: Bool,
+        shouldShowBadge: Bool
+    ) {
         guard let button = statusItem.button else { return }
 
         // 确定是否实际显示徽章
         let showBadge = hasUpdate && shouldShowBadge
 
         // 生成缓存键
-        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: showBadge)
+        let cacheKey = generateCacheKey(
+            usageData: usageData,
+            codexUsageData: codexUsageData,
+            grokUsageData: grokUsageData,
+            hasUpdate: showBadge
+        )
 
         // 尝试从缓存获取
         if let cachedImage = iconCache[cacheKey] {
@@ -563,6 +574,7 @@ class MenuBarUI {
         let icon = iconRenderer.createIcon(
             usageData: usageData,
             codexUsageData: codexUsageData,
+            grokUsageData: grokUsageData,
             hasUpdate: showBadge,
             button: button
         )
@@ -590,7 +602,12 @@ class MenuBarUI {
     ///   - codexUsageData: Codex 用量数据
     ///   - hasUpdate: 是否有更新徽章
     /// - Returns: 缓存键字符串
-    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
+    private func generateCacheKey(
+        usageData: UsageData?,
+        codexUsageData: CodexUsageData? = nil,
+        grokUsageData: GrokUsageData? = nil,
+        hasUpdate: Bool
+    ) -> String {
         let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
             var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)"
@@ -622,6 +639,11 @@ class MenuBarUI {
                     key += "_cxenil"
                 }
             }
+            if let grok = grokUsageData {
+                if let w = grok.weekly { key += "_gkw\(Int(w.percentage))" }
+                if let m = grok.monthly { key += "_gkm\(Int(m.percentage))" }
+                if let c = grok.credits?.percentage { key += "_gkc\(Int(c))" }
+            }
 
             if hasUpdate {
                 key += "_badge"
@@ -652,6 +674,11 @@ class MenuBarUI {
             if let p = codex.primary { key += "_cxp\(Int(p.percentage))" }
             if let s = codex.secondary { key += "_cxs\(Int(s.percentage))" }
             if let e = codex.extraUsage?.percentage { key += "_cxe\(Int(e))" }
+        }
+        if let grok = grokUsageData {
+            if let w = grok.weekly { key += "_gkw\(Int(w.percentage))" }
+            if let m = grok.monthly { key += "_gkm\(Int(m.percentage))" }
+            if let c = grok.credits?.percentage { key += "_gkc\(Int(c))" }
         }
 
         if hasUpdate {

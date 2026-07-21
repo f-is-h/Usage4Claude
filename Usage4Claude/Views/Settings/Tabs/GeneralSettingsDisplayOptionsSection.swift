@@ -114,7 +114,7 @@ struct GeneralSettingsDisplayOptionsSection: View {
 
     /// 判断是否只剩一个圆形图标
     private var hasOnlyOneCircularIcon: Bool {
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
+        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary, .grokWeekly, .grokMonthly]
         let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
         return selectedCircular.count == 1
     }
@@ -135,7 +135,7 @@ struct GeneralSettingsDisplayOptionsSection: View {
         }
         #endif
 
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
+        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary, .grokWeekly, .grokMonthly]
 
         // 如果这是最后一个选中的圆形图标，则禁用
         if circularTypes.contains(limitType) {
@@ -226,6 +226,9 @@ struct LimitTypeCheckbox: View {
         case .codexPrimary:  return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
         case .codexSecondary: return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)
         case .codexExtraUsage: return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
+        case .grokWeekly: return Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0)
+        case .grokMonthly: return Color(red: 244/255.0, green: 114/255.0, blue: 182/255.0)
+        case .grokCredits: return Color(red: 250/255.0, green: 204/255.0, blue: 21/255.0)
         }
     }
 }

@@ -133,6 +133,31 @@ final class NotificationManager: NSObject {
         )
     }
 
+    /// Check Grok usage thresholds and fire notifications when needed
+    func checkAndNotify(grokUsageData: GrokUsageData, previousData: GrokUsageData?) {
+        checkLimit(
+            type: .grokWeekly,
+            current: grokUsageData.weekly?.percentage,
+            previous: previousData?.weekly?.percentage,
+            currentResetsAt: grokUsageData.weekly?.resetsAt,
+            previousResetsAt: previousData?.weekly?.resetsAt
+        )
+        checkLimit(
+            type: .grokMonthly,
+            current: grokUsageData.monthly?.percentage,
+            previous: previousData?.monthly?.percentage,
+            currentResetsAt: grokUsageData.monthly?.resetsAt,
+            previousResetsAt: previousData?.monthly?.resetsAt
+        )
+        checkLimit(
+            type: .grokCredits,
+            current: grokUsageData.credits?.percentage,
+            previous: previousData?.credits?.percentage,
+            currentResetsAt: nil,
+            previousResetsAt: nil
+        )
+    }
+
     // MARK: - Private Methods
 
     /// 检查单个限制类型的用量变化
@@ -147,7 +172,7 @@ final class NotificationManager: NSObject {
     ) {
         let warningKey = notificationKey(for: type)
         // 7天限制额外检查 75% 阈值，其余类型不做早期预警
-        let earlyWarningKey = (type == .sevenDay || type == .codexSecondary)
+        let earlyWarningKey = (type == .sevenDay || type == .codexSecondary || type == .grokMonthly)
             ? notificationKey(for: type, suffix: "75")
             : nil
 
@@ -183,6 +208,8 @@ final class NotificationManager: NSObject {
             accountId = UserSettings.shared.currentAccountId
         case .codex:
             accountId = UserSettings.shared.currentCodexAccountId
+        case .grok:
+            accountId = UserSettings.shared.currentGrokAccountId
         }
         return Self.makeNotificationKey(
             provider: type.provider,

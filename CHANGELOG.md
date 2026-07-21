@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Grok usage monitoring**: Track Grok Build / SuperGrok weekly quota, monthly included allowance, and credits in the menu bar and detail window
+- **Grok authentication**: Import credentials from Grok CLI `~/.grok/auth.json`, or sign in via OIDC device-code flow (`auth.x.ai`)
+- **Multi-provider layout**: Grok can be shown alone or side-by-side with Claude and/or Codex
+- **Grok limit types**: `grok_weekly`, `grok_monthly`, and `grok_credits` with dedicated colors, notifications, and custom display options
+
 ## [3.3.0] - 2026-07-14
 
 ### Added

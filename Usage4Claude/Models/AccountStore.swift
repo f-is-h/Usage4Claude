@@ -12,7 +12,7 @@ import Foundation
 import Combine
 import OSLog
 
-/// 多账户（Claude + Codex）存储、持久化与切换逻辑
+/// 多账户（Claude + Codex + Grok）存储、持久化与切换逻辑
 final class AccountStore: ObservableObject {
 
     private let defaults = UserDefaults.standard
@@ -119,6 +119,47 @@ final class AccountStore: ObservableObject {
         !codexSessionToken.isEmpty
     }
 
+    // MARK: - Grok 账户
+
+    /// Grok 账户列表（独立 Keychain key "accounts_grok"）
+    @Published var grokAccounts: [Account] {
+        didSet {
+            saveGrokAccounts()
+        }
+    }
+
+    /// 当前激活的 Grok 账户 ID
+    @Published var currentGrokAccountId: UUID? {
+        didSet {
+            #if DEBUG
+            let key = "DEBUG_currentGrokAccountId"
+            #else
+            let key = "currentGrokAccountId"
+            #endif
+            if let id = currentGrokAccountId {
+                defaults.set(id.uuidString, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+    }
+
+    /// 当前激活的 Grok 账户
+    var currentGrokAccount: Account? {
+        guard let id = currentGrokAccountId else { return grokAccounts.first }
+        return grokAccounts.first { $0.id == id } ?? grokAccounts.first
+    }
+
+    /// Grok OIDC refresh_token（存于 Account.sessionKey）
+    var grokRefreshToken: String {
+        currentGrokAccount?.sessionKey ?? ""
+    }
+
+    /// Grok 认证是否已配置
+    var hasValidGrokCredentials: Bool {
+        !grokRefreshToken.isEmpty
+    }
+
     // MARK: - Initialization
 
     init() {
@@ -195,6 +236,23 @@ final class AccountStore: ObservableObject {
             self.currentCodexAccountId = id
         } else {
             self.currentCodexAccountId = loadedCodexAccounts.first?.id
+        }
+
+        // MARK: - 加载 Grok 账户数据
+
+        let loadedGrokAccounts = keychain.loadGrokAccounts() ?? []
+        self.grokAccounts = loadedGrokAccounts
+
+        #if DEBUG
+        let grokCurrentAccountIdKey = "DEBUG_currentGrokAccountId"
+        #else
+        let grokCurrentAccountIdKey = "currentGrokAccountId"
+        #endif
+        if let idString = defaults.string(forKey: grokCurrentAccountIdKey),
+           let id = UUID(uuidString: idString) {
+            self.currentGrokAccountId = id
+        } else {
+            self.currentGrokAccountId = loadedGrokAccounts.first?.id
         }
 
         // MARK: - 旧版迁移（v1.x → v2.0.0，保留向后兼容）
@@ -382,6 +440,87 @@ final class AccountStore: ObservableObject {
         // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
         codexAccounts[index].sessionKey = token
         Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+    }
+
+    // MARK: - Grok Account Management
+
+    private func saveGrokAccounts() {
+        let snapshot = grokAccounts
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.keychain.saveGrokAccounts(snapshot)
+        }
+    }
+
+    /// 添加/更新 Grok 账户
+    @discardableResult
+    func addGrokAccount(_ account: Account) -> (account: Account, wasFirstGrokAccount: Bool) {
+        let stableId = account.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let existingIndex = grokAccounts.firstIndex { existing in
+            if !stableId.isEmpty {
+                let existingStableId = existing.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return existingStableId == stableId || existing.sessionKey == account.sessionKey
+            }
+            return existing.sessionKey == account.sessionKey
+        }
+
+        if let index = existingIndex {
+            grokAccounts[index].sessionKey = account.sessionKey
+            grokAccounts[index].organizationId = account.organizationId
+            grokAccounts[index].organizationName = account.organizationName
+            grokAccounts[index].provider = .grok
+            if currentGrokAccountId == nil {
+                currentGrokAccountId = grokAccounts[index].id
+            }
+            Logger.settings.notice("Updated existing Grok account: \(self.grokAccounts[index].displayName)")
+            postAccountChanged(provider: .grok)
+            return (grokAccounts[index], false)
+        }
+
+        let wasFirst = grokAccounts.isEmpty
+        var stored = account
+        stored.provider = .grok
+        grokAccounts.append(stored)
+        if grokAccounts.count == 1 {
+            currentGrokAccountId = stored.id
+        }
+        Logger.settings.notice("Added Grok account: \(stored.displayName)")
+        postAccountChanged(provider: .grok)
+        return (stored, wasFirst)
+    }
+
+    func removeGrokAccount(_ account: Account) {
+        guard let index = grokAccounts.firstIndex(where: { $0.id == account.id }) else { return }
+        let wasCurrent = (currentGrokAccountId == account.id)
+        grokAccounts.remove(at: index)
+        NotificationManager.shared.resetNotificationStates(for: .grok, accountId: account.id)
+        if wasCurrent {
+            currentGrokAccountId = grokAccounts.first?.id
+            postAccountChanged(provider: .grok)
+        }
+        Logger.settings.notice("Removed Grok account: \(account.displayName)")
+    }
+
+    func switchToGrokAccount(_ account: Account) {
+        guard account.id != currentGrokAccountId else { return }
+        guard grokAccounts.contains(where: { $0.id == account.id }) else { return }
+        currentGrokAccountId = account.id
+        Logger.settings.notice("Switched to Grok account: \(account.displayName)")
+        postAccountChanged(provider: .grok)
+    }
+
+    func updateGrokAccount(_ account: Account, alias: String?) {
+        guard let index = grokAccounts.firstIndex(where: { $0.id == account.id }) else { return }
+        grokAccounts[index].alias = alias
+        Logger.settings.notice("Updated Grok account alias: \(self.grokAccounts[index].displayName)")
+    }
+
+    /// Silently update current Grok refresh_token (token rotation; no accountChanged)
+    func silentlyUpdateCurrentGrokRefreshToken(_ token: String) {
+        guard let id = currentGrokAccountId,
+              let index = grokAccounts.firstIndex(where: { $0.id == id }) else { return }
+        guard grokAccounts[index].sessionKey != token else { return }
+        grokAccounts[index].sessionKey = token
+        Logger.settings.notice("Grok refresh_token silently updated (auto-renewal)")
     }
 
     // MARK: - Shared Helpers

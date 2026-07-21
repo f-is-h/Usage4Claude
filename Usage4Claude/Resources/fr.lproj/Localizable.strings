@@ -436,3 +436,19 @@
 "weblogin.claude_oauth_manual_prompt" = "Collez le lien depuis la barre d'adresse de votre navigateur (commence par http://localhost)";
 "weblogin.claude_oauth_manual_submit" = "Se connecter avec ce lien";
 "weblogin.claude_oauth_manual_invalid" = "Aucun code d'autorisation trouvé. Copiez le lien complet depuis la barre d'adresse et réessayez.";
+
+/* Grok usage monitoring */
+"usage.grok_title" = "Grok Usage";
+"grok_weekly_limit" = "Grok Weekly Limit";
+"grok_monthly_limit" = "Grok Monthly Limit";
+"grok_credits" = "Grok Credits";
+"account.grok_accounts" = "Grok Accounts";
+"account.grok_current_account" = "Current Grok Account";
+"account.import_grok_auth" = "Import Grok Auth";
+"account.import_grok_auth_help" = "Import credentials from Grok CLI ~/.grok/auth.json";
+"account.grok_device_login" = "Grok Device Login";
+"account.grok_device_login_help" = "Sign in to Grok via browser device code";
+"account.grok_device_code_hint" = "Enter this code in the browser if prompted:";
+"account.grok_open_browser" = "Open Browser";
+"account.grok_device_preparing" = "Preparing device login…";
+"account.grok_import_success" = "Grok account added successfully";

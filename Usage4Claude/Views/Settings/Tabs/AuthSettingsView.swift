@@ -26,6 +26,13 @@ struct AuthSettingsView: View {
     @State var successMessage: String?
     @State var showDeleteCodexConfirmation = false
     @State var codexAccountToDelete: Account?
+    @State var showDeleteGrokConfirmation = false
+    @State var grokAccountToDelete: Account?
+    @State var isImportingGrokAuth = false
+    @State var isGrokDeviceLogin = false
+    @State var grokDeviceUserCode: String?
+    @State var grokDeviceVerificationURL: URL?
+    @State private var grokDeviceCancel = false
 
     var body: some View {
         ScrollView {
@@ -67,6 +74,15 @@ struct AuthSettingsView: View {
                         currentCodexAccountDetailView(account: currentCodexAccount)
                     }
 
+                    // Current Grok account detail
+                    if let currentGrokAccount = settings.currentGrokAccount {
+                        currentGrokAccountDetailView(account: currentGrokAccount)
+                    }
+
+                    if isGrokDeviceLogin {
+                        grokDeviceLoginCard
+                    }
+
                     // 说明卡片
                     howToCard
 
@@ -96,13 +112,25 @@ struct AuthSettingsView: View {
         } message: {
             Text(L.Account.deleteConfirmMessage)
         }
+        .alert(L.Account.deleteConfirmTitle, isPresented: $showDeleteGrokConfirmation) {
+            Button(L.Account.cancel, role: .cancel) {}
+            Button(L.Account.delete, role: .destructive) {
+                if let account = grokAccountToDelete {
+                    settings.removeGrokAccount(account)
+                }
+            }
+        } message: {
+            Text(L.Account.deleteConfirmMessage)
+        }
     }
 
     // MARK: - Account List View
 
     var accountListView: some View {
         let hasCodex = !settings.codexAccounts.isEmpty
-        let hasBothProviders = !settings.accounts.isEmpty && hasCodex
+        let hasGrok = !settings.grokAccounts.isEmpty
+        let providerCount = [!settings.accounts.isEmpty, hasCodex, hasGrok].filter { $0 }.count
+        let hasMultipleProviders = providerCount >= 2
 
         return SettingCard(
             icon: "person.2.fill",
@@ -111,7 +139,7 @@ struct AuthSettingsView: View {
             hint: ""
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                if settings.accounts.isEmpty && settings.codexAccounts.isEmpty {
+                if settings.accounts.isEmpty && settings.codexAccounts.isEmpty && settings.grokAccounts.isEmpty {
                     // 无账户时的提示
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.badge.plus")
@@ -126,7 +154,7 @@ struct AuthSettingsView: View {
                 } else {
                     // Claude 账户组
                     if !settings.accounts.isEmpty {
-                        if hasBothProviders {
+                        if hasMultipleProviders {
                             providerSectionHeader(provider: .claude, label: L.Account.claudeAccounts)
                         }
                         ForEach(settings.accounts) { account in
@@ -136,12 +164,23 @@ struct AuthSettingsView: View {
 
                     // Codex 账户组
                     if hasCodex {
-                        if hasBothProviders {
+                        if hasMultipleProviders {
                             providerSectionHeader(provider: .codex, label: L.Account.codexAccounts)
                                 .padding(.top, 4)
                         }
                         ForEach(settings.codexAccounts) { account in
                             accountRow(account: account, provider: .codex)
+                        }
+                    }
+
+                    // Grok accounts
+                    if hasGrok {
+                        if hasMultipleProviders {
+                            providerSectionHeader(provider: .grok, label: L.Account.grokAccounts)
+                                .padding(.top, 4)
+                        }
+                        ForEach(settings.grokAccounts) { account in
+                            accountRow(account: account, provider: .grok)
                         }
                     }
                 }
@@ -188,6 +227,22 @@ struct AuthSettingsView: View {
                 ) {
                     WebLoginWindowManager.shared.showCodexLoginWindow()
                 }
+
+                addAccountActionButton(
+                    provider: .grok,
+                    title: L.Account.importGrokAuth,
+                    help: L.Account.importGrokAuthHelp
+                ) {
+                    importGrokAuthJSON()
+                }
+
+                addAccountActionButton(
+                    provider: .grok,
+                    title: L.Account.grokDeviceLogin,
+                    help: L.Account.grokDeviceLoginHelp
+                ) {
+                    startGrokDeviceLogin()
+                }
             }
         }
         .padding(.top, 8)
@@ -233,6 +288,10 @@ struct AuthSettingsView: View {
                 Image(systemName: "sparkles")
                     .frame(width: size, height: size)
             }
+        case .grok:
+            Image(systemName: "sparkles")
+                .foregroundColor(Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0))
+                .frame(width: size, height: size)
         }
     }
 
@@ -246,6 +305,10 @@ struct AuthSettingsView: View {
                 Image(nsImage: icon)
                     .resizable()
                     .frame(width: 12, height: 12)
+            } else if provider == .grok {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 10))
+                    .foregroundColor(Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0))
             }
             Text(label)
                 .font(.caption)
@@ -259,18 +322,26 @@ struct AuthSettingsView: View {
     // MARK: - Account Row
 
     func accountRow(account: Account, provider: ProviderType) -> some View {
-        let isSelected = provider == .codex
-            ? account.id == settings.currentCodexAccountId
-            : account.id == settings.currentAccountId
-        let accentColor: Color = provider == .codex
-            ? Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
-            : .blue
+        let isSelected: Bool = {
+            switch provider {
+            case .claude: return account.id == settings.currentAccountId
+            case .codex: return account.id == settings.currentCodexAccountId
+            case .grok: return account.id == settings.currentGrokAccountId
+            }
+        }()
+        let accentColor: Color = {
+            switch provider {
+            case .claude: return .blue
+            case .codex: return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
+            case .grok: return Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0)
+            }
+        }()
 
         return Button(action: {
-            if provider == .codex {
-                settings.switchToCodexAccount(account)
-            } else {
-                settings.switchToAccount(account)
+            switch provider {
+            case .claude: settings.switchToAccount(account)
+            case .codex: settings.switchToCodexAccount(account)
+            case .grok: settings.switchToGrokAccount(account)
             }
         }) {
             HStack(spacing: 12) {

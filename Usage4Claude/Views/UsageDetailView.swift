@@ -13,8 +13,10 @@ import SwiftUI
 struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
+    @Binding var grokUsageData: GrokUsageData?
     @Binding var errorMessage: String?
     @Binding var codexErrorMessage: String?
+    @Binding var grokErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Binding var codexNeedsRelogin: Bool
     @ObservedObject var refreshState: RefreshState
@@ -60,6 +62,7 @@ struct UsageDetailView: View {
         case refresh
         case refreshClaude
         case refreshCodex
+        case refreshGrok
         case codexRelogin
     }
     
@@ -77,18 +80,36 @@ struct UsageDetailView: View {
     @AppStorage("showRemainingMode") private var savedRemainingMode = false
     @State private var showRemainingMode = UserDefaults.standard.bool(forKey: "showRemainingMode")
     @State private var remainingModeAnimationTrigger = 0
+    @State var grokAnimationType: LoadingAnimationType = .rainbow
     
     // MARK: - Body
 
+    private var showsClaudeColumn: Bool {
+        usageData != nil || errorMessage != nil || UserSettings.shared.hasValidCredentials
+    }
+
+    private var showsCodexColumn: Bool {
+        codexUsageData != nil || codexErrorMessage != nil || UserSettings.shared.hasValidCodexCredentials
+    }
+
+    private var showsGrokColumn: Bool {
+        grokUsageData != nil || grokErrorMessage != nil || UserSettings.shared.hasValidGrokCredentials
+    }
+
+    private var visibleProviderCount: Int {
+        [showsClaudeColumn, showsCodexColumn, showsGrokColumn].filter { $0 }.count
+    }
+
     private var isMultiProviderActive: Bool {
-        UserSettings.shared.isMultiProviderActive
-            && (codexUsageData != nil || codexErrorMessage != nil || UserSettings.shared.hasValidCodexCredentials)
+        visibleProviderCount >= 2
     }
 
     private var isCodexOnlyActive: Bool {
-        !isMultiProviderActive
-            && ((!UserSettings.shared.hasValidCredentials && UserSettings.shared.hasValidCodexCredentials)
-                || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil)))
+        !isMultiProviderActive && showsCodexColumn && !showsClaudeColumn && !showsGrokColumn
+    }
+
+    private var isGrokOnlyActive: Bool {
+        !isMultiProviderActive && showsGrokColumn && !showsClaudeColumn && !showsCodexColumn
     }
 
     private var isClaudeRefreshing: Bool {
@@ -177,14 +198,14 @@ struct UsageDetailView: View {
     }
 
     private var contentWidth: CGFloat {
-        isMultiProviderActive ? 580 : 290
+        CGFloat(max(visibleProviderCount, 1)) * 290
     }
 
     private var contentHeight: CGFloat {
         if isMultiProviderActive {
             return multiProviderHeight
         }
-        if isCodexOnlyActive {
+        if isCodexOnlyActive || isGrokOnlyActive {
             return codexOnlyHeight
         }
         return dynamicHeight
@@ -546,13 +567,23 @@ struct UsageDetailView: View {
                     Image(systemName: "chart.pie.fill")
                         .foregroundColor(.blue)
                 }
-            } else if let icon = ImageHelper.createCodexIcon(size: headerIconSize) {
+            } else if provider == .codex, let icon = ImageHelper.createCodexIcon(size: headerIconSize) {
                 Image(nsImage: icon)
                     .resizable()
                     .frame(width: headerIconSize, height: headerIconSize)
+            } else if provider == .grok {
+                Image(systemName: "sparkles")
+                    .foregroundColor(Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0))
+                    .frame(width: headerIconSize, height: headerIconSize)
             }
 
-            Text(provider == .claude ? L.Usage.title : L.Usage.codexTitle)
+            Text({
+                switch provider {
+                case .claude: return L.Usage.title
+                case .codex: return L.Usage.codexTitle
+                case .grok: return L.Usage.grokTitle
+                }
+            }())
                 .font(.headline)
 
             Spacer()
@@ -695,42 +726,101 @@ struct UsageDetailView: View {
         }
     }
 
-    private func multiProviderBody(codex: CodexUsageData?) -> some View {
+    private func multiProviderBody(codex: CodexUsageData?, grok: GrokUsageData?) -> some View {
         VStack(spacing: contentSpacing) {
             HStack(alignment: .top, spacing: 0) {
-                VStack(spacing: contentSpacing) {
-                    ZStack(alignment: .bottom) {
-                        VStack(spacing: contentSpacing) {
-                            headerView(provider: .claude, showsControls: false)
-                            claudeMainContent
-                        }
-                        .offset(y: isAnimationHintVisible(for: .claude) ? -18 : 0)
-                    }
-                    .overlay(alignment: .bottom) {
-                        animationHintOverlay(for: .claude)
+                if showsClaudeColumn {
+                    providerColumn(provider: .claude, showsControls: !showsCodexColumn && !showsGrokColumn) {
+                        claudeMainContent
                     }
                 }
-                .frame(width: 290, alignment: .top)
-
-                VStack(spacing: contentSpacing) {
-                    ZStack(alignment: .bottom) {
-                        VStack(spacing: contentSpacing) {
-                            headerView(provider: .codex, showsControls: true)
-                            codexOnlyMainContent(codex: codex)
-                        }
-                        .offset(y: isAnimationHintVisible(for: .codex) ? -18 : 0)
-                    }
-                    .overlay(alignment: .bottom) {
-                        animationHintOverlay(for: .codex)
+                if showsCodexColumn {
+                    providerColumn(provider: .codex, showsControls: true) {
+                        codexOnlyMainContent(codex: codex)
                     }
                 }
-                .frame(width: 290, alignment: .top)
-            }
-            .overlay(alignment: .center) {
-                ProviderDivider(height: multiProviderDividerHeight)
-                    .allowsHitTesting(false)
+                if showsGrokColumn {
+                    providerColumn(provider: .grok, showsControls: true) {
+                        grokOnlyMainContent(grok: grok)
+                    }
+                }
             }
 
+            updateNotificationView
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private func providerColumn<Content: View>(
+        provider: ProviderType,
+        showsControls: Bool,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: contentSpacing) {
+            ZStack(alignment: .bottom) {
+                VStack(spacing: contentSpacing) {
+                    headerView(provider: provider, showsControls: showsControls)
+                    content()
+                }
+                .offset(y: isAnimationHintVisible(for: provider) ? -18 : 0)
+            }
+            .overlay(alignment: .bottom) {
+                animationHintOverlay(for: provider)
+            }
+        }
+        .frame(width: 290, alignment: .top)
+    }
+
+    @ViewBuilder
+    private func grokOnlyMainContent(grok: GrokUsageData?) -> some View {
+        if let grok {
+            GrokColumnView(
+                grokUsageData: grok,
+                showRemainingMode: $showRemainingMode,
+                refreshState: refreshState,
+                animationType: $grokAnimationType,
+                rotationAngle: $rotationAngle,
+                remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                onRefresh: { onMenuAction?(.refreshGrok) },
+                onAnimationHint: { showAnimationHint($0, provider: .grok) },
+                onToggleRemainingMode: toggleRemainingMode
+            )
+        } else if let error = grokErrorMessage {
+            VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.orange)
+                Text(error)
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                Button(action: { onMenuAction?(.authSettings) }) {
+                    Label(L.Usage.goToSettings, systemImage: "key.fill")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+        } else {
+            ProgressView()
+                .padding()
+        }
+    }
+
+    private func grokOnlyBody(grok: GrokUsageData?) -> some View {
+        VStack(spacing: contentSpacing) {
+            VStack(spacing: contentSpacing) {
+                headerView(provider: .grok, showsControls: true)
+                grokOnlyMainContent(grok: grok)
+            }
+            .offset(y: isAnimationHintVisible(for: .grok) ? -18 : 0)
+
+            animationHintView(for: .grok)
             updateNotificationView
             Spacer()
         }
@@ -767,7 +857,9 @@ struct UsageDetailView: View {
     var body: some View {
         Group {
             if isMultiProviderActive {
-                multiProviderBody(codex: codexUsageData)
+                multiProviderBody(codex: codexUsageData, grok: grokUsageData)
+            } else if isGrokOnlyActive {
+                grokOnlyBody(grok: grokUsageData)
             } else if isCodexOnlyActive {
                 codexOnlyBody(codex: codexUsageData)
             } else {
@@ -777,6 +869,7 @@ struct UsageDetailView: View {
         .frame(width: contentWidth, height: contentHeight)
         .animation(.easeInOut(duration: 0.25), value: isMultiProviderActive)
         .animation(.easeInOut(duration: 0.25), value: isCodexOnlyActive)
+        .animation(.easeInOut(duration: 0.25), value: isGrokOnlyActive)
         .animation(.easeInOut(duration: 0.25), value: showAnimationTypeHint)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
@@ -879,7 +972,9 @@ struct UsageDetailView_Previews: PreviewProvider {
 
     @State static var errorMsg: String? = nil
     @State static var codexErrorMsg: String? = nil
+    @State static var grokErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
+    @State static var grokData: GrokUsageData? = nil
     @State static var codexNeedsRelogin = false
     @StateObject static var refreshState = RefreshState()
     @State static var hasUpdate = false
@@ -889,8 +984,10 @@ struct UsageDetailView_Previews: PreviewProvider {
         UsageDetailView(
             usageData: $sampleData,
             codexUsageData: $codexData,
+            grokUsageData: $grokData,
             errorMessage: $errorMsg,
             codexErrorMessage: $codexErrorMsg,
+            grokErrorMessage: $grokErrorMsg,
             codexNeedsRelogin: $codexNeedsRelogin,
             refreshState: refreshState,
             hasAvailableUpdate: $hasUpdate,

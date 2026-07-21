@@ -321,6 +321,88 @@ enum UsageColorScheme {
         }
     }
 
+    // MARK: - Grok Weekly 配色（黑/灰 → 深灰，圆形）
+
+    /// Grok brand-adjacent grays with warm warning ramp
+    static func grokWeeklyColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 100/255.0, green: 116/255.0, blue: 139/255.0, alpha: 1.0)  // #64748B slate
+        } else if percentage < 90 {
+            return NSColor(red: 71/255.0, green: 85/255.0, blue: 105/255.0, alpha: 1.0)    // #475569
+        } else {
+            return NSColor(red: 30/255.0, green: 41/255.0, blue: 59/255.0, alpha: 1.0)     // #1E293B
+        }
+    }
+
+    static func grokWeeklyColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 100/255.0, green: 116/255.0, blue: 139/255.0).opacity(opacity)
+        } else if percentage < 90 {
+            return Color(red: 71/255.0, green: 85/255.0, blue: 105/255.0).opacity(opacity)
+        } else {
+            return Color(red: 30/255.0, green: 41/255.0, blue: 59/255.0).opacity(opacity)
+        }
+    }
+
+    static func grokWeeklyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = grokWeeklyColor(percentage)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
+    }
+
+    // MARK: - Grok Monthly 配色（品红/玫红，虚线圆）
+
+    static func grokMonthlyColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 244/255.0, green: 114/255.0, blue: 182/255.0, alpha: 1.0)  // #F472B6
+        } else if percentage < 90 {
+            return NSColor(red: 219/255.0, green: 39/255.0, blue: 119/255.0, alpha: 1.0)   // #DB2777
+        } else {
+            return NSColor(red: 131/255.0, green: 24/255.0, blue: 67/255.0, alpha: 1.0)    // #831843
+        }
+    }
+
+    static func grokMonthlyColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 244/255.0, green: 114/255.0, blue: 182/255.0).opacity(opacity)
+        } else if percentage < 90 {
+            return Color(red: 219/255.0, green: 39/255.0, blue: 119/255.0).opacity(opacity)
+        } else {
+            return Color(red: 131/255.0, green: 24/255.0, blue: 67/255.0).opacity(opacity)
+        }
+    }
+
+    static func grokMonthlyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = grokMonthlyColor(percentage)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
+    }
+
+    // MARK: - Grok Credits 配色（冷金/柠檬，六边形）
+
+    static func grokCreditsColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 250/255.0, green: 204/255.0, blue: 21/255.0, alpha: 1.0)   // #FACC15
+        } else if percentage < 90 {
+            return NSColor(red: 202/255.0, green: 138/255.0, blue: 4/255.0, alpha: 1.0)    // #CA8A04
+        } else {
+            return NSColor(red: 113/255.0, green: 63/255.0, blue: 18/255.0, alpha: 1.0)    // #713F12
+        }
+    }
+
+    static func grokCreditsColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 250/255.0, green: 204/255.0, blue: 21/255.0).opacity(opacity)
+        } else if percentage < 90 {
+            return Color(red: 202/255.0, green: 138/255.0, blue: 4/255.0).opacity(opacity)
+        } else {
+            return Color(red: 113/255.0, green: 63/255.0, blue: 18/255.0).opacity(opacity)
+        }
+    }
+
+    static func grokCreditsColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = grokCreditsColor(percentage)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
+    }
+
     // MARK: - 备选配色方案（注释保留，方便切换测试）
 
     /*
