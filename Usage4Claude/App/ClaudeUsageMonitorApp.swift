@@ -46,16 +46,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = UserSettings.shared
 
     /// Sparkle 更新控制器
-    /// - `startingUpdater: true` 让 Sparkle 按 Info.plist 中的
-    ///   SUEnableAutomaticChecks / SUScheduledCheckInterval 自动后台检查（默认24小时）
-    /// - `updaterDelegate: self` 让 AppDelegate 作为 SPUUpdaterDelegate，把
-    ///   `didFindValidUpdate` / `updaterDidNotFindUpdate` 转给菜单栏徽章状态机，
-    ///   使彩虹文字 / 红点徽章与 Sparkle 自己的模态对话框并存；EdDSA 签名校验
-    ///   仍通过 Info.plist 的 SUPublicEDKey 完成
-    /// - 暴露为 internal，让 MenuBarManager 通过 `AppDelegate.shared` 调用
-    ///
-    /// 在 init() 的 super.init() 之后构造：updaterDelegate 需要 self，而 Swift
-    /// 不允许在存储属性初始化器里引用 self（此时仍早于任何后台检查）。
+    /// 自动后台检查已禁用（Info.plist SUEnableAutomaticChecks = false）；
+    /// 更新只能从设置的「关于」页手动触发，EdDSA 签名校验仍通过 SUPublicEDKey 完成。
+    /// 暴露为 internal，让设置界面通过 `AppDelegate.shared` 调用。
     private(set) var updaterController: SPUStandardUpdaterController!
 
     override init() {
@@ -63,7 +56,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AppDelegate.shared = self
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
-            updaterDelegate: self,
+            updaterDelegate: nil,
             userDriverDelegate: nil
         )
     }
@@ -88,6 +81,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             menuBarManager.startRefreshing()
         }
+
+        // .env 导入的账户首次启动时补齐 organizationId（完成后自动触发刷新）
+        settings.resolveMissingOrganizationIds()
 
         // 使用 Combine 订阅通知，自动管理生命周期
         NotificationCenter.default.publisher(for: .openSettings)
@@ -159,20 +155,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         welcomeWindow?.close()
         welcomeWindow = nil
         cancellables.removeAll()
-    }
-}
-
-// MARK: - SPUUpdaterDelegate
-
-extension AppDelegate: SPUUpdaterDelegate {
-    /// Sparkle 在后台或手动检查中发现可用更新时回调：点亮菜单栏徽章 /
-    /// 彩虹文字状态机，与 Sparkle 自己的“有可用更新”模态对话框并存。
-    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
-        menuBarManager?.applyUpdateAvailable(version: item.displayVersionString)
-    }
-
-    /// Sparkle 检查后未发现更新时回调：清除可能残留的徽章状态。
-    func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
-        menuBarManager?.applyUpdateNotFound()
     }
 }

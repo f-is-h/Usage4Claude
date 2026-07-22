@@ -18,6 +18,10 @@
 "menu.quit" = "Quit Usage4Claude";
 "menu.account" = "Account";
 "menu.account_prefix" = "Account:";
+"menu.warm_up_idle" = "Warm Up Idle";
+"menu.warm_up_all" = "Warm Up All";
+"menu.warm_up_none" = "No accounts are ready to warm up.";
+"menu.warm_up_succeeded" = "Warmed up %d of %d accounts";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude Usage";
@@ -55,6 +59,11 @@
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
 "settings.general.menubar_theme" = "Menu Bar Theme";
 "settings.general.display_content" = "Display Content";
+"settings.general.menubar_accounts" = "Menu Bar Accounts";
+"settings.general.menubar_accounts_hint" = "Selected accounts are shown side by side in the menu bar";
+"settings.general.menubar_accounts_style" = "Circles per Account";
+"settings.general.menubar_accounts_style_five_hour" = "5-hour circle only";
+"settings.general.menubar_accounts_style_both" = "5-hour + weekly circles";
 "settings.general.monochrome_no_icon_hint" = "Icon display is not supported in Monochrome theme";
 "settings.general.refresh_section" = "Refresh Settings";
 "settings.general.refresh_mode" = "Refresh Mode";
@@ -421,6 +430,12 @@
 "account.codex_accounts" = "Codex Accounts";
 "account.add_codex_account" = "Add Codex Account";
 "account.codex_current_account" = "Current Codex Account";
+"account.oauth_token" = "Warm-up OAuth Token";
+"account.oauth_token_placeholder" = "Paste sk-ant-oat01-…";
+"account.oauth_token_stored" = "Stored";
+"account.oauth_token_hint" = "Inference token from `claude setup-token`. Stored securely in Keychain and used only for manual warm-ups.";
+"account.save_oauth_token" = "Save";
+"account.remove_oauth_token" = "Remove OAuth token";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "Preparing sign-in…";

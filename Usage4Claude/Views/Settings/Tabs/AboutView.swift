@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Sparkle
 
 /// 关于页面
 /// 显示应用信息、版本号和相关链接
@@ -44,13 +45,28 @@ struct AboutView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
+            // This fork adds
+            VStack(alignment: .leading, spacing: 6) {
+                Text("This fork adds")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Label("Multiple Claude accounts", systemImage: "person.2.fill")
+                Label("Menu-bar warm-up: send a 1-token “hi” to start your rolling 5-hour window", systemImage: "flame.fill")
+                Label("Kimi for Coding usage support", systemImage: "chart.bar.fill")
+            }
+            .font(.callout)
+            .foregroundColor(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+
             Divider()
                 .padding(.horizontal, 60)
-            
+
             // 信息列表
             VStack(alignment: .leading, spacing: 12) {
                 AboutInfoRow(icon: "person.fill", title: L.SettingsAbout.developer, value: "f-is-h")
+                AboutInfoRow(icon: "arrow.triangle.branch", title: "Fork", value: "thislev")
                 AboutInfoRow(icon: "doc.text", title: L.SettingsAbout.license, value: L.SettingsAbout.licenseValue)
             }
             
@@ -58,6 +74,18 @@ struct AboutView: View {
             
             // 链接按钮
             VStack(spacing: 8) {
+                // 手动检查更新（自动检查已禁用，这里是唯一入口）
+                Button(action: {
+                    AppDelegate.shared?.updaterController.checkForUpdates(nil)
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text(L.Menu.checkUpdates)
+                    }
+                    .frame(minWidth: 200)
+                }
+                .focusable(false)
+
                 Button(action: {
                     if let url = URL(string: "https://github.com/f-is-h/Usage4Claude") {
                         NSWorkspace.shared.open(url)

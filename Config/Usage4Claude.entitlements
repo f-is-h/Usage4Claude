@@ -26,5 +26,13 @@
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spki</string>
 	</array>
+	<!--
+	  允许沙盒内只读访问 ~/.config/usage4claude/，应用从这里的 .env
+	  读取 WARMUP_ACCOUNTS（Claude 凭证）。见 Services/EnvAccountStore.swift。
+	-->
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+	<array>
+		<string>/.config/usage4claude/</string>
+	</array>
 </dict>
 </plist>

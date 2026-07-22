@@ -32,6 +32,10 @@ class DataRefreshManager: ObservableObject {
     @Published var usageData: UsageData?
     /// Codex 用量数据（nil 表示无 Codex 账号或拉取失败）
     @Published var codexUsageData: CodexUsageData?
+    /// 多账户菜单栏模式：各选中账户的用量数据（含当前账户）
+    @Published var multiAccountUsage: [UUID: UsageData] = [:]
+    /// 多 Codex 账户菜单栏模式：各选中 Codex 账户的用量数据（含当前 Codex 账户）
+    @Published var multiAccountCodexUsage: [UUID: CodexUsageData] = [:]
     /// 加载状态
     @Published var isLoading = false
     /// 错误消息
@@ -64,6 +68,10 @@ class DataRefreshManager: ObservableObject {
     @Published private(set) var codexNeedsRelogin = false
     /// Codex 过期通知已发送，防止重复打扰
     private var codexSessionExpiredNotified = false
+    /// 多账户菜单栏模式：每个附加账户独享一个 API 服务实例（各自的 OAuth token 缓存互不干扰）
+    private var accountServices: [UUID: ClaudeAPIService] = [:]
+    /// 多 Codex 账户菜单栏模式：每个附加 Codex 账户独享一个 API 服务实例
+    private var codexAccountServices: [UUID: CodexAPIService] = [:]
 
     private var shouldFetchClaudeUsage: Bool {
         #if DEBUG
@@ -156,6 +164,14 @@ class DataRefreshManager: ObservableObject {
             return
         }
 
+        // 多账户菜单栏：并行拉取其余选中账户（互不阻塞主流程）
+        if fetchClaude {
+            fetchAdditionalAccounts()
+        }
+        if fetchCodex {
+            fetchAdditionalCodexAccounts()
+        }
+
         let group = DispatchGroup()
         var claudeResult: Result<UsageData, Error>?
         var codexResult: Result<CodexUsageData, Error>?
@@ -217,6 +233,7 @@ class DataRefreshManager: ObservableObject {
                     let previousData = self.usageData
                     self.usageData = data
                     self.errorMessage = nil
+                    self.recordCurrentAccountUsage(data)
                     monitoringUtilizations[.claude] = data.percentage
 
                     if self.settings.notificationsEnabled {
@@ -249,6 +266,119 @@ class DataRefreshManager: ObservableObject {
         usageData = nil
         lastResetsAt = nil
         cancelResetVerification()
+    }
+
+    // MARK: - 多账户菜单栏支持
+
+    /// 当前账户数据写入多账户字典（当前账户被选中显示时）
+    private func recordCurrentAccountUsage(_ data: UsageData) {
+        guard let currentId = settings.currentAccount?.id,
+              settings.menuBarAccountIds.contains(currentId) else { return }
+        multiAccountUsage[currentId] = data
+    }
+
+    /// 拉取除当前账户外所有选中账户的用量
+    /// - Parameter onlyMissing: true 时只拉取还没有数据的账户（设置变更时避免重复请求）
+    private func fetchAdditionalAccounts(onlyMissing: Bool = false) {
+        guard settings.isMultiAccountMenuBarActive else { return }
+        let currentId = settings.currentAccount?.id
+
+        for account in settings.menuBarAccounts where account.id != currentId {
+            if onlyMissing && multiAccountUsage[account.id] != nil { continue }
+
+            let service: ClaudeAPIService
+            if let existing = accountServices[account.id] {
+                service = existing
+            } else {
+                service = ClaudeAPIService(accountId: account.id)
+                accountServices[account.id] = service
+            }
+
+            let accountId = account.id
+            service.fetchUsage { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    // 选择可能在请求期间变化，过期结果直接丢弃
+                    guard self.settings.menuBarAccountIds.contains(accountId) else { return }
+                    switch result {
+                    case .success(let data):
+                        self.multiAccountUsage[accountId] = data
+                    case .failure(let error):
+                        Logger.menuBar.info("附加账户用量拉取失败（\(accountId.uuidString.prefix(8))…）: \(error.localizedDescription)")
+                        self.multiAccountUsage.removeValue(forKey: accountId)
+                    }
+                }
+            }
+        }
+    }
+
+    /// 当前 Codex 账户数据写入多 Codex 字典（当前 Codex 账户被选中显示时）
+    private func recordCurrentCodexAccountUsage(_ data: CodexUsageData) {
+        guard let currentId = settings.currentCodexAccount?.id,
+              settings.menuBarCodexAccountIds.contains(currentId) else { return }
+        multiAccountCodexUsage[currentId] = data
+    }
+
+    /// 拉取除当前 Codex 账户外所有选中 Codex 账户的用量
+    /// - Parameter onlyMissing: true 时只拉取还没有数据的账户
+    private func fetchAdditionalCodexAccounts(onlyMissing: Bool = false) {
+        guard settings.isMultiAccountMenuBarActive else { return }
+        let currentId = settings.currentCodexAccount?.id
+
+        for account in settings.menuBarCodexAccounts where account.id != currentId {
+            if onlyMissing && multiAccountCodexUsage[account.id] != nil { continue }
+
+            let service: CodexAPIService
+            if let existing = codexAccountServices[account.id] {
+                service = existing
+            } else {
+                service = CodexAPIService(accountId: account.id)
+                codexAccountServices[account.id] = service
+            }
+
+            let accountId = account.id
+            service.fetchUsage { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    guard self.settings.menuBarCodexAccountIds.contains(accountId) else { return }
+                    switch result {
+                    case .success(let data):
+                        self.multiAccountCodexUsage[accountId] = data
+                    case .failure(let error):
+                        Logger.menuBar.info("附加 Codex 账户用量拉取失败（\(accountId.uuidString.prefix(8))…）: \(error.localizedDescription)")
+                        self.multiAccountCodexUsage.removeValue(forKey: accountId)
+                    }
+                }
+            }
+        }
+    }
+
+    /// 菜单栏账户选择变化后调用：清理未选中账户的数据与服务实例，补拉新选中账户
+    func syncMultiAccountFetches() {
+        let selectedIds = Set(settings.menuBarAccounts.map(\.id))
+        for id in multiAccountUsage.keys where !selectedIds.contains(id) {
+            multiAccountUsage.removeValue(forKey: id)
+        }
+        for id in accountServices.keys where !selectedIds.contains(id) {
+            accountServices.removeValue(forKey: id)
+        }
+        if let data = usageData {
+            recordCurrentAccountUsage(data)
+        }
+        fetchAdditionalAccounts(onlyMissing: true)
+
+        // Codex 多账户同步
+        let selectedCodexIds = Set(settings.menuBarCodexAccounts.map(\.id))
+        for id in multiAccountCodexUsage.keys where !selectedCodexIds.contains(id) {
+            multiAccountCodexUsage.removeValue(forKey: id)
+        }
+        for id in codexAccountServices.keys where !selectedCodexIds.contains(id) {
+            codexAccountServices.removeValue(forKey: id)
+        }
+        if let data = codexUsageData {
+            recordCurrentCodexAccountUsage(data)
+        }
+        fetchAdditionalCodexAccounts(onlyMissing: true)
     }
 
     private func clearCodexUsageState(clearError: Bool = true) {
@@ -486,6 +616,8 @@ class DataRefreshManager: ObservableObject {
         errorMessage = nil
         lastAPIFetchTime = Date()
 
+        fetchAdditionalAccounts()
+
         apiService.fetchUsage { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -497,6 +629,7 @@ class DataRefreshManager: ObservableObject {
                     let previousData = self.usageData
                     self.usageData = data
                     self.errorMessage = nil
+                    self.recordCurrentAccountUsage(data)
                     if self.settings.notificationsEnabled {
                         NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                     }
@@ -554,6 +687,7 @@ class DataRefreshManager: ObservableObject {
         let previousCodexData = codexUsageData
         codexUsageData = data
         codexErrorMessage = nil
+        recordCurrentCodexAccountUsage(data)
         if let utilization = monitoringUtilization(for: data) {
             settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
         }

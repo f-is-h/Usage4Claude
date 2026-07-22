@@ -18,6 +18,10 @@
 "menu.quit" = "Usage4Claudeを終了";
 "menu.account" = "アカウント";
 "menu.account_prefix" = "アカウント:";
+"menu.warm_up_idle" = "待機中をウォームアップ";
+"menu.warm_up_all" = "すべてウォームアップ";
+"menu.warm_up_none" = "ウォームアップできるアカウントがありません。";
+"menu.warm_up_succeeded" = "%d/%d アカウントをウォームアップしました";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude使用状況";
@@ -55,6 +59,11 @@
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
 "settings.general.menubar_theme" = "メニューバーテーマ";
 "settings.general.display_content" = "表示内容";
+"settings.general.menubar_accounts" = "メニューバーのアカウント";
+"settings.general.menubar_accounts_hint" = "選択したアカウントがメニューバーに並んで表示されます";
+"settings.general.menubar_accounts_style" = "アカウントごとのリング";
+"settings.general.menubar_accounts_style_five_hour" = "5時間リングのみ";
+"settings.general.menubar_accounts_style_both" = "5時間 + 週間リング";
 "settings.general.monochrome_no_icon_hint" = "モノクロームテーマではアイコン表示に対応していません";
 "settings.general.refresh_section" = "更新設定";
 "settings.general.refresh_mode" = "更新モード";
@@ -421,6 +430,12 @@
 "account.codex_accounts" = "Codex アカウント";
 "account.add_codex_account" = "Codex アカウントを追加";
 "account.codex_current_account" = "現在の Codex アカウント";
+"account.oauth_token" = "ウォームアップ OAuth トークン";
+"account.oauth_token_placeholder" = "sk-ant-oat01-… を貼り付け";
+"account.oauth_token_stored" = "保存済み";
+"account.oauth_token_hint" = "`claude setup-token` で生成した推論トークンです。キーチェーンに安全に保存され、手動ウォームアップのみに使用されます。";
+"account.save_oauth_token" = "保存";
+"account.remove_oauth_token" = "OAuth トークンを削除";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "サインインを準備しています…";

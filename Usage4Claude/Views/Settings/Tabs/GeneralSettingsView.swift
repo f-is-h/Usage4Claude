@@ -15,6 +15,7 @@ struct GeneralSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
+    @State private var menuBarProfileNameDraft = ""
     #if DEBUG
     @State private var tokenRefreshStatus: String? = nil
     @State private var isTestingTokenRefresh = false
@@ -111,6 +112,126 @@ struct GeneralSettingsView: View {
                                 .toggleStyle(.checkbox)
                                 .focusable(false)
                                 .disabled(settings.iconDisplayMode == .percentageOnly)
+                            }
+                        }
+
+                        // 多账户菜单栏选择（有 2 个及以上 Claude 账户或 Codex 账户时显示）
+                        if settings.claudeAccounts.count > 1 || settings.hasValidCodexCredentials || !settings.codexAccounts.isEmpty {
+                            Divider()
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(L.SettingsGeneral.menubarAccounts)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+
+                                HStack(spacing: 8) {
+                                    Picker("", selection: Binding(
+                                        get: { settings.activeMenuBarAccountProfileId },
+                                        set: { profileId in
+                                            guard let profileId,
+                                                  let profile = settings.menuBarAccountProfiles.first(where: { $0.id == profileId }) else { return }
+                                            settings.applyMenuBarAccountProfile(profile)
+                                            menuBarProfileNameDraft = profile.name
+                                        }
+                                    )) {
+                                        ForEach(settings.menuBarAccountProfiles) { profile in
+                                            Text(profile.name).tag(Optional(profile.id))
+                                        }
+                                    }
+                                    .labelsHidden()
+                                    .frame(maxWidth: 180)
+
+                                    TextField("Profile name", text: $menuBarProfileNameDraft)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onSubmit {
+                                            renameActiveMenuBarProfile()
+                                        }
+                                        .onChange(of: menuBarProfileNameDraft) { _ in
+                                            renameActiveMenuBarProfile()
+                                        }
+
+                                    Button {
+                                        settings.createMenuBarAccountProfile()
+                                        menuBarProfileNameDraft = settings.activeMenuBarAccountProfile?.name ?? ""
+                                    } label: {
+                                        Image(systemName: "plus")
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help("New profile")
+
+                                    Button {
+                                        if let profile = settings.activeMenuBarAccountProfile {
+                                            settings.deleteMenuBarAccountProfile(profile)
+                                            menuBarProfileNameDraft = settings.activeMenuBarAccountProfile?.name ?? ""
+                                        }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .disabled(settings.menuBarAccountProfiles.count <= 1)
+                                    .help("Delete profile")
+                                }
+                                .padding(.leading, 20)
+
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(settings.claudeAccounts) { account in
+                                        Toggle(isOn: menuBarAccountBinding(for: account)) {
+                                            Text(account.displayName)
+                                        }
+                                        .toggleStyle(.checkbox)
+                                        .focusable(false)
+                                    }
+
+                                    ForEach(settings.codexAccounts) { account in
+                                        Toggle(isOn: menuBarCodexAccountBinding(for: account)) {
+                                            Label {
+                                                Text(account.displayName)
+                                            } icon: {
+                                                Image(systemName: "terminal.fill")
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        .toggleStyle(.checkbox)
+                                        .focusable(false)
+                                    }
+                                }
+                                .padding(.leading, 20)
+
+                                HStack(alignment: .top, spacing: 4) {
+                                    Image(systemName: "info.circle.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(.blue)
+                                    Text(L.SettingsGeneral.menubarAccountsHint)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.leading, 20)
+
+                                // 每个账户显示的圆环样式（仅多账户模式生效）
+                                if settings.isMultiAccountMenuBarActive {
+                                    Text(L.SettingsGeneral.menubarAccountsStyle)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.secondary)
+                                        .padding(.top, 4)
+
+                                    Picker("", selection: $settings.multiAccountShowWeekly) {
+                                        Text(L.SettingsGeneral.menubarAccountsStyleFiveHour).tag(false)
+                                        Text(L.SettingsGeneral.menubarAccountsStyleBoth).tag(true)
+                                    }
+                                    .pickerStyle(.radioGroup)
+                                    .labelsHidden()
+                                    .focusable(false)
+                                    .padding(.leading, 20)
+                                }
+                            }
+                            .onAppear {
+                                menuBarProfileNameDraft = settings.activeMenuBarAccountProfile?.name ?? ""
+                            }
+                            .onChange(of: settings.activeMenuBarAccountProfileId) { _ in
+                                menuBarProfileNameDraft = settings.activeMenuBarAccountProfile?.name ?? ""
                             }
                         }
                     }
@@ -555,27 +676,6 @@ struct GeneralSettingsView: View {
                             .padding(.leading, 20)
                         }
 
-                        // 模拟更新开关
-                        Divider()
-                            .padding(.vertical, 4)
-
-                        HStack {
-                            Toggle("", isOn: $settings.simulateUpdateAvailable)
-                                .toggleStyle(.switch)
-                                .controlSize(.mini)
-                                .focusable(false)
-                                .labelsHidden()
-
-                            Text("模拟有可用更新")
-                                .font(.subheadline)
-
-                            Spacer()
-
-                            Text("实时显示红点标识")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
                         // 单独显示所有形状图标开关
                         Divider()
                             .padding(.vertical, 4)
@@ -798,6 +898,39 @@ struct GeneralSettingsView: View {
         let operationType = operation == "enable" ? L.LaunchAtLogin.errorEnable : L.LaunchAtLogin.errorDisable
         errorMessage = "\(operationType)\n\n\(error.localizedDescription)"
         showErrorAlert = true
+    }
+
+    /// 某个账户是否显示在菜单栏的绑定
+    private func menuBarAccountBinding(for account: Account) -> Binding<Bool> {
+        Binding(
+            get: { settings.menuBarAccountIds.contains(account.id) },
+            set: { isOn in
+                if isOn {
+                    settings.menuBarAccountIds.insert(account.id)
+                } else {
+                    settings.menuBarAccountIds.remove(account.id)
+                }
+            }
+        )
+    }
+
+    /// 某个 Codex 账户是否显示在菜单栏的绑定
+    private func menuBarCodexAccountBinding(for account: Account) -> Binding<Bool> {
+        Binding(
+            get: { settings.menuBarCodexAccountIds.contains(account.id) },
+            set: { isOn in
+                if isOn {
+                    settings.menuBarCodexAccountIds.insert(account.id)
+                } else {
+                    settings.menuBarCodexAccountIds.remove(account.id)
+                }
+            }
+        )
+    }
+
+    private func renameActiveMenuBarProfile() {
+        guard let profile = settings.activeMenuBarAccountProfile else { return }
+        settings.renameMenuBarAccountProfile(profile, to: menuBarProfileNameDraft)
     }
 
     // MARK: - Display Options Helpers

@@ -18,6 +18,10 @@
 "menu.quit" = "結束 Usage4Claude";
 "menu.account" = "帳戶";
 "menu.account_prefix" = "帳戶:";
+"menu.warm_up_idle" = "預熱閒置帳戶";
+"menu.warm_up_all" = "預熱所有帳戶";
+"menu.warm_up_none" = "沒有可預熱的帳戶。";
+"menu.warm_up_succeeded" = "已預熱 %d/%d 個帳戶";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude 使用狀況";
@@ -55,6 +59,11 @@
 "settings.general.menubar_hint" = "選擇選單列中顯示的內容";
 "settings.general.menubar_theme" = "選單列主題";
 "settings.general.display_content" = "顯示內容";
+"settings.general.menubar_accounts" = "選單列帳戶";
+"settings.general.menubar_accounts_hint" = "選取的帳戶將並排顯示在選單列中";
+"settings.general.menubar_accounts_style" = "每個帳戶顯示的圓環";
+"settings.general.menubar_accounts_style_five_hour" = "僅 5 小時圓環";
+"settings.general.menubar_accounts_style_both" = "5 小時 + 每週圓環";
 "settings.general.monochrome_no_icon_hint" = "單色主題下不支援顯示圖示";
 "settings.general.refresh_section" = "重新整理設定";
 "settings.general.refresh_mode" = "重新整理模式";
@@ -421,6 +430,12 @@
 "account.codex_accounts" = "Codex 帳號";
 "account.add_codex_account" = "新增 Codex 帳號";
 "account.codex_current_account" = "目前的 Codex 帳號";
+"account.oauth_token" = "預熱 OAuth Token";
+"account.oauth_token_placeholder" = "貼上 sk-ant-oat01-…";
+"account.oauth_token_stored" = "已儲存";
+"account.oauth_token_hint" = "由 `claude setup-token` 產生的推理 Token。安全儲存在鑰匙圈中，僅用於手動預熱。";
+"account.save_oauth_token" = "儲存";
+"account.remove_oauth_token" = "移除 OAuth Token";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "正在準備登入…";

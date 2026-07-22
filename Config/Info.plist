@@ -59,7 +59,7 @@
     <key>SUPublicEDKey</key>
     <string>p0CSf0X2mD0Z74yU64g36hGMQKpRE5/GFpaoyhhr6aY=</string>
     <key>SUEnableAutomaticChecks</key>
-    <true/>
+    <false/>
 
     <!--
         Under App Sandbox, Sparkle installs updates through a bundled XPC

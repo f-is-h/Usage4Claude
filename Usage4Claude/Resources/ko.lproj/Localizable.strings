@@ -18,6 +18,10 @@
 "menu.quit" = "Usage4Claude 종료";
 "menu.account" = "계정";
 "menu.account_prefix" = "계정:";
+"menu.warm_up_idle" = "유휴 계정 워밍업";
+"menu.warm_up_all" = "모든 계정 워밍업";
+"menu.warm_up_none" = "워밍업할 수 있는 계정이 없습니다.";
+"menu.warm_up_succeeded" = "%d/%d개 계정을 워밍업했습니다";
 
 // MARK: - Usage Detail View
 "usage.title" = "Claude 사용 현황";
@@ -55,6 +59,11 @@
 "settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
 "settings.general.menubar_theme" = "메뉴바 테마";
 "settings.general.display_content" = "표시 내용";
+"settings.general.menubar_accounts" = "메뉴 막대 계정";
+"settings.general.menubar_accounts_hint" = "선택한 계정이 메뉴 막대에 나란히 표시됩니다";
+"settings.general.menubar_accounts_style" = "계정당 링";
+"settings.general.menubar_accounts_style_five_hour" = "5시간 링만";
+"settings.general.menubar_accounts_style_both" = "5시간 + 주간 링";
 "settings.general.monochrome_no_icon_hint" = "단색 테마에서는 아이콘 표시를 지원하지 않습니다";
 "settings.general.refresh_section" = "새로고침 설정";
 "settings.general.refresh_mode" = "새로고침 모드";
@@ -419,6 +428,12 @@
 "account.codex_accounts" = "Codex 계정";
 "account.add_codex_account" = "Codex 계정 추가";
 "account.codex_current_account" = "현재 Codex 계정";
+"account.oauth_token" = "워밍업 OAuth 토큰";
+"account.oauth_token_placeholder" = "sk-ant-oat01-… 붙여넣기";
+"account.oauth_token_stored" = "저장됨";
+"account.oauth_token_hint" = "`claude setup-token`에서 생성한 추론 토큰입니다. 키체인에 안전하게 저장되며 수동 워밍업에만 사용됩니다.";
+"account.save_oauth_token" = "저장";
+"account.remove_oauth_token" = "OAuth 토큰 제거";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "로그인 준비 중…";

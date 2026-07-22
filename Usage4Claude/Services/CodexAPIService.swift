@@ -21,6 +21,35 @@ class CodexAPIService {
     private let settings = UserSettings.shared
     private let session: URLSession
 
+    /// 固定账户 ID：非 nil 时本实例始终为该 Codex 账户拉取用量（多账户菜单栏模式）；
+    /// nil 时跟随当前激活的 Codex 账户（原有行为）
+    private let accountId: UUID?
+
+    /// 固定账户的最新快照（每次读取都从 settings 取，token 轮换后保持新鲜）
+    private var pinnedCodexAccount: Account? {
+        guard let accountId else { return nil }
+        return settings.codexAccounts.first { $0.id == accountId }
+    }
+
+    /// 本实例实际使用的 Codex session-token（OAuth refresh_token）
+    private var activeCodexSessionToken: String {
+        pinnedCodexAccount?.sessionKey ?? settings.codexSessionToken
+    }
+
+    /// 本实例凭据是否有效
+    private var hasActiveCodexCredentials: Bool {
+        !activeCodexSessionToken.isEmpty
+    }
+
+    /// token 轮换写回：固定账户写回该账户，否则写回当前账户
+    private func writeBackRotatedToken(_ token: String) {
+        if let accountId {
+            UserSettings.shared.silentlyUpdateCodexSessionToken(accountId: accountId, token: token)
+        } else {
+            UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(token)
+        }
+    }
+
     /// 当前进行中的任务（最多两个：session + usage）
     private var activeTasks: [URLSessionDataTask] = []
 
@@ -53,7 +82,7 @@ class CodexAPIService {
         guard let token = cachedAccessToken, !token.isEmpty,
               let expiry = cachedAccessTokenExpiry,
               let forToken = cachedForSessionToken else { return false }
-        return forToken == settings.codexSessionToken
+        return forToken == activeCodexSessionToken
             && expiry > Date().addingTimeInterval(Self.tokenRefreshMargin)
     }
 
@@ -79,8 +108,8 @@ class CodexAPIService {
 
     /// 由独立计时器调用：仅在缓存即将过期时主动调用 session API 续期，不触发用量拉取
     func proactivelyRefreshIfNeeded() {
-        guard settings.hasValidCodexCredentials, !hasCachedValidToken else { return }
-        let sessionToken = settings.codexSessionToken
+        guard hasActiveCodexCredentials, !hasCachedValidToken else { return }
+        let sessionToken = activeCodexSessionToken
         fetchAccessToken(sessionToken: sessionToken) { result in
             switch result {
             case .success:
@@ -93,7 +122,9 @@ class CodexAPIService {
 
     // MARK: - Initialization
 
-    init() {
+    /// - Parameter accountId: 固定为某个 Codex 账户拉取用量；nil 表示跟随当前激活账户
+    init(accountId: UUID? = nil) {
+        self.accountId = accountId
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 30
         configuration.timeoutIntervalForResource = 60
@@ -118,12 +149,12 @@ class CodexAPIService {
 
         cancelAllRequests()
 
-        guard settings.hasValidCodexCredentials else {
+        guard hasActiveCodexCredentials else {
             completion(.failure(UsageError.noCredentials))
             return
         }
 
-        let sessionToken = settings.codexSessionToken
+        let sessionToken = activeCodexSessionToken
 
         fetchAccessToken(sessionToken: sessionToken) { [weak self] result in
             guard let self = self else { return }
@@ -245,7 +276,7 @@ class CodexAPIService {
                 if newToken != sessionToken {
                     Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
                     DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                        self.writeBackRotatedToken(newToken)
                     }
                 }
             }
@@ -325,7 +356,7 @@ class CodexAPIService {
                 if newRefresh != refreshToken {
                     Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
                     DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newRefresh)
+                        self.writeBackRotatedToken(newRefresh)
                     }
                 }
 

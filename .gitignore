@@ -89,3 +89,11 @@ ClaudeUsageMonitor
 *~
 *.bak
 *.backup
+.env
+
+# Local Xcode build output (never commit build artifacts)
+build-debug/
+build-release/
+
+# Companion web app lives in its own repository
+usageresetter/

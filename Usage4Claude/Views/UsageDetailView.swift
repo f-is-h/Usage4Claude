@@ -12,6 +12,8 @@ import SwiftUI
 /// 显示 Claude 的当前使用情况，包括百分比进度条、倒计时和重置时间
 struct UsageDetailView: View {
     @Binding var usageData: UsageData?
+    @Binding var multiAccountUsage: [UUID: UsageData]
+    @Binding var multiAccountCodexUsage: [UUID: CodexUsageData]
     @Binding var codexUsageData: CodexUsageData?
     @Binding var errorMessage: String?
     @Binding var codexErrorMessage: String?
@@ -21,10 +23,6 @@ struct UsageDetailView: View {
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
     @StateObject private var localization = LocalizationManager.shared
-    /// 是否有可用更新（用于显示文字和徽章）
-    @Binding var hasAvailableUpdate: Bool
-    /// 是否应显示更新徽章（用户未确认时才显示徽章）
-    @Binding var shouldShowUpdateBadge: Bool
 
     /// 加载动画效果类型
     enum LoadingAnimationType: Int, CaseIterable {
@@ -50,7 +48,6 @@ struct UsageDetailView: View {
     enum MenuAction {
         case generalSettings
         case authSettings
-        case checkForUpdates
         case about
         case claudeStatus
         case codexStatus
@@ -61,6 +58,8 @@ struct UsageDetailView: View {
         case refreshClaude
         case refreshCodex
         case codexRelogin
+        case warmUpIdle
+        case warmUpAll
     }
     
     // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
@@ -91,8 +90,46 @@ struct UsageDetailView: View {
                 || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil)))
     }
 
+    private var isMultiAccountPopoverActive: Bool {
+        UserSettings.shared.isMultiAccountMenuBarActive && !UserSettings.shared.menuBarAccounts.isEmpty
+    }
+
+    private var selectedMenuBarAccountUsage: [(Account, UsageData?)] {
+        UserSettings.shared.menuBarAccounts.map { account in
+            let data = multiAccountUsage[account.id]
+                ?? (account.id == UserSettings.shared.currentAccountId ? usageData : nil)
+            return (account, data)
+        }
+    }
+
+    /// 选中显示在多账户 popover 的 Codex 账户及其用量
+    private var selectedMenuBarCodexUsage: [(Account, CodexUsageData?)] {
+        UserSettings.shared.menuBarCodexAccounts.map { account in
+            let data = multiAccountCodexUsage[account.id]
+                ?? (account.id == UserSettings.shared.currentCodexAccountId ? codexUsageData : nil)
+            return (account, data)
+        }
+    }
+
     private var isClaudeRefreshing: Bool {
         refreshState.isRefreshingProvider(.claude)
+    }
+
+    private var eligibleWarmupAccounts: [Account] {
+        UserSettings.shared.accounts.filter { account in
+            account.oauthToken?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        }
+    }
+
+    private var idleWarmupAccountCount: Int {
+        eligibleWarmupAccounts.filter { account in
+            let data = multiAccountUsage[account.id]
+                ?? (account.id == UserSettings.shared.currentAccountId ? usageData : nil)
+            guard let reset = data?.fiveHour?.resetsAt else {
+                return !account.hasLocallyActiveWarmupWindow
+            }
+            return reset <= Date()
+        }.count
     }
 
     /// 获取当前 Claude 活动的显示类型
@@ -177,10 +214,16 @@ struct UsageDetailView: View {
     }
 
     private var contentWidth: CGFloat {
-        isMultiProviderActive ? 580 : 290
+        if isMultiAccountPopoverActive {
+            return multiAccountPopoverWidth
+        }
+        return isMultiProviderActive ? 580 : 290
     }
 
     private var contentHeight: CGFloat {
+        if isMultiAccountPopoverActive {
+            return multiAccountPopoverHeight
+        }
         if isMultiProviderActive {
             return multiProviderHeight
         }
@@ -188,6 +231,15 @@ struct UsageDetailView: View {
             return codexOnlyHeight
         }
         return dynamicHeight
+    }
+
+    private var multiAccountPopoverHeight: CGFloat {
+        286
+    }
+
+    private var multiAccountPopoverWidth: CGFloat {
+        let columnCount = max(selectedMenuBarAccountUsage.count + selectedMenuBarCodexUsage.count, 1)
+        return min(CGFloat(columnCount) * 290, 870)
     }
 
     @ViewBuilder
@@ -405,6 +457,37 @@ struct UsageDetailView: View {
     /// 刷新按钮 + 三点菜单按钮（共用于单列和双列头部）
     @ViewBuilder
     private var refreshAndMenuButtons: some View {
+        if !eligibleWarmupAccounts.isEmpty {
+            Button(action: { onMenuAction?(.warmUpIdle) }) {
+                Image(systemName: "flame")
+                    .font(.system(size: 14))
+                    .foregroundColor(.orange)
+                    .frame(width: 20, height: 20)
+            }
+            .buttonStyle(.plain)
+            .disabled(refreshState.isWarmingUp || idleWarmupAccountCount == 0)
+            .opacity(refreshState.isWarmingUp || idleWarmupAccountCount == 0 ? 0.35 : 1)
+            .help("\(L.Menu.warmUpIdle) (\(idleWarmupAccountCount))")
+            .accessibilityLabel("\(L.Menu.warmUpIdle) (\(idleWarmupAccountCount))")
+
+            Button(action: { onMenuAction?(.warmUpAll) }) {
+                if refreshState.isWarmingUp {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(width: 20, height: 20)
+                } else {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.orange)
+                        .frame(width: 20, height: 20)
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(refreshState.isWarmingUp)
+            .help("\(L.Menu.warmUpAll) (\(eligibleWarmupAccounts.count))")
+            .accessibilityLabel("\(L.Menu.warmUpAll) (\(eligibleWarmupAccounts.count))")
+        }
+
         Button(action: { onMenuAction?(.refresh) }) {
             Image(systemName: "arrow.clockwise")
                 .font(.system(size: 14))
@@ -419,6 +502,19 @@ struct UsageDetailView: View {
 
         ZStack(alignment: .topTrailing) {
             Menu {
+                if !eligibleWarmupAccounts.isEmpty {
+                    Button(action: { onMenuAction?(.warmUpIdle) }) {
+                        Label("\(L.Menu.warmUpIdle) (\(idleWarmupAccountCount))", systemImage: "flame")
+                    }
+                    .disabled(refreshState.isWarmingUp || idleWarmupAccountCount == 0)
+
+                    Button(action: { onMenuAction?(.warmUpAll) }) {
+                        Label("\(L.Menu.warmUpAll) (\(eligibleWarmupAccounts.count))", systemImage: "flame.fill")
+                    }
+                    .disabled(refreshState.isWarmingUp)
+                    Divider()
+                }
+
                 if UserSettings.shared.accounts.count > 1 {
                     Menu {
                         ForEach(UserSettings.shared.accounts) { account in
@@ -463,17 +559,6 @@ struct UsageDetailView: View {
                 Button(action: { onMenuAction?(.authSettings) }) {
                     Label(L.Menu.authSettings, systemImage: "key")
                 }
-                if hasAvailableUpdate {
-                    Button(action: { onMenuAction?(.checkForUpdates) }) {
-                        Label { Text(createUpdateMenuText()) } icon: {
-                            Image(systemName: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-                        }
-                    }
-                } else {
-                    Button(action: { onMenuAction?(.checkForUpdates) }) {
-                        Label(L.Menu.checkUpdates, systemImage: "arrow.triangle.2.circlepath")
-                    }
-                }
                 Button(action: { onMenuAction?(.about) }) {
                     Label(L.Menu.about, systemImage: "info.circle")
                 }
@@ -510,10 +595,6 @@ struct UsageDetailView: View {
             .fixedSize()
             .buttonStyle(.plain)
             .focusable(false)
-
-            if shouldShowUpdateBadge {
-                Circle().fill(Color.red).frame(width: 6, height: 6).offset(x: 5, y: -5)
-            }
         }
     }
 
@@ -553,19 +634,23 @@ struct UsageDetailView: View {
 
     @ViewBuilder
     private var updateNotificationView: some View {
-        if showUpdateNotification {
+        if showUpdateNotification, let message = refreshState.notificationMessage {
             HStack(spacing: 6) {
-                Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.red, .orange, .yellow, .green, .blue, .purple, .red],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                rainbowText(L.Update.Notification.available)
-                    .font(.system(size: 14))
+                switch refreshState.notificationType {
+                case .warmupSuccess:
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.green)
+                    Text(message).font(.system(size: 14))
+                case .warmupFailure:
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.orange)
+                    Text(message).font(.system(size: 14))
+                case .loading:
+                    ProgressView().controlSize(.small)
+                    Text(message).font(.system(size: 14))
+                }
             }
             .padding(.horizontal, 12)
             .padding(.top, -8)
@@ -721,6 +806,199 @@ struct UsageDetailView: View {
         }
     }
 
+    private var multiAccountBody: some View {
+        VStack(spacing: 10) {
+            headerView(provider: .claude, showsControls: true)
+
+            ScrollView(.horizontal, showsIndicators: selectedMenuBarAccountUsage.count + selectedMenuBarCodexUsage.count > 3) {
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(selectedMenuBarAccountUsage, id: \.0.id) { account, data in
+                        multiAccountColumn(account: account, data: data)
+                            .frame(width: 290, alignment: .top)
+
+                        if account.id != selectedMenuBarAccountUsage.last?.0.id || !selectedMenuBarCodexUsage.isEmpty {
+                            ProviderDivider(height: 218)
+                                .allowsHitTesting(false)
+                        }
+                    }
+
+                    ForEach(Array(selectedMenuBarCodexUsage.enumerated()), id: \.1.0.id) { index, entry in
+                        multiAccountCodexColumn(account: entry.0, codex: entry.1)
+                            .frame(width: 290, alignment: .top)
+
+                        if index != selectedMenuBarCodexUsage.count - 1 {
+                            ProviderDivider(height: 218)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                }
+            }
+
+            animationHintView(for: .claude)
+            updateNotificationView
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private func multiAccountCodexColumn(account: Account, codex: CodexUsageData?) -> some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 6) {
+                if let icon = ImageHelper.createCodexIcon(size: 14) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 14, height: 14)
+                } else {
+                    Image(systemName: "terminal.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Text(account.displayName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            if let codex {
+                CodexColumnView(
+                    codexUsageData: codex,
+                    showRemainingMode: $showRemainingMode,
+                    refreshState: refreshState,
+                    animationType: $codexAnimationType,
+                    rotationAngle: $rotationAngle,
+                    remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                    onRefresh: { onMenuAction?(.refreshCodex) },
+                    onAnimationHint: { showAnimationHint($0, provider: .codex) },
+                    onToggleRemainingMode: toggleRemainingMode
+                )
+            } else if let error = codexErrorMessage {
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 34))
+                        .foregroundColor(.orange)
+                    Text(error)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                }
+                .frame(height: 160)
+            } else {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text(L.Usage.loading)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(height: 160)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func multiAccountColumn(account: Account, data: UsageData?) -> some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: account.id == UserSettings.shared.currentAccountId ? "person.fill" : "person")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(account.displayName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            if let data {
+                multiAccountLargeRing(data: data)
+
+                VStack(spacing: 5) {
+                    UnifiedLimitRow(
+                        type: .fiveHour,
+                        data: data,
+                        showRemainingMode: showRemainingMode
+                    )
+                    UnifiedLimitRow(
+                        type: .sevenDay,
+                        data: data,
+                        showRemainingMode: showRemainingMode
+                    )
+                }
+                .padding(.horizontal, 14)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggleRemainingMode()
+                }
+            } else {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text(L.Usage.loading)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(height: 160)
+            }
+        }
+    }
+
+    private func multiAccountLargeRing(data: UsageData) -> some View {
+        let fiveHourPercentage = data.fiveHour?.percentage ?? 0
+        let weeklyPercentage = data.sevenDay?.percentage ?? 0
+        let fiveHourRange = UsageRingDisplay.displayedTrimRange(
+            usedPercentage: fiveHourPercentage,
+            showRemainingMode: showRemainingMode
+        )
+        let weeklyRange = UsageRingDisplay.displayedTrimRange(
+            usedPercentage: weeklyPercentage,
+            showRemainingMode: showRemainingMode
+        )
+
+        return ZStack {
+            Circle()
+                .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                .frame(width: 100, height: 100)
+
+            Circle()
+                .trim(from: fiveHourRange.from, to: fiveHourRange.to)
+                .stroke(
+                    colorForPercentage(fiveHourPercentage),
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                )
+                .frame(width: 100, height: 100)
+                .rotationEffect(.degrees(-90))
+
+            Circle()
+                .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                .frame(width: 114, height: 114)
+
+            Circle()
+                .trim(from: weeklyRange.from, to: weeklyRange.to)
+                .stroke(
+                    colorForSevenDay(weeklyPercentage),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                )
+                .frame(width: 114, height: 114)
+                .rotationEffect(.degrees(-90))
+
+            DetailUsageRingCenterText(
+                usedPercentage: fiveHourPercentage,
+                showRemainingMode: showRemainingMode
+            )
+        }
+        .frame(height: 122)
+        .contentShape(Circle())
+        .onTapGesture {
+            if refreshState.canRefresh && !refreshState.isRefreshing {
+                onMenuAction?(.refreshClaude)
+            }
+        }
+    }
+
     private func isAnimationHintVisible(for provider: ProviderType) -> Bool {
         showAnimationTypeHint && animationTypeHintProvider == provider
     }
@@ -751,7 +1029,9 @@ struct UsageDetailView: View {
 
     var body: some View {
         Group {
-            if isMultiProviderActive {
+            if isMultiAccountPopoverActive {
+                multiAccountBody
+            } else if isMultiProviderActive {
                 multiProviderBody(codex: codexUsageData)
             } else if isCodexOnlyActive {
                 codexOnlyBody(codex: codexUsageData)
@@ -865,21 +1145,21 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var errorMsg: String? = nil
     @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
+    @State static var multiAccountUsage: [UUID: UsageData] = [:]
+    @State static var multiAccountCodexUsage: [UUID: CodexUsageData] = [:]
     @State static var codexNeedsRelogin = false
     @StateObject static var refreshState = RefreshState()
-    @State static var hasUpdate = false
-    @State static var shouldShowBadge = false
 
     static var previews: some View {
         UsageDetailView(
             usageData: $sampleData,
+            multiAccountUsage: $multiAccountUsage,
+            multiAccountCodexUsage: $multiAccountCodexUsage,
             codexUsageData: $codexData,
             errorMessage: $errorMsg,
             codexErrorMessage: $codexErrorMsg,
             codexNeedsRelogin: $codexNeedsRelogin,
-            refreshState: refreshState,
-            hasAvailableUpdate: $hasUpdate,
-            shouldShowUpdateBadge: $shouldShowBadge
+            refreshState: refreshState
         )
     }
 }

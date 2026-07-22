@@ -55,11 +55,15 @@ class MenuBarUI {
     /// 初始化菜单栏状态项
     /// 设置点击事件处理
     private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: 24)
+        statusItem.isVisible = true
 
         if let button = statusItem.button {
             // 初始图标
             button.image = createSimpleCircleIcon()
+            button.imagePosition = .imageOnly
+            button.toolTip = "Usage4Claude"
+            button.appearsDisabled = false
         }
     }
 
@@ -103,9 +107,6 @@ class MenuBarUI {
     /// 打开弹出窗口
     /// - Parameter button: 菜单栏按钮
     func openPopover(relativeTo button: NSStatusBarButton) {
-        // 激活应用，使 popover 能够正确响应焦点变化
-        NSApp.activate(ignoringOtherApps: true)
-
         // Popover 挂在系统状态栏上，继承状态栏外观而非 NSApp.appearance
         // 需要在每次打开时显式设置，确保与用户偏好同步
         switch settings.appearance {
@@ -134,6 +135,12 @@ class MenuBarUI {
 
         // 设置窗口level，确保显示在其他窗口之上
         popoverWindow.level = .popUpMenu
+        popoverWindow.collectionBehavior = [
+            .canJoinAllSpaces,
+            .fullScreenAuxiliary,
+            .transient,
+            .ignoresCycle
+        ]
 
         // 让窗口成为 key window，显示 Focus 状态
         popoverWindow.makeKey()
@@ -240,11 +247,14 @@ class MenuBarUI {
     /// 创建标准菜单
     /// 用于右键菜单和弹出窗口中的三点菜单
     /// - Parameters:
-    ///   - hasUpdate: 是否有可用更新
-    ///   - shouldShowBadge: 是否显示更新徽章
     ///   - target: 菜单项目标对象
     /// - Returns: 配置好的 NSMenu 实例
-    func createStandardMenu(hasUpdate: Bool, shouldShowBadge: Bool, target: AnyObject?) -> NSMenu {
+    func createStandardMenu(
+        warmupAllCount: Int,
+        warmupIdleCount: Int,
+        isWarmingUp: Bool,
+        target: AnyObject?
+    ) -> NSMenu {
         let menu = NSMenu()
 
         // 账户选择子菜单（多账户时显示）
@@ -282,6 +292,41 @@ class MenuBarUI {
             menu.addItem(NSMenuItem.separator())
         }
 
+        if settings.menuBarAccountProfiles.count > 1 {
+            let profileItem = NSMenuItem(
+                title: "Menu Bar Profile",
+                action: nil,
+                keyEquivalent: ""
+            )
+            profileItem.submenu = createMenuBarProfileSubmenu(target: target)
+            setMenuItemIcon(profileItem, systemName: "rectangle.3.group")
+            menu.addItem(profileItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
+        if warmupAllCount > 0 {
+            let warmupIdleItem = NSMenuItem(
+                title: "\(L.Menu.warmUpIdle) (\(warmupIdleCount))",
+                action: #selector(MenuBarManager.warmUpIdleAccounts),
+                keyEquivalent: ""
+            )
+            warmupIdleItem.target = target
+            warmupIdleItem.isEnabled = !isWarmingUp && warmupIdleCount > 0
+            setMenuItemIcon(warmupIdleItem, systemName: "flame")
+            menu.addItem(warmupIdleItem)
+
+            let warmupAllItem = NSMenuItem(
+                title: "\(L.Menu.warmUpAll) (\(warmupAllCount))",
+                action: #selector(MenuBarManager.warmUpAllAccounts),
+                keyEquivalent: ""
+            )
+            warmupAllItem.target = target
+            warmupAllItem.isEnabled = !isWarmingUp
+            setMenuItemIcon(warmupAllItem, systemName: "flame.fill")
+            menu.addItem(warmupAllItem)
+            menu.addItem(NSMenuItem.separator())
+        }
+
         // 通用设置
         let generalItem = NSMenuItem(
             title: L.Menu.generalSettings,
@@ -302,44 +347,6 @@ class MenuBarUI {
         authItem.keyEquivalentModifierMask = [.command, .shift] as NSEvent.ModifierFlags
         setMenuItemIcon(authItem, systemName: "key.horizontal")
         menu.addItem(authItem)
-
-        // 检查更新
-        let updateItem = NSMenuItem(
-            title: "",
-            action: #selector(MenuBarManager.checkForUpdates),
-            keyEquivalent: "u"
-        )
-        updateItem.target = target
-
-        // 根据是否有更新设置不同的样式
-        if hasUpdate {
-            // 有更新：显示彩虹文字
-            let baseText = L.Menu.checkUpdates
-            let highlightText = L.Update.Notification.badgeMenu
-            let title = "\(baseText)\t\(highlightText)"
-
-            let highlightLocation = baseText.utf16.count + 1
-            let highlightLength = highlightText.utf16.count
-            let highlightRange = NSRange(location: highlightLocation, length: highlightLength)
-
-            let attributedTitle = createRainbowText(title, highlightRange: highlightRange)
-            updateItem.attributedTitle = attributedTitle
-
-            // 徽章图标：仅在用户未确认时显示
-            if shouldShowBadge {
-                if let badgeImage = createBadgeIcon() {
-                    updateItem.image = badgeImage
-                }
-            } else {
-                setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
-            }
-        } else {
-            // 无更新：普通样式
-            updateItem.title = L.Menu.checkUpdates
-            setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
-        }
-
-        menu.addItem(updateItem)
 
         // 关于
         let aboutItem = NSMenuItem(
@@ -471,67 +478,35 @@ class MenuBarUI {
         return submenu
     }
 
-    /// 创建彩虹文字 NSAttributedString
-    /// - Parameters:
-    ///   - text: 完整文本
-    ///   - highlightRange: 需要高亮的范围
-    /// - Returns: 带彩虹效果的属性字符串
-    private func createRainbowText(_ text: String, highlightRange: NSRange) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: text)
+    private func createMenuBarProfileSubmenu(target: AnyObject?) -> NSMenu {
+        let submenu = NSMenu()
 
-        let font = NSFont.menuFont(ofSize: 0)
-        attributedString.addAttribute(.font, value: font, range: NSRange(location: 0, length: text.utf16.count))
-
-        let paragraphStyle = NSMutableParagraphStyle()
-        let nsText = text as NSString
-        let baseText = nsText.substring(to: highlightRange.location)
-        let baseTextSize = (baseText as NSString).size(withAttributes: [.font: font])
-
-        let tabLocation = baseTextSize.width + 20
-        let tabStop = NSTextTab(textAlignment: .left, location: tabLocation, options: [:])
-        paragraphStyle.tabStops = [tabStop]
-
-        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: text.utf16.count))
-
-        let colors: [NSColor] = [.systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple]
-        let highlightText = nsText.substring(with: highlightRange) as String
-
-        var utf16Offset = 0
-        for (index, char) in highlightText.enumerated() {
-            let charString = String(char)
-            let charUtf16Count = charString.utf16.count
-            let colorIndex = index % colors.count
-
-            attributedString.addAttribute(
-                .foregroundColor,
-                value: colors[colorIndex],
-                range: NSRange(location: highlightRange.location + utf16Offset, length: charUtf16Count)
+        for profile in settings.menuBarAccountProfiles {
+            let item = NSMenuItem(
+                title: profile.name,
+                action: #selector(MenuBarManager.switchMenuBarProfile(_:)),
+                keyEquivalent: ""
             )
-
-            utf16Offset += charUtf16Count
+            item.target = target
+            item.representedObject = profile.id
+            if profile.id == settings.activeMenuBarAccountProfileId {
+                item.state = .on
+            }
+            submenu.addItem(item)
         }
 
-        return attributedString
-    }
+        submenu.addItem(NSMenuItem.separator())
 
-    /// 创建徽章图标（小红点）
-    /// - Returns: 带徽章的图标
-    private func createBadgeIcon() -> NSImage? {
-        let size = NSSize(width: 16, height: 16)
-        let image = NSImage(size: size)
-        image.lockFocus()
+        let cycleItem = NSMenuItem(
+            title: "Next Profile",
+            action: #selector(MenuBarManager.cycleMenuBarProfile),
+            keyEquivalent: "m"
+        )
+        cycleItem.target = target
+        cycleItem.keyEquivalentModifierMask = [.command, .option, .control]
+        submenu.addItem(cycleItem)
 
-        if let icon = NSImage(systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil) {
-            icon.size = NSSize(width: 12, height: 12)
-            icon.draw(in: NSRect(x: 0, y: 2, width: 12, height: 12))
-        }
-
-        NSColor.systemRed.setFill()
-        NSBezierPath(ovalIn: NSRect(x: 10, y: 10, width: 6, height: 6)).fill()
-
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
+        return submenu
     }
 
     // MARK: - Icon Management
@@ -540,20 +515,18 @@ class MenuBarUI {
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据
-    ///   - hasUpdate: 是否有可用更新
-    ///   - shouldShowBadge: 是否显示更新徽章
-    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
+    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, multiAccountUsage: [UUID: UsageData] = [:], multiAccountCodexUsage: [UUID: CodexUsageData] = [:]) {
         guard let button = statusItem.button else { return }
 
-        // 确定是否实际显示徽章
-        let showBadge = hasUpdate && shouldShowBadge
-
         // 生成缓存键
-        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: showBadge)
+        var cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData)
+        cacheKey += multiAccountCacheKeySuffix(multiAccountUsage: multiAccountUsage, multiAccountCodexUsage: multiAccountCodexUsage)
 
         // 尝试从缓存获取
         if let cachedImage = iconCache[cacheKey] {
             button.image = cachedImage
+            button.imagePosition = .imageOnly
+            statusItem.length = max(24, cachedImage.size.width + 6)
             return
         }
 
@@ -561,7 +534,8 @@ class MenuBarUI {
         let icon = iconRenderer.createIcon(
             usageData: usageData,
             codexUsageData: codexUsageData,
-            hasUpdate: showBadge,
+            multiAccountUsage: multiAccountUsage,
+            multiAccountCodexUsage: multiAccountCodexUsage,
             button: button
         )
 
@@ -572,6 +546,9 @@ class MenuBarUI {
         iconCache[cacheKey] = icon
 
         button.image = icon
+        button.imagePosition = .imageOnly
+        statusItem.isVisible = true
+        statusItem.length = max(24, icon.size.width + 6)
     }
 
     /// 清除图标缓存
@@ -579,13 +556,31 @@ class MenuBarUI {
         iconCache.removeAll()
     }
 
+    /// 多账户菜单栏模式的缓存键后缀（按选中顺序编码每个账户的 5小时/7天百分比）
+    private func multiAccountCacheKeySuffix(multiAccountUsage: [UUID: UsageData], multiAccountCodexUsage: [UUID: CodexUsageData] = [:]) -> String {
+        guard settings.isMultiAccountMenuBarActive else { return "" }
+        var suffix = "_ma\(settings.multiAccountShowWeekly ? "w" : "f")\(settings.menuBarShowCodex ? "c" : "n")"
+        for account in settings.menuBarAccounts {
+            let data = multiAccountUsage[account.id]
+            let fiveHour = data?.fiveHour?.percentage ?? 0
+            let sevenDay = data?.sevenDay?.percentage ?? 0
+            suffix += "_\(account.id.uuidString.prefix(8)):\(Int(fiveHour))/\(Int(sevenDay))"
+        }
+        for account in settings.menuBarCodexAccounts {
+            let data = multiAccountCodexUsage[account.id]
+            let primary = data?.primary?.percentage ?? 0
+            let secondary = data?.secondary?.percentage ?? 0
+            suffix += "_cx\(account.id.uuidString.prefix(8)):\(Int(primary))/\(Int(secondary))"
+        }
+        return suffix
+    }
+
     /// 生成图标缓存键
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据
-    ///   - hasUpdate: 是否有更新徽章
     /// - Returns: 缓存键字符串
-    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
+    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil) -> String {
         let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
             var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)"
@@ -618,10 +613,6 @@ class MenuBarUI {
                 }
             }
 
-            if hasUpdate {
-                key += "_badge"
-            }
-
             return key
         }
 
@@ -647,10 +638,6 @@ class MenuBarUI {
             if let p = codex.primary { key += "_cxp\(Int(p.percentage))" }
             if let s = codex.secondary { key += "_cxs\(Int(s.percentage))" }
             if let e = codex.extraUsage?.percentage { key += "_cxe\(Int(e))" }
-        }
-
-        if hasUpdate {
-            key += "_badge"
         }
 
         return key

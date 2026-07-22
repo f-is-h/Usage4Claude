@@ -23,6 +23,19 @@
 
 ---
 
+## 🍴 This Fork Adds
+
+This is a fork of [f-is-h/Usage4Claude](https://github.com/f-is-h/Usage4Claude) with a few extra features on top of the original:
+
+- **👥 Multiple Claude accounts** - manage several Claude accounts side by side, right from the menu bar.
+- **🔥 One-click menu-bar warm-up** - send a tiny 1-token "hi" message straight from the menu bar to anchor your rolling **5-hour usage window** exactly when you want it, effortlessly.
+- **🌙 Kimi for Coding support** - track [Kimi](https://kimi.com) usage (5-hour / 7-day / booster wallet) right alongside Claude.
+- **🗂️ `.env` account store** - load Claude accounts (session key + OAuth warm-up token) from `~/.config/usage4claude/.env`, so your credentials live in one place.
+
+Everything below is from the original project, which does the heavy lifting. 🙏
+
+---
+
 ## ✨ Features
 
 ### 🎯 Core Features

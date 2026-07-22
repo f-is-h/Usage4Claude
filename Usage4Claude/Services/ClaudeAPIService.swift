@@ -21,8 +21,32 @@ class ClaudeAPIService {
     /// 用户设置实例，用于获取认证信息
     private let settings = UserSettings.shared
 
+    /// 固定账户 ID：非 nil 时本实例始终为该账户拉取用量（多账户菜单栏模式）
+    /// nil 时跟随当前激活账户（原有行为）
+    private let accountId: UUID?
+
+    /// 固定账户的最新快照（每次读取都从 settings 取，token 轮换后保持新鲜）
+    private var pinnedAccount: Account? {
+        guard let accountId else { return nil }
+        return settings.accounts.first { $0.id == accountId }
+    }
+
+    /// 本实例实际使用的 Session Key / Organization ID
+    private var activeSessionKey: String { pinnedAccount?.sessionKey ?? settings.sessionKey }
+    private var activeOrganizationId: String { pinnedAccount?.organizationId ?? settings.organizationId }
+
+    /// 本实例凭据是否有效（与 UserSettings.hasValidCredentials 同语义）
+    private var hasValidActiveCredentials: Bool {
+        guard !activeSessionKey.isEmpty else { return false }
+        if activeSessionKey.hasPrefix("sk-ant-ort01-") { return true }
+        return !activeOrganizationId.isEmpty
+    }
+
     /// 共享的 URLSession 实例
     private let session: URLSession
+
+    /// Kimi for Coding 用量服务（sessionKey 为 sk-kimi- 前缀的账户走这里）
+    private let kimiService = KimiAPIService()
 
     /// 当前正在执行的网络请求任务
     private var currentTask: URLSessionDataTask?
@@ -45,7 +69,9 @@ class ClaudeAPIService {
 
     // MARK: - Initialization
 
-    init() {
+    /// - Parameter accountId: 固定为某个账户拉取用量；nil 表示跟随当前激活账户
+    init(accountId: UUID? = nil) {
+        self.accountId = accountId
         // 配置 URLSession
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 30  // 请求超时：30秒
@@ -92,17 +118,23 @@ class ClaudeAPIService {
         }
         #endif
 
+        // Kimi for Coding 账户（sessionKey 为 sk-kimi-… API key）：走 Kimi 用量 API
+        if KimiAPIService.isKimiKey(activeSessionKey) {
+            kimiService.fetchUsage(apiKey: activeSessionKey, completion: completion)
+            return
+        }
+
         // 取消之前的请求（如果存在）
         currentTask?.cancel()
 
         // 检查认证信息
-        guard settings.hasValidCredentials else {
+        guard hasValidActiveCredentials else {
             completion(.failure(UsageError.noCredentials))
             return
         }
 
         // OAuth 账户：凭据是 refresh_token，走 /api/oauth/usage 路径，跳过 Cloudflare cookie 流程
-        if Self.isOAuthRefreshToken(settings.sessionKey) {
+        if Self.isOAuthRefreshToken(activeSessionKey) {
             fetchOAuthUsage(completion: completion)
             return
         }
@@ -168,7 +200,7 @@ class ClaudeAPIService {
     /// 获取主 Usage API 数据（内部方法）
     /// - Parameter completion: 完成回调
     private func fetchMainUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
-        let urlString = "\(baseURL)/\(settings.organizationId)/usage"
+        let urlString = "\(baseURL)/\(activeOrganizationId)/usage"
 
         guard let url = URL(string: urlString) else {
             completion(.failure(UsageError.invalidURL))
@@ -182,8 +214,8 @@ class ClaudeAPIService {
         // 使用统一的 Header 构建器添加完整的浏览器 Headers 以绕过 Cloudflare
         ClaudeAPIHeaderBuilder.applyHeaders(
             to: &request,
-            organizationId: settings.organizationId,
-            sessionKey: settings.sessionKey
+            organizationId: activeOrganizationId,
+            sessionKey: activeSessionKey
         )
 
         // 创建并保存任务引用
@@ -372,12 +404,12 @@ class ClaudeAPIService {
     /// - Note: 此方法是可选的，即使失败也不应影响主要功能
     func fetchExtraUsage(completion: @escaping (Result<ExtraUsageData?, Error>) -> Void) {
         // 检查认证信息
-        guard settings.hasValidCredentials else {
+        guard hasValidActiveCredentials else {
             completion(.failure(UsageError.noCredentials))
             return
         }
 
-        let urlString = "\(baseURL)/\(settings.organizationId)/overage_spend_limit"
+        let urlString = "\(baseURL)/\(activeOrganizationId)/overage_spend_limit"
 
         guard let url = URL(string: urlString) else {
             completion(.failure(UsageError.invalidURL))
@@ -391,8 +423,8 @@ class ClaudeAPIService {
         // 使用统一的 Header 构建器添加完整的浏览器 Headers
         ClaudeAPIHeaderBuilder.applyHeaders(
             to: &request,
-            organizationId: settings.organizationId,
-            sessionKey: settings.sessionKey
+            organizationId: activeOrganizationId,
+            sessionKey: activeSessionKey
         )
 
         let task = session.dataTask(with: request) { data, response, error in
@@ -468,7 +500,7 @@ class ClaudeAPIService {
 
     /// OAuth 账户专用：用 refresh_token 换 access_token 后调用 /api/oauth/usage
     private func fetchOAuthUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
-        let refreshToken = settings.sessionKey
+        let refreshToken = activeSessionKey
         fetchOAuthAccessToken(refreshToken: refreshToken) { [weak self] result in
             guard let self else { return }
             switch result {
@@ -518,8 +550,13 @@ class ClaudeAPIService {
                 let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
                 if newRefresh != refreshToken {
                     Logger.api.notice("Claude OAuth: refresh_token 已轮换，静默写回")
+                    let pinnedAccountId = self.accountId
                     DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentClaudeSessionToken(newRefresh)
+                        if let pinnedAccountId {
+                            UserSettings.shared.silentlyUpdateClaudeSessionToken(accountId: pinnedAccountId, token: newRefresh)
+                        } else {
+                            UserSettings.shared.silentlyUpdateCurrentClaudeSessionToken(newRefresh)
+                        }
                     }
                 }
 

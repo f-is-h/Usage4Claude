@@ -11,6 +11,7 @@ import AppKit
 import Combine
 import OSLog
 import Sparkle
+import Carbon.HIToolbox
 
 /// 刷新状态管理器
 /// 用于在视图间同步刷新状态，支持响应式更新
@@ -21,6 +22,8 @@ class RefreshState: ObservableObject {
     @Published var refreshingProvider: ProviderType?
     /// 是否可以刷新（防抖控制）
     @Published var canRefresh = true
+    /// Prevents duplicate warm-up requests while a batch is running.
+    @Published var isWarmingUp = false
     /// 通知消息
     @Published var notificationMessage: String?
     /// 通知类型
@@ -29,7 +32,8 @@ class RefreshState: ObservableObject {
     /// 通知类型
     enum NotificationType {
         case loading          // 彩虹加载动画
-        case updateAvailable  // 彩虹文字通知
+        case warmupSuccess
+        case warmupFailure
     }
 
     func isRefreshingProvider(_ provider: ProviderType) -> Bool {
@@ -56,11 +60,17 @@ class MenuBarManager: ObservableObject {
     private var windowCloseObserver: NSObjectProtocol?
     /// 语言变化观察者
     private var languageChangeObserver: NSObjectProtocol?
+    private var menuBarProfileHotKeyRef: EventHotKeyRef?
+    private var menuBarProfileHotKeyHandler: EventHandlerRef?
 
     /// 当前用量数据（从 dataManager 同步）
     @Published var usageData: UsageData?
     /// Codex 用量数据（从 dataManager 同步）
     @Published var codexUsageData: CodexUsageData?
+    /// 多账户菜单栏用量数据（从 dataManager 同步）
+    @Published var multiAccountUsage: [UUID: UsageData] = [:]
+    /// 多 Codex 账户菜单栏用量数据（从 dataManager 同步）
+    @Published var multiAccountCodexUsage: [UUID: CodexUsageData] = [:]
     /// 加载状态（从 dataManager 同步）
     @Published var isLoading = false
     /// 错误消息（从 dataManager 同步）
@@ -69,22 +79,10 @@ class MenuBarManager: ObservableObject {
     @Published var codexErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Published var codexNeedsRelogin = false
-    /// 是否有可用更新（由 Sparkle 的 SPUUpdaterDelegate 回调驱动）
-    @Published var hasAvailableUpdate = false
-    /// 最新版本号（来自 Sparkle 发现的 appcast 条目）
-    @Published var latestVersion: String?
-    /// 用户已确认的版本号（点击检查更新后记录）
-    private var acknowledgedVersion: String?
 
     /// 刷新状态管理器（从 dataManager 引用）
     var refreshState: RefreshState {
         return dataManager.refreshState
-    }
-
-    /// 是否应该显示徽章和通知（用户未确认时才显示）
-    var shouldShowUpdateBadge: Bool {
-        guard hasAvailableUpdate, let latest = latestVersion else { return false }
-        return acknowledgedVersion != latest
     }
 
     // MARK: - Initialization
@@ -93,6 +91,7 @@ class MenuBarManager: ObservableObject {
         ui.configureClickHandler(target: self, action: #selector(handleClick))
         setupDataBindings()
         setupSettingsObservers()
+        setupMenuBarProfileHotKey()
     }
 
     /// 设置数据绑定
@@ -108,6 +107,20 @@ class MenuBarManager: ObservableObject {
         dataManager.$codexUsageData
             .sink { [weak self] data in
                 self?.codexUsageData = data
+                self?.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
+        dataManager.$multiAccountUsage
+            .sink { [weak self] data in
+                self?.multiAccountUsage = data
+                self?.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
+        dataManager.$multiAccountCodexUsage
+            .sink { [weak self] data in
+                self?.multiAccountCodexUsage = data
                 self?.updateMenuBarIcon()
             }
             .store(in: &cancellables)
@@ -143,7 +156,12 @@ class MenuBarManager: ObservableObject {
 
     /// 显示右键菜单
     private func showMenu() {
-        let menu = ui.createStandardMenu(hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge, target: self)
+        let menu = ui.createStandardMenu(
+            warmupAllCount: eligibleWarmupAccounts.count,
+            warmupIdleCount: idleWarmupAccounts.count,
+            isWarmingUp: refreshState.isWarmingUp,
+            target: self
+        )
         ui.statusItem.menu = menu
         ui.statusItem.button?.performClick(nil)
         ui.statusItem.menu = nil
@@ -161,6 +179,86 @@ class MenuBarManager: ObservableObject {
     @objc func openCodexStatus() {
         if let url = URL(string: "https://status.openai.com/") {
             NSWorkspace.shared.open(url)
+        }
+    }
+
+    // MARK: - Manual Warm-up
+
+    /// Accounts currently shown in the menu bar view: in multi-account mode the
+    /// accounts selected under "Menu Bar accounts", otherwise the single
+    /// displayed (current) account. Warm-ups only ever touch these — accounts
+    /// not selected in the current menu bar view are never warmed up.
+    private var menuBarVisibleClaudeAccounts: [Account] {
+        if settings.isMultiAccountMenuBarActive {
+            return settings.menuBarAccounts
+        }
+        if let current = settings.currentAccount, current.provider == .claude {
+            return [current]
+        }
+        return []
+    }
+
+    private var eligibleWarmupAccounts: [Account] {
+        menuBarVisibleClaudeAccounts.filter { account in
+            account.oauthToken?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        }
+    }
+
+    /// Matches UsageResetter: no known reset, or a reset already in the past, is idle.
+    private var idleWarmupAccounts: [Account] {
+        eligibleWarmupAccounts.filter { account in
+            let data = multiAccountUsage[account.id]
+                ?? (account.id == settings.currentAccountId ? usageData : nil)
+            guard let reset = data?.fiveHour?.resetsAt else {
+                return !account.hasLocallyActiveWarmupWindow
+            }
+            return reset <= Date()
+        }
+    }
+
+    @objc func warmUpIdleAccounts() {
+        performWarmup(accounts: idleWarmupAccounts)
+    }
+
+    @objc func warmUpAllAccounts() {
+        performWarmup(accounts: eligibleWarmupAccounts)
+    }
+
+    private func performWarmup(accounts: [Account]) {
+        guard !refreshState.isWarmingUp else { return }
+        guard !accounts.isEmpty else {
+            showWarmupMessage(L.Menu.warmUpNone, type: .warmupFailure)
+            return
+        }
+
+        refreshState.isWarmingUp = true
+        ClaudeWarmupService.shared.warmUp(accounts: accounts) { [weak self] summary in
+            guard let self else { return }
+            self.refreshState.isWarmingUp = false
+            let type: RefreshState.NotificationType = summary.succeeded == summary.total
+                ? .warmupSuccess : .warmupFailure
+            self.showWarmupMessage(L.Menu.warmUpSucceeded(summary.succeeded, summary.total), type: type)
+
+            let warmedAt = Date()
+            for result in summary.results where result.succeeded {
+                self.settings.markAccountWarmed(accountId: result.accountID, at: warmedAt)
+            }
+
+            for result in summary.results where !result.succeeded {
+                Logger.menuBar.info("Warm-up failed for \(result.accountName, privacy: .public): \(result.error ?? "Unknown error", privacy: .public)")
+            }
+
+            // Refresh visible usage so newly anchored windows appear immediately.
+            self.dataManager.fetchUsage()
+        }
+    }
+
+    private func showWarmupMessage(_ message: String, type: RefreshState.NotificationType) {
+        refreshState.notificationType = type
+        refreshState.notificationMessage = message
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard self?.refreshState.notificationMessage == message else { return }
+            self?.refreshState.notificationMessage = nil
         }
     }
 
@@ -184,9 +282,6 @@ class MenuBarManager: ObservableObject {
         case .authSettings:
             closePopover()
             openSettingsWindow(tab: 1)
-        case .checkForUpdates:
-            closePopover()
-            checkForUpdates()
         case .about:
             closePopover()
             openSettingsWindow(tab: 2)
@@ -207,6 +302,10 @@ class MenuBarManager: ObservableObject {
         case .codexRelogin:
             closePopover()
             WebLoginWindowManager.shared.showCodexLoginWindow()
+        case .warmUpIdle:
+            warmUpIdleAccounts()
+        case .warmUpAll:
+            warmUpAllAccounts()
         case .quit:
             quitApp()
         }
@@ -221,25 +320,15 @@ class MenuBarManager: ObservableObject {
                 // 设置改变时清除图标缓存（显示模式可能改变）
                 self.ui.clearIconCache()
 
+                // 菜单栏账户选择可能变化：清理已取消选择的账户数据并补拉新选中账户
+                self.dataManager.syncMultiAccountFetches()
+
                 // 立即更新图标，无需等待
                 self.updateMenuBarIcon()
 
                 #if DEBUG
                 // 调试模式下立即刷新数据（不使用防抖）
                 self.dataManager.fetchUsage()
-
-                // 模拟更新开关变化时，直接驱动 Sparkle 徽章状态机（无需真实 appcast）
-                if self.settings.simulateUpdateAvailable {
-                    self.hasAvailableUpdate = true
-                    self.latestVersion = "2.0.0"
-                    self.updateMenuBarIcon()
-                    Logger.menuBar.debug("模拟更新已启用")
-                } else {
-                    self.hasAvailableUpdate = false
-                    self.latestVersion = nil
-                    self.updateMenuBarIcon()
-                    Logger.menuBar.debug("模拟更新已禁用")
-                }
                 #endif
             }
             .store(in: &cancellables)
@@ -294,9 +383,6 @@ class MenuBarManager: ObservableObject {
         // 智能刷新数据
         dataManager.refreshOnPopoverOpen()
 
-        // 显示更新通知（如果有）
-        showUpdateNotificationIfNeeded()
-
         ui.setPopoverContentSize(usageDetailContentSize())
 
         // 创建并设置内容视图
@@ -304,6 +390,14 @@ class MenuBarManager: ObservableObject {
             usageData: Binding(
                 get: { self.usageData },
                 set: { self.usageData = $0 }
+            ),
+            multiAccountUsage: Binding(
+                get: { self.multiAccountUsage },
+                set: { self.multiAccountUsage = $0 }
+            ),
+            multiAccountCodexUsage: Binding(
+                get: { self.multiAccountCodexUsage },
+                set: { self.multiAccountCodexUsage = $0 }
             ),
             codexUsageData: Binding(
                 get: { self.codexUsageData },
@@ -324,15 +418,7 @@ class MenuBarManager: ObservableObject {
             refreshState: self.refreshState,
             onMenuAction: { [weak self] action in
                 self?.handleMenuAction(action)
-            },
-            hasAvailableUpdate: Binding(
-                get: { self.hasAvailableUpdate },
-                set: { self.hasAvailableUpdate = $0 }
-            ),
-            shouldShowUpdateBadge: Binding(
-                get: { self.shouldShowUpdateBadge },
-                set: { _ in }
-            )
+            }
         ))
 
         // 打开 popover
@@ -346,6 +432,12 @@ class MenuBarManager: ObservableObject {
         let baseHeight: CGFloat = 190
         let rowHeight: CGFloat = 26
         let spacing: CGFloat = 5
+
+        if settings.isMultiAccountMenuBarActive {
+            let codexColumnCount = settings.menuBarCodexAccounts.count
+            let columnCount = max(settings.menuBarAccounts.count + codexColumnCount, 1)
+            return NSSize(width: min(CGFloat(columnCount) * 290, 870), height: 286)
+        }
 
         if settings.isMultiProviderActive && (codexUsageData != nil || codexErrorMessage != nil || settings.hasValidCodexCredentials) {
             let claudeRowCount: Int
@@ -397,18 +489,6 @@ class MenuBarManager: ObservableObject {
         let rowCount = activeCount == 1 ? 2 : activeCount
         let rowsHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
         return NSSize(width: 290, height: baseHeight + rowsHeight)
-    }
-
-    /// 显示更新通知（如果需要）
-    private func showUpdateNotificationIfNeeded() {
-        guard shouldShowUpdateBadge else { return }
-
-        dataManager.refreshState.notificationMessage = L.Update.Notification.available
-        dataManager.refreshState.notificationType = .updateAvailable
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.dataManager.refreshState.notificationMessage = nil
-        }
     }
 
     /// 关闭弹出窗口
@@ -485,37 +565,17 @@ class MenuBarManager: ObservableObject {
         settings.switchToCodexAccount(account)
     }
 
-    @objc func checkForUpdates() {
-        // 记录用户已确认当前版本，隐藏徽章与彩虹文字
-        if let version = latestVersion {
-            acknowledgedVersion = version
-            objectWillChange.send()
-            updateMenuBarIcon()
-        }
-
-        // 交给 Sparkle：模态对话框、下载进度、EdDSA 签名校验和重启都由它处理。
-        // 通过 AppDelegate.shared 访问控制器是因为 `NSApp.delegate as? AppDelegate`
-        // 在 NSApplicationDelegateAdaptor 包装下不能可靠转换。
-        guard let appDelegate = AppDelegate.shared else {
-            Logger.menuBar.error("checkForUpdates: AppDelegate.shared not set")
-            return
-        }
-        appDelegate.updaterController.checkForUpdates(self)
-    }
-    
-    // MARK: - Update Status（由 Sparkle 驱动）
-
-    /// Sparkle 发现可用更新时调用：点亮徽章 / 彩虹文字状态机。
-    func applyUpdateAvailable(version: String?) {
-        hasAvailableUpdate = true
-        latestVersion = version
+    @objc func switchMenuBarProfile(_ sender: NSMenuItem) {
+        guard let profileId = sender.representedObject as? UUID,
+              let profile = settings.menuBarAccountProfiles.first(where: { $0.id == profileId }) else { return }
+        settings.applyMenuBarAccountProfile(profile)
+        dataManager.refreshOnPopoverOpen()
         updateMenuBarIcon()
     }
 
-    /// Sparkle 未发现更新时调用：清除徽章状态。
-    func applyUpdateNotFound() {
-        hasAvailableUpdate = false
-        latestVersion = nil
+    @objc func cycleMenuBarProfile() {
+        settings.cycleMenuBarAccountProfile()
+        dataManager.refreshOnPopoverOpen()
         updateMenuBarIcon()
     }
 
@@ -609,7 +669,71 @@ class MenuBarManager: ObservableObject {
 
     /// 更新菜单栏图标
     private func updateMenuBarIcon() {
-        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
+        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, multiAccountUsage: multiAccountUsage, multiAccountCodexUsage: multiAccountCodexUsage)
+    }
+
+    // MARK: - Menu Bar Profile Hotkey
+
+    private func setupMenuBarProfileHotKey() {
+        var eventType = EventTypeSpec(
+            eventClass: OSType(kEventClassKeyboard),
+            eventKind: UInt32(kEventHotKeyPressed)
+        )
+
+        let userData = Unmanaged.passUnretained(self).toOpaque()
+        let installStatus = InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, _, userData in
+                guard let userData else { return noErr }
+                let manager = Unmanaged<MenuBarManager>.fromOpaque(userData).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    manager.cycleMenuBarProfile()
+                }
+                return noErr
+            },
+            1,
+            &eventType,
+            userData,
+            &menuBarProfileHotKeyHandler
+        )
+
+        guard installStatus == noErr else {
+            Logger.menuBar.error("菜单栏账户配置快捷键监听注册失败: \(installStatus)")
+            return
+        }
+
+        var hotKeyID = EventHotKeyID(signature: Self.fourCharCode("U4CP"), id: 1)
+        let hotKeyStatus = RegisterEventHotKey(
+            UInt32(kVK_ANSI_M),
+            UInt32(cmdKey | optionKey | controlKey),
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &menuBarProfileHotKeyRef
+        )
+
+        if hotKeyStatus != noErr {
+            Logger.menuBar.error("菜单栏账户配置快捷键注册失败: \(hotKeyStatus)")
+        }
+    }
+
+    private func unregisterMenuBarProfileHotKey() {
+        if let hotKeyRef = menuBarProfileHotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            menuBarProfileHotKeyRef = nil
+        }
+        if let handler = menuBarProfileHotKeyHandler {
+            RemoveEventHandler(handler)
+            menuBarProfileHotKeyHandler = nil
+        }
+    }
+
+    private static func fourCharCode(_ string: String) -> OSType {
+        var result: OSType = 0
+        for scalar in string.unicodeScalars.prefix(4) {
+            result = (result << 8) + OSType(scalar.value)
+        }
+        return result
     }
     
     // MARK: - Cleanup
@@ -617,6 +741,8 @@ class MenuBarManager: ObservableObject {
     /// 清理所有资源
     /// 在应用退出时调用，停止所有定时器并移除所有观察者
     func cleanup() {
+        unregisterMenuBarProfileHotKey()
+
         // 停止 popover 刷新定时器
         dataManager.stopPopoverRefreshTimer()
 

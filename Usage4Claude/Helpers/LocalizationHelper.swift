@@ -26,6 +26,12 @@ enum L {
         static var quit: String { localized("menu.quit") }
         static var account: String { localized("menu.account") }
         static var accountPrefix: String { localized("menu.account_prefix") }
+        static var warmUpIdle: String { localized("menu.warm_up_idle") }
+        static var warmUpAll: String { localized("menu.warm_up_all") }
+        static var warmUpNone: String { localized("menu.warm_up_none") }
+        static func warmUpSucceeded(_ succeeded: Int, _ total: Int) -> String {
+            String(format: localized("menu.warm_up_succeeded"), succeeded, total)
+        }
     }
 
     // MARK: - Account Management
@@ -52,6 +58,12 @@ enum L {
         static var codexAccounts: String { localized("account.codex_accounts") }
         static var addCodexAccount: String { localized("account.add_codex_account") }
         static var codexCurrentAccount: String { localized("account.codex_current_account") }
+        static var oauthToken: String { localized("account.oauth_token") }
+        static var oauthTokenPlaceholder: String { localized("account.oauth_token_placeholder") }
+        static var oauthTokenStored: String { localized("account.oauth_token_stored") }
+        static var oauthTokenHint: String { localized("account.oauth_token_hint") }
+        static var saveOAuthToken: String { localized("account.save_oauth_token") }
+        static var removeOAuthToken: String { localized("account.remove_oauth_token") }
     }
     
     // MARK: - Usage Detail View
@@ -95,6 +107,11 @@ enum L {
         static var menubarHint: String { localized("settings.general.menubar_hint") }
         static var menubarTheme: String { localized("settings.general.menubar_theme") }
         static var displayContent: String { localized("settings.general.display_content") }
+        static var menubarAccounts: String { localized("settings.general.menubar_accounts") }
+        static var menubarAccountsHint: String { localized("settings.general.menubar_accounts_hint") }
+        static var menubarAccountsStyle: String { localized("settings.general.menubar_accounts_style") }
+        static var menubarAccountsStyleFiveHour: String { localized("settings.general.menubar_accounts_style_five_hour") }
+        static var menubarAccountsStyleBoth: String { localized("settings.general.menubar_accounts_style_both") }
         static var monochromeNoIconHint: String { localized("settings.general.monochrome_no_icon_hint") }
         static var refreshSection: String { localized("settings.general.refresh_section") }
         static var refreshMode: String { localized("settings.general.refresh_mode") }

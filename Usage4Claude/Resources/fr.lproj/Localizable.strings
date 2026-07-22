@@ -18,6 +18,10 @@
 "menu.quit" = "Quitter Usage4Claude";
 "menu.account" = "Compte";
 "menu.account_prefix" = "Compte :";
+"menu.warm_up_idle" = "Initialiser les comptes inactifs";
+"menu.warm_up_all" = "Initialiser tous les comptes";
+"menu.warm_up_none" = "Aucun compte n’est prêt à être initialisé.";
+"menu.warm_up_succeeded" = "%d compte(s) initialisé(s) sur %d";
 
 // MARK: - Usage Detail View
 "usage.title" = "Utilisation de Claude";
@@ -55,6 +59,11 @@
 "settings.general.menubar_hint" = "Choisir ce qui s'affiche dans la barre des menus";
 "settings.general.menubar_theme" = "Thème de la barre des menus";
 "settings.general.display_content" = "Contenu affiché";
+"settings.general.menubar_accounts" = "Comptes dans la barre de menus";
+"settings.general.menubar_accounts_hint" = "Les comptes sélectionnés sont affichés côte à côte dans la barre de menus";
+"settings.general.menubar_accounts_style" = "Anneaux par compte";
+"settings.general.menubar_accounts_style_five_hour" = "Anneau 5 heures uniquement";
+"settings.general.menubar_accounts_style_both" = "Anneaux 5 heures + hebdomadaire";
 "settings.general.monochrome_no_icon_hint" = "L'affichage de l'icône n'est pas disponible avec le thème monochrome";
 "settings.general.refresh_section" = "Réglages d'actualisation";
 "settings.general.refresh_mode" = "Mode d'actualisation";
@@ -421,6 +430,12 @@
 "account.codex_accounts" = "Comptes Codex";
 "account.add_codex_account" = "Ajouter un compte Codex";
 "account.codex_current_account" = "Compte Codex actuel";
+"account.oauth_token" = "Jeton OAuth d’initialisation";
+"account.oauth_token_placeholder" = "Coller sk-ant-oat01-…";
+"account.oauth_token_stored" = "Enregistré";
+"account.oauth_token_hint" = "Jeton d’inférence créé par `claude setup-token`. Stocké dans le trousseau et utilisé uniquement pour les initialisations manuelles.";
+"account.save_oauth_token" = "Enregistrer";
+"account.remove_oauth_token" = "Supprimer le jeton OAuth";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "Préparation de la connexion…";

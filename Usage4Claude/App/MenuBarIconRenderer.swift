@@ -35,13 +35,13 @@ class MenuBarIconRenderer {
     /// - Parameters:
     ///   - usageData: Claude 用量数据
     ///   - codexUsageData: Codex 用量数据（nil 表示无 Codex 账号）
-    ///   - hasUpdate: 是否有可用更新
     ///   - button: 状态栏按钮（用于获取外观模式）
     /// - Returns: 生成的图标图像
     func createIcon(
         usageData: UsageData?,
         codexUsageData: CodexUsageData? = nil,
-        hasUpdate: Bool,
+        multiAccountUsage: [UUID: UsageData] = [:],
+        multiAccountCodexUsage: [UUID: CodexUsageData] = [:],
         button: NSStatusBarButton?
     ) -> NSImage {
         // 确定单色/彩色模式
@@ -52,6 +52,17 @@ class MenuBarIconRenderer {
             isMonochrome = settings.iconStyleMode == .monochrome || forceMonochrome
         } else {
             isMonochrome = settings.iconStyleMode == .monochrome
+        }
+
+        // 多账户菜单栏模式：每个选中账户一组圆环
+        if settings.isMultiAccountMenuBarActive {
+            return createMultiAccountIcon(
+                multiAccountUsage: multiAccountUsage,
+                codexUsageData: codexUsageData,
+                multiAccountCodexUsage: multiAccountCodexUsage,
+                isMonochrome: isMonochrome,
+                button: button
+            )
         }
 
         var icon: NSImage
@@ -81,7 +92,6 @@ class MenuBarIconRenderer {
                         createCircleTemplateImage(percentage: 0, size: size, button: button, removeBackground: true) :
                         createCircleImage(percentage: 0, size: size, button: button, removeBackground: true)
                 }
-                if hasUpdate { return addBadgeToImage(defaultIcon) }
                 return defaultIcon
             }
 
@@ -104,8 +114,82 @@ class MenuBarIconRenderer {
             }
         }
 
-        if hasUpdate { icon = addBadgeToImage(icon) }
         return icon
+    }
+
+    // MARK: - Multi-Account Icon Creation
+
+    /// 多账户菜单栏图标：[App 图标?] + 每个账户 [5小时圆环 (+ 每周虚线圆环)]，账户之间用分隔线区隔
+    /// Codex 数据存在时在末尾追加 Codex 指标（与多 Provider 模式一致）
+    private func createMultiAccountIcon(
+        multiAccountUsage: [UUID: UsageData],
+        codexUsageData: CodexUsageData?,
+        multiAccountCodexUsage: [UUID: CodexUsageData],
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        var icons: [NSImage] = []
+        let removeBackground = settings.iconStyleMode == .colorTranslucent
+        let circleSize = NSSize(width: metricIconSize, height: metricIconSize)
+
+        if settings.iconDisplayMode == .iconOnly || settings.iconDisplayMode == .both {
+            let iconName = isMonochrome ? "AppIconReverse" : "AppIcon"
+            if let brand = ImageHelper.createSquareIcon(named: iconName, size: providerBrandIconSize, isTemplate: isMonochrome) {
+                icons.append(brand)
+            }
+        }
+
+        if settings.iconDisplayMode == .percentageOnly || settings.iconDisplayMode == .both {
+            for account in settings.menuBarAccounts {
+                // 数据未到达时显示 0% 占位，保持每个账户的位置稳定
+                let data = multiAccountUsage[account.id]
+                let fiveHour = data?.fiveHour?.percentage ?? 0
+                if isMonochrome {
+                    icons.append(createCircleTemplateImage(percentage: fiveHour, size: circleSize, button: button, removeBackground: true))
+                } else {
+                    icons.append(createCircleImage(percentage: fiveHour, size: circleSize, button: button, removeBackground: removeBackground))
+                }
+
+                if settings.multiAccountShowWeekly {
+                    let weekly = data?.sevenDay?.percentage ?? 0
+                    if isMonochrome {
+                        icons.append(createCircleTemplateImage(percentage: weekly, size: circleSize, useSevenDayStyle: true, button: button, removeBackground: true))
+                    } else {
+                        icons.append(createCircleImage(percentage: weekly, size: circleSize, useSevenDayColor: true, button: button, removeBackground: removeBackground))
+                    }
+                }
+            }
+        }
+
+        // 每个选中的 Codex 账户一组圆环（5小时 + 可选 7天）
+        for account in settings.menuBarCodexAccounts {
+            let data = multiAccountCodexUsage[account.id]
+                ?? (account.id == settings.currentCodexAccountId ? codexUsageData : nil)
+            let primary = data?.primary?.percentage ?? 0
+            if isMonochrome {
+                icons.append(createCircleTemplateImage(percentage: primary, size: circleSize, button: button, removeBackground: true))
+            } else {
+                let color = UsageColorScheme.codexPrimaryColorAdaptive(primary, for: button)
+                icons.append(createCircleImage(percentage: primary, size: circleSize, colorOverride: color, button: button, removeBackground: removeBackground))
+            }
+
+            if settings.multiAccountShowWeekly {
+                let secondary = data?.secondary?.percentage ?? 0
+                if isMonochrome {
+                    icons.append(createCircleTemplateImage(percentage: secondary, size: circleSize, useSevenDayStyle: true, button: button, removeBackground: true))
+                } else {
+                    let color = UsageColorScheme.codexSecondaryColorAdaptive(secondary, for: button)
+                    icons.append(createCircleImage(percentage: secondary, size: circleSize, useSevenDayColor: true, colorOverride: color, button: button, removeBackground: removeBackground))
+                }
+            }
+        }
+
+        guard !icons.isEmpty else {
+            return createMenuBarDividerIcon(isMonochrome: isMonochrome)
+        }
+        let combined = combineIcons(icons, spacing: 2.0, height: metricIconSize)
+        combined.isTemplate = isMonochrome
+        return combined
     }
 
     // MARK: - Multi-Provider Icon Creation
@@ -294,12 +378,10 @@ class MenuBarIconRenderer {
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
         let radius = min(size.width, size.height) / 2 - 2
 
-        if !removeBackground {
-            let backgroundCircle = NSBezierPath()
-            backgroundCircle.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor.white.withAlphaComponent(0.5).setFill()
-            backgroundCircle.fill()
-        }
+        let backgroundCircle = NSBezierPath()
+        backgroundCircle.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
+        menuBarCircleFillColor(for: button).setFill()
+        backgroundCircle.fill()
 
         NSColor.gray.withAlphaComponent(0.5).setStroke()
         let backgroundPath = NSBezierPath()
@@ -358,7 +440,11 @@ class MenuBarIconRenderer {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
 
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: menuBarCircleTextColor(for: button),
+            .paragraphStyle: paragraphStyle
+        ]
         let textSize = text.size(withAttributes: attrs)
         let textOrigin = NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2)
         text.draw(at: textOrigin, withAttributes: attrs)
@@ -425,13 +511,31 @@ class MenuBarIconRenderer {
         let text = "\(Int(percentage))"
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: paragraphStyle
+        ]
         let textSize = text.size(withAttributes: attrs)
         text.draw(at: NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2), withAttributes: attrs)
 
         image.unlockFocus()
         image.isTemplate = true
         return image
+    }
+
+    private func menuBarCircleFillColor(for button: NSStatusBarButton?) -> NSColor {
+        if UsageColorScheme.isDarkMode(for: button) {
+            return NSColor(calibratedWhite: 0.74, alpha: 0.82)
+        }
+        return NSColor(calibratedWhite: 0.88, alpha: 0.88)
+    }
+
+    private func menuBarCircleTextColor(for button: NSStatusBarButton?) -> NSColor {
+        if UsageColorScheme.isDarkMode(for: button) {
+            return NSColor(calibratedWhite: 0.08, alpha: 1.0)
+        }
+        return NSColor(calibratedWhite: 0.18, alpha: 1.0)
     }
 
     // MARK: - Utility Icons
@@ -452,32 +556,6 @@ class MenuBarIconRenderer {
         image.unlockFocus()
         image.isTemplate = true
         return image
-    }
-
-    /// 在图标上添加徽章（小红点）
-    private func addBadgeToImage(_ baseImage: NSImage) -> NSImage {
-        let size = baseImage.size
-        let expandedSize = NSSize(width: size.width + 2.5, height: size.height + 2.5)
-        let badgedImage = NSImage(size: expandedSize)
-
-        badgedImage.lockFocus()
-        baseImage.draw(in: NSRect(origin: .zero, size: size))
-
-        let badgeRadius: CGFloat = 2.0
-        let badgeDiameter = badgeRadius * 2
-        let badgeX = expandedSize.width - badgeDiameter - 1.5
-        let badgeY = expandedSize.height - badgeDiameter - 1.5
-        let badgeRect = NSRect(x: badgeX, y: badgeY, width: badgeDiameter, height: badgeDiameter)
-
-        NSGraphicsContext.saveGraphicsState()
-        NSColor.systemRed.setFill()
-        NSBezierPath(ovalIn: badgeRect).fill()
-        NSGraphicsContext.restoreGraphicsState()
-
-        badgedImage.unlockFocus()
-        badgedImage.isTemplate = baseImage.isTemplate
-
-        return badgedImage
     }
 
     // MARK: - Icon Combination Methods (v2.0)
