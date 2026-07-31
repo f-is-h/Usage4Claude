@@ -124,6 +124,8 @@
 "display.none" = "Keine Anzeige";
 "display.show_icon" = "Symbol anzeigen";
 "display.show_percentage" = "Prozent anzeigen";
+"display.menu_bar_countdown" = "Reset-Countdown";
+"display.menu_bar_countdown_description" = "Zeigt für jedes Reset-Fenster (5 Stunden und 7 Tage) einen Countdown-Ring neben dem zugehörigen Nutzungsring in der Menüleiste an.";
 
 // MARK: - Refresh Interval
 "refresh.smart_mode" = "Intelligente Frequenz";
