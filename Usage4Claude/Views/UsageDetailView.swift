@@ -14,6 +14,9 @@ struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
     @Binding var errorMessage: String?
+    /// 当前错误是否为认证类错误：认证错误全屏提示引导去设置；
+    /// 瞬时错误（限流/网络）在有缓存数据时保留数据展示，只显示顶部横幅
+    @Binding var errorRequiresAuthAction: Bool
     @Binding var codexErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Binding var codexNeedsRelogin: Bool
@@ -180,20 +183,30 @@ struct UsageDetailView: View {
         isMultiProviderActive ? 580 : 290
     }
 
+    /// 瞬时错误横幅高度（两行 caption 文本 + 内边距）+ VStack 行距
+    private var staleBannerHeight: CGFloat {
+        showsStaleDataBanner ? 53 : 0
+    }
+
     private var contentHeight: CGFloat {
         if isMultiProviderActive {
-            return multiProviderHeight
+            return multiProviderHeight + staleBannerHeight
         }
         if isCodexOnlyActive {
             return codexOnlyHeight
         }
-        return dynamicHeight
+        return dynamicHeight + staleBannerHeight
+    }
+
+    /// 是否显示"数据已过期"横幅：有缓存数据的瞬时错误不清空界面，只提示
+    private var showsStaleDataBanner: Bool {
+        errorMessage != nil && usageData != nil && !errorRequiresAuthAction
     }
 
     @ViewBuilder
     private var claudeMainContent: some View {
-        if let error = errorMessage {
-            // 错误信息
+        if let error = errorMessage, usageData == nil || errorRequiresAuthAction {
+            // 错误信息（无缓存数据或认证类错误时才全屏展示）
             VStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
@@ -206,7 +219,7 @@ struct UsageDetailView: View {
                 // 操作按钮组
                 HStack(spacing: 12) {
                     // 如果是认证信息错误，显示设置按钮
-                    if error.contains("认证") || error.contains("配置") || error.contains("Authentication") || error.contains("configured") {
+                    if errorRequiresAuthAction {
                         Button(action: {
                             onMenuAction?(.authSettings)
                         }) {
@@ -238,6 +251,11 @@ struct UsageDetailView: View {
         } else if let data = usageData {
             // 使用数据
             VStack(spacing: 15) {
+                // 瞬时错误横幅：保留缓存数据展示，仅在顶部轻量提示
+                if showsStaleDataBanner, let error = errorMessage {
+                    staleDataBanner(error)
+                }
+
                 // 圆形进度条
                 ZStack {
                     let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
@@ -413,6 +431,34 @@ struct UsageDetailView: View {
             }
             .frame(height: 100)
         }
+    }
+
+    /// 瞬时错误（如 429 限流）横幅：错误文案单行截断，完整内容见悬停提示
+    @ViewBuilder
+    private func staleDataBanner(_ error: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(error)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Text(L.Error.showingCachedData)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.orange.opacity(0.12))
+        )
+        .padding(.horizontal, 14)
+        .help(error)
     }
 
     // MARK: - Header Buttons
@@ -878,6 +924,7 @@ struct UsageDetailView_Previews: PreviewProvider {
     )
 
     @State static var errorMsg: String? = nil
+    @State static var errorRequiresAuth = false
     @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
     @State static var codexNeedsRelogin = false
@@ -890,6 +937,7 @@ struct UsageDetailView_Previews: PreviewProvider {
             usageData: $sampleData,
             codexUsageData: $codexData,
             errorMessage: $errorMsg,
+            errorRequiresAuthAction: $errorRequiresAuth,
             codexErrorMessage: $codexErrorMsg,
             codexNeedsRelogin: $codexNeedsRelogin,
             refreshState: refreshState,

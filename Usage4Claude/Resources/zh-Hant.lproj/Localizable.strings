@@ -169,6 +169,7 @@
 "error.no_organizations_found" = "未找到組織";
 "error.unauthorized" = "認證失敗，請檢查您的憑據";
 "error.rate_limited" = "請求過於頻繁，請稍後再試";
+"error.showing_cached_data" = "顯示上次取得的資料";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "已啟用";

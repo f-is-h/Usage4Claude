@@ -169,6 +169,7 @@
 "error.no_organizations_found" = "Aucune organisation trouvée";
 "error.unauthorized" = "Échec de l'authentification, veuillez vérifier vos identifiants";
 "error.rate_limited" = "Trop de requêtes, veuillez réessayer plus tard";
+"error.showing_cached_data" = "Affichage des dernières données récupérées";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Activé";

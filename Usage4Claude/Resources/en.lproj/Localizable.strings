@@ -169,6 +169,7 @@
 "error.no_organizations_found" = "No organizations found";
 "error.unauthorized" = "Authentication failed, please check your credentials";
 "error.rate_limited" = "Too many requests, please try again later";
+"error.showing_cached_data" = "Showing last fetched data";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Enabled";

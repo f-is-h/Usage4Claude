@@ -169,6 +169,7 @@
 "error.no_organizations_found" = "組織が見つかりませんでした";
 "error.unauthorized" = "認証に失敗しました。認証情報を確認してください";
 "error.rate_limited" = "リクエストが多すぎます。しばらくしてから再試行してください";
+"error.showing_cached_data" = "最後に取得したデータを表示しています";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "有効";
