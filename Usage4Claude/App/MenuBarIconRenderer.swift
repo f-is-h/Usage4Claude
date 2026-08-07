@@ -108,6 +108,119 @@ class MenuBarIconRenderer {
         return icon
     }
 
+    /// Creates one group per saved account. Unlike the legacy API,
+    /// this deliberately does not collapse accounts of the same provider.
+    func createIcon(
+        accountSnapshots: [AccountUsageSnapshot],
+        hasUpdate: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        guard !accountSnapshots.isEmpty else {
+            let divider = createMenuBarDividerIcon(isMonochrome: settings.iconStyleMode == .monochrome)
+            return hasUpdate ? addBadgeToImage(divider) : divider
+        }
+
+        let isMonochrome = resolvedMonochromeMode(for: accountSnapshots)
+        if settings.iconDisplayMode == .none {
+            let divider = createMenuBarDividerIcon(isMonochrome: isMonochrome)
+            return hasUpdate ? addBadgeToImage(divider) : divider
+        }
+        let groups = accountSnapshots.map {
+            createAccountGroup($0, isMonochrome: isMonochrome, button: button)
+        }
+
+        var icons: [NSImage] = []
+        for (index, group) in groups.enumerated() {
+            if index > 0 {
+                icons.append(createMenuBarDividerIcon(isMonochrome: isMonochrome))
+            }
+            icons.append(group)
+        }
+
+        var icon = combineIcons(icons, spacing: 3.0, height: metricIconSize)
+        icon.isTemplate = isMonochrome
+        if hasUpdate { icon = addBadgeToImage(icon) }
+        return icon
+    }
+
+    private func resolvedMonochromeMode(for snapshots: [AccountUsageSnapshot]) -> Bool {
+        if let claudeUsage = snapshots.compactMap({ snapshot -> UsageData? in
+            guard case .some(.claude(let usage)) = snapshot.payload else { return nil }
+            return usage
+        }).first {
+            let canUseColor = settings.canUseColoredTheme(usageData: claudeUsage)
+            let forceMonochrome = !canUseColor && settings.iconStyleMode != .monochrome
+            return settings.iconStyleMode == .monochrome || forceMonochrome
+        }
+        return settings.iconStyleMode == .monochrome
+    }
+
+    /// A complete account group includes a provider mark only when the selected
+    /// display mode requests icons. Status remains visible while usage loads or fails.
+    private func createAccountGroup(
+        _ snapshot: AccountUsageSnapshot,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        var icons: [NSImage] = []
+
+        switch settings.iconDisplayMode {
+        case .iconOnly, .both:
+            if let brand = createProviderBrandIcon(snapshot.provider, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                icons.append(brand)
+            }
+        case .percentageOnly, .none:
+            break
+        }
+        let metricIcons = createMetricIcons(for: snapshot, isMonochrome: isMonochrome, button: button)
+        icons.append(contentsOf: metricIcons)
+        if snapshot.errorDescription != nil {
+            icons.append(createAccountStatusIcon(for: snapshot, isMonochrome: isMonochrome))
+        } else if case .none = snapshot.payload {
+            icons.append(createAccountStatusIcon(for: snapshot, isMonochrome: isMonochrome))
+        }
+
+        let group = combineIcons(icons, spacing: 2.0, height: metricIconSize)
+        group.isTemplate = isMonochrome
+        return group
+    }
+
+    private func createMetricIcons(
+        for snapshot: AccountUsageSnapshot,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> [NSImage] {
+        guard settings.iconDisplayMode == .percentageOnly || settings.iconDisplayMode == .both else {
+            return []
+        }
+
+        switch snapshot.payload {
+        case .some(.claude(let usage)):
+            let types = settings.getActiveDisplayTypes(usageData: usage, forMenuBar: true)
+                .filter { $0.provider == .claude }
+            return types.compactMap {
+                createIconForType($0, data: usage, isMonochrome: isMonochrome, button: button)
+            }
+
+        case .some(.codex(let usage)):
+            let types = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: usage, forMenuBar: true)
+                .filter { $0.provider == .codex }
+            return buildCodexIcons(codex: usage, types: types, isMonochrome: isMonochrome, button: button)
+
+        case .none:
+            return []
+        }
+    }
+
+    private func createAccountStatusIcon(for snapshot: AccountUsageSnapshot, isMonochrome: Bool) -> NSImage {
+        let symbolName = snapshot.errorDescription == nil ? "clock" : "exclamationmark.triangle"
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: snapshot.errorDescription ?? "Loading usage")
+            ?? createSimpleCircleIcon()
+        image.size = NSSize(width: 13, height: 13)
+        image.isTemplate = isMonochrome
+        return image
+    }
+
     // MARK: - Multi-Provider Icon Creation
 
     /// 双 Provider 模式图标：[Claude 品牌] + [Claude 指标] + [Codex 品牌] + [Codex 指标]

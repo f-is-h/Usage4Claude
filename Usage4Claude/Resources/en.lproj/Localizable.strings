@@ -436,3 +436,6 @@
 "weblogin.claude_oauth_manual_prompt" = "Paste the link from your browser's address bar (starts with http://localhost)";
 "weblogin.claude_oauth_manual_submit" = "Sign in with this link";
 "weblogin.claude_oauth_manual_invalid" = "No authorization code found. Copy the full link from your browser's address bar and try again.";
+
+"settings.general.menu_bar_accounts" = "Menu Bar Accounts";
+"settings.general.menu_bar_accounts_hint" = "Choose which accounts appear in the menu bar.";

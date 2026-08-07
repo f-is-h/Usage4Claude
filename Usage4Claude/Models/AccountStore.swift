@@ -17,6 +17,9 @@ final class AccountStore: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private let keychain = KeychainManager.shared
+    /// Whole-list Keychain writes must complete in mutation order. Concurrent writes can otherwise
+    /// persist an older account snapshot after a newer token rotation.
+    private let persistenceQueue = DispatchQueue(label: "xyz.fi5h.Usage4Claude.account-persistence")
 
     // MARK: - Claude 账户
 
@@ -215,7 +218,7 @@ final class AccountStore: ObservableObject {
     private func saveAccounts() {
         // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
         let snapshot = accounts
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        persistenceQueue.async { [weak self] in
             self?.keychain.saveAccounts(snapshot)
         }
     }
@@ -238,9 +241,7 @@ final class AccountStore: ObservableObject {
         }
         Logger.settings.notice("添加账户: \(account.displayName)")
 
-        if wasFirstClaudeAccount {
-            postAccountChanged(provider: .claude)
-        }
+        postAccountChanged(provider: .claude)
         return wasFirstClaudeAccount
     }
 
@@ -256,9 +257,8 @@ final class AccountStore: ObservableObject {
         // 如果删除的是当前账户，切换到第一个账户
         if wasCurrentAccount {
             currentAccountId = accounts.first?.id
-            // 发送账户变更通知
-            postAccountChanged(provider: .claude)
         }
+        postAccountChanged(provider: .claude)
 
         Logger.settings.notice("删除账户: \(account.displayName)")
     }
@@ -285,17 +285,34 @@ final class AccountStore: ObservableObject {
         accounts[index].alias = alias
         let displayName = accounts[index].displayName
         Logger.settings.notice("更新账户别名: \(displayName)")
+        postAccountChanged(provider: .claude)
     }
 
-    /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
-    /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
-    func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
-        guard let id = currentAccountId,
-              let index = accounts.firstIndex(where: { $0.id == id }) else { return }
+    /// Silently updates the specified Claude account session token without posting accountChanged.
+    /// OAuth rotation persists the new token without triggering another fetch cycle.
+    func silentlyUpdateClaudeSessionToken(
+        _ token: String,
+        for accountId: UUID,
+        replacing expectedToken: String? = nil
+    ) {
+        guard let index = accounts.firstIndex(where: { $0.id == accountId }) else { return }
+        guard expectedToken == nil || accounts[index].sessionKey == expectedToken else {
+            Logger.settings.info("忽略过期的 Claude token 轮换结果")
+            return
+        }
         guard accounts[index].sessionKey != token else { return }
-        // Account 是 struct，下标赋值触发 accounts.didSet → saveAccounts()，自动持久化
-        accounts[index].sessionKey = token
+        accounts = AccountCredentialUpdate.replacingCredential(
+            in: accounts,
+            accountId: accountId,
+            expectedToken: expectedToken,
+            token: token
+        )
         Logger.settings.notice("Claude session-token 已静默更新（自动续期）")
+    }
+
+    func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
+        guard let currentAccountId else { return }
+        silentlyUpdateClaudeSessionToken(token, for: currentAccountId)
     }
 
     // MARK: - Codex Account Management
@@ -303,7 +320,7 @@ final class AccountStore: ObservableObject {
     private func saveCodexAccounts() {
         // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
         let snapshot = codexAccounts
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        persistenceQueue.async { [weak self] in
             self?.keychain.saveCodexAccounts(snapshot)
         }
     }
@@ -326,6 +343,7 @@ final class AccountStore: ObservableObject {
             codexAccounts[index].sessionKey = account.sessionKey
             codexAccounts[index].organizationId = account.organizationId
             codexAccounts[index].organizationName = account.organizationName
+            codexAccounts[index].email = account.email
             codexAccounts[index].provider = .codex
             if currentCodexAccountId == nil {
                 currentCodexAccountId = codexAccounts[index].id
@@ -354,8 +372,8 @@ final class AccountStore: ObservableObject {
         NotificationManager.shared.resetNotificationStates(for: .codex, accountId: account.id)
         if wasCurrent {
             currentCodexAccountId = codexAccounts.first?.id
-            postAccountChanged(provider: .codex)
         }
+        postAccountChanged(provider: .codex)
         Logger.settings.notice("删除 Codex 账户: \(account.displayName)")
     }
 
@@ -371,17 +389,34 @@ final class AccountStore: ObservableObject {
         guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
         codexAccounts[index].alias = alias
         Logger.settings.notice("更新 Codex 账户别名: \(self.codexAccounts[index].displayName)")
+        postAccountChanged(provider: .codex)
     }
 
-    /// 静默更新当前 Codex 账户的 session-token（不触发 accountChanged 通知）
-    /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
-    func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
-        guard let id = currentCodexAccountId,
-              let index = codexAccounts.firstIndex(where: { $0.id == id }) else { return }
+    /// Silently updates the specified Codex account session token without posting accountChanged.
+    /// Automatic renewal persists the new token without triggering another fetch cycle.
+    func silentlyUpdateCodexSessionToken(
+        _ token: String,
+        for accountId: UUID,
+        replacing expectedToken: String? = nil
+    ) {
+        guard let index = codexAccounts.firstIndex(where: { $0.id == accountId }) else { return }
+        guard expectedToken == nil || codexAccounts[index].sessionKey == expectedToken else {
+            Logger.settings.info("忽略过期的 Codex token 轮换结果")
+            return
+        }
         guard codexAccounts[index].sessionKey != token else { return }
-        // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
-        codexAccounts[index].sessionKey = token
+        codexAccounts = AccountCredentialUpdate.replacingCredential(
+            in: codexAccounts,
+            accountId: accountId,
+            expectedToken: expectedToken,
+            token: token
+        )
         Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+    }
+
+    func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
+        guard let currentCodexAccountId else { return }
+        silentlyUpdateCodexSessionToken(token, for: currentCodexAccountId)
     }
 
     // MARK: - Shared Helpers

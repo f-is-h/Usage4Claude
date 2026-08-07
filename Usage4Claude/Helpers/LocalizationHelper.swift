@@ -95,6 +95,8 @@ enum L {
         static var menubarHint: String { localized("settings.general.menubar_hint") }
         static var menubarTheme: String { localized("settings.general.menubar_theme") }
         static var displayContent: String { localized("settings.general.display_content") }
+        static var menuBarAccounts: String { localized("settings.general.menu_bar_accounts") }
+        static var menuBarAccountsHint: String { localized("settings.general.menu_bar_accounts_hint") }
         static var monochromeNoIconHint: String { localized("settings.general.monochrome_no_icon_hint") }
         static var refreshSection: String { localized("settings.general.refresh_section") }
         static var refreshMode: String { localized("settings.general.refresh_mode") }

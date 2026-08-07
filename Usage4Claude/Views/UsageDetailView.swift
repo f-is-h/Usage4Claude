@@ -13,6 +13,7 @@ import SwiftUI
 struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
+    @Binding var accountUsageSnapshots: [AccountUsageSnapshot]
     @Binding var errorMessage: String?
     @Binding var codexErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
@@ -83,6 +84,15 @@ struct UsageDetailView: View {
     private var isMultiProviderActive: Bool {
         UserSettings.shared.isMultiProviderActive
             && (codexUsageData != nil || codexErrorMessage != nil || UserSettings.shared.hasValidCodexCredentials)
+    }
+
+    private var orderedAccountUsageSnapshots: [AccountUsageSnapshot] {
+        accountUsageSnapshots.filter { $0.provider == .claude }
+            + accountUsageSnapshots.filter { $0.provider == .codex }
+    }
+
+    private var showsAllAccounts: Bool {
+        !orderedAccountUsageSnapshots.isEmpty
     }
 
     private var isCodexOnlyActive: Bool {
@@ -177,10 +187,16 @@ struct UsageDetailView: View {
     }
 
     private var contentWidth: CGFloat {
-        isMultiProviderActive ? 580 : 290
+        if showsAllAccounts {
+            return 620
+        }
+        return isMultiProviderActive ? 580 : 290
     }
 
     private var contentHeight: CGFloat {
+        if showsAllAccounts {
+            return 560
+        }
         if isMultiProviderActive {
             return multiProviderHeight
         }
@@ -695,6 +711,31 @@ struct UsageDetailView: View {
         }
     }
 
+    private var allAccountsBody: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(L.Menu.account)
+                    .font(.headline)
+                Spacer()
+                refreshAndMenuButtons
+            }
+            .padding(.horizontal)
+            .padding(.top)
+
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    ForEach(orderedAccountUsageSnapshots) { snapshot in
+                        AccountUsageSnapshotCard(snapshot: snapshot)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 4)
+            }
+
+            updateNotificationView
+        }
+    }
+
     private func multiProviderBody(codex: CodexUsageData?) -> some View {
         VStack(spacing: contentSpacing) {
             HStack(alignment: .top, spacing: 0) {
@@ -766,7 +807,9 @@ struct UsageDetailView: View {
 
     var body: some View {
         Group {
-            if isMultiProviderActive {
+            if showsAllAccounts {
+                allAccountsBody
+            } else if isMultiProviderActive {
                 multiProviderBody(codex: codexUsageData)
             } else if isCodexOnlyActive {
                 codexOnlyBody(codex: codexUsageData)
@@ -889,6 +932,7 @@ struct UsageDetailView_Previews: PreviewProvider {
         UsageDetailView(
             usageData: $sampleData,
             codexUsageData: $codexData,
+            accountUsageSnapshots: .constant([]),
             errorMessage: $errorMsg,
             codexErrorMessage: $codexErrorMsg,
             codexNeedsRelogin: $codexNeedsRelogin,
@@ -897,4 +941,111 @@ struct UsageDetailView_Previews: PreviewProvider {
             shouldShowUpdateBadge: $shouldShowBadge
         )
     }
+}
+
+private struct AccountUsageSnapshotCard: View {
+    let snapshot: AccountUsageSnapshot
+
+    private struct UsageRow: Identifiable {
+        let id: String
+        let name: String
+        let percentage: Double
+    }
+
+    private var usageRows: [UsageRow] {
+        switch snapshot.payload {
+        case .claude(let usage):
+            var rows: [UsageRow] = []
+            if let limit = usage.fiveHour {
+                rows.append(UsageRow(id: LimitType.fiveHour.rawValue, name: LimitType.fiveHour.displayName, percentage: limit.percentage))
+            }
+            if let limit = usage.sevenDay {
+                rows.append(UsageRow(id: LimitType.sevenDay.rawValue, name: LimitType.sevenDay.displayName, percentage: limit.percentage))
+            }
+            for (index, model) in usage.weeklyModels.enumerated() {
+                let fallbackName = index == 0 ? LimitType.opusWeekly.displayName : LimitType.sonnetWeekly.displayName
+                rows.append(UsageRow(id: "weekly-\(index)", name: model.modelName ?? fallbackName, percentage: model.limit.percentage))
+            }
+            if let percentage = usage.extraUsage?.percentage {
+                rows.append(UsageRow(id: LimitType.extraUsage.rawValue, name: LimitType.extraUsage.displayName, percentage: percentage))
+            }
+            return rows
+        case .codex(let usage):
+            var rows: [UsageRow] = []
+            if let limit = usage.primary {
+                rows.append(UsageRow(id: LimitType.codexPrimary.rawValue, name: LimitType.codexPrimary.displayName, percentage: limit.percentage))
+            }
+            if let limit = usage.secondary {
+                rows.append(UsageRow(id: LimitType.codexSecondary.rawValue, name: LimitType.codexSecondary.displayName, percentage: limit.percentage))
+            }
+            if let percentage = usage.extraUsage?.percentage {
+                rows.append(UsageRow(id: LimitType.codexExtraUsage.rawValue, name: LimitType.codexExtraUsage.displayName, percentage: percentage))
+            }
+            return rows
+        case nil:
+            return []
+        }
+    }
+
+    private var providerName: String {
+        snapshot.provider.displayName
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(providerName)
+                    .font(.headline)
+                Text(snapshot.displayName)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                if snapshot.accountIdentity != snapshot.displayName {
+                    Text(snapshot.accountIdentity)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            if let errorDescription = snapshot.errorDescription {
+                Text(errorDescription)
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .lineLimit(2)
+            }
+
+            if usageRows.isEmpty {
+                Text(emptyStateText)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                VStack(spacing: 5) {
+                    ForEach(usageRows) { row in
+                        HStack(spacing: 8) {
+                            Text(row.name)
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            Spacer(minLength: 8)
+                            Text("\(Int(row.percentage.rounded()))%")
+                                .font(.system(size: 12, weight: .semibold))
+                                .monospacedDigit()
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(Color.gray.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var emptyStateText: String {
+        if case .none = snapshot.payload {
+            return L.Usage.loading
+        }
+        return L.Error.noData
+    }
+
 }

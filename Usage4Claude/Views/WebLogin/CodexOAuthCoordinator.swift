@@ -208,6 +208,7 @@ final class CodexOAuthCoordinator: ObservableObject {
                 sessionKey: tokens.refreshToken,
                 organizationId: email.isEmpty ? (tokens.accountId ?? "") : email,
                 organizationName: displayName,
+                email: email.isEmpty ? nil : email,
                 alias: nil,
                 provider: .codex
             )

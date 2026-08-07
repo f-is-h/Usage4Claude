@@ -225,6 +225,7 @@ final class ClaudeOAuthCoordinator: ObservableObject {
             sessionKey: tokens.refreshToken,
             organizationId: stableOrgId,
             organizationName: displayName,
+            email: email.isEmpty ? nil : email,
             alias: nil,
             provider: .claude
         )
