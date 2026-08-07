@@ -34,7 +34,10 @@ let package = Package(
                 "Helpers/SensitiveDataRedactor.swift",
                 "Helpers/ResetTimeChange.swift",
                 "Helpers/NotificationDecisionEngine.swift",
-                "Models/CodexUsageData.swift"
+                "Models/CodexUsageData.swift",
+                "Models/Account.swift",
+                "Models/AccountUsageSnapshot.swift",
+                "Models/MenuBarAccountVisibility.swift"
             ]
         ),
         .testTarget(

@@ -55,6 +55,8 @@
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
 "settings.general.menubar_theme" = "メニューバーテーマ";
 "settings.general.display_content" = "表示内容";
+"settings.general.menu_bar_accounts" = "メニューバーのアカウント";
+"settings.general.menu_bar_accounts_hint" = "メニューバーに表示するアカウントを選択します。";
 "settings.general.monochrome_no_icon_hint" = "モノクロームテーマではアイコン表示に対応していません";
 "settings.general.refresh_section" = "更新設定";
 "settings.general.refresh_mode" = "更新モード";

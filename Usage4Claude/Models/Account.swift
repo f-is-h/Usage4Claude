@@ -13,6 +13,8 @@ struct Account: Codable, Identifiable, Equatable {
     var sessionKey: String
     var organizationId: String
     var organizationName: String
+    /// Stable account identity shown outside the menu bar when it is available.
+    var email: String?
     var alias: String?
     let createdAt: Date
     var provider: ProviderType
@@ -24,10 +26,25 @@ struct Account: Codable, Identifiable, Equatable {
         return organizationName
     }
 
+    /// A duplicate-safe identity for settings and detail views.
+    var presentationLabel: String {
+        let identity = accountIdentity
+        guard identity != displayName else { return displayName }
+        return "\(displayName) — \(identity)"
+    }
+
+    /// Uses the verified email when available, then preserves legacy organization labels.
+    var accountIdentity: String {
+        if let email, !email.isEmpty {
+            return email
+        }
+        return organizationName
+    }
+
     // MARK: - CodingKeys
 
     private enum CodingKeys: String, CodingKey {
-        case id, sessionKey, organizationId, organizationName, alias, createdAt, provider
+        case id, sessionKey, organizationId, organizationName, email, alias, createdAt, provider
     }
 
     // MARK: - Codable
@@ -39,6 +56,7 @@ struct Account: Codable, Identifiable, Equatable {
         sessionKey = try container.decode(String.self, forKey: .sessionKey)
         organizationId = try container.decode(String.self, forKey: .organizationId)
         organizationName = try container.decode(String.self, forKey: .organizationName)
+        email = try container.decodeIfPresent(String.self, forKey: .email)
         alias = try container.decodeIfPresent(String.self, forKey: .alias)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         provider = try container.decodeIfPresent(ProviderType.self, forKey: .provider) ?? .claude
@@ -50,6 +68,7 @@ struct Account: Codable, Identifiable, Equatable {
         sessionKey: String,
         organizationId: String,
         organizationName: String,
+        email: String? = nil,
         alias: String? = nil,
         provider: ProviderType = .claude
     ) {
@@ -57,6 +76,7 @@ struct Account: Codable, Identifiable, Equatable {
         self.sessionKey = sessionKey
         self.organizationId = organizationId
         self.organizationName = organizationName
+        self.email = email
         self.alias = alias
         self.createdAt = Date()
         self.provider = provider
@@ -67,6 +87,7 @@ struct Account: Codable, Identifiable, Equatable {
         sessionKey: String,
         organizationId: String,
         organizationName: String,
+        email: String? = nil,
         alias: String?,
         createdAt: Date,
         provider: ProviderType = .claude
@@ -75,6 +96,7 @@ struct Account: Codable, Identifiable, Equatable {
         self.sessionKey = sessionKey
         self.organizationId = organizationId
         self.organizationName = organizationName
+        self.email = email
         self.alias = alias
         self.createdAt = createdAt
         self.provider = provider

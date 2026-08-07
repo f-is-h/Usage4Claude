@@ -64,35 +64,39 @@ final class NotificationManager: NSObject {
     /// - Parameters:
     ///   - usageData: 最新的用量数据
     ///   - previousData: 上一次的用量数据（用于对比变化）
-    func checkAndNotify(usageData: UsageData, previousData: UsageData?) {
+    func checkAndNotify(accountId: UUID, usageData: UsageData, previousData: UsageData?) {
         // 逐个限制类型检查
         checkLimit(
             type: .fiveHour,
             current: usageData.fiveHour?.percentage,
             previous: previousData?.fiveHour?.percentage,
             currentResetsAt: usageData.fiveHour?.resetsAt,
-            previousResetsAt: previousData?.fiveHour?.resetsAt
+            previousResetsAt: previousData?.fiveHour?.resetsAt,
+            accountId: accountId
         )
         checkLimit(
             type: .sevenDay,
             current: usageData.sevenDay?.percentage,
             previous: previousData?.sevenDay?.percentage,
             currentResetsAt: usageData.sevenDay?.resetsAt,
-            previousResetsAt: previousData?.sevenDay?.resetsAt
+            previousResetsAt: previousData?.sevenDay?.resetsAt,
+            accountId: accountId
         )
         checkLimit(
             type: .opusWeekly,
             current: usageData.opus?.percentage,
             previous: previousData?.opus?.percentage,
             currentResetsAt: usageData.opus?.resetsAt,
-            previousResetsAt: previousData?.opus?.resetsAt
+            previousResetsAt: previousData?.opus?.resetsAt,
+            accountId: accountId
         )
         checkLimit(
             type: .sonnetWeekly,
             current: usageData.sonnet?.percentage,
             previous: previousData?.sonnet?.percentage,
             currentResetsAt: usageData.sonnet?.resetsAt,
-            previousResetsAt: previousData?.sonnet?.resetsAt
+            previousResetsAt: previousData?.sonnet?.resetsAt,
+            accountId: accountId
         )
 
         // Extra Usage 单独处理
@@ -101,7 +105,8 @@ final class NotificationManager: NSObject {
             current: usageData.extraUsage?.percentage,
             previous: previousData?.extraUsage?.percentage,
             currentResetsAt: nil,
-            previousResetsAt: nil
+            previousResetsAt: nil,
+            accountId: accountId
         )
     }
 
@@ -109,27 +114,30 @@ final class NotificationManager: NSObject {
     /// - Parameters:
     ///   - codexUsageData: 最新的 Codex 用量数据
     ///   - previousData: 上一次的 Codex 用量数据（用于对比变化）
-    func checkAndNotify(codexUsageData: CodexUsageData, previousData: CodexUsageData?) {
+    func checkAndNotify(accountId: UUID, codexUsageData: CodexUsageData, previousData: CodexUsageData?) {
         checkLimit(
             type: .codexPrimary,
             current: codexUsageData.primary?.percentage,
             previous: previousData?.primary?.percentage,
             currentResetsAt: codexUsageData.primary?.resetsAt,
-            previousResetsAt: previousData?.primary?.resetsAt
+            previousResetsAt: previousData?.primary?.resetsAt,
+            accountId: accountId
         )
         checkLimit(
             type: .codexSecondary,
             current: codexUsageData.secondary?.percentage,
             previous: previousData?.secondary?.percentage,
             currentResetsAt: codexUsageData.secondary?.resetsAt,
-            previousResetsAt: previousData?.secondary?.resetsAt
+            previousResetsAt: previousData?.secondary?.resetsAt,
+            accountId: accountId
         )
         checkLimit(
             type: .codexExtraUsage,
             current: codexUsageData.extraUsage?.percentage,
             previous: previousData?.extraUsage?.percentage,
             currentResetsAt: nil,
-            previousResetsAt: nil
+            previousResetsAt: nil,
+            accountId: accountId
         )
     }
 
@@ -143,12 +151,13 @@ final class NotificationManager: NSObject {
         current: Double?,
         previous: Double?,
         currentResetsAt: Date?,
-        previousResetsAt: Date?
+        previousResetsAt: Date?,
+        accountId: UUID
     ) {
-        let warningKey = notificationKey(for: type)
+        let warningKey = notificationKey(for: type, accountId: accountId)
         // 7天限制额外检查 75% 阈值，其余类型不做早期预警
         let earlyWarningKey = (type == .sevenDay || type == .codexSecondary)
-            ? notificationKey(for: type, suffix: "75")
+            ? notificationKey(for: type, accountId: accountId, suffix: "75")
             : nil
 
         let (actions, updatedWarnings) = NotificationDecisionEngine.evaluate(
@@ -176,14 +185,7 @@ final class NotificationManager: NSObject {
         }
     }
 
-    private func notificationKey(for type: LimitType, suffix: String? = nil) -> String {
-        let accountId: UUID?
-        switch type.provider {
-        case .claude:
-            accountId = UserSettings.shared.currentAccountId
-        case .codex:
-            accountId = UserSettings.shared.currentCodexAccountId
-        }
+    private func notificationKey(for type: LimitType, accountId: UUID, suffix: String? = nil) -> String {
         return Self.makeNotificationKey(
             provider: type.provider,
             accountId: accountId,

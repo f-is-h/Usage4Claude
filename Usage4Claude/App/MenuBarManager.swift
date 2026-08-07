@@ -61,6 +61,8 @@ class MenuBarManager: ObservableObject {
     @Published var usageData: UsageData?
     /// Codex 用量数据（从 dataManager 同步）
     @Published var codexUsageData: CodexUsageData?
+    /// All saved accounts' usage snapshots, in the same provider-first order used by the menu bar.
+    @Published var accountUsageSnapshots: [AccountUsageSnapshot] = []
     /// 加载状态（从 dataManager 同步）
     @Published var isLoading = false
     /// 错误消息（从 dataManager 同步）
@@ -108,6 +110,13 @@ class MenuBarManager: ObservableObject {
         dataManager.$codexUsageData
             .sink { [weak self] data in
                 self?.codexUsageData = data
+                self?.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
+        dataManager.$accountUsageSnapshots
+            .sink { [weak self] snapshots in
+                self?.accountUsageSnapshots = snapshots
                 self?.updateMenuBarIcon()
             }
             .store(in: &cancellables)
@@ -329,6 +338,10 @@ class MenuBarManager: ObservableObject {
             codexUsageData: Binding(
                 get: { self.codexUsageData },
                 set: { self.codexUsageData = $0 }
+            ),
+            accountUsageSnapshots: Binding(
+                get: { self.accountUsageSnapshots },
+                set: { self.accountUsageSnapshots = $0 }
             ),
             errorMessage: Binding(
                 get: { self.errorMessage },
@@ -573,7 +586,15 @@ class MenuBarManager: ObservableObject {
 
     /// 更新菜单栏图标
     private func updateMenuBarIcon() {
-        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
+        let visibleSnapshots = accountUsageSnapshots.filter {
+            settings.isAccountVisibleInMenuBar(id: $0.id)
+        }
+
+        ui.updateMenuBarIcon(
+            accountSnapshots: visibleSnapshots,
+            hasUpdate: hasAvailableUpdate,
+            shouldShowBadge: shouldShowUpdateBadge
+        )
     }
     
     // MARK: - Cleanup

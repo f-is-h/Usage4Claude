@@ -101,7 +101,46 @@ struct GeneralSettingsDisplaySection: View {
                         .disabled(settings.iconDisplayMode == .percentageOnly)
                     }
                 }
+
+                if !settings.accounts.isEmpty || !settings.codexAccounts.isEmpty {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L.SettingsGeneral.menuBarAccounts)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+
+                        Text(L.SettingsGeneral.menuBarAccountsHint)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        ForEach(settings.accounts) { account in
+                            accountVisibilityToggle(account, provider: .claude)
+                        }
+
+                        ForEach(settings.codexAccounts) { account in
+                            accountVisibilityToggle(account, provider: .codex)
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private func accountVisibilityToggle(_ account: Account, provider: ProviderType) -> some View {
+        Toggle(isOn: Binding(
+                        get: { settings.isAccountVisibleInMenuBar(id: account.id) },
+            set: { settings.setMenuBarVisibility(accountId: account.id, isVisible: $0) }
+        )) {
+            HStack(spacing: 6) {
+                Text(account.presentationLabel)
+                Text(provider.displayName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .toggleStyle(.checkbox)
+        .focusable(false)
     }
 }

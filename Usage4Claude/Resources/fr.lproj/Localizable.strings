@@ -55,6 +55,8 @@
 "settings.general.menubar_hint" = "Choisir ce qui s'affiche dans la barre des menus";
 "settings.general.menubar_theme" = "Thème de la barre des menus";
 "settings.general.display_content" = "Contenu affiché";
+"settings.general.menu_bar_accounts" = "Comptes de la barre des menus";
+"settings.general.menu_bar_accounts_hint" = "Choisissez les comptes affichés dans la barre des menus.";
 "settings.general.monochrome_no_icon_hint" = "L'affichage de l'icône n'est pas disponible avec le thème monochrome";
 "settings.general.refresh_section" = "Réglages d'actualisation";
 "settings.general.refresh_mode" = "Mode d'actualisation";

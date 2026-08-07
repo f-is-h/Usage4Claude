@@ -475,6 +475,17 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// Account IDs hidden from the menu bar. Accounts absent from this set are visible by default.
+    @Published private(set) var hiddenMenuBarAccountIds: Set<UUID> {
+        didSet {
+            defaults.set(
+                hiddenMenuBarAccountIds.map(\.uuidString).sorted(),
+                forKey: "hiddenMenuBarAccountIds"
+            )
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// Popover 端是否应该显示自定义模式的占位符（0% 空壳）
     /// 仅当显示模式为 custom 且未开启"仅应用于菜单栏"时为 true
     var shouldShowCustomPlaceholderInPopover: Bool {
@@ -777,6 +788,11 @@ class UserSettings: ObservableObject {
         // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
         self.customDisplayMenuBarOnly = defaults.bool(forKey: "customDisplayMenuBarOnly")
 
+        let menuBarVisibility = MenuBarAccountVisibility(
+            persistedAccountIdStrings: defaults.array(forKey: "hiddenMenuBarAccountIds") as? [String]
+        )
+        self.hiddenMenuBarAccountIds = menuBarVisibility.hiddenAccountIds
+
         // 检查是否首次启动（如果没有保存过认证信息，就是首次启动）
         if !defaults.bool(forKey: "hasLaunched") {
             self.isFirstLaunch = true
@@ -833,6 +849,20 @@ class UserSettings: ObservableObject {
     /// 当前应用使用的 Locale（基于用户选择的语言）
     var appLocale: Locale {
         return language.locale
+    }
+
+    /// Returns whether an account should appear in the menu bar.
+    func isAccountVisibleInMenuBar(id: UUID) -> Bool {
+        !hiddenMenuBarAccountIds.contains(id)
+    }
+
+    /// Updates one account's menu-bar visibility and immediately notifies observers.
+    func setMenuBarVisibility(accountId: UUID, isVisible: Bool) {
+        var visibility = MenuBarAccountVisibility(
+            persistedAccountIdStrings: hiddenMenuBarAccountIds.map(\.uuidString)
+        )
+        visibility.setVisibility(accountId: accountId, isVisible: isVisible)
+        hiddenMenuBarAccountIds = visibility.hiddenAccountIds
     }
 
     /// 检查认证信息是否已配置
@@ -970,6 +1000,7 @@ class UserSettings: ObservableObject {
     /// - Parameter account: 要删除的账户
     func removeAccount(_ account: Account) {
         accountStore.removeAccount(account)
+        removeMenuBarVisibility(for: account.id)
     }
 
     /// 切换到指定账户
@@ -1005,6 +1036,7 @@ class UserSettings: ObservableObject {
 
     func removeCodexAccount(_ account: Account) {
         accountStore.removeCodexAccount(account)
+        removeMenuBarVisibility(for: account.id)
     }
 
     func switchToCodexAccount(_ account: Account) {
@@ -1015,16 +1047,40 @@ class UserSettings: ObservableObject {
         accountStore.updateCodexAccount(account, alias: alias)
     }
 
+    private func removeMenuBarVisibility(for accountId: UUID) {
+        var visibility = MenuBarAccountVisibility(
+            persistedAccountIdStrings: hiddenMenuBarAccountIds.map(\.uuidString)
+        )
+        visibility.removeAccount(accountId)
+        hiddenMenuBarAccountIds = visibility.hiddenAccountIds
+    }
+
     /// 静默更新当前 Codex 账户的 session-token（不触发 accountChanged 通知）
     /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
     func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
         accountStore.silentlyUpdateCurrentCodexSessionToken(token)
     }
 
+    func silentlyUpdateCodexSessionToken(
+        _ token: String,
+        for accountId: UUID,
+        replacing expectedToken: String? = nil
+    ) {
+        accountStore.silentlyUpdateCodexSessionToken(token, for: accountId, replacing: expectedToken)
+    }
+
     /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
     /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
     func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
         accountStore.silentlyUpdateCurrentClaudeSessionToken(token)
+    }
+
+    func silentlyUpdateClaudeSessionToken(
+        _ token: String,
+        for accountId: UUID,
+        replacing expectedToken: String? = nil
+    ) {
+        accountStore.silentlyUpdateClaudeSessionToken(token, for: accountId, replacing: expectedToken)
     }
 
     private func ensureDefaultCodexDisplayTypesForCustomMode() {

@@ -55,6 +55,8 @@
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
 "settings.general.menubar_theme" = "菜单栏主题";
 "settings.general.display_content" = "显示内容";
+"settings.general.menu_bar_accounts" = "菜单栏账户";
+"settings.general.menu_bar_accounts_hint" = "选择要在菜单栏中显示的账户。";
 "settings.general.monochrome_no_icon_hint" = "单色主题下不支持显示图标";
 "settings.general.refresh_section" = "刷新设置";
 "settings.general.refresh_mode" = "刷新模式";

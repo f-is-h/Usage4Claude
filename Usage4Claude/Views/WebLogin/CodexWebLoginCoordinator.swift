@@ -195,6 +195,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
                     sessionKey: sessionToken,
                     organizationId: info.email,
                     organizationName: info.displayName,
+                    email: info.email.isEmpty ? nil : info.email,
                     alias: nil,
                     provider: .codex
                 )
