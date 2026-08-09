@@ -31,6 +31,7 @@ final class CodexSilentRefreshCoordinator: NSObject {
     private var navigationDelegate: NavigationDelegate?
     private var timeoutTask: Task<Void, Never>?
     private var completion: ((Result<String, Error>) -> Void)?
+    private var refreshAccount: Account?
 
     private let timeoutInterval: TimeInterval = 25
     private let safariUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
@@ -41,13 +42,21 @@ final class CodexSilentRefreshCoordinator: NSObject {
 
     /// 触发静默刷新。成功时 Result.success 携带最新的 session-token 字符串。
     func refresh(completion: @escaping (Result<String, Error>) -> Void) {
+        guard let account = UserSettings.shared.currentCodexAccount else {
+            completion(.failure(UsageError.noCredentials))
+            return
+        }
+        refresh(for: account, completion: completion)
+    }
+
+    func refresh(for account: Account, completion: @escaping (Result<String, Error>) -> Void) {
         guard !isRefreshing else {
             Logger.settings.debug("CodexSilentRefresh: 刷新已在进行中，跳过")
             completion(.failure(UsageError.networkError))
             return
         }
 
-        let sessionToken = UserSettings.shared.codexSessionToken
+        let sessionToken = account.sessionKey
         guard !sessionToken.isEmpty else {
             completion(.failure(UsageError.noCredentials))
             return
@@ -55,6 +64,7 @@ final class CodexSilentRefreshCoordinator: NSObject {
 
         isRefreshing = true
         self.completion = completion
+        refreshAccount = account
 
         // 使用进程级共享 data store，与登录窗口的 WKWebView 共享同一套 cookie
         let config = WKWebViewConfiguration()
@@ -167,10 +177,17 @@ final class CodexSilentRefreshCoordinator: NSObject {
                 return
             }
 
-            let currentToken = UserSettings.shared.codexSessionToken
-            if newToken != currentToken {
+            guard let account = self.refreshAccount else {
+                self.finish(result: .failure(UsageError.noCredentials))
+                return
+            }
+            if newToken != account.sessionKey {
                 Logger.settings.notice("CodexSilentRefresh: 获取到新 session-token，静默写回 Keychain")
-                UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                UserSettings.shared.silentlyUpdateCodexSessionToken(
+                    newToken,
+                    for: account.id,
+                    replacing: account.sessionKey
+                )
             } else {
                 Logger.settings.info("CodexSilentRefresh: session-token 未变化（服务端未续期）")
             }
@@ -198,6 +215,7 @@ final class CodexSilentRefreshCoordinator: NSObject {
         webView?.navigationDelegate = nil
         webView = nil
         navigationDelegate = nil
+        refreshAccount = nil
         let cb = completion
         completion = nil
         cb?(result)

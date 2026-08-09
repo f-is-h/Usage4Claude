@@ -180,7 +180,7 @@ class DataRefreshManager: ObservableObject {
             guard let self, generation == self.refreshGeneration else { return }
             self.isLoading = false
             self.endRefreshAnimationWithMinimumDuration { }
-            self.apply(results: results, to: plan)
+            self.apply(results: results, to: plan, generation: generation)
         }
     }
 
@@ -211,7 +211,8 @@ class DataRefreshManager: ObservableObject {
     /// bindings for the popover, notifications, reset checks, and relogin UX.
     private func apply(
         results: [UUID: Result<AccountUsagePayload, Error>],
-        to plan: [AccountUsageSnapshot]
+        to plan: [AccountUsageSnapshot],
+        generation: Int
     ) {
         let previousSnapshots = accountUsageSnapshots
         accountUsageSnapshots = AccountUsageReducer.applying(
@@ -224,7 +225,11 @@ class DataRefreshManager: ObservableObject {
         let selectedClaudeId = settings.currentAccount?.id
         let selectedCodexId = settings.currentCodexAccount?.id
         applySelectedClaudeResult(selectedClaudeId.flatMap { results[$0] })
-        applySelectedCodexResult(selectedCodexId.flatMap { results[$0] })
+        applySelectedCodexResult(
+            selectedCodexId.flatMap { results[$0] },
+            accountId: selectedCodexId,
+            generation: generation
+        )
         updateSmartMonitoringFromSnapshots()
         pruneUnusedServices(using: plan)
         pruneResetVerifications(validAccountIds: Set(plan.map(\.id)))
@@ -293,7 +298,11 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
-    private func applySelectedCodexResult(_ result: Result<AccountUsagePayload, Error>?) {
+    private func applySelectedCodexResult(
+        _ result: Result<AccountUsagePayload, Error>?,
+        accountId: UUID?,
+        generation: Int
+    ) {
         switch result {
         case .success(.codex(let data)):
             processCodexSuccess(data)
@@ -303,8 +312,13 @@ class DataRefreshManager: ObservableObject {
             // is intentionally retained only for the selected account.
             codexUsageData = accountUsageSnapshots.selectedCodex(accountId: settings.currentCodexAccount?.id)
             if case UsageError.unauthorized = error {
-                selectedCodexAPIService?.clearAccessTokenCache()
-                attemptTokenRefreshAndRetry()
+                guard let accountId,
+                      let account = settings.codexAccounts.first(where: { $0.id == accountId }) else {
+                    markCodexNeedsRelogin()
+                    return
+                }
+                codexAPIService(for: account.id).clearAccessTokenCache()
+                attemptTokenRefreshAndRetry(for: account, generation: generation)
             } else {
                 codexErrorMessage = error.localizedDescription
                 Logger.menuBar.info("Codex 请求失败（不影响其它账户）: \(error.localizedDescription)")
@@ -600,16 +614,25 @@ class DataRefreshManager: ObservableObject {
     /// Retry used after the selected account's legacy silent-refresh flow. It is
     /// intentionally scoped to that account and does not restart the provider-wide
     /// loop or a second unauthorized fallback chain.
-    private func fetchSelectedCodexUsageWithoutFallback(_ account: Account) {
+    private func fetchSelectedCodexUsageWithoutFallback(
+        _ account: Account,
+        generation: Int? = nil
+    ) {
         isLoading = true
         codexErrorMessage = nil
         lastAPIFetchTime = Date()
         let service = codexAPIService(for: account.id)
-        let generation = refreshGeneration
+        let generation = generation ?? refreshGeneration
 
         Task { @MainActor [weak self] in
             let result = await service.fetchUsageResult(for: account)
-            guard let self, generation == self.refreshGeneration else { return }
+            guard let self,
+                  AccountRequestGuard.isCurrent(
+                    accountId: account.id,
+                    generation: generation,
+                    currentAccountId: self.settings.currentCodexAccountId,
+                    currentGeneration: self.refreshGeneration
+                  ) else { return }
             self.isLoading = false
             self.endRefreshAnimationWithMinimumDuration { }
 
@@ -645,7 +668,8 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
-    private func attemptTokenRefreshAndRetry() {
+    private func attemptTokenRefreshAndRetry(for account: Account, generation: Int) {
+        guard isCurrentCodexRequest(account: account, generation: generation) else { return }
         guard !codexNeedsRelogin else {
             Logger.menuBar.info("Codex 已确认需要重新登录，跳过刷新")
             markCodexNeedsRelogin()
@@ -653,10 +677,6 @@ class DataRefreshManager: ObservableObject {
         }
         // OAuth 账户：refresh_token 已在 fetchUsage 内尝试续期，401 表示 refresh_token 失效。
         // 旧的 chatgpt.com 三级刷新链针对 session-token，对 OAuth 凭据无意义且必然失败，直接要求重新登录。
-        guard let account = settings.currentCodexAccount else {
-            markCodexNeedsRelogin()
-            return
-        }
         if CodexAPIService.isOAuthRefreshToken(account.sessionKey) {
             Logger.menuBar.info("Codex OAuth refresh_token 失效，需重新登录")
             markCodexNeedsRelogin()
@@ -664,40 +684,41 @@ class DataRefreshManager: ObservableObject {
         }
         let prefix = account.sessionKey.prefix(16)
         Logger.menuBar.info("Codex accessToken 已过期，启动三级刷新链（session prefix=\(prefix)…）")
-        attemptLevel1SSRRefresh()
+        attemptLevel1SSRRefresh(for: account, generation: generation)
     }
 
     /// 级别 1：SSR bootstrap 刷新 accessToken
-    private func attemptLevel1SSRRefresh() {
+    private func attemptLevel1SSRRefresh(for account: Account, generation: Int) {
         Logger.menuBar.info("Codex 级别1：SSR bootstrap 刷新")
         Task { @MainActor [weak self] in
-            guard let self else { return }
-            CodexTokenRefreshCoordinator.shared.refresh { [weak self] result in
-                guard let self else { return }
+            guard let self, self.isCurrentCodexRequest(account: account, generation: generation) else { return }
+            CodexTokenRefreshCoordinator.shared.refresh(for: account) { [weak self] result in
+                guard let self, self.isCurrentCodexRequest(account: account, generation: generation) else { return }
                 switch result {
                 case .success(let freshAccessToken):
                     Logger.menuBar.notice("Codex 级别1 SSR 刷新成功，用新 accessToken 重试")
-                    self.retryCodexWithAccessToken(freshAccessToken)
+                    self.retryCodexWithAccessToken(freshAccessToken, for: account, generation: generation)
                 case .failure(let error):
                     Logger.menuBar.info("Codex 级别1 失败（\(error.localizedDescription)），降级至级别2")
-                    self.attemptLevel2WebViewRefresh()
+                    self.attemptLevel2WebViewRefresh(for: account, generation: generation)
                 }
             }
         }
     }
 
     /// 级别 2：隐藏 WebView 静默续期 session-token
-    private func attemptLevel2WebViewRefresh() {
+    private func attemptLevel2WebViewRefresh(for account: Account, generation: Int) {
         Logger.menuBar.info("Codex 级别2：隐藏 WebView 静默续期")
         Task { @MainActor [weak self] in
-            guard let self else { return }
-            CodexSilentRefreshCoordinator.shared.refresh { [weak self] result in
-                guard let self else { return }
+            guard let self, self.isCurrentCodexRequest(account: account, generation: generation) else { return }
+            CodexSilentRefreshCoordinator.shared.refresh(for: account) { [weak self] result in
+                guard let self, self.isCurrentCodexRequest(account: account, generation: generation) else { return }
                 switch result {
                 case .success:
                     Logger.menuBar.notice("Codex 级别2 WebView 续期成功，重新拉取用量")
                     // session-token 已在 coordinator 内写回，重新走完整的 session→usage 流程
-                    self.fetchCodexOnly(retryOnUnauthorized: false)
+                    guard let refreshedAccount = self.settings.codexAccounts.first(where: { $0.id == account.id }) else { return }
+                    self.fetchSelectedCodexUsageWithoutFallback(refreshedAccount, generation: generation)
                 case .failure(let error):
                     Logger.menuBar.error("Codex 级别2 失败（\(error.localizedDescription)），进入级别3")
                     self.markCodexNeedsRelogin()
@@ -707,16 +728,16 @@ class DataRefreshManager: ObservableObject {
     }
 
     /// 用新鲜 accessToken 直接查询用量（跳过 session 步骤）
-    private func retryCodexWithAccessToken(_ accessToken: String) {
+    private func retryCodexWithAccessToken(
+        _ accessToken: String,
+        for account: Account,
+        generation: Int
+    ) {
+        guard isCurrentCodexRequest(account: account, generation: generation) else { return }
         isLoading = true
-        guard let account = settings.currentCodexAccount else {
-            markCodexNeedsRelogin()
-            return
-        }
-        let generation = refreshGeneration
         codexAPIService(for: account.id).fetchUsageWithAccessToken(accessToken) { [weak self] usageResult in
             DispatchQueue.main.async {
-                guard let self, generation == self.refreshGeneration else { return }
+                guard let self, self.isCurrentCodexRequest(account: account, generation: generation) else { return }
                 self.isLoading = false
                 self.endRefreshAnimationWithMinimumDuration { }
                 switch usageResult {
@@ -730,10 +751,19 @@ class DataRefreshManager: ObservableObject {
                     self.processCodexSuccess(data)
                 case .failure(let error):
                     Logger.menuBar.error("Codex 新鲜 accessToken 仍失败: \(error.localizedDescription)，降级至级别2")
-                    self.attemptLevel2WebViewRefresh()
+                    self.attemptLevel2WebViewRefresh(for: account, generation: generation)
                 }
             }
         }
+    }
+
+    private func isCurrentCodexRequest(account: Account, generation: Int) -> Bool {
+        AccountRequestGuard.isCurrent(
+            accountId: account.id,
+            generation: generation,
+            currentAccountId: settings.currentCodexAccountId,
+            currentGeneration: refreshGeneration
+        )
     }
 
     private func replaceSelectedCodexSnapshot(account: Account, data: CodexUsageData) {
