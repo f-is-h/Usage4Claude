@@ -34,13 +34,21 @@ final class CodexTokenRefreshCoordinator: NSObject {
 
     /// 刷新 accessToken。成功时 Result.success 携带新鲜的 accessToken 字符串。
     func refresh(completion: @escaping (Result<String, Error>) -> Void) {
+        guard let account = UserSettings.shared.currentCodexAccount else {
+            completion(.failure(UsageError.noCredentials))
+            return
+        }
+        refresh(for: account, completion: completion)
+    }
+
+    func refresh(for account: Account, completion: @escaping (Result<String, Error>) -> Void) {
         guard !isRefreshing else {
             Logger.settings.debug("CodexTokenRefresh: 刷新已在进行中，跳过")
             completion(.failure(UsageError.networkError))
             return
         }
 
-        let sessionToken = UserSettings.shared.codexSessionToken
+        let sessionToken = account.sessionKey
         guard !sessionToken.isEmpty else {
             completion(.failure(UsageError.noCredentials))
             return
@@ -108,11 +116,14 @@ final class CodexTokenRefreshCoordinator: NSObject {
             let chatgptURL = URL(string: "https://chatgpt.com")!
             let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
             if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies) {
-                let currentToken = UserSettings.shared.codexSessionToken
-                if newToken != currentToken {
+                if newToken != sessionToken {
                     Logger.settings.notice("CodexTokenRefresh: URLSession 检测到新 session-token，静默写回")
                     DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                        UserSettings.shared.silentlyUpdateCodexSessionToken(
+                            newToken,
+                            for: account.id,
+                            replacing: sessionToken
+                        )
                     }
                 } else {
                     Logger.settings.debug("CodexTokenRefresh: session-token 未变化")

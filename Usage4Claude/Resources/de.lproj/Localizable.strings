@@ -54,6 +54,8 @@
 "settings.general.menubar_hint" = "Legt fest, was in der Menüleiste angezeigt wird";
 "settings.general.menubar_theme" = "Menüleisten-Theme";
 "settings.general.display_content" = "Angezeigter Inhalt";
+"settings.general.menu_bar_accounts" = "Menüleisten-Konten";
+"settings.general.menu_bar_accounts_hint" = "Wählen Sie die Konten aus, die in der Menüleiste angezeigt werden.";
 "settings.general.monochrome_no_icon_hint" = "Die Symbolanzeige wird im einfarbigen Theme nicht unterstützt";
 "settings.general.refresh_section" = "Aktualisierungseinstellungen";
 "settings.general.refresh_mode" = "Aktualisierungsmodus";

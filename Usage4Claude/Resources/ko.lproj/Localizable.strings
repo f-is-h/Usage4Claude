@@ -55,6 +55,8 @@
 "settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
 "settings.general.menubar_theme" = "메뉴바 테마";
 "settings.general.display_content" = "표시 내용";
+"settings.general.menu_bar_accounts" = "메뉴 막대 계정";
+"settings.general.menu_bar_accounts_hint" = "메뉴 막대에 표시할 계정을 선택하세요.";
 "settings.general.monochrome_no_icon_hint" = "단색 테마에서는 아이콘 표시를 지원하지 않습니다";
 "settings.general.refresh_section" = "새로고침 설정";
 "settings.general.refresh_mode" = "새로고침 모드";

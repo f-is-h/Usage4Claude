@@ -58,8 +58,9 @@ class CodexAPIService {
     /// 由独立计时器调用：仅在缓存即将过期时主动续期，不触发用量拉取。
     /// fetchAccessToken 内部先查缓存（20 分钟余量），缓存仍新鲜时不会发起网络请求。
     func proactivelyRefreshIfNeeded() {
-        guard settings.hasValidCodexCredentials else { return }
-        fetchAccessToken(sessionToken: settings.codexSessionToken) { result in
+        guard let account = settings.currentCodexAccount,
+              !account.sessionKey.isEmpty else { return }
+        fetchAccessToken(sessionToken: account.sessionKey, accountId: account.id) { result in
             switch result {
             case .success:
                 Logger.api.debug("Codex accessToken: 主动续期检查完成")
@@ -86,6 +87,16 @@ class CodexAPIService {
     /// 获取 Codex 用量（两步：session → usage）
     /// - Parameter completion: 成功返回 CodexUsageData，失败返回 Error
     func fetchUsage(completion: @escaping (Result<CodexUsageData, Error>) -> Void) {
+        guard let account = settings.currentCodexAccount else {
+            DispatchQueue.main.async { completion(.failure(UsageError.noCredentials)) }
+            return
+        }
+        fetchUsage(for: account, completion: completion)
+    }
+
+    /// Fetches usage for one Codex account. The account UUID follows token renewal so a
+    /// rotated refresh token cannot be written to whichever account is selected later.
+    func fetchUsage(for account: Account, completion: @escaping (Result<CodexUsageData, Error>) -> Void) {
         #if DEBUG
         if settings.debugModeEnabled {
             let mockData = createMockData()
@@ -96,15 +107,15 @@ class CodexAPIService {
 
         cancelAllRequests()
 
-        guard settings.hasValidCodexCredentials else {
-            completion(.failure(UsageError.noCredentials))
+        guard !account.sessionKey.isEmpty else {
+            DispatchQueue.main.async { completion(.failure(UsageError.noCredentials)) }
             return
         }
 
-        let sessionToken = settings.codexSessionToken
+        let sessionToken = account.sessionKey
 
         // fetchAccessToken 的 completion 已保证主线程回调
-        fetchAccessToken(sessionToken: sessionToken) { [weak self] result in
+        fetchAccessToken(sessionToken: sessionToken, accountId: account.id) { [weak self] result in
             guard let self = self else { return }
 
             switch result {
@@ -133,7 +144,11 @@ class CodexAPIService {
     ///
     /// 缓存有效时（距过期 > 20 分钟）跳过网络请求；同一凭据的并发调用由
     /// OAuthTokenCache 合并为一次网络请求。completion 一律主线程回调。
-    private func fetchAccessToken(sessionToken: String, completion: @escaping (Result<String, Error>) -> Void) {
+    private func fetchAccessToken(
+        sessionToken: String,
+        accountId: UUID,
+        completion: @escaping (Result<String, Error>) -> Void
+    ) {
         Task {
             do {
                 let accessToken = try await tokenCache.accessToken(
@@ -142,9 +157,9 @@ class CodexAPIService {
                 ) { [weak self] credential in
                     guard let self else { throw UsageError.networkError }
                     if Self.isOAuthRefreshToken(credential) {
-                        return try await self.refreshOAuthTokens(refreshToken: credential)
+                        return try await self.refreshOAuthTokens(refreshToken: credential, accountId: accountId)
                     }
-                    return try await self.fetchSessionTokens(sessionToken: credential)
+                    return try await self.fetchSessionTokens(sessionToken: credential, accountId: accountId)
                 }
                 await MainActor.run { completion(.success(accessToken)) }
             } catch {
@@ -169,7 +184,7 @@ class CodexAPIService {
     /// cookie 账户：调用 /api/auth/session 换取 accessToken，返回统一的 Tokens 三元组。
     /// 若响应通过 Set-Cookie 轮换了 session-token，静默写回账户存储，并把新值作为
     /// 返回的 refreshToken——缓存键跟随新凭据，下次用新 session-token 查询可直接命中。
-    private func fetchSessionTokens(sessionToken: String) async throws -> OAuthTokenCache.Tokens {
+    private func fetchSessionTokens(sessionToken: String, accountId: UUID) async throws -> OAuthTokenCache.Tokens {
         guard let url = URL(string: "\(baseURL)/api/auth/session") else {
             throw UsageError.invalidURL
         }
@@ -194,12 +209,17 @@ class CodexAPIService {
                         return .failure(UsageError.cloudflareBlocked)
                     }
 
+                    let setCookieHeaders: [String] = if let httpResponse = response as? HTTPURLResponse {
+                        httpResponse.allHeaderFields
+                            .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
+                            .compactMap { $0.value as? String }
+                    } else {
+                        []
+                    }
+
                     if let httpResponse = response as? HTTPURLResponse {
                         Logger.api.debug("Codex session HTTP status: \(httpResponse.statusCode)")
                         // Phase 0 诊断：检查 /api/auth/session 是否下发新 session-token
-                        let setCookieHeaders = httpResponse.allHeaderFields
-                            .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
-                            .compactMap { $0.value as? String }
                         Logger.api.debug("Codex session Set-Cookie 数量=\(setCookieHeaders.count)")
                         for cookieStr in setCookieHeaders where cookieStr.contains("next-auth.session-token") {
                             Logger.api.info("Codex session Set-Cookie [SESSION-TOKEN] \(cookieStr.prefix(80))")
@@ -215,17 +235,25 @@ class CodexAPIService {
                         }
                     }
 
-                    // 检查 HTTPCookieStorage 是否收到轮换后的新 session-token
-                    // （用已捕获的 sessionToken 参数比较，避免在后台线程读取 @Published 属性）
+                    // Inspect only this response's Set-Cookie values. Reading shared cookie
+                    // storage could pick up another account's concurrently rotated token.
                     var effectiveSessionToken = sessionToken
-                    let chatgptURL = URL(string: "https://chatgpt.com")!
-                    let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
-                    if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies),
+                    let responseCookies = setCookieHeaders.flatMap { header in
+                        HTTPCookie.cookies(
+                            withResponseHeaderFields: ["Set-Cookie": header],
+                            for: request.url!
+                        )
+                    }
+                    if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: responseCookies),
                        newToken != sessionToken {
                         Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
                         effectiveSessionToken = newToken
                         DispatchQueue.main.async {
-                            UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                            UserSettings.shared.silentlyUpdateCodexSessionToken(
+                                newToken,
+                                for: accountId,
+                                replacing: sessionToken
+                            )
                         }
                     }
 
@@ -262,7 +290,7 @@ class CodexAPIService {
     /// OAuth 账户：用 refresh_token 向 auth.openai.com 换取 access_token。
     /// 只会在 OAuthTokenCache 判定「确实需要发起新刷新」时被调用一次（并发调用共享同一次结果）。
     /// refresh_token 轮换时静默写回账户存储，并作为返回的 refreshToken（缓存键跟随新值）。
-    private func refreshOAuthTokens(refreshToken: String) async throws -> OAuthTokenCache.Tokens {
+    private func refreshOAuthTokens(refreshToken: String, accountId: UUID) async throws -> OAuthTokenCache.Tokens {
         let tokens = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CodexOAuthTokens, Error>) in
             CodexOAuthService.refresh(refreshToken: refreshToken) { result in
                 continuation.resume(with: result)
@@ -273,7 +301,11 @@ class CodexAPIService {
         if newRefresh != refreshToken {
             Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
             await MainActor.run {
-                UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newRefresh)
+                UserSettings.shared.silentlyUpdateCodexSessionToken(
+                    newRefresh,
+                    for: accountId,
+                    replacing: refreshToken
+                )
             }
         }
 
@@ -298,6 +330,12 @@ class CodexAPIService {
     func fetchUsageResult() async -> Result<CodexUsageData, Error> {
         await withCheckedContinuation { continuation in
             fetchUsage { continuation.resume(returning: $0) }
+        }
+    }
+
+    func fetchUsageResult(for account: Account) async -> Result<CodexUsageData, Error> {
+        await withCheckedContinuation { continuation in
+            fetchUsage(for: account) { continuation.resume(returning: $0) }
         }
     }
 

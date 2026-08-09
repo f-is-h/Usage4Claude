@@ -85,7 +85,7 @@ class MenuBarUI {
     private func setupPopover() {
         popover = NSPopover()
         // 固定尺寸以避免布局跳动
-        popover.contentSize = NSSize(width: 280, height: 240)
+        popover.contentSize = NSSize(width: 620, height: 560)
         // 设置行为，允许自定义外观
         popover.behavior = .semitransient
     }
@@ -578,6 +578,35 @@ class MenuBarUI {
         button.image = icon
     }
 
+    /// Updates the status item with every saved account in the supplied order.
+    /// The selected-account overload above remains for callers that have not
+    /// yet migrated to account-scoped refresh state.
+    func updateMenuBarIcon(accountSnapshots: [AccountUsageSnapshot], hasUpdate: Bool, shouldShowBadge: Bool) {
+        guard let button = statusItem.button else { return }
+
+        let showBadge = hasUpdate && shouldShowBadge
+        let cacheKey = generateCacheKey(accountSnapshots: accountSnapshots, hasUpdate: showBadge)
+
+        if let cachedImage = iconCache[cacheKey] {
+            button.image = cachedImage
+            return
+        }
+
+        let icon = iconRenderer.createIcon(
+            accountSnapshots: accountSnapshots,
+            hasUpdate: showBadge,
+            button: button
+        )
+
+        if iconCache.count >= maxCacheSize, !iconCacheOrder.isEmpty {
+            let oldestKey = iconCacheOrder.removeFirst()
+            iconCache.removeValue(forKey: oldestKey)
+        }
+        iconCache[cacheKey] = icon
+        iconCacheOrder.append(cacheKey)
+        button.image = icon
+    }
+
     /// 清除图标缓存
     func clearIconCache() {
         iconCache.removeAll()
@@ -659,6 +688,18 @@ class MenuBarUI {
         }
 
         return key
+    }
+
+    /// Account identity, label, provider, all displayed percentages, and the
+    /// per-account error state belong to the signature.  Settings are prefixed
+    /// because they change the renderer without changing a snapshot.
+    private func generateCacheKey(accountSnapshots: [AccountUsageSnapshot], hasUpdate: Bool) -> String {
+        let settingsKey = [
+            settings.iconDisplayMode.rawValue,
+            settings.iconStyleMode.rawValue,
+            settings.displayMode.rawValue
+        ].joined(separator: "_")
+        return "accounts_\(settingsKey)_\(AccountMenuBarSignature.make(snapshots: accountSnapshots, hasUpdate: hasUpdate))"
     }
 
     // MARK: - Utility Icons
