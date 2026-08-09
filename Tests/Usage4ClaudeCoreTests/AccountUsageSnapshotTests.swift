@@ -2,6 +2,29 @@ import XCTest
 @testable import Usage4ClaudeCore
 
 final class AccountUsageSnapshotTests: XCTestCase {
+    func testAccountRequestGuardRejectsStaleGenerationAndAccountSwitch() {
+        let accountId = UUID()
+
+        XCTAssertTrue(AccountRequestGuard.isCurrent(
+            accountId: accountId,
+            generation: 4,
+            currentAccountId: accountId,
+            currentGeneration: 4
+        ))
+        XCTAssertFalse(AccountRequestGuard.isCurrent(
+            accountId: accountId,
+            generation: 3,
+            currentAccountId: accountId,
+            currentGeneration: 4
+        ))
+        XCTAssertFalse(AccountRequestGuard.isCurrent(
+            accountId: accountId,
+            generation: 4,
+            currentAccountId: UUID(),
+            currentGeneration: 4
+        ))
+    }
+
     func testPlanKeepsEveryClaudeThenEveryCodexAccount() {
         let claude = (0..<12).map { account("Claude \($0)", provider: .claude) }
         let codex = (0..<9).map { account("Codex \($0)", provider: .codex) }

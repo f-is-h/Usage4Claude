@@ -7,6 +7,17 @@
 
 import Foundation
 
+enum AccountRequestGuard {
+    static func isCurrent(
+        accountId: UUID,
+        generation: Int,
+        currentAccountId: UUID?,
+        currentGeneration: Int
+    ) -> Bool {
+        accountId == currentAccountId && generation == currentGeneration
+    }
+}
+
 enum AccountUsagePayload: Sendable {
     case claude(UsageData)
     case codex(CodexUsageData)
