@@ -503,6 +503,11 @@ enum L {
         static var codexOAuthPortBusy: String { localized("weblogin.codex_oauth_port_busy") }
         static var codexOAuthReopenBrowser: String { localized("weblogin.codex_oauth_reopen_browser") }
         static var codexOAuthRetry: String { localized("weblogin.codex_oauth_retry") }
+        // 回调粘贴提示沿用 Claude 回环回调的通用本地化文案
+        static var codexOAuthManualHint: String { claudeOAuthManualHint }
+        static var codexOAuthManualPrompt: String { claudeOAuthManualPrompt }
+        static var codexOAuthManualSubmit: String { claudeOAuthManualSubmit }
+        static var codexOAuthManualInvalid: String { claudeOAuthManualInvalid }
     }
 
     // MARK: - Settings Notification
