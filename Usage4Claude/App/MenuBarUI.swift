@@ -84,8 +84,9 @@ class MenuBarUI {
     /// 设置窗口尺寸和外观
     private func setupPopover() {
         popover = NSPopover()
-        // 固定尺寸以避免布局跳动
-        popover.contentSize = NSSize(width: 620, height: 560)
+        // Start with the original compact size; the hosting controller expands it
+        // to the account grid's preferred size when multiple accounts are visible.
+        popover.contentSize = NSSize(width: 280, height: 240)
         // 设置行为，允许自定义外观
         popover.behavior = .semitransient
     }

@@ -8,30 +8,29 @@
 
 import SwiftUI
 
-/// 用量详情视图
-/// 显示 Claude 的当前使用情况，包括百分比进度条、倒计时和重置时间
+/// Displays current provider usage, including progress, countdowns, and reset times.
 struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
     @Binding var accountUsageSnapshots: [AccountUsageSnapshot]
     @Binding var errorMessage: String?
     @Binding var codexErrorMessage: String?
-    /// Codex 三级刷新均失败，需要用户手动重新登录
+    /// All Codex refresh layers failed and the user must sign in again.
     @Binding var codexNeedsRelogin: Bool
     @ObservedObject var refreshState: RefreshState
-    /// 菜单操作回调
+    /// Callback for menu actions.
     var onMenuAction: ((MenuAction) -> Void)? = nil
     @StateObject private var localization = LocalizationManager.shared
-    /// 是否有可用更新（用于显示文字和徽章）
+    /// Whether an update is available for the text and badge.
     @Binding var hasAvailableUpdate: Bool
-    /// 是否应显示更新徽章（用户未确认时才显示徽章）
+    /// Whether to show the update badge until the user acknowledges it.
     @Binding var shouldShowUpdateBadge: Bool
 
-    /// 加载动画效果类型
+    /// Loading animation style.
     enum LoadingAnimationType: Int, CaseIterable {
-        case rainbow = 0   // 彩虹渐变旋转
-        case dashed = 1    // 虚线旋转
-        case pulse = 2     // 脉冲效果
+        case rainbow = 0   // Rotating rainbow gradient.
+        case dashed = 1    // Rotating dashed ring.
+        case pulse = 2     // Pulsing ring.
 
         var name: String {
             switch self {
@@ -42,12 +41,12 @@ struct UsageDetailView: View {
         }
     }
 
-    // Claude 列加载动画类型（可长按圆环切换）
+    // Claude column loading animation style, changed by long-pressing the ring.
     @State var claudeAnimationType: LoadingAnimationType = .rainbow
-    // Codex 列加载动画类型（独立）
+    // Independent Codex column loading animation style.
     @State var codexAnimationType: LoadingAnimationType = .rainbow
 
-    /// 菜单操作类型
+    /// Menu actions.
     enum MenuAction {
         case generalSettings
         case authSettings
@@ -64,17 +63,17 @@ struct UsageDetailView: View {
         case codexRelogin
     }
     
-    // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
+    // Animation state is kept outside the view body so rebuilding does not reset it.
     @State var rotationAngle: Double = 0
     @State var animationTimer: Timer?
-    // 显示动画类型切换提示
+    // Animation style change hint.
     @State private var showAnimationTypeHint = false
     @State private var animationTypeHintName = ""
     @State private var animationTypeHintProvider: ProviderType?
     @State private var animationTypeHintDismissWorkItem: DispatchWorkItem?
-    // 显示更新通知
+    // Update notification.
     @State private var showUpdateNotification = false
-    // 显示模式切换（false: 重置时间, true: 剩余时间）
+    // Display mode toggle (false: reset time, true: remaining time).
     @AppStorage("showRemainingMode") private var savedRemainingMode = false
     @State private var showRemainingMode = UserDefaults.standard.bool(forKey: "showRemainingMode")
     @State private var remainingModeAnimationTrigger = 0
@@ -92,7 +91,12 @@ struct UsageDetailView: View {
     }
 
     private var showsAllAccounts: Bool {
-        !orderedAccountUsageSnapshots.isEmpty
+        let claudeCount = orderedAccountUsageSnapshots.filter { $0.provider == .claude }.count
+        let codexCount = orderedAccountUsageSnapshots.filter { $0.provider == .codex }.count
+        // Keep the original compact/split-provider presentation for one account
+        // per provider. Use the account grid only when it is needed to compare
+        // multiple accounts of the same provider.
+        return claudeCount > 1 || codexCount > 1
     }
 
     private var isCodexOnlyActive: Bool {
@@ -105,40 +109,40 @@ struct UsageDetailView: View {
         refreshState.isRefreshingProvider(.claude)
     }
 
-    /// 获取当前 Claude 活动的显示类型
+    /// Returns the active Claude display types.
     private var activeDisplayTypes: [LimitType] {
         guard let data = usageData else { return [] }
         return UserSettings.shared.getActiveDisplayTypes(usageData: data)
             .filter { $0.provider == .claude }
     }
 
-    /// 获取当前 Codex 活动的显示类型
+    /// Returns the active Codex display types.
     private var activeCodexDisplayTypes: [LimitType] {
         guard let codex = codexUsageData else { return [] }
         return UserSettings.shared.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
             .filter { $0.provider == .codex }
     }
 
-    /// 根据活动类型数量计算动态高度（单 Provider 模式）
+    /// Calculates the dynamic height for a single-provider layout.
     private var dynamicHeight: CGFloat {
         let activeCount = activeDisplayTypes.count
 
-        // 统一使用动态计算，确保底部边距一致
-        // 基础高度：圆环、标题、上下边距等固定内容的总高度
-        // 每行实际高度：文字(12pt) + vertical padding(12pt) + 背景高度 ≈ 26pt
-        // 行间距：5pt
+        // Use one calculation so the bottom margin stays consistent.
+        // Base height includes the ring, header, and fixed vertical spacing.
+        // Each row is approximately 26pt including text, padding, and background.
+        // Rows are separated by 5pt.
         let baseHeight: CGFloat = 190
         let rowHeight: CGFloat = 26
         let spacing: CGFloat = 5
 
-        // 单限制固定显示2行，双限制和3+限制显示对应行数
+        // A single limit reserves two rows; otherwise use the active count.
         let rowCount = activeCount == 1 ? 2 : activeCount
         let textHeight = CGFloat(rowCount) * rowHeight + CGFloat(max(0, rowCount - 1)) * spacing
 
         return baseHeight + textHeight
     }
 
-    /// Codex-only 模式的动态高度
+    /// Dynamic height for the Codex-only layout.
     private var codexOnlyHeight: CGFloat {
         let activeCount = activeCodexDisplayTypes.count
         let baseHeight: CGFloat = 190
@@ -150,7 +154,7 @@ struct UsageDetailView: View {
         return baseHeight + textHeight
     }
 
-    /// 双 Provider 模式的动态高度（取两列最大行数）
+    /// Dynamic height for the dual-provider layout, based on the taller column.
     private var multiProviderHeight: CGFloat {
         let claudeRowCount: Int
         if let data = usageData {
@@ -195,7 +199,8 @@ struct UsageDetailView: View {
 
     private var contentHeight: CGFloat {
         if showsAllAccounts {
-            return 560
+            let rowCount = CGFloat((orderedAccountUsageSnapshots.count + 1) / 2)
+            return min(560, max(380, 115 + rowCount * 250))
         }
         if isMultiProviderActive {
             return multiProviderHeight
@@ -209,7 +214,7 @@ struct UsageDetailView: View {
     @ViewBuilder
     private var claudeMainContent: some View {
         if let error = errorMessage {
-            // 错误信息
+            // Error message.
             VStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
@@ -219,9 +224,9 @@ struct UsageDetailView: View {
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
 
-                // 操作按钮组
+                // Action buttons.
                 HStack(spacing: 12) {
-                    // 如果是认证信息错误，显示设置按钮
+                    // Authentication errors include a shortcut to settings.
                     if error.contains("认证") || error.contains("配置") || error.contains("Authentication") || error.contains("configured") {
                         Button(action: {
                             onMenuAction?(.authSettings)
@@ -236,7 +241,7 @@ struct UsageDetailView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // 诊断连接按钮（所有错误都显示）
+                    // Show the diagnostic shortcut for every error.
                     Button(action: {
                         onMenuAction?(.authSettings)
                     }) {
@@ -252,9 +257,9 @@ struct UsageDetailView: View {
             }
             .padding()
         } else if let data = usageData {
-            // 使用数据
+            // Usage data.
             VStack(spacing: 15) {
-                // 圆形进度条
+                // Circular progress ring.
                 ZStack {
                     let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
 
@@ -362,10 +367,10 @@ struct UsageDetailView: View {
                                     showRemainingMode: showRemainingMode
                                 )
                             }
-                            // 前两个模型走上面的 opus / sonnet 槽位；第三个及以后的模型
-                            // （如同时出现 Fable + Opus + Sonnet）在此按 Claude API 顺序补齐，
-                            // 形状在圆角方 / 斜切方之间轮换，标签用 API 返回的模型名。
-                            // 仅智能模式展开全部；自定义模式尊重用户勾选的固定槽位。
+                            // The first two models use the Opus/Sonnet slots above. Additional
+                            // models are appended in Claude API order, alternating icon shapes
+                            // and using the model names returned by the API. Smart mode shows
+                            // every model; custom mode keeps the user's selected fixed slots.
                             if UserSettings.shared.displayMode == .smart {
                                 let overflow = Array(data.weeklyModels.enumerated()).dropFirst(2)
                                 ForEach(overflow, id: \.offset) { entry in
@@ -419,7 +424,7 @@ struct UsageDetailView: View {
                 .padding(.horizontal, 14)
             }
         } else {
-            // 加载中
+            // Loading state.
             VStack(spacing: 12) {
                 ProgressView()
                     .scaleEffect(1.2)
@@ -433,7 +438,7 @@ struct UsageDetailView: View {
 
     // MARK: - Header Buttons
 
-    /// 刷新按钮 + 三点菜单按钮（共用于单列和双列头部）
+    /// Refresh and overflow buttons shared by single- and dual-column headers.
     @ViewBuilder
     private var refreshAndMenuButtons: some View {
         Button(action: { onMenuAction?(.refresh) }) {
@@ -630,7 +635,7 @@ struct UsageDetailView: View {
                     .foregroundColor(.secondary)
 
                 if codexNeedsRelogin {
-                    // 三级刷新均失败：提供一键重新登录入口
+            // All three refresh layers failed; provide a one-click sign-in action.
                     Button(action: {
                         onMenuAction?(.codexRelogin)
                     }) {
@@ -713,7 +718,9 @@ struct UsageDetailView: View {
 
     private var allAccountsBody: some View {
         VStack(spacing: 10) {
-            HStack {
+            HStack(spacing: 8) {
+                Image(systemName: "person.2.fill")
+                    .foregroundStyle(.secondary)
                 Text(L.Menu.account)
                     .font(.headline)
                 Spacer()
@@ -723,12 +730,25 @@ struct UsageDetailView: View {
             .padding(.top)
 
             ScrollView {
-                LazyVStack(spacing: 10) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 270, maximum: 320), spacing: 12)],
+                    spacing: 12
+                ) {
                     ForEach(orderedAccountUsageSnapshots) { snapshot in
-                        AccountUsageSnapshotCard(snapshot: snapshot)
+                        AccountUsageSnapshotCard(
+                            snapshot: snapshot,
+                            showRemainingMode: $showRemainingMode,
+                            refreshState: refreshState,
+                            rotationAngle: $rotationAngle,
+                            remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                            onRefresh: {
+                                onMenuAction?(snapshot.provider == .codex ? .refreshCodex : .refreshClaude)
+                            },
+                            onToggleRemainingMode: toggleRemainingMode
+                        )
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 12)
                 .padding(.bottom, 4)
             }
 
@@ -821,23 +841,23 @@ struct UsageDetailView: View {
         .animation(.easeInOut(duration: 0.25), value: isMultiProviderActive)
         .animation(.easeInOut(duration: 0.25), value: isCodexOnlyActive)
         .animation(.easeInOut(duration: 0.25), value: showAnimationTypeHint)
-        .id(localization.updateTrigger)  // 语言变化时重新创建视图
+        .id(localization.updateTrigger)  // Recreate the view when the language changes.
         .onAppear {
             var transaction = Transaction(animation: nil)
             transaction.disablesAnimations = true
             withTransaction(transaction) {
                 showRemainingMode = savedRemainingMode
             }
-            // 如果打开时已经在刷新，启动旋转动画
+            // Start the rotation animation if the popover opened during a refresh.
             if refreshState.isRefreshing {
                 startRotationAnimation()
             }
-            // 如果有更新通知消息，显示通知
+            // Show an update notification when one is available.
             if refreshState.notificationMessage != nil {
                 withAnimation {
                     showUpdateNotification = true
                 }
-                // 3秒后隐藏通知
+                // Hide the notification after three seconds.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     withAnimation {
                         showUpdateNotification = false
@@ -849,12 +869,12 @@ struct UsageDetailView: View {
             if newValue { startRotationAnimation() } else { stopRotationAnimation() }
         }
         .onChange(of: refreshState.notificationMessage) { message in
-            // 监听通知消息变化
+            // Observe notification message changes.
             if message != nil {
                 withAnimation {
                     showUpdateNotification = true
                 }
-                // 3秒后隐藏通知
+                // Hide the notification after three seconds.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     withAnimation {
                         showUpdateNotification = false
@@ -867,7 +887,7 @@ struct UsageDetailView: View {
             }
         }
         .onDisappear {
-            // 视图消失时清理定时器和重置状态
+            // Clean up timers and reset state when the view disappears.
             stopRotationAnimation()
             animationTypeHintDismissWorkItem?.cancel()
             animationTypeHintProvider = nil
@@ -907,7 +927,7 @@ struct UsageDetailView: View {
     }
 }
 
-// 预览
+// Preview.
 struct UsageDetailView_Previews: PreviewProvider {
     @State static var sampleData: UsageData? = UsageData(
         fiveHour: UsageData.LimitData(
@@ -945,107 +965,345 @@ struct UsageDetailView_Previews: PreviewProvider {
 
 private struct AccountUsageSnapshotCard: View {
     let snapshot: AccountUsageSnapshot
+    @Binding var showRemainingMode: Bool
+    let refreshState: RefreshState
+    @Binding var rotationAngle: Double
+    let remainingModeAnimationTrigger: Int
+    var onRefresh: (() -> Void)?
+    var onToggleRemainingMode: (() -> Void)?
 
-    private struct UsageRow: Identifiable {
-        let id: String
-        let name: String
-        let percentage: Double
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            accountHeader
+
+            if let errorDescription = snapshot.errorDescription {
+                Label(errorDescription, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .lineLimit(2)
+            }
+
+            switch snapshot.payload {
+            case .codex, .claude:
+                AccountUsageWidgetView(
+                    snapshot: snapshot,
+                    showRemainingMode: $showRemainingMode,
+                    refreshState: refreshState,
+                    rotationAngle: $rotationAngle,
+                    remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                    onRefresh: onRefresh,
+                    onToggleRemainingMode: onToggleRemainingMode
+                )
+            case nil:
+                ProgressView()
+                    .frame(maxWidth: .infinity, minHeight: 150)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(providerAccent.opacity(0.28), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.10), radius: 8, y: 3)
     }
 
-    private var usageRows: [UsageRow] {
+    private var accountHeader: some View {
+        HStack(spacing: 8) {
+            if snapshot.provider == .codex,
+               let icon = ImageHelper.createCodexIcon(size: 20) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            } else if let icon = ImageHelper.createAppIcon(size: 20) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            }
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(snapshot.displayName)
+                    .font(.headline)
+                    .lineLimit(1)
+                if snapshot.accountIdentity != snapshot.displayName {
+                    Text(snapshot.accountIdentity)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            Spacer(minLength: 4)
+            Text(snapshot.provider.displayName)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(providerAccent)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(providerAccent.opacity(0.12), in: Capsule())
+        }
+    }
+
+    private var providerAccent: Color {
+        snapshot.provider == .codex
+            ? Color(red: 45 / 255, green: 212 / 255, blue: 191 / 255)
+            : Color(red: 217 / 255, green: 119 / 255, blue: 87 / 255)
+    }
+}
+
+private struct AccountUsageWidgetWindow: Identifiable {
+    let id: String
+    let title: String
+    let limit: UsageData.LimitData
+    let color: Color
+    let resetText: String
+    let remainingText: String
+}
+
+private struct AccountUsageWidgetView: View {
+    let snapshot: AccountUsageSnapshot
+    @Binding var showRemainingMode: Bool
+    let refreshState: RefreshState
+    @Binding var rotationAngle: Double
+    let remainingModeAnimationTrigger: Int
+    var onRefresh: (() -> Void)?
+    var onToggleRemainingMode: (() -> Void)?
+
+    private var windows: [AccountUsageWidgetWindow] {
         switch snapshot.payload {
         case .claude(let usage):
-            var rows: [UsageRow] = []
-            if let limit = usage.fiveHour {
-                rows.append(UsageRow(id: LimitType.fiveHour.rawValue, name: LimitType.fiveHour.displayName, percentage: limit.percentage))
+            var result: [AccountUsageWidgetWindow] = []
+            if let fiveHour = usage.fiveHour {
+                result.append(
+                    AccountUsageWidgetWindow(
+                        id: "five-hour",
+                        title: "5h",
+                        limit: fiveHour,
+                        color: UsageColorScheme.fiveHourColorSwiftUI(fiveHour.percentage),
+                        resetText: fiveHour.formattedCompactResetTime,
+                        remainingText: fiveHour.formattedCompactRemaining
+                    )
+                )
             }
-            if let limit = usage.sevenDay {
-                rows.append(UsageRow(id: LimitType.sevenDay.rawValue, name: LimitType.sevenDay.displayName, percentage: limit.percentage))
+            if let sevenDay = usage.sevenDay {
+                result.append(
+                    AccountUsageWidgetWindow(
+                        id: "seven-day",
+                        title: "1w",
+                        limit: sevenDay,
+                        color: UsageColorScheme.sevenDayColorSwiftUI(sevenDay.percentage),
+                        resetText: sevenDay.formattedCompactResetDate,
+                        remainingText: sevenDay.formattedCompactRemaining
+                    )
+                )
             }
-            for (index, model) in usage.weeklyModels.enumerated() {
-                let fallbackName = index == 0 ? LimitType.opusWeekly.displayName : LimitType.sonnetWeekly.displayName
-                rows.append(UsageRow(id: "weekly-\(index)", name: model.modelName ?? fallbackName, percentage: model.limit.percentage))
-            }
-            if let percentage = usage.extraUsage?.percentage {
-                rows.append(UsageRow(id: LimitType.extraUsage.rawValue, name: LimitType.extraUsage.displayName, percentage: percentage))
-            }
-            return rows
+            return result
         case .codex(let usage):
-            var rows: [UsageRow] = []
-            if let limit = usage.primary {
-                rows.append(UsageRow(id: LimitType.codexPrimary.rawValue, name: LimitType.codexPrimary.displayName, percentage: limit.percentage))
+            var result: [AccountUsageWidgetWindow] = []
+            if let primary = usage.primary {
+                let limit = primary.asUsageLimitData()
+                result.append(
+                    AccountUsageWidgetWindow(
+                        id: "primary",
+                        title: "5h",
+                        limit: limit,
+                        color: UsageColorScheme.codexPrimaryColorSwiftUI(primary.percentage),
+                        resetText: limit.formattedCompactResetTime,
+                        remainingText: limit.formattedCompactRemaining
+                    )
+                )
             }
-            if let limit = usage.secondary {
-                rows.append(UsageRow(id: LimitType.codexSecondary.rawValue, name: LimitType.codexSecondary.displayName, percentage: limit.percentage))
+            if let secondary = usage.secondary {
+                let limit = secondary.asUsageLimitData()
+                result.append(
+                    AccountUsageWidgetWindow(
+                        id: "secondary",
+                        title: "1w",
+                        limit: limit,
+                        color: UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
+                        resetText: limit.formattedCompactResetDateWithMinutes,
+                        remainingText: limit.formattedCompactRemainingWithMinutes
+                    )
+                )
             }
-            if let percentage = usage.extraUsage?.percentage {
-                rows.append(UsageRow(id: LimitType.codexExtraUsage.rawValue, name: LimitType.codexExtraUsage.displayName, percentage: percentage))
-            }
-            return rows
+            return result
         case nil:
             return []
         }
     }
 
-    private var providerName: String {
-        snapshot.provider.displayName
+    private var supplementalRows: [(String, String, Color)] {
+        switch snapshot.payload {
+        case .claude(let usage):
+            var rows = usage.weeklyModels.enumerated().map { index, model in
+                let fallback = index == 0 ? L.DetailRow.opusWeekly : L.DetailRow.sonnetWeekly
+                let name = model.modelName ?? fallback
+                let value = showRemainingMode
+                    ? model.limit.formattedCompactRemaining
+                    : model.limit.formattedCompactResetDate
+                let color: Color = index.isMultiple(of: 2) ? .orange : .blue
+                return (name, value, color)
+            }
+            if let extra = usage.extraUsage {
+                rows.append((L.DetailRow.extraUsage, showRemainingMode ? extra.formattedRemainingAmount : extra.formattedCompactAmount, .pink))
+            }
+            return rows
+        case .codex(let usage):
+            guard let extra = usage.extraUsage, extra.enabled else { return [] }
+            return [(L.DetailRow.extraUsage, showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount, .orange)]
+        case nil:
+            return []
+        }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(providerName)
-                    .font(.headline)
-                Text(snapshot.displayName)
+        VStack(spacing: 8) {
+            if windows.isEmpty {
+                Text(L.Error.noData)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                if snapshot.accountIdentity != snapshot.displayName {
-                    Text(snapshot.accountIdentity)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
-            if let errorDescription = snapshot.errorDescription {
-                Text(errorDescription)
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                    .lineLimit(2)
-            }
-
-            if usageRows.isEmpty {
-                Text(emptyStateText)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, minHeight: 145)
             } else {
-                VStack(spacing: 5) {
-                    ForEach(usageRows) { row in
-                        HStack(spacing: 8) {
-                            Text(row.name)
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
-                            Spacer(minLength: 8)
-                            Text("\(Int(row.percentage.rounded()))%")
-                                .font(.system(size: 12, weight: .semibold))
-                                .monospacedDigit()
+                HStack(alignment: .top, spacing: 12) {
+                    ForEach(windows) { window in
+                        AccountUsageDonutView(
+                            window: window,
+                            showRemainingMode: showRemainingMode,
+                            isRefreshing: refreshState.isRefreshingProvider(snapshot.provider),
+                            rotationAngle: rotationAngle,
+                            remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                            canRefresh: refreshState.canRefresh && !refreshState.isRefreshing,
+                            onRefresh: onRefresh,
+                            onToggleRemainingMode: onToggleRemainingMode
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                if !supplementalRows.isEmpty {
+                    VStack(spacing: 5) {
+                        ForEach(Array(supplementalRows.enumerated()), id: \.offset) { _, row in
+                            HStack(spacing: 7) {
+                                Circle()
+                                    .fill(row.2)
+                                    .frame(width: 6, height: 6)
+                                Text(row.0)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                Spacer(minLength: 4)
+                                Text(row.1)
+                                    .font(.caption2.weight(.semibold))
+                                    .monospacedDigit()
+                                    .lineLimit(1)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                         }
-                        .padding(.vertical, 2)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onToggleRemainingMode?()
                     }
                 }
             }
         }
-        .padding(12)
-        .background(Color.gray.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+private struct AccountUsageDonutView: View {
+    let window: AccountUsageWidgetWindow
+    let showRemainingMode: Bool
+    let isRefreshing: Bool
+    let rotationAngle: Double
+    let remainingModeAnimationTrigger: Int
+    let canRefresh: Bool
+    var onRefresh: (() -> Void)?
+    var onToggleRemainingMode: (() -> Void)?
+
+    private let diameter: CGFloat = 76
+    private let lineWidth: CGFloat = 8
+
+    private var displayedPercentage: Double {
+        UsageRingDisplay.displayedPercentage(
+            usedPercentage: window.limit.percentage,
+            showRemainingMode: showRemainingMode
+        )
     }
 
-    private var emptyStateText: String {
-        if case .none = snapshot.payload {
-            return L.Usage.loading
+    private var trimRange: UsageRingTrimRange {
+        UsageRingDisplay.displayedTrimRange(
+            usedPercentage: window.limit.percentage,
+            showRemainingMode: showRemainingMode
+        )
+    }
+
+    private var detailText: String {
+        showRemainingMode ? window.remainingText : window.resetText
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            ZStack {
+                Circle()
+                    .stroke(Color.primary.opacity(0.12), lineWidth: lineWidth)
+
+                if isRefreshing {
+                    Circle()
+                        .trim(from: 0, to: 0.72)
+                        .stroke(
+                            AngularGradient(
+                                colors: [window.color.opacity(0.18), window.color, .white.opacity(0.85), window.color.opacity(0.18)],
+                                center: .center
+                            ),
+                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(rotationAngle))
+                } else {
+                    Circle()
+                        .trim(from: trimRange.from, to: trimRange.to)
+                        .stroke(window.color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .animation(.spring(response: 0.42, dampingFraction: 0.78), value: trimRange)
+
+                    DetailUsageRingSweep(
+                        trigger: remainingModeAnimationTrigger,
+                        diameter: diameter + 6,
+                        lineWidth: 2,
+                        color: window.color
+                    )
+                }
+
+                Text(window.title)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: diameter, height: diameter)
+            .contentShape(Circle())
+            .onTapGesture {
+                if canRefresh {
+                    onRefresh?()
+                }
+            }
+
+            VStack(spacing: 1) {
+                Text("\(Int(displayedPercentage.rounded()))%")
+                    .font(.headline.weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(window.color)
+
+                Text(detailText)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onToggleRemainingMode?()
+            }
         }
-        return L.Error.noData
     }
 
 }
