@@ -200,7 +200,18 @@ struct UsageDetailView: View {
     private var contentHeight: CGFloat {
         if showsAllAccounts {
             let rowCount = CGFloat((orderedAccountUsageSnapshots.count + 1) / 2)
-            return min(560, max(380, 115 + rowCount * 250))
+            let supplementalRowCount = CGFloat(orderedAccountUsageSnapshots.map { snapshot in
+                switch snapshot.payload {
+                case .claude(let usage):
+                    return usage.weeklyModels.count + (usage.extraUsage == nil ? 0 : 1)
+                case .codex(let usage):
+                    return usage.extraUsage?.enabled == true ? 1 : 0
+                case nil:
+                    return 0
+                }
+            }.max() ?? 0)
+            let estimatedCardHeight = 205 + min(supplementalRowCount, 4) * 24
+            return min(560, max(290, 85 + rowCount * estimatedCardHeight))
         }
         if isMultiProviderActive {
             return multiProviderHeight
@@ -985,7 +996,7 @@ private struct AccountUsageSnapshotCard: View {
 
             switch snapshot.payload {
             case .codex, .claude:
-                AccountUsageWidgetView(
+                AccountUsageOriginalColumnView(
                     snapshot: snapshot,
                     showRemainingMode: $showRemainingMode,
                     refreshState: refreshState,
@@ -1050,16 +1061,7 @@ private struct AccountUsageSnapshotCard: View {
     }
 }
 
-private struct AccountUsageWidgetWindow: Identifiable {
-    let id: String
-    let title: String
-    let limit: UsageData.LimitData
-    let color: Color
-    let resetText: String
-    let remainingText: String
-}
-
-private struct AccountUsageWidgetView: View {
+private struct AccountUsageOriginalColumnView: View {
     let snapshot: AccountUsageSnapshot
     @Binding var showRemainingMode: Bool
     let refreshState: RefreshState
@@ -1068,237 +1070,250 @@ private struct AccountUsageWidgetView: View {
     var onRefresh: (() -> Void)?
     var onToggleRemainingMode: (() -> Void)?
 
-    private var windows: [AccountUsageWidgetWindow] {
-        switch snapshot.payload {
-        case .claude(let usage):
-            var result: [AccountUsageWidgetWindow] = []
-            if let fiveHour = usage.fiveHour {
-                result.append(
-                    AccountUsageWidgetWindow(
-                        id: "five-hour",
-                        title: "5h",
-                        limit: fiveHour,
-                        color: UsageColorScheme.fiveHourColorSwiftUI(fiveHour.percentage),
-                        resetText: fiveHour.formattedCompactResetTime,
-                        remainingText: fiveHour.formattedCompactRemaining
-                    )
-                )
-            }
-            if let sevenDay = usage.sevenDay {
-                result.append(
-                    AccountUsageWidgetWindow(
-                        id: "seven-day",
-                        title: "1w",
-                        limit: sevenDay,
-                        color: UsageColorScheme.sevenDayColorSwiftUI(sevenDay.percentage),
-                        resetText: sevenDay.formattedCompactResetDate,
-                        remainingText: sevenDay.formattedCompactRemaining
-                    )
-                )
-            }
-            return result
-        case .codex(let usage):
-            var result: [AccountUsageWidgetWindow] = []
-            if let primary = usage.primary {
-                let limit = primary.asUsageLimitData()
-                result.append(
-                    AccountUsageWidgetWindow(
-                        id: "primary",
-                        title: "5h",
-                        limit: limit,
-                        color: UsageColorScheme.codexPrimaryColorSwiftUI(primary.percentage),
-                        resetText: limit.formattedCompactResetTime,
-                        remainingText: limit.formattedCompactRemaining
-                    )
-                )
-            }
-            if let secondary = usage.secondary {
-                let limit = secondary.asUsageLimitData()
-                result.append(
-                    AccountUsageWidgetWindow(
-                        id: "secondary",
-                        title: "1w",
-                        limit: limit,
-                        color: UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
-                        resetText: limit.formattedCompactResetDateWithMinutes,
-                        remainingText: limit.formattedCompactRemainingWithMinutes
-                    )
-                )
-            }
-            return result
-        case nil:
-            return []
-        }
-    }
-
-    private var supplementalRows: [(String, String, Color)] {
-        switch snapshot.payload {
-        case .claude(let usage):
-            var rows = usage.weeklyModels.enumerated().map { index, model in
-                let fallback = index == 0 ? L.DetailRow.opusWeekly : L.DetailRow.sonnetWeekly
-                let name = model.modelName ?? fallback
-                let value = showRemainingMode
-                    ? model.limit.formattedCompactRemaining
-                    : model.limit.formattedCompactResetDate
-                let color: Color = index.isMultiple(of: 2) ? .orange : .blue
-                return (name, value, color)
-            }
-            if let extra = usage.extraUsage {
-                rows.append((L.DetailRow.extraUsage, showRemainingMode ? extra.formattedRemainingAmount : extra.formattedCompactAmount, .pink))
-            }
-            return rows
-        case .codex(let usage):
-            guard let extra = usage.extraUsage, extra.enabled else { return [] }
-            return [(L.DetailRow.extraUsage, showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount, .orange)]
-        case nil:
-            return []
-        }
-    }
+    @State private var animationType: UsageDetailView.LoadingAnimationType = .rainbow
 
     var body: some View {
-        VStack(spacing: 8) {
-            if windows.isEmpty {
-                Text(L.Error.noData)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 145)
-            } else {
-                HStack(alignment: .top, spacing: 12) {
-                    ForEach(windows) { window in
-                        AccountUsageDonutView(
-                            window: window,
-                            showRemainingMode: showRemainingMode,
-                            isRefreshing: refreshState.isRefreshingProvider(snapshot.provider),
-                            rotationAngle: rotationAngle,
-                            remainingModeAnimationTrigger: remainingModeAnimationTrigger,
-                            canRefresh: refreshState.canRefresh && !refreshState.isRefreshing,
-                            onRefresh: onRefresh,
-                            onToggleRemainingMode: onToggleRemainingMode
-                        )
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-                if !supplementalRows.isEmpty {
-                    VStack(spacing: 5) {
-                        ForEach(Array(supplementalRows.enumerated()), id: \.offset) { _, row in
-                            HStack(spacing: 7) {
-                                Circle()
-                                    .fill(row.2)
-                                    .frame(width: 6, height: 6)
-                                Text(row.0)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                                Spacer(minLength: 4)
-                                Text(row.1)
-                                    .font(.caption2.weight(.semibold))
-                                    .monospacedDigit()
-                                    .lineLimit(1)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        onToggleRemainingMode?()
-                    }
-                }
-            }
+        switch snapshot.payload {
+        case .claude(let usage):
+            AccountClaudeUsageColumnView(
+                usageData: usage,
+                showRemainingMode: $showRemainingMode,
+                refreshState: refreshState,
+                animationType: $animationType,
+                rotationAngle: $rotationAngle,
+                remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                onRefresh: onRefresh,
+                onToggleRemainingMode: onToggleRemainingMode
+            )
+        case .codex(let usage):
+            CodexColumnView(
+                codexUsageData: usage,
+                showRemainingMode: $showRemainingMode,
+                refreshState: refreshState,
+                animationType: $animationType,
+                rotationAngle: $rotationAngle,
+                remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                onRefresh: onRefresh,
+                onAnimationHint: nil,
+                onToggleRemainingMode: onToggleRemainingMode
+            )
+        case nil:
+            ProgressView()
+                .frame(maxWidth: .infinity, minHeight: 150)
         }
     }
 }
 
-private struct AccountUsageDonutView: View {
-    let window: AccountUsageWidgetWindow
-    let showRemainingMode: Bool
-    let isRefreshing: Bool
-    let rotationAngle: Double
+private struct AccountClaudeUsageColumnView: View {
+    let usageData: UsageData
+    @Binding var showRemainingMode: Bool
+    let refreshState: RefreshState
+    @Binding var animationType: UsageDetailView.LoadingAnimationType
+    @Binding var rotationAngle: Double
     let remainingModeAnimationTrigger: Int
-    let canRefresh: Bool
     var onRefresh: (() -> Void)?
     var onToggleRemainingMode: (() -> Void)?
 
-    private let diameter: CGFloat = 76
-    private let lineWidth: CGFloat = 8
-
-    private var displayedPercentage: Double {
-        UsageRingDisplay.displayedPercentage(
-            usedPercentage: window.limit.percentage,
-            showRemainingMode: showRemainingMode
-        )
+    private var activeTypes: [LimitType] {
+        UserSettings.shared.getActiveDisplayTypes(usageData: usageData, codexUsageData: nil)
+            .filter { $0.provider == .claude }
     }
 
-    private var trimRange: UsageRingTrimRange {
-        UsageRingDisplay.displayedTrimRange(
-            usedPercentage: window.limit.percentage,
-            showRemainingMode: showRemainingMode
-        )
+    private var primaryRingData: UsageData.LimitData? {
+        let placeholder = UsageData.LimitData(percentage: 0, resetsAt: nil)
+        let showPlaceholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
+
+        if activeTypes.contains(.fiveHour) {
+            return usageData.fiveHour ?? (showPlaceholder ? placeholder : nil)
+        }
+        if activeTypes.contains(.sevenDay) {
+            return usageData.sevenDay ?? (showPlaceholder ? placeholder : nil)
+        }
+        return nil
     }
 
-    private var detailText: String {
-        showRemainingMode ? window.remainingText : window.resetText
+    private var primaryRingColor: Color {
+        if let fiveHour = usageData.fiveHour, activeTypes.contains(.fiveHour) {
+            return UsageColorScheme.fiveHourColorSwiftUI(fiveHour.percentage)
+        }
+        if let sevenDay = usageData.sevenDay, activeTypes.contains(.sevenDay) {
+            return UsageColorScheme.sevenDayColorSwiftUI(sevenDay.percentage)
+        }
+        return .secondary
+    }
+
+    private var isRefreshing: Bool {
+        refreshState.isRefreshingProvider(.claude)
+    }
+
+    private var hasSecondaryRing: Bool {
+        activeTypes.contains(.fiveHour) && activeTypes.contains(.sevenDay)
     }
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 15) {
             ZStack {
-                Circle()
-                    .stroke(Color.primary.opacity(0.12), lineWidth: lineWidth)
+                if let primary = primaryRingData {
+                    let primaryRange = UsageRingDisplay.displayedTrimRange(
+                        usedPercentage: primary.percentage,
+                        showRemainingMode: showRemainingMode
+                    )
 
-                if isRefreshing {
                     Circle()
-                        .trim(from: 0, to: 0.72)
-                        .stroke(
-                            AngularGradient(
-                                colors: [window.color.opacity(0.18), window.color, .white.opacity(0.85), window.color.opacity(0.18)],
-                                center: .center
-                            ),
-                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                        .frame(width: 100, height: 100)
+
+                    if isRefreshing {
+                        primaryLoadingAnimation
+                    } else {
+                        Circle()
+                            .trim(from: primaryRange.from, to: primaryRange.to)
+                            .stroke(primaryRingColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                            .frame(width: 100, height: 100)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.spring(response: 0.42, dampingFraction: 0.78), value: primaryRange)
+                    }
+
+                    if hasSecondaryRing {
+                        let secondary = usageData.sevenDay
+                        let secondaryPercentage = secondary?.percentage ?? (UserSettings.shared.shouldShowCustomPlaceholderInPopover ? 0 : nil)
+
+                        if let secondaryPercentage {
+                            let secondaryRange = UsageRingDisplay.displayedTrimRange(
+                                usedPercentage: secondaryPercentage,
+                                showRemainingMode: showRemainingMode
+                            )
+
+                            Circle()
+                                .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                                .frame(width: 114, height: 114)
+
+                            if isRefreshing {
+                                secondaryLoadingAnimation
+                            } else {
+                                Circle()
+                                    .trim(from: secondaryRange.from, to: secondaryRange.to)
+                                    .stroke(
+                                        UsageColorScheme.sevenDayColorSwiftUI(secondaryPercentage),
+                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                    )
+                                    .frame(width: 114, height: 114)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.spring(response: 0.42, dampingFraction: 0.78), value: secondaryRange)
+                            }
+                        }
+                    }
+
+                    if !isRefreshing {
+                        DetailUsageRingSweep(
+                            trigger: remainingModeAnimationTrigger,
+                            diameter: 122,
+                            lineWidth: 3,
+                            color: primaryRingColor
                         )
-                        .rotationEffect(.degrees(rotationAngle))
-                } else {
-                    Circle()
-                        .trim(from: trimRange.from, to: trimRange.to)
-                        .stroke(window.color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                        .animation(.spring(response: 0.42, dampingFraction: 0.78), value: trimRange)
+                    }
 
-                    DetailUsageRingSweep(
-                        trigger: remainingModeAnimationTrigger,
-                        diameter: diameter + 6,
-                        lineWidth: 2,
-                        color: window.color
+                    DetailUsageRingCenterText(
+                        usedPercentage: primary.percentage,
+                        showRemainingMode: showRemainingMode
                     )
                 }
-
-                Text(window.title)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
             }
-            .frame(width: diameter, height: diameter)
+            .frame(height: 114)
             .contentShape(Circle())
             .onTapGesture {
-                if canRefresh {
+                if refreshState.canRefresh && !refreshState.isRefreshing {
                     onRefresh?()
                 }
             }
-
-            VStack(spacing: 1) {
-                Text("\(Int(displayedPercentage.rounded()))%")
-                    .font(.headline.weight(.bold))
-                    .monospacedDigit()
-                    .foregroundStyle(window.color)
-
-                Text(detailText)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+            .onLongPressGesture(minimumDuration: 3.0) {
+                let allTypes = UsageDetailView.LoadingAnimationType.allCases
+                let currentIndex = allTypes.firstIndex(of: animationType) ?? 0
+                animationType = allTypes[(currentIndex + 1) % allTypes.count]
             }
+
+            limitRows
+                .padding(.horizontal, 14)
+        }
+    }
+
+    @ViewBuilder
+    private var limitRows: some View {
+        if activeTypes.count >= 2 {
+            VStack(spacing: 5) {
+                ForEach(activeTypes, id: \.self) { type in
+                    UnifiedLimitRow(
+                        type: type,
+                        data: usageData,
+                        showRemainingMode: showRemainingMode
+                    )
+                }
+                if UserSettings.shared.displayMode == .smart {
+                    let overflow = Array(usageData.weeklyModels.enumerated()).dropFirst(2)
+                    ForEach(overflow, id: \.offset) { entry in
+                        UnifiedLimitRow(
+                            type: entry.offset.isMultiple(of: 2) ? .opusWeekly : .sonnetWeekly,
+                            data: usageData,
+                            showRemainingMode: showRemainingMode,
+                            weeklyModelOverride: entry.element
+                        )
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onToggleRemainingMode?()
+            }
+        } else if let singleType = activeTypes.first {
+            singleTypeRows(singleType)
+        } else {
+            Text(L.Error.noData)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func singleTypeRows(_ type: LimitType) -> some View {
+        switch type {
+        case .fiveHour:
+            if let fiveHour = usageData.fiveHour {
+                VStack(spacing: 5) {
+                    InfoRow(
+                        icon: "clock.fill",
+                        title: L.Usage.fiveHourLimit,
+                        value: fiveHour.formattedResetsInHours
+                    )
+                    InfoRow(
+                        icon: "arrow.clockwise",
+                        title: L.Usage.resetTime,
+                        value: fiveHour.formattedResetTimeShort
+                    )
+                }
+            }
+        case .sevenDay:
+            if let sevenDay = usageData.sevenDay {
+                VStack(spacing: 5) {
+                    InfoRow(
+                        icon: "calendar",
+                        title: L.Usage.sevenDayLimit,
+                        value: sevenDay.formattedResetsInDays,
+                        tintColor: .purple
+                    )
+                    InfoRow(
+                        icon: "calendar.badge.clock",
+                        title: L.Usage.resetDate,
+                        value: sevenDay.formattedResetDateLong,
+                        tintColor: .purple
+                    )
+                }
+            }
+        default:
+            UnifiedLimitRow(
+                type: type,
+                data: usageData,
+                showRemainingMode: showRemainingMode
+            )
             .contentShape(Rectangle())
             .onTapGesture {
                 onToggleRemainingMode?()
@@ -1306,4 +1321,64 @@ private struct AccountUsageDonutView: View {
         }
     }
 
+    @ViewBuilder
+    private var primaryLoadingAnimation: some View {
+        switch animationType {
+        case .rainbow:
+            Circle()
+                .trim(from: 0, to: 0.7)
+                .stroke(
+                    AngularGradient(colors: [.blue, .purple, .pink, .orange, .blue], center: .center),
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                )
+                .frame(width: 100, height: 100)
+                .rotationEffect(.degrees(rotationAngle))
+        case .dashed:
+            Circle()
+                .trim(from: 0, to: 1)
+                .stroke(.blue, style: StrokeStyle(lineWidth: 10, lineCap: .round, dash: [10, 8]))
+                .frame(width: 100, height: 100)
+                .rotationEffect(.degrees(rotationAngle))
+        case .pulse:
+            ZStack {
+                Circle()
+                    .trim(from: 0, to: 0.6)
+                    .stroke(.blue.opacity(0.8), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .frame(width: 90, height: 90)
+                    .rotationEffect(.degrees(rotationAngle))
+                Circle()
+                    .trim(from: 0, to: 0.4)
+                    .stroke(.blue.opacity(0.4), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 100, height: 100)
+                    .rotationEffect(.degrees(-rotationAngle * 0.7))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var secondaryLoadingAnimation: some View {
+        switch animationType {
+        case .rainbow:
+            Circle()
+                .trim(from: 0, to: 0.7)
+                .stroke(
+                    AngularGradient(colors: [.blue, .purple, .pink, .orange, .blue], center: .center),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                )
+                .frame(width: 114, height: 114)
+                .rotationEffect(.degrees(-rotationAngle))
+        case .dashed:
+            Circle()
+                .trim(from: 0, to: 1)
+                .stroke(.purple, style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 6]))
+                .frame(width: 114, height: 114)
+                .rotationEffect(.degrees(-rotationAngle))
+        case .pulse:
+            Circle()
+                .trim(from: 0, to: 0.4)
+                .stroke(.purple.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .frame(width: 114, height: 114)
+                .rotationEffect(.degrees(-rotationAngle * 0.7))
+        }
+    }
 }
