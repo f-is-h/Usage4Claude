@@ -1,8 +1,8 @@
 # Cloudflare Pages 部署指南
 
 > ⚠️ **域名迁移待定**：本文档中的 `usagepacecc.pages.dev` 尚未生效——Cloudflare Pages
-> 项目本身的改名被推迟到 Phase 08。在 Phase 08 完成之前，该域名会 404；仍在线的
-> `usage4claude.pages.dev` 也不再被任何文档引用。这是已知且可接受的过渡状态（网站尚未
+> 项目本身的改名被推迟到 Phase 08。在 Phase 08 完成之前，该域名会 404；旧的 Cloudflare
+> Pages 项目域名仍在线，但已不再被任何文档引用。这是已知且可接受的过渡状态（网站尚未
 > 对外推广，无外部用户）。
 
 将 UsagePaceCC 网站部署到 Cloudflare Pages 的完整步骤。
