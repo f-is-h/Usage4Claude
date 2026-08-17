@@ -18,7 +18,7 @@ class UpdateChecker {
     /// GitHub 仓库所有者
     private let repoOwner = "quangyendn"
     /// GitHub 仓库名称
-    private let repoName = "Usage4Claude"
+    private let repoName = "UsagePaceCC"
     
     /// 当前应用版本号
     /// - Returns: 从 Bundle 中读取的版本号，默认为 "1.0.0"
