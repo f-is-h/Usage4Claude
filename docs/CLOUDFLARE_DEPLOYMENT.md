@@ -3,7 +3,9 @@
 > ⚠️ **域名迁移待定**：本文档中的 `usagepacecc.pages.dev` 尚未生效——Cloudflare Pages
 > 项目本身的改名被推迟到 Phase 08。在 Phase 08 完成之前，该域名会 404；旧的 Cloudflare
 > Pages 项目域名仍在线，但已不再被任何文档引用。这是已知且可接受的过渡状态（网站尚未
-> 对外推广，无外部用户）。
+> 对外推广，无外部用户）。另外，文中所有自定义域名（`<your-custom-domain>`）均为占位
+> 符，需按你自己拥有的域名替换；在 Phase 08 完成之前，`website/**` 中的实际域名仍是
+> `usage4claude.pages.dev`。
 
 将 UsagePaceCC 网站部署到 Cloudflare Pages 的完整步骤。
 
@@ -11,8 +13,8 @@
 
 - ✅ Cloudflare 账号
 - ✅ GitHub 仓库：`quangyendn/UsagePaceCC`
-- ✅ 域名：`fi5h.xyz`（已注册）
-- ✅ 目标网址：`u4c.fi5h.xyz`
+- ⬜ （可选）自定义域名：`<your-custom-domain>`——如果你打算绑定自己的域名，需先完成注册
+- ⬜ （可选）目标网址：`https://<your-custom-domain>`
 
 ---
 
@@ -55,12 +57,15 @@
 
 ---
 
-## 步骤 3：添加自定义域名
+## 步骤 3：添加自定义域名（可选）
+
+> 本步骤仅在你打算绑定自己的域名时执行。下文的 `<your-custom-domain>` 是占位符，
+> 请替换为你实际拥有的域名。若只用 `*.pages.dev` 域名，可直接跳到步骤 4。
 
 ### 3.1 添加域名到 Cloudflare（如果还没有）
 
 1. 在 Cloudflare 主页点击 **Add a site**
-2. 输入域名：`fi5h.xyz`
+2. 输入你的根域名（例如 `<your-custom-domain>` 对应的注册域名）
 3. 选择免费计划
 4. 按照指引更新域名的 DNS 服务器到 Cloudflare 提供的服务器
 5. 等待域名激活（通常 5-60 分钟）
@@ -69,7 +74,7 @@
 
 1. 进入 Pages 项目 → **Custom domains** 标签
 2. 点击 **Set up a custom domain**
-3. 输入：`u4c.fi5h.xyz`
+3. 输入：`<your-custom-domain>`
 4. 点击 **Continue**
 5. Cloudflare 会自动添加必要的 DNS 记录（CNAME）
 6. 等待 SSL 证书生成（通常 1-5 分钟）
@@ -81,7 +86,7 @@
 访问以下网址确认部署成功：
 
 - ✅ **临时域名**：`https://usagepacecc.pages.dev`（或你的项目名）
-- ✅ **自定义域名**：`https://u4c.fi5h.xyz`
+- ⬜ **自定义域名**（若已绑定）：`https://<your-custom-domain>`
 
 测试检查清单：
 
@@ -96,13 +101,14 @@
 
 ---
 
-## 步骤 5：更新网站文件中的域名
+## 步骤 5：更新网站文件中的域名（仅在绑定自定义域名后）
 
-部署成功后，需要更新以下文件中的域名引用：
+如果你在步骤 3 绑定了自定义域名，需要更新以下文件中的域名引用；否则保持现状即可。
 
 ### 5.1 更新所有 HTML 文件
 
-将所有 `https://usagepacecc.pages.dev` 替换为 `https://u4c.fi5h.xyz`
+将文件中现有的站点域名（当前仍为 `https://usage4claude.pages.dev`，Phase 08 之后为
+`https://usagepacecc.pages.dev`）替换为 `https://<your-custom-domain>`
 
 **需要更新的文件**：
 - `website/index.html`
@@ -128,14 +134,14 @@ User-agent: *
 Allow: /
 Disallow: /legal.html
 
-Sitemap: https://u4c.fi5h.xyz/sitemap.xml
+Sitemap: https://<your-custom-domain>/sitemap.xml
 ```
 
 ### 5.3 提交更新
 
 ```bash
 git add website/
-git commit -m "update: change domain to u4c.fi5h.xyz"
+git commit -m "update: change domain to <your-custom-domain>"
 git push origin main
 ```
 
@@ -153,35 +159,35 @@ Cloudflare Pages 会自动重新部署。
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>https://u4c.fi5h.xyz/</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/index.ja.html"/>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/index.zh-cn.html"/>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/index.zh-tw.html"/>
+    <loc>https://<your-custom-domain>/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://<your-custom-domain>/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://<your-custom-domain>/index.ja.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://<your-custom-domain>/index.zh-cn.html"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://<your-custom-domain>/index.zh-tw.html"/>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://u4c.fi5h.xyz/index.ja.html</loc>
+    <loc>https://<your-custom-domain>/index.ja.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://u4c.fi5h.xyz/index.zh-cn.html</loc>
+    <loc>https://<your-custom-domain>/index.zh-cn.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://u4c.fi5h.xyz/index.zh-tw.html</loc>
+    <loc>https://<your-custom-domain>/index.zh-tw.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://u4c.fi5h.xyz/privacy.html</loc>
+    <loc>https://<your-custom-domain>/privacy.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -251,7 +257,7 @@ Cloudflare Pages 会自动重新部署。
 部署完成后，使用此清单验证：
 
 **基础功能**：
-- [ ] 网站可通过 `https://u4c.fi5h.xyz` 访问
+- [ ] 网站可通过 `https://<your-custom-domain>` 访问
 - [ ] SSL 证书有效
 - [ ] 所有 4 种语言版本正常访问
 - [ ] 所有链接正常工作
@@ -273,5 +279,5 @@ Cloudflare Pages 会自动重新部署。
 
 **部署完成！** 🎉
 
-网站地址：**https://u4c.fi5h.xyz**
+网站地址：**https://<your-custom-domain>**
 
