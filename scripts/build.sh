@@ -46,8 +46,8 @@ print_info() {
 # ============================================
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_NAME="UsagePaceCC"
-SCHEME_NAME="Usage4Claude"
-XCODEPROJ="${PROJECT_ROOT}/Usage4Claude.xcodeproj"
+SCHEME_NAME="UsagePaceCC"
+XCODEPROJ="${PROJECT_ROOT}/UsagePaceCC.xcodeproj"
 BUILD_DIR="${PROJECT_ROOT}/build"
 
 # 默认参数

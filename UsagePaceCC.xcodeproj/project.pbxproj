@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Usage4Claude.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8873E4CF2E9F61C700ACFF5C /* UsagePaceCC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UsagePaceCC.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8873E4D12E9F61C700ACFF5C /* Usage4Claude */ = {
+		8873E4D12E9F61C700ACFF5C /* UsagePaceCC */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Usage4Claude;
+			path = UsagePaceCC;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		8873E4C62E9F61C700ACFF5C = {
 			isa = PBXGroup;
 			children = (
-				8873E4D12E9F61C700ACFF5C /* Usage4Claude */,
+				8873E4D12E9F61C700ACFF5C /* UsagePaceCC */,
 				8873E4D02E9F61C700ACFF5C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		8873E4D02E9F61C700ACFF5C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */,
+				8873E4CF2E9F61C700ACFF5C /* UsagePaceCC.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8873E4CE2E9F61C700ACFF5C /* Usage4Claude */ = {
+		8873E4CE2E9F61C700ACFF5C /* UsagePaceCC */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8873E4DA2E9F61C800ACFF5C /* Build configuration list for PBXNativeTarget "Usage4Claude" */;
+			buildConfigurationList = 8873E4DA2E9F61C800ACFF5C /* Build configuration list for PBXNativeTarget "UsagePaceCC" */;
 			buildPhases = (
 				8873E4CB2E9F61C700ACFF5C /* Sources */,
 				8873E4CC2E9F61C700ACFF5C /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				8873E4D12E9F61C700ACFF5C /* Usage4Claude */,
+				8873E4D12E9F61C700ACFF5C /* UsagePaceCC */,
 			);
-			name = Usage4Claude;
+			name = UsagePaceCC;
 			packageProductDependencies = (
 			);
 			productName = UsagePaceCC;
-			productReference = 8873E4CF2E9F61C700ACFF5C /* Usage4Claude.app */;
+			productReference = 8873E4CF2E9F61C700ACFF5C /* UsagePaceCC.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -86,7 +86,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8873E4CA2E9F61C700ACFF5C /* Build configuration list for PBXProject "Usage4Claude" */;
+			buildConfigurationList = 8873E4CA2E9F61C700ACFF5C /* Build configuration list for PBXProject "UsagePaceCC" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -105,7 +105,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8873E4CE2E9F61C700ACFF5C /* Usage4Claude */,
+				8873E4CE2E9F61C700ACFF5C /* UsagePaceCC */,
 			);
 		};
 /* End PBXProject section */
@@ -353,7 +353,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8873E4CA2E9F61C700ACFF5C /* Build configuration list for PBXProject "Usage4Claude" */ = {
+		8873E4CA2E9F61C700ACFF5C /* Build configuration list for PBXProject "UsagePaceCC" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8873E4D82E9F61C800ACFF5C /* Debug */,
@@ -362,7 +362,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8873E4DA2E9F61C800ACFF5C /* Build configuration list for PBXNativeTarget "Usage4Claude" */ = {
+		8873E4DA2E9F61C800ACFF5C /* Build configuration list for PBXNativeTarget "UsagePaceCC" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8873E4DB2E9F61C800ACFF5C /* Debug */,

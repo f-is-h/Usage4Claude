@@ -123,8 +123,8 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0 extract-changelog CHANGELOG.md"
-    echo "  $0 extract-xcode Usage4Claude.xcodeproj"
-    echo "  $0 verify CHANGELOG.md Usage4Claude.xcodeproj"
+    echo "  $0 extract-xcode UsagePaceCC.xcodeproj"
+    echo "  $0 verify CHANGELOG.md UsagePaceCC.xcodeproj"
 }
 
 # Check arguments

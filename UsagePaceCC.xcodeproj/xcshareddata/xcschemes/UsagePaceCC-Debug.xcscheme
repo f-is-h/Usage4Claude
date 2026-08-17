@@ -17,8 +17,8 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8873E4CE2E9F61C700ACFF5C"
                BuildableName = "UsagePaceCC.app"
-               BlueprintName = "Usage4Claude"
-               ReferencedContainer = "container:Usage4Claude.xcodeproj">
+               BlueprintName = "UsagePaceCC"
+               ReferencedContainer = "container:UsagePaceCC.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,8 +46,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8873E4CE2E9F61C700ACFF5C"
             BuildableName = "UsagePaceCC.app"
-            BlueprintName = "Usage4Claude"
-            ReferencedContainer = "container:Usage4Claude.xcodeproj">
+            BlueprintName = "UsagePaceCC"
+            ReferencedContainer = "container:UsagePaceCC.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -63,8 +63,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8873E4CE2E9F61C700ACFF5C"
             BuildableName = "UsagePaceCC.app"
-            BlueprintName = "Usage4Claude"
-            ReferencedContainer = "container:Usage4Claude.xcodeproj">
+            BlueprintName = "UsagePaceCC"
+            ReferencedContainer = "container:UsagePaceCC.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
