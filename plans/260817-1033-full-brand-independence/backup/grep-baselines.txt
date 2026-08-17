@@ -1,0 +1,48 @@
+Grep baselines recorded 2026-08-17 (Phase 01 pre-flight), commit 6e677c44dbf9a14bfb0bc128ebe1c8c0aa604b3d
+
+Command: git grep -o "Usage4Claude"            -- . ':!plans' ':!build' | wc -l
+  Expected: 666
+  Actual:   666
+  Match: YES
+
+Command: git grep -o "f-is-h/Usage4Claude"     -- . ':!plans' ':!build' | wc -l
+  Expected: 196
+  Actual:   196
+  Match: YES
+
+Command: git grep -o "quangyendn/Usage4Claude" -- . ':!plans' ':!build' | wc -l
+  Expected: 22
+  Actual:   23
+  Match: NO -- DISCREPANCY (+1 over expected)
+
+Discrepancy detail:
+  All 23 occurrences of "quangyendn/Usage4Claude" listed below (via
+  `git grep -n "quangyendn/Usage4Claude" -- . ':!plans' ':!build'`).
+  Likely cause: docs/UPSTREAM_SYNC.md and docs/CODE_SIGNING.md were added after the
+  scout-01 baseline was captured (upstream-sync docs commit landed post-scout), adding
+  new legitimate references to quangyendn/Usage4Claude that the scout figure predates.
+  Flagging for Phase 04 sweep accounting -- expect 23 as the pre-sweep baseline, not 22.
+
+.github/RELEASE_TEMPLATE.md:28
+.github/RELEASE_TEMPLATE.md:30
+.github/RELEASE_TEMPLATE.md:34
+Usage4Claude/Models/DiagnosticReport.swift:246
+Usage4Claude/Models/DiagnosticReport.swift:314
+Usage4Claude/Resources/en.lproj/Localizable.strings:248
+Usage4Claude/Resources/fr.lproj/Localizable.strings:248
+Usage4Claude/Resources/ja.lproj/Localizable.strings:248
+Usage4Claude/Resources/ko.lproj/Localizable.strings:248
+Usage4Claude/Resources/zh-Hans.lproj/Localizable.strings:248
+Usage4Claude/Resources/zh-Hant.lproj/Localizable.strings:248
+Usage4Claude/Views/Settings/Tabs/AboutView.swift:62
+Usage4Claude/Views/Settings/Welcome/WelcomeView.swift:597
+docs/CODE_SIGNING.md:98
+docs/UPSTREAM_SYNC.md:3
+docs/UPSTREAM_SYNC.md:43
+docs/UPSTREAM_SYNC.md:73
+docs/UPSTREAM_SYNC.md:74
+docs/UPSTREAM_SYNC.md:75
+docs/UPSTREAM_SYNC.md:81
+docs/UPSTREAM_SYNC.md:94
+docs/UPSTREAM_SYNC.md:100
+docs/UPSTREAM_SYNC.md:101
