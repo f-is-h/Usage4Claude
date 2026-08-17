@@ -91,3 +91,7 @@ ClaudeUsageMonitor
 *.backup
 
 .claude
+
+# Local agent tooling
+.serena/
+.codex/
