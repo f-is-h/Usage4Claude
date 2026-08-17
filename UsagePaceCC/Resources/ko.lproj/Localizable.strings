@@ -12,8 +12,6 @@
 "menu.check_updates" = "업데이트 확인";
 "menu.about" = "정보";
 "menu.web_usage" = "Claude 사용량 웹페이지";
-"menu.coffee" = "Buy Me A Coffee";
-"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "UsagePaceCC 종료";
 "menu.account" = "계정";
 "menu.account_prefix" = "계정:";
@@ -97,8 +95,6 @@
 "settings.about.license" = "라이선스";
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "GitHub 저장소 방문";
-"settings.about.coffee" = "Buy Me A Coffee";
-"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "f-is-h의 Usage4Claude를 기반으로 합니다 (MIT 라이선스)";
 "settings.about.disclaimer" = "Anthropic과 제휴, 보증 또는 후원 관계가 없습니다. \"Claude\"는 Anthropic의 상표입니다.";

@@ -12,8 +12,6 @@
 "menu.check_updates" = "檢查更新";
 "menu.about" = "關於";
 "menu.web_usage" = "檢視 Claude 用量";
-"menu.coffee" = "Buy Me A Coffee";
-"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "結束 UsagePaceCC";
 "menu.account" = "帳戶";
 "menu.account_prefix" = "帳戶:";
@@ -97,8 +95,6 @@
 "settings.about.license" = "授權條款";
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "造訪 GitHub 儲存庫";
-"settings.about.coffee" = "Buy Me A Coffee";
-"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "基於 f-is-h 的 Usage4Claude（MIT 授權）";
 "settings.about.disclaimer" = "本應用與 Anthropic 無任何關聯、認可或贊助關係。\"Claude\" 是 Anthropic 的商標。";

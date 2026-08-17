@@ -191,14 +191,6 @@ class MenuBarManager: ObservableObject {
         case .webUsage:
             closePopover()
             openWebUsage()
-        case .coffee:
-            closePopover()
-            if let url = URL(string: "https://ko-fi.com/1atte") {
-                NSWorkspace.shared.open(url)
-            }
-        case .githubSponsor:
-            closePopover()
-            openGithubSponsor()
         case .quit:
             quitApp()
         }
@@ -440,18 +432,6 @@ class MenuBarManager: ObservableObject {
 
     @objc func openAbout() {
         openSettingsWindow(tab: 2)
-    }
-
-    @objc func openCoffee() {
-        if let url = URL(string: "https://ko-fi.com/1atte") {
-            NSWorkspace.shared.open(url)
-        }
-    }
-
-    @objc func openGithubSponsor() {
-        if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time") {
-            NSWorkspace.shared.open(url)
-        }
     }
 
     /// 切换账户

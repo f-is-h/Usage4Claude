@@ -369,26 +369,6 @@ class MenuBarUI {
         setMenuItemIcon(webItem, systemName: "safari")
         menu.addItem(webItem)
 
-        // Buy Me A Coffee
-        let coffeeItem = NSMenuItem(
-            title: L.Menu.coffee,
-            action: #selector(MenuBarManager.openCoffee),
-            keyEquivalent: ""
-        )
-        coffeeItem.target = target
-        setMenuItemIcon(coffeeItem, systemName: "cup.and.saucer")
-        menu.addItem(coffeeItem)
-
-        // GitHub Sponsor
-        let sponsorItem = NSMenuItem(
-            title: L.Menu.githubSponsor,
-            action: #selector(MenuBarManager.openGithubSponsor),
-            keyEquivalent: ""
-        )
-        sponsorItem.target = target
-        setMenuItemIcon(sponsorItem, systemName: "heart")
-        menu.addItem(sponsorItem)
-
         menu.addItem(NSMenuItem.separator())
 
         // 退出

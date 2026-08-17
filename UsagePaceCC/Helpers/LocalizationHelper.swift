@@ -20,8 +20,6 @@ enum L {
         static var checkUpdates: String { localized("menu.check_updates") }
         static var about: String { localized("menu.about") }
         static var webUsage: String { localized("menu.web_usage") }
-        static var coffee: String { localized("menu.coffee") }
-        static var githubSponsor: String { localized("menu.github_sponsor") }
         static var quit: String { localized("menu.quit") }
         static var account: String { localized("menu.account") }
         static var accountPrefix: String { localized("menu.account_prefix") }
@@ -137,8 +135,6 @@ enum L {
         static var license: String { localized("settings.about.license") }
         static var licenseValue: String { localized("settings.about.license_value") }
         static var github: String { localized("settings.about.github") }
-        static var coffee: String { localized("settings.about.coffee") }
-        static var githubSponsor: String { localized("settings.about.github_sponsor") }
         static var copyright: String { localized("settings.about.copyright") }
         static var basedOn: String { localized("settings.about.based_on") }
         static var disclaimer: String { localized("settings.about.disclaimer") }

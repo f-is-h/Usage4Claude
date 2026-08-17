@@ -12,8 +12,6 @@
 "menu.check_updates" = "アップデートを確認";
 "menu.about" = "このアプリについて";
 "menu.web_usage" = "Claude使用状況を表示";
-"menu.coffee" = "Buy Me A Coffee";
-"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "UsagePaceCCを終了";
 "menu.account" = "アカウント";
 "menu.account_prefix" = "アカウント:";
@@ -97,8 +95,6 @@
 "settings.about.license" = "ライセンス";
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "GitHubリポジトリを表示";
-"settings.about.coffee" = "Buy Me A Coffee";
-"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "f-is-h の Usage4Claude をベースにしています（MITライセンス）";
 "settings.about.disclaimer" = "Anthropic との提携・推薦・スポンサー関係はありません。\"Claude\" は Anthropic の商標です。";

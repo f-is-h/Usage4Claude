@@ -12,8 +12,6 @@
 "menu.check_updates" = "Check for Updates";
 "menu.about" = "About";
 "menu.web_usage" = "View Claude Usage";
-"menu.coffee" = "Buy Me A Coffee";
-"menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Quit UsagePaceCC";
 "menu.account" = "Account";
 "menu.account_prefix" = "Account:";
@@ -97,8 +95,6 @@
 "settings.about.license" = "License";
 "settings.about.license_value" = "MIT License";
 "settings.about.github" = "Visit GitHub Repository";
-"settings.about.coffee" = "Buy Me A Coffee";
-"settings.about.github_sponsor" = "GitHub Sponsor";
 "settings.about.copyright" = "© 2025 f-is-h · © 2026 Yen NQ";
 "settings.about.based_on" = "Based on Usage4Claude by f-is-h (MIT License)";
 "settings.about.disclaimer" = "Not affiliated with, endorsed by, or sponsored by Anthropic. \"Claude\" is a trademark of Anthropic.";
