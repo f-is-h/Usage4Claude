@@ -1,6 +1,6 @@
 //
 //  WebLoginCoordinator.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by Claude Code on 2026-02-06.
 //  Copyright © 2026 f-is-h. All rights reserved.

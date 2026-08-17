@@ -1,6 +1,6 @@
 //
 //  LinearUsageGraphView.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by Claude on 2026-01-11.
 //  Copyright © 2026 f-is-h. All rights reserved.

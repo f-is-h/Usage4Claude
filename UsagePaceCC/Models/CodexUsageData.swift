@@ -1,6 +1,6 @@
 //
 //  CodexUsageData.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by f-is-h on 2026-04-24.
 //  Copyright © 2025 f-is-h. All rights reserved.

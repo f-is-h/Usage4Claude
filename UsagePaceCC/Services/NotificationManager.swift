@@ -1,6 +1,6 @@
 //
 //  NotificationManager.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by Claude Code on 2026-02-17.
 //  Copyright © 2025 f-is-h. All rights reserved.

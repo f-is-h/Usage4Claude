@@ -1,6 +1,6 @@
 //
 //  LocalizationManager.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by f-is-h on 2025-11-05.
 //  Copyright © 2025 f-is-h. All rights reserved.

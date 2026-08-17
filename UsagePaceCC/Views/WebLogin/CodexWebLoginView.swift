@@ -1,6 +1,6 @@
 //
 //  CodexWebLoginView.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by f-is-h on 2026-04-27.
 //  Copyright © 2025 f-is-h. All rights reserved.

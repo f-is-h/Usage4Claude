@@ -1,6 +1,6 @@
 //
 //  ImageHelper.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by f-is-h on 2025-10-15.
 //  Copyright © 2025 f-is-h. All rights reserved.

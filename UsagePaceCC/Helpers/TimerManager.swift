@@ -1,6 +1,6 @@
 //
 //  TimerManager.swift
-//  Usage4Claude
+//  UsagePaceCC
 //
 //  Created by Claude Code on 2025-12-01.
 //  Copyright © 2025 f-is-h. All rights reserved.
