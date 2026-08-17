@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+  DO NOT "fix" the domain token below to the new UsagePaceCC host yet.
+  The site still deploys to usage4claude.pages.dev; the Cloudflare Pages project
+  rename happens in Phase 08, and only then do canonical/hreflang/og:url/og:image
+  and robots.txt move to the new host. Changing it earlier canonicalizes the live
+  site to a host that does not resolve.
+-->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,20 +15,20 @@
   <meta name="description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring. Supports 5-hour and 7-day limits, cross-platform, local storage, open source.">
   <meta name="keywords" content="Claude AI, Usage Monitor, macOS, Menu Bar, Real-time Monitoring">
 
-  <link rel="canonical" href="https://usagepacecc.pages.dev/">
-  <link rel="alternate" hreflang="en" href="https://usagepacecc.pages.dev/">
-  <link rel="alternate" hreflang="zh-CN" href="https://usagepacecc.pages.dev/index.zh-cn.html">
-  <link rel="alternate" hreflang="ja" href="https://usagepacecc.pages.dev/index.ja.html">
-  <link rel="alternate" hreflang="zh-TW" href="https://usagepacecc.pages.dev/index.zh-tw.html">
-  <link rel="alternate" hreflang="ko" href="https://usagepacecc.pages.dev/index.ko.html">
-  <link rel="alternate" hreflang="x-default" href="https://usagepacecc.pages.dev/">
+  <link rel="canonical" href="https://usage4claude.pages.dev/">
+  <link rel="alternate" hreflang="en" href="https://usage4claude.pages.dev/">
+  <link rel="alternate" hreflang="zh-CN" href="https://usage4claude.pages.dev/index.zh-cn.html">
+  <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
+  <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
+  <link rel="alternate" hreflang="ko" href="https://usage4claude.pages.dev/index.ko.html">
+  <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
   <meta property="og:title" content="Usage4Claude - Real-time Claude AI Usage Monitor">
   <meta property="og:description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring. Supports 5-hour and 7-day limits, cross-platform, local storage, open source.">
-  <meta property="og:url" content="https://usagepacecc.pages.dev/">
-  <meta property="og:image" content="https://usagepacecc.pages.dev/images/og-image.png">
+  <meta property="og:url" content="https://usage4claude.pages.dev/">
+  <meta property="og:image" content="https://usage4claude.pages.dev/images/og-image.png">
   <meta property="og:image:width" content="1224">
   <meta property="og:image:height" content="1168">
   <meta property="og:image:alt" content="Usage4Claude App Screenshot">
@@ -29,7 +36,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Usage4Claude - Real-time Claude AI Usage Monitor">
   <meta name="twitter:description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring.">
-  <meta name="twitter:image" content="https://usagepacecc.pages.dev/images/og-image.png">
+  <meta name="twitter:image" content="https://usage4claude.pages.dev/images/og-image.png">
 
   <link rel="icon" type="image/png" href="favicon.ico">
   <link rel="apple-touch-icon" href="images/icon.png">

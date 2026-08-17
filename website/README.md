@@ -7,7 +7,7 @@ Product website for Usage4Claude macOS application.
 - **Tech Stack**: HTML5 + Tailwind CSS (CDN) + Vanilla JS
 - **Deployment**: Cloudflare Pages
 - **Languages**: English (main), Simplified Chinese, Japanese, Traditional Chinese
-- **Website URL**: https://usagepacecc.pages.dev (to be deployed)
+- **Website URL**: https://usage4claude.pages.dev (to be deployed)
 
 ## Directory Structure
 
