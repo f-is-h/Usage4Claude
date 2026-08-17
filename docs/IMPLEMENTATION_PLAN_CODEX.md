@@ -1,4 +1,4 @@
-# Plan: 为 Usage4Claude 增加 Codex 额度支持
+# Plan: 为 UsagePaceCC 增加 Codex 额度支持
 
 ## Context
 
@@ -14,7 +14,7 @@ ChatGPT 网页侧已有可用的额度查询接口（`/api/auth/session` 取 acc
 
 ## 1. 项目定位
 
-Usage4Claude 是作者为自己和有相同需求的用户做的菜单栏小工具。它有以下不可妥协的属性：
+UsagePaceCC 是作者为自己和有相同需求的用户做的菜单栏小工具。它有以下不可妥协的属性：
 
 - **小而美**：不追求功能全、用户多、市场大
 - **克制**：不是所有合理的需求都会被采纳；以作者的审美为基础
@@ -101,12 +101,12 @@ Codex 的位置应该在副标题/Features 区段而非头图，符合"作者本
 
 | 文件 | 用途 |
 |---|---|
-| `Usage4Claude/Models/ProviderType.swift` | `enum ProviderType: String, Codable, CaseIterable { case claude, codex }`，附带 `displayName`、`brandColor` |
-| `Usage4Claude/Services/UsageProvider.swift` | 协议：`fetchUsage / cancelAllRequests / providerType / sessionValid` |
-| `Usage4Claude/Services/CodexAPIService.swift` | 实现 `UsageProvider`。两步请求：先 `GET /api/auth/session` 取 accessToken，再 `GET /backend-api/wham/usage`。配 30/60s 超时、关 HTTP/3、no-cache，跟 `ClaudeAPIService.init` 一致 |
-| `Usage4Claude/Services/CodexAPIHeaderBuilder.swift` | Cookie 名 `__Secure-next-auth.session-token`，UA/Origin/Referer 走 `chatgpt.com` |
-| `Usage4Claude/Models/CodexUsageData.swift` | Codex 侧的内部模型 + `toCodexUsageData()` 解析 |
-| `Usage4Claude/Views/WebLogin/CodexWebLoginCoordinator.swift` | 仿 `WebLoginCoordinator`，加载 `https://chatgpt.com/auth/login`，轮询 `__Secure-next-auth.session-token` cookie，调 `/api/auth/session` 验证 |
+| `UsagePaceCC/Models/ProviderType.swift` | `enum ProviderType: String, Codable, CaseIterable { case claude, codex }`，附带 `displayName`、`brandColor` |
+| `UsagePaceCC/Services/UsageProvider.swift` | 协议：`fetchUsage / cancelAllRequests / providerType / sessionValid` |
+| `UsagePaceCC/Services/CodexAPIService.swift` | 实现 `UsageProvider`。两步请求：先 `GET /api/auth/session` 取 accessToken，再 `GET /backend-api/wham/usage`。配 30/60s 超时、关 HTTP/3、no-cache，跟 `ClaudeAPIService.init` 一致 |
+| `UsagePaceCC/Services/CodexAPIHeaderBuilder.swift` | Cookie 名 `__Secure-next-auth.session-token`，UA/Origin/Referer 走 `chatgpt.com` |
+| `UsagePaceCC/Models/CodexUsageData.swift` | Codex 侧的内部模型 + `toCodexUsageData()` 解析 |
+| `UsagePaceCC/Views/WebLogin/CodexWebLoginCoordinator.swift` | 仿 `WebLoginCoordinator`，加载 `https://chatgpt.com/auth/login`，轮询 `__Secure-next-auth.session-token` cookie，调 `/api/auth/session` 验证 |
 | `docs/PRODUCT_DESIGN_PHILOSOPHY.md` | 复制本文档 Part A 全部内容 |
 | `docs/IMPLEMENTATION_PLAN_CODEX.md` | 复制本 plan 文件全文（包含 Part A 与 Part B），作为本次实现的归档文档；后续若实现过程中产生方案偏离，需同步更新此文档 |
 
@@ -164,14 +164,14 @@ Codex 的位置应该在副标题/Features 区段而非头图，符合"作者本
 
 ### 不改的东西（明确清单）
 
-- 仓库名 `f-is-h/Usage4Claude` — 不改
-- Bundle ID `xyz.fi5h.Usage4Claude` — 不改
-- 产品 Display Name `Usage4Claude` — 不改
+- 仓库名 `f-is-h/UsagePaceCC` — 不改
+- Bundle ID `xyz.fi5h.UsagePaceCC` — 不改
+- 产品 Display Name `UsagePaceCC` — 不改
 - `UpdateChecker.swift` 的 `repoOwner` / `repoName` — 不改（因此不需要发"过渡版"）
 - `MenuBarManager.swift:405` 的 `setFrameAutosaveName` — 不改
-- `DiagnosticLogger.swift` 的 `Application Support/Usage4Claude/logs` 路径 — 不改
-- README 主标题"Usage4Claude" — 不改，但在 Features 列表加一行 Codex 支持说明（Part A.4）
-- 网站 `usage4claude.pages.dev` 域名、HTML title、SEO meta — 不改
+- `DiagnosticLogger.swift` 的 `Application Support/UsagePaceCC/logs` 路径 — 不改
+- README 主标题"UsagePaceCC" — 不改，但在 Features 列表加一行 Codex 支持说明（Part A.4）
+- 网站 `usagepacecc.pages.dev` 域名、HTML title、SEO meta — 不改
 
 ## B.3 实现顺序（单一 feature 分支，本地完整开发后一次性 PR）
 

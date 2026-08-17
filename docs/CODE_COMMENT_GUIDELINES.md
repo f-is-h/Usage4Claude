@@ -1,6 +1,6 @@
 # Swift 代码注释规范指南
 
-> 本文档定义了 Usage4Claude 项目的代码注释标准。作为 AI 助手，你必须严格遵守这些规范。
+> 本文档定义了 UsagePaceCC 项目的代码注释标准。作为 AI 助手，你必须严格遵守这些规范。
 
 ## 📋 总体原则
 
@@ -595,6 +595,6 @@ if #available(macOS 10.14, *) {
 
 ---
 
-*本文档基于 Usage4Claude 项目的实际代码总结而成，作为 Project Knowledge 的一部分供 AI 助手参考。*
+*本文档基于 UsagePaceCC 项目的实际代码总结而成，作为 Project Knowledge 的一部分供 AI 助手参考。*
 
 *最后更新：2025年10月21日*

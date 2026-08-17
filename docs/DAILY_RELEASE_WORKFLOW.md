@@ -1,4 +1,4 @@
-# Usage4Claude 日常版本发布流程
+# UsagePaceCC 日常版本发布流程
 
 > 使用 GitHub Workflow 自动化发布的快速指南
 
@@ -69,7 +69,7 @@ Cmd + R
 1. 在文件顶部添加 Claude 生成的新版本条目
 2. **重要**: 更新底部的版本链接
    ```markdown
-   [1.X.X]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.X.X
+   [1.X.X]: https://github.com/quangyendn/UsagePaceCC/releases/tag/v1.X.X
    ```
 
 **示例：**
@@ -87,8 +87,8 @@ Cmd + R
 ## [1.1.0] - 2025-11-15
 ...
 
-[1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0
-[1.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.1.0
+[1.2.0]: https://github.com/quangyendn/UsagePaceCC/releases/tag/v1.2.0
+[1.1.0]: https://github.com/quangyendn/UsagePaceCC/releases/tag/v1.1.0
 ```
 
 ---
@@ -98,7 +98,7 @@ Cmd + R
 **使用 Claude 生成的 Commit Message：**
 
 ```bash
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /Users/iMac/Coding/Projects/UsagePaceCC
 
 # 添加所有改动
 git add .
@@ -125,7 +125,7 @@ git push origin main
 
 **访问 Actions 页面监控：**
 ```
-https://github.com/f-is-h/Usage4Claude/actions
+https://github.com/quangyendn/UsagePaceCC/actions
 ```
 
 **Workflow 流程（约10分钟）：**
@@ -162,7 +162,7 @@ https://github.com/f-is-h/Usage4Claude/actions
 
 1. **访问 Releases 页面：**
    ```
-   https://github.com/f-is-h/Usage4Claude/releases
+   https://github.com/quangyendn/UsagePaceCC/releases
    ```
 
 2. **找到 Draft Release（未发布）：**
@@ -188,8 +188,8 @@ https://github.com/f-is-h/Usage4Claude/actions
    - 检查格式、链接、emoji
 
 5. **验证附件：**
-   - ✅ `Usage4Claude-vX.Y.Z.dmg` 已上传
-   - ✅ `Usage4Claude-vX.Y.Z.dmg.sha256` 已上传
+   - ✅ `UsagePaceCC-vX.Y.Z.dmg` 已上传
+   - ✅ `UsagePaceCC-vX.Y.Z.dmg.sha256` 已上传
 
 6. **发布：**
    - ✅ 勾选 "Set as the latest release"
@@ -204,7 +204,7 @@ https://github.com/f-is-h/Usage4Claude/actions
 
 1. **访问 Release 页面：**
    ```
-   https://github.com/f-is-h/Usage4Claude/releases/tag/vX.Y.Z
+   https://github.com/quangyendn/UsagePaceCC/releases/tag/vX.Y.Z
    ```
 
 2. **验证内容：**
@@ -217,7 +217,7 @@ https://github.com/f-is-h/Usage4Claude/actions
 3. **测试下载：**
    ```bash
    # 下载 DMG
-   open ~/Downloads/Usage4Claude-vX.Y.Z.dmg
+   open ~/Downloads/UsagePaceCC-vX.Y.Z.dmg
    
    # 安装测试
    # 验证版本号

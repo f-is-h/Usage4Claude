@@ -1,4 +1,4 @@
-# Usage4Claude 项目开发总结
+# UsagePaceCC 项目开发总结
 
 > 一个 macOS 菜单栏应用的完整开发历程，从零到生产就绪
 
@@ -47,7 +47,7 @@
 
 **项目结构：**
 ```
-Usage4Claude/
+UsagePaceCC/
 ├── App/                    # 应用核心
 ├── Services/               # 服务层
 ├── Models/                 # 数据模型
@@ -370,7 +370,7 @@ deinit {
 **1. 创建证书**
 ```
 钥匙串访问 → 证书助理 → 创建证书
-- 名称：Usage4Claude-CodeSigning
+- 名称：UsagePaceCC-CodeSigning
 - 类型：代码签名
 - 证书类型：自签名根证书
 - 密钥对：RSA 2048位
@@ -384,7 +384,7 @@ deinit {
 **3. Xcode 配置**
 ```
 TARGETS → Build Settings → Signing
-- Code Signing Identity: Usage4Claude-CodeSigning
+- Code Signing Identity: UsagePaceCC-CodeSigning
 - Code Signing Style: Manual
 ```
 

@@ -10,7 +10,7 @@ Generated from a single 1024×1024 master into all sizes:
 
 | Path | Description |
 |------|-------------|
-| `Usage4Claude/Resources/Assets.xcassets/AppIcon.appiconset/*.png` | All AppIcon sizes (16–1024) — Dock/Finder/About |
+| `UsagePaceCC/Resources/Assets.xcassets/AppIcon.appiconset/*.png` | All AppIcon sizes (16–1024) — Dock/Finder/About |
 | `docs/images/AppIcon.icns` | App bundle icon (ICNS) |
 | `docs/images/DmgIcon.icns` | DMG volume icon (ICNS) |
 | `docs/images/icon@2x.png` | 512px source PNG |

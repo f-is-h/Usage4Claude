@@ -1,8 +1,8 @@
-# Usage4Claude 多限制显示功能实现文档
+# UsagePaceCC 多限制显示功能实现文档
 
 ## 项目概述
 
-为 Usage4Claude 应用添加对多种使用限制的支持，包括模型特定限制（Opus/Sonnet）和额外付费额度（Extra Usage）的监控与显示。
+为 UsagePaceCC 应用添加对多种使用限制的支持，包括模型特定限制（Opus/Sonnet）和额外付费额度（Extra Usage）的监控与显示。
 
 ---
 
@@ -901,7 +901,7 @@ enum LocalizationKey: String {
 
 ## 开发指导（给 Claude Code）
 
-本文档为 Usage4Claude v2.0.0 的完整技术规范。请按照以下功能模块逐步实现，每个功能模块可以独立开发和测试。
+本文档为 UsagePaceCC v2.0.0 的完整技术规范。请按照以下功能模块逐步实现，每个功能模块可以独立开发和测试。
 
 ### 开发方式
 
@@ -1185,4 +1185,4 @@ enum LocalizationKey: String {
 **文档版本**：2.0  
 **最后更新**：2025-12-16  
 **作者**：Claude (Anthropic)  
-**适用项目**：Usage4Claude v2.0.0
+**适用项目**：UsagePaceCC v2.0.0

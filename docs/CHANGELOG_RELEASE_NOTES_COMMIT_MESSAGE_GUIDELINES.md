@@ -13,7 +13,7 @@
 ## CHANGELOG
 
 参照项目根目录下 CHANGELOG.md 文件，编写最新版本的 CHANGELOG 说明。
-输出后提醒需要更新最下方处链接，如 [1.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v1.2.0
+输出后提醒需要更新最下方处链接，如 [1.2.0]: https://github.com/quangyendn/UsagePaceCC/releases/tag/v1.2.0
 
 ## RELEASE NOTES
 

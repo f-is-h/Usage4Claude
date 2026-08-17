@@ -94,8 +94,8 @@ Filesystem:edit_file({
 
 **你必须：**
 1. **始终使用绝对路径**
-   - 正确：`/Users/iMac/Coding/Projects/Usage4Claude/src/App.tsx`
-   - 错误：`./src/App.tsx`, `../Usage4Claude/src/App.tsx`
+   - 正确：`/Users/iMac/Coding/Projects/UsagePaceCC/src/App.tsx`
+   - 错误：`./src/App.tsx`, `../UsagePaceCC/src/App.tsx`
 
 2. **直接使用 `search_files`，不要先 list 再过滤**
    - 正确：`Filesystem:search_files({ path: "/path", pattern: "*.tsx" })`
