@@ -102,6 +102,7 @@ occasionally (user-initiated)
 | `/Users/yennq/Projects/opensrc/Usage4Claude/.github/workflows/release.yml` | modify | **delete** the "Import code signing certificate" step (and any `CODESIGN_*` env wiring feeding it) |
 | `/Users/yennq/Projects/opensrc/Usage4Claude/docs/CODE_SIGNING.md` | rewrite (partial) | state ad-hoc signing + Gatekeeper warning as fact; drop the CI-signing narrative and the secrets setup section |
 | `/Users/yennq/Projects/opensrc/Usage4Claude/scripts/build.sh` | **no change** | already forces `CODE_SIGN_IDENTITY="-"` — leave it |
+| `/Users/yennq/Projects/opensrc/Usage4Claude/UsagePaceCC.xcodeproj/project.pbxproj` | modify | **Found during Phase 03.** Both build configs set `CODE_SIGN_IDENTITY = "UsagePaceCC-CodeSigning"`, but that cert does not exist in any keychain → a plain `xcodebuild` or an Xcode ⌘B fails with *"No certificate matching 'UsagePaceCC-CodeSigning' found"*. Only an explicit ad-hoc override builds. This contradicts V3 ("builds are ad-hoc, say so plainly"). Set both configs to `CODE_SIGN_IDENTITY = "-"` so the checked-in project builds out of the box for anyone who clones it. Phase 07 (deferred) may reintroduce a real identity **after** the cert exists. |
 
 ## Implementation Steps
 
