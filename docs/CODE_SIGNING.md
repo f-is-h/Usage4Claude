@@ -95,6 +95,6 @@ For Gatekeeper-transparent distribution (no right-click workaround), you would n
 
 This is out of scope for the current project and is documented here only for reference.
 
-> **Repo note**: The repo is `quangyendn/Usage4Claude`. The `.xcodeproj` filename
+> **Repo note**: The repo is `quangyendn/UsagePaceCC`. The `.xcodeproj` filename
 > (`Usage4Claude.xcodeproj`) is unchanged — only the certificate identity name and the
 > built product name (`UsagePaceCC.app`) have changed.

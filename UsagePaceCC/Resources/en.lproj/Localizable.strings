@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "Please configure Organization ID and Session Key in the fields above";
 "diagnostic.suggestion_check_org_id" = "Check if Organization ID format is correct (should be a UUID)";
 "diagnostic.suggestion_export_and_share" = "Export this diagnostic report and share it on GitHub Issues";
-"diagnostic.suggestion_contact_support" = "Contact developer for help at github.com/quangyendn/Usage4Claude/issues";
+"diagnostic.suggestion_contact_support" = "Contact developer for help at github.com/quangyendn/UsagePaceCC/issues";
 "diagnostic.open_log_folder" = "Open Log Folder";
 
 // MARK: - Limit Types (v2.0.0)

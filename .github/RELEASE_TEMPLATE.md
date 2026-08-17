@@ -25,10 +25,10 @@ Delete this comment when done
 
 ### 📝 Full Changelog
 
-See [CHANGELOG.md](https://github.com/quangyendn/Usage4Claude/blob/main/CHANGELOG.md) for complete version history.
+See [CHANGELOG.md](https://github.com/quangyendn/UsagePaceCC/blob/main/CHANGELOG.md) for complete version history.
 
-**Previous Version:** [v{{PREVIOUS_VERSION}}](https://github.com/quangyendn/Usage4Claude/releases/tag/v{{PREVIOUS_VERSION}})
+**Previous Version:** [v{{PREVIOUS_VERSION}}](https://github.com/quangyendn/UsagePaceCC/releases/tag/v{{PREVIOUS_VERSION}})
 
 ---
 
-**Full Changelog**: https://github.com/quangyendn/Usage4Claude/compare/v{{PREVIOUS_VERSION}}...v{{VERSION}}
+**Full Changelog**: https://github.com/quangyendn/UsagePaceCC/compare/v{{PREVIOUS_VERSION}}...v{{VERSION}}

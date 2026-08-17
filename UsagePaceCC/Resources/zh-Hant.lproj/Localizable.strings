@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "請在上方欄位中設定組織 ID 和工作階段金鑰";
 "diagnostic.suggestion_check_org_id" = "檢查組織 ID 格式是否正確(應該是 UUID 格式)";
 "diagnostic.suggestion_export_and_share" = "匯出此診斷報告並在 GitHub Issues 上分享";
-"diagnostic.suggestion_contact_support" = "在 github.com/quangyendn/Usage4Claude/issues 聯絡開發者尋求協助";
+"diagnostic.suggestion_contact_support" = "在 github.com/quangyendn/UsagePaceCC/issues 聯絡開發者尋求協助";
 "diagnostic.open_log_folder" = "開啟日誌資料夾";
 
 // MARK: - Limit Types (v2.0.0)

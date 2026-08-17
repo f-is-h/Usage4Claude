@@ -245,7 +245,7 @@
 "diagnostic.suggestion_configure_auth" = "Veuillez configurer l'identifiant d'organisation et la clé de session dans les champs ci-dessus";
 "diagnostic.suggestion_check_org_id" = "Vérifiez que le format de l'identifiant d'organisation est correct (doit être un UUID)";
 "diagnostic.suggestion_export_and_share" = "Exportez ce rapport de diagnostic et partagez-le sur GitHub Issues";
-"diagnostic.suggestion_contact_support" = "Contactez le développeur pour obtenir de l'aide sur github.com/quangyendn/Usage4Claude/issues";
+"diagnostic.suggestion_contact_support" = "Contactez le développeur pour obtenir de l'aide sur github.com/quangyendn/UsagePaceCC/issues";
 "diagnostic.open_log_folder" = "Ouvrir le dossier des journaux";
 
 // MARK: - Limit Types (v2.0.0)
