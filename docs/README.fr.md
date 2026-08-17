@@ -1,4 +1,4 @@
-# Usage4Claude
+# UsagePaceCC
 
 [English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
 
@@ -10,8 +10,8 @@
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](../LICENSE)
-[![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Release](https://img.shields.io/github/v/release/quangyendn/UsagePaceCC?style=flat-square)](https://github.com/quangyendn/UsagePaceCC/releases)
+[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/quangyendn/UsagePaceCC/total)](https://github.com/quangyendn/UsagePaceCC/releases)
 
 **Suivez vos quotas d'abonnement Claude (et Codex) avec elegance, directement dans la barre des menus.**
 
@@ -156,7 +156,7 @@ Couleurs Codex actuelles :
 
 ### Option 1 : Telecharger le binaire (recommande)
 
-1. Rendez-vous sur la [page des Releases](https://github.com/f-is-h/Usage4Claude/releases)
+1. Rendez-vous sur la [page des Releases](https://github.com/quangyendn/UsagePaceCC/releases)
 2. Telechargez le dernier fichier `.dmg`
 3. Double-cliquez pour ouvrir, glissez l'application dans le dossier Applications
 4. Faites un clic droit sur l'app et selectionnez « Ouvrir » au premier lancement (autoriser l'app non signee)
@@ -173,11 +173,11 @@ Couleurs Codex actuelles :
 
 ```bash
 # Cloner le depot
-git clone https://github.com/f-is-h/Usage4Claude.git
-cd Usage4Claude
+git clone https://github.com/quangyendn/UsagePaceCC.git
+cd UsagePaceCC
 
 # Ouvrir dans Xcode
-open Usage4Claude.xcodeproj
+open UsagePaceCC.xcodeproj
 
 # Appuyez sur Cmd + R pour lancer dans Xcode
 ```
@@ -257,7 +257,7 @@ R : Deux methodes :
 
 **Methode 2 : Via les Reglages Systeme**
 1. Ouvrez Reglages Systeme → General → Ouverture
-2. Cliquez sur « + » pour ajouter Usage4Claude
+2. Cliquez sur « + » pour ajouter UsagePaceCC
 
 </details>
 
@@ -330,14 +330,14 @@ R : Oui. Ouvrez Reglages → Authentification, cliquez sur la connexion navigate
 
 R : **Oui, elle fonctionne avec toutes les plateformes Claude !**
 
-Puisque tous les produits Claude (Web, Claude Code, Application de bureau, Application mobile, Cowork) partagent le meme quota d'utilisation, Usage4Claude surveille votre utilisation combinee sur toutes les plateformes.
+Puisque tous les produits Claude (Web, Claude Code, Application de bureau, Application mobile, Cowork) partagent le meme quota d'utilisation, UsagePaceCC surveille votre utilisation combinee sur toutes les plateformes.
 
 </details>
 
 <details>
 <summary><b>Q : Comment gerer plusieurs comptes ?</b></summary>
 
-R : Usage4Claude prend en charge plusieurs comptes Claude, plusieurs organisations sous un meme compte Claude, ainsi que des comptes Codex independants :
+R : UsagePaceCC prend en charge plusieurs comptes Claude, plusieurs organisations sous un meme compte Claude, ainsi que des comptes Codex independants :
 - **Ajouter un compte** - Connexion navigateur Claude, saisie manuelle Claude ou connexion navigateur Codex dans Reglages → Authentification
 - **Changer de compte** - Menu « … » dans la fenetre de detail ou clic droit sur l'icone de la barre des menus
 - **Modifier l'alias** - Donnez a chaque compte un nom facile a reconnaitre
@@ -475,22 +475,6 @@ Si ce projet vous aide, vous pouvez le soutenir des facons suivantes :
 ### ⭐ Donner une Star au projet
 Une Star est le meilleur encouragement !
 
-### ☕ M'offrir un cafe
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
 
 ### 📢 Partager le projet
 Si vous aimez ce projet, partagez-le avec davantage de personnes !
@@ -513,8 +497,8 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](../LICENSE) pour plus
 
 ## 📞 Contact
 
-- **Issues** : [Soumettre un probleme ou une suggestion](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions** : [Rejoindre les discussions](https://github.com/f-is-h/Usage4Claude/discussions)
+- **Issues** : [Soumettre un probleme ou une suggestion](https://github.com/quangyendn/UsagePaceCC/issues)
+- **Discussions** : [Rejoindre les discussions](https://github.com/quangyendn/UsagePaceCC/discussions)
 - **GitHub** : [@f-is-h](https://github.com/f-is-h)
 
 ---
@@ -531,6 +515,6 @@ Ce projet est un outil tiers independant sans affiliation officielle avec Anthro
 
 Fait avec ❤️ par [f-is-h](https://github.com/f-is-h)
 
-[⬆ Retour en haut](#usage4claude)
+[⬆ Retour en haut](#usagepacecc)
 
 </div>

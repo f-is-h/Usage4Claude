@@ -1,4 +1,4 @@
-# Usage4Claude
+# UsagePaceCC
 
 [English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [한국어](docs/README.ko.md) | [Français](docs/README.fr.md)
 
@@ -10,8 +10,8 @@
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Release](https://img.shields.io/github/v/release/quangyendn/UsagePaceCC?style=flat-square)](https://github.com/quangyendn/UsagePaceCC/releases)
+[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/quangyendn/UsagePaceCC/total)](https://github.com/quangyendn/UsagePaceCC/releases)
 
 **Track your Claude (and Codex) subscription quota — beautifully, in your menu bar.**
 
@@ -179,7 +179,7 @@ Codex current colors:
 
 ### Option 1: Download Pre-built (Recommended)
 
-1. Go to [Releases page](https://github.com/f-is-h/Usage4Claude/releases)
+1. Go to [Releases page](https://github.com/quangyendn/UsagePaceCC/releases)
 2. Download the latest `.dmg` file
 3. Double-click to open, drag app to Applications folder
 4. Right-click the app and select "Open" on first launch (allow unsigned app)
@@ -196,11 +196,11 @@ Codex current colors:
 
 ```bash
 # Clone repository
-git clone https://github.com/f-is-h/Usage4Claude.git
-cd Usage4Claude
+git clone https://github.com/quangyendn/UsagePaceCC.git
+cd UsagePaceCC
 
 # Open in Xcode
-open Usage4Claude.xcodeproj
+open UsagePaceCC.xcodeproj
 
 # Press Cmd + R to run in Xcode
 ```
@@ -288,7 +288,7 @@ A: Two methods:
 
 **Method 2: Via System Settings**
 1. Open System Settings → General → Login Items
-2. Click "+" to add Usage4Claude
+2. Click "+" to add UsagePaceCC
 
 </details>
 
@@ -357,7 +357,7 @@ You can verify all of this by reviewing the source code on GitHub!
 
 A: **Yes, it works with all Claude platforms!**
 
-Since all Claude products (Web, Claude Code, Desktop App, Mobile App, Cowork) share the same usage quota, Usage4Claude monitors your combined usage across all platforms.
+Since all Claude products (Web, Claude Code, Desktop App, Mobile App, Cowork) share the same usage quota, UsagePaceCC monitors your combined usage across all platforms.
 
 Whether you're:
 - Coding in terminal with `claude code`
@@ -389,7 +389,7 @@ A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may a
 **Solution:**
 1. Hold **Command (⌘) key**
 2. Drag icons in the menu bar with mouse
-3. Drag Usage4Claude icon to the visible area on the right side of menu bar
+3. Drag UsagePaceCC icon to the visible area on the right side of menu bar
 4. Release mouse
 
 **Note:**
@@ -401,7 +401,7 @@ A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may a
 <details>
 <summary><b>Q: How to manage multiple accounts?</b></summary>
 
-A: Usage4Claude supports multiple Claude accounts, multiple organizations under the same Claude account, and independent Codex account management:
+A: UsagePaceCC supports multiple Claude accounts, multiple organizations under the same Claude account, and independent Codex account management:
 - **Add Account** - Add via Claude browser login, Claude manual input, or Codex browser login in Settings → Authentication
 - **Switch Account** - Click "…" menu in detail window or right-click menu bar icon, select the Claude / Codex account to switch to
 - **Edit Alias** - Set easily recognizable aliases for each account
@@ -539,23 +539,6 @@ If this project helps you, please support in the following ways:
 ### ⭐ Star the Project
 Giving a star is the biggest encouragement!
 
-### ☕ Buy Me a Coffee
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
-
 ### 📢 Share the Project
 If you like this project, please share it with more people!
 
@@ -586,8 +569,8 @@ and/or sell copies of the Software.
 
 ## 📞 Contact
 
-- **Issues**: [Submit issues or suggestions](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [Join discussions](https://github.com/f-is-h/Usage4Claude/discussions)
+- **Issues**: [Submit issues or suggestions](https://github.com/quangyendn/UsagePaceCC/issues)
+- **Discussions**: [Join discussions](https://github.com/quangyendn/UsagePaceCC/discussions)
 - **GitHub**: [@f-is-h](https://github.com/f-is-h)
 
 ---
@@ -604,6 +587,6 @@ This project is an independent third-party tool with no official affiliation wit
 
 Made with ❤️ by [f-is-h](https://github.com/f-is-h)
 
-[⬆ Back to Top](#usage4claude)
+[⬆ Back to Top](#usagepacecc)
 
 </div>

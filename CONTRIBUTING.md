@@ -1,4 +1,4 @@
-# Contributing to Usage4Claude
+# Contributing to UsagePaceCC
 
 Thank you for your interest in contributing! We welcome all contributions.
 
@@ -6,7 +6,7 @@ Thank you for your interest in contributing! We welcome all contributions.
 
 ### Reporting Bugs
 
-Use the [Bug Report template](https://github.com/f-is-h/Usage4Claude/issues/new?template=bug_report.md) and include:
+Use the [Bug Report template](https://github.com/quangyendn/UsagePaceCC/issues/new?template=bug_report.md) and include:
 
 - Clear description
 - Steps to reproduce
@@ -16,7 +16,7 @@ Use the [Bug Report template](https://github.com/f-is-h/Usage4Claude/issues/new?
 
 ### Suggesting Features
 
-Use the [Feature Request template](https://github.com/f-is-h/Usage4Claude/issues/new?template=feature_request.md) and describe:
+Use the [Feature Request template](https://github.com/quangyendn/UsagePaceCC/issues/new?template=feature_request.md) and describe:
 
 - What you want to achieve
 - Why it's useful
@@ -28,8 +28,8 @@ Use the [Feature Request template](https://github.com/f-is-h/Usage4Claude/issues
 
 2. **Clone and create a branch**
    ```bash
-   git clone https://github.com/f-is-h/Usage4Claude.git
-   cd Usage4Claude
+   git clone https://github.com/quangyendn/UsagePaceCC.git
+   cd UsagePaceCC
    git checkout -b feature/your-feature-name
    ```
 
@@ -88,7 +88,7 @@ func refreshUsageData(force: Bool = false) {
 ### File Organization
 
 ```
-Usage4Claude/
+UsagePaceCC/
 ├── App/              # Application entry
 ├── Views/            # UI views
 ├── Models/           # Data models
@@ -128,9 +128,9 @@ To add a new language:
 
 ## Getting Help
 
-- Check existing [Issues](https://github.com/f-is-h/Usage4Claude/issues)
-- Check existing [Pull Requests](https://github.com/f-is-h/Usage4Claude/pulls)
-- Ask in [Discussions](https://github.com/f-is-h/Usage4Claude/discussions)
+- Check existing [Issues](https://github.com/quangyendn/UsagePaceCC/issues)
+- Check existing [Pull Requests](https://github.com/quangyendn/UsagePaceCC/pulls)
+- Ask in [Discussions](https://github.com/quangyendn/UsagePaceCC/discussions)
 
 ## License
 

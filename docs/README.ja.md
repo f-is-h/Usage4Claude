@@ -1,4 +1,4 @@
-# Usage4Claude
+# UsagePaceCC
 
 [English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
 
@@ -10,8 +10,8 @@
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](../LICENSE)
-[![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Release](https://img.shields.io/github/v/release/quangyendn/UsagePaceCC?style=flat-square)](https://github.com/quangyendn/UsagePaceCC/releases)
+[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/quangyendn/UsagePaceCC/total)](https://github.com/quangyendn/UsagePaceCC/releases)
 
 **Claude（および Codex）のサブスクリプション使用量を、メニューバーで美しく追跡。**
 
@@ -179,7 +179,7 @@ Codex 現在の配色：
 
 ### 方法1：ビルド済みをダウンロード（推奨）
 
-1. [Releases ページ](https://github.com/f-is-h/Usage4Claude/releases)へ移動
+1. [Releases ページ](https://github.com/quangyendn/UsagePaceCC/releases)へ移動
 2. 最新バージョンの `.dmg` ファイルをダウンロード
 3. ダブルクリックして開き、アプリを「アプリケーション」フォルダにドラッグ
 4. 初回起動時は、アプリを右クリックして「開く」を選択（未署名アプリの許可）
@@ -196,11 +196,11 @@ Codex 現在の配色：
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/f-is-h/Usage4Claude.git
-cd Usage4Claude
+git clone https://github.com/quangyendn/UsagePaceCC.git
+cd UsagePaceCC
 
 # Xcode で開く
-open Usage4Claude.xcodeproj
+open UsagePaceCC.xcodeproj
 
 # Xcode で Cmd + R を押して実行
 ```
@@ -288,7 +288,7 @@ A: 2つの方法があります：
 
 **方法2：システム設定経由**
 1. システム設定 → 一般 → ログイン項目を開く
-2. 「+」をクリックして Usage4Claude を追加
+2. 「+」をクリックして UsagePaceCC を追加
 
 </details>
 
@@ -357,7 +357,7 @@ GitHub でソースコードを確認してこれらすべてを検証できま�
 
 A: **はい、すべてのClaudeプラットフォームで動作します!**
 
-すべてのClaude製品 (Web, Claude Code, Desktop App, Mobile App, Cowork) は同じ使用量クォータを共有しているため、Usage4Claudeはすべてのプラットフォームでの総使用量を監視します。
+すべてのClaude製品 (Web, Claude Code, Desktop App, Mobile App, Cowork) は同じ使用量クォータを共有しているため、UsagePaceCCはすべてのプラットフォームでの総使用量を監視します。
 
 以下のような場合でも:
 - ターミナルで `claude code` を使用してコーディング
@@ -389,7 +389,7 @@ A: macOS システムまたはサードパーティソフトウェア（Bartende
 **解決方法：**
 1. **Command (⌘) キー**を押したまま
 2. メニューバー内のアイコンをマウスでドラッグ
-3. Usage4Claude アイコンをメニューバー右側の可視エリアにドラッグ
+3. UsagePaceCC アイコンをメニューバー右側の可視エリアにドラッグ
 4. マウスを離す
 
 **ヒント：**
@@ -401,7 +401,7 @@ A: macOS システムまたはサードパーティソフトウェア（Bartende
 <details>
 <summary><b>Q: 複数のアカウントを管理するには？</b></summary>
 
-A: Usage4Claude は Claude の複数アカウント、同一 Claude アカウント下の複数組織、独立した Codex アカウント管理をサポートしています：
+A: UsagePaceCC は Claude の複数アカウント、同一 Claude アカウント下の複数組織、独立した Codex アカウント管理をサポートしています：
 - **アカウント追加** - 設定 → 認証情報で Claude ブラウザログイン、Claude 手動入力、または Codex ブラウザログインで追加
 - **アカウント切り替え** - 詳細ウィンドウの「…」メニューまたはメニューバーアイコンを右クリックして、切り替える Claude / Codex アカウントを選択
 - **エイリアス編集** - 各アカウントに識別しやすいエイリアスを設定
@@ -539,22 +539,6 @@ A: 設定 → 一般で Claude 使用量通知機能のオン/オフを切り替
 ### ⭐ プロジェクトにスター
 スターを付けることが最大の励みになります！
 
-### ☕ コーヒーをおごる
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
 
 ### 📢 プロジェクトを共有
 このプロジェクトが気に入ったら、より多くの人に共有してください！
@@ -586,8 +570,8 @@ Copyright (c) 2025 f-is-h
 
 ## 📞 連絡先
 
-- **Issues**: [問題や提案を送信](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [ディスカッションに参加](https://github.com/f-is-h/Usage4Claude/discussions)
+- **Issues**: [問題や提案を送信](https://github.com/quangyendn/UsagePaceCC/issues)
+- **Discussions**: [ディスカッションに参加](https://github.com/quangyendn/UsagePaceCC/discussions)
 - **GitHub**: [@f-is-h](https://github.com/f-is-h)
 
 ---
@@ -604,6 +588,6 @@ Copyright (c) 2025 f-is-h
 
 Made with ❤️ by [f-is-h](https://github.com/f-is-h)
 
-[⬆ トップに戻る](#usage4claude)
+[⬆ トップに戻る](#usagepacecc)
 
 </div> 

@@ -1,4 +1,4 @@
-#  Usage4Claude
+# UsagePaceCC
 
 [English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
 
@@ -10,8 +10,8 @@
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](../LICENSE)
-[![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Release](https://img.shields.io/github/v/release/quangyendn/UsagePaceCC?style=flat-square)](https://github.com/quangyendn/UsagePaceCC/releases)
+[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/quangyendn/UsagePaceCC/total)](https://github.com/quangyendn/UsagePaceCC/releases)
 
 **在選單列中優雅地追蹤您的 Claude（以及 Codex）訂閱用量。**
 
@@ -179,7 +179,7 @@ Codex 目前配色：
 
 ### 方式一：下載預編譯版本（推薦）
 
-1. 前往 [Releases 頁面](https://github.com/f-is-h/Usage4Claude/releases)
+1. 前往 [Releases 頁面](https://github.com/quangyendn/UsagePaceCC/releases)
 2. 下載最新版本的 `.dmg` 檔案
 3. 雙擊開啟，將應用程式拖入「應用程式」資料夾
 4. 首次執行時，右鍵點擊應用程式選擇「開啟」（需要允許執行未簽署應用程式）
@@ -196,11 +196,11 @@ Codex 目前配色：
 
 ```bash
 # 複製儲存庫
-git clone https://github.com/f-is-h/Usage4Claude.git
-cd Usage4Claude
+git clone https://github.com/quangyendn/UsagePaceCC.git
+cd UsagePaceCC
 
 # 在 Xcode 中開啟
-open Usage4Claude.xcodeproj
+open UsagePaceCC.xcodeproj
 
 # 在 Xcode 中按 Cmd + R 執行
 ```
@@ -288,7 +288,7 @@ A: 有兩種方式：
 
 **方式二：透過系統設定**
 1. 開啟「系統設定」→「一般」→「登入項目」
-2. 點擊「+」新增 Usage4Claude
+2. 點擊「+」新增 UsagePaceCC
 
 </details>
 
@@ -357,7 +357,7 @@ A:
 
 A: **是的，支持所有Claude平台！**
 
-由於所有Claude產品 (Web, Claude Code, Desktop App, Mobile App, Cowork) 共享同一使用配額，Usage4Claude會監控您在所有平台上的總使用量。
+由於所有Claude產品 (Web, Claude Code, Desktop App, Mobile App, Cowork) 共享同一使用配額，UsagePaceCC會監控您在所有平台上的總使用量。
 
 無論您是:
 - 在終端使用 `claude code` 編程
@@ -389,7 +389,7 @@ A: macOS 系統或第三方軟體（如 Bartender、Hidden Bar 等）有時會�
 **解決方法：**
 1. 按住 **Command (⌘) 鍵**
 2. 用滑鼠拖曳選單列中的圖示
-3. 將 Usage4Claude 圖示拖到選單列右側可見區域
+3. 將 UsagePaceCC 圖示拖到選單列右側可見區域
 4. 鬆開滑鼠即可
 
 **提示：**
@@ -401,7 +401,7 @@ A: macOS 系統或第三方軟體（如 Bartender、Hidden Bar 等）有時會�
 <details>
 <summary><b>Q: 如何管理多個帳戶？</b></summary>
 
-A: Usage4Claude 支援 Claude 多帳戶、同一 Claude 帳戶下的多組織，以及獨立的 Codex 帳戶管理：
+A: UsagePaceCC 支援 Claude 多帳戶、同一 Claude 帳戶下的多組織，以及獨立的 Codex 帳戶管理：
 - **新增帳戶** - 在設定 → 認證資訊中透過 Claude 瀏覽器登入、Claude 手動輸入或 Codex 瀏覽器登入新增
 - **切換帳戶** - 在詳情視窗點擊「…」選單或右鍵點擊選單列圖示，選擇要切換的 Claude / Codex 帳戶
 - **編輯別名** - 為每個帳戶設定易於辨識的別名
@@ -539,22 +539,6 @@ A: 在設定 → 一般設定中可以開關 Claude 用量通知功能：
 ### ⭐ Star 專案
 給專案一個 Star 是對我最大的鼓勵！
 
-### ☕ 請我喝杯咖啡
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
 
 ### 📢 分享專案
 如果您喜歡這個專案，請分享給更多可能需要的人！
@@ -585,8 +569,8 @@ Copyright (c) 2025 f-is-h
 
 ## 📞 聯絡方式
 
-- **Issues**: [提交問題或建議](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [參與討論](https://github.com/f-is-h/Usage4Claude/discussions)
+- **Issues**: [提交問題或建議](https://github.com/quangyendn/UsagePaceCC/issues)
+- **Discussions**: [參與討論](https://github.com/quangyendn/UsagePaceCC/discussions)
 - **GitHub**: [@f-is-h](https://github.com/f-is-h)
 
 ---
@@ -603,6 +587,6 @@ Copyright (c) 2025 f-is-h
 
 Made with ❤️ by [f-is-h](https://github.com/f-is-h)
 
-[⬆ 回到頂部](#usage4claude)
+[⬆ 回到頂部](#usagepacecc)
 
 </div>
