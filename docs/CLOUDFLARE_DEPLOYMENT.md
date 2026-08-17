@@ -1,11 +1,16 @@
 # Cloudflare Pages 部署指南
 
-将 Usage4Claude 网站部署到 Cloudflare Pages 的完整步骤。
+> ⚠️ **域名迁移待定**：本文档中的 `usagepacecc.pages.dev` 尚未生效——Cloudflare Pages
+> 项目本身的改名被推迟到 Phase 08。在 Phase 08 完成之前，该域名会 404；仍在线的
+> `usage4claude.pages.dev` 也不再被任何文档引用。这是已知且可接受的过渡状态（网站尚未
+> 对外推广，无外部用户）。
+
+将 UsagePaceCC 网站部署到 Cloudflare Pages 的完整步骤。
 
 ## 准备工作
 
 - ✅ Cloudflare 账号
-- ✅ GitHub 仓库：`f-is-h/Usage4Claude`
+- ✅ GitHub 仓库：`quangyendn/UsagePaceCC`
 - ✅ 域名：`fi5h.xyz`（已注册）
 - ✅ 目标网址：`u4c.fi5h.xyz`
 
@@ -17,7 +22,7 @@
 2. 左侧菜单选择 **Workers & Pages**
 3. 点击 **Create application** → **Pages** → **Connect to Git**
 4. 授权 Cloudflare 访问你的 GitHub 账号
-5. 选择仓库：**f-is-h/Usage4Claude**
+5. 选择仓库：**quangyendn/UsagePaceCC**
 
 ---
 
@@ -75,7 +80,7 @@
 
 访问以下网址确认部署成功：
 
-- ✅ **临时域名**：`https://usage4claude.pages.dev`（或你的项目名）
+- ✅ **临时域名**：`https://usagepacecc.pages.dev`（或你的项目名）
 - ✅ **自定义域名**：`https://u4c.fi5h.xyz`
 
 测试检查清单：
@@ -97,7 +102,7 @@
 
 ### 5.1 更新所有 HTML 文件
 
-将所有 `https://usage4claude.pages.dev` 替换为 `https://u4c.fi5h.xyz`
+将所有 `https://usagepacecc.pages.dev` 替换为 `https://u4c.fi5h.xyz`
 
 **需要更新的文件**：
 - `website/index.html`

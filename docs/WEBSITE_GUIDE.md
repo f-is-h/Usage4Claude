@@ -1,6 +1,6 @@
-# Usage4Claude 产品网站开发指南（精简版）
+# UsagePaceCC 产品网站开发指南（精简版）
 
-> 本指南用于指导Claude Code开发Usage4Claude产品网站
+> 本指南用于指导Claude Code开发UsagePaceCC产品网站
 > 适用于Cloudflare Pages静态部署
 
 ---
@@ -67,7 +67,7 @@
 ## 📋 项目概述
 
 ### 项目目标
-为Usage4Claude macOS应用创建产品展示网站：
+为UsagePaceCC macOS应用创建产品展示网站：
 - 向用户介绍产品功能
 - 提供下载和文档
 - 满足Stripe审核的法律合规要求（特商法、隐私政策）
@@ -97,7 +97,7 @@ Cloudflare Pages Functions - 地址替换（边缘计算）
 ## 📁 项目结构
 
 ```
-Usage4Claude/
+UsagePaceCC/
 └── website/
     ├── functions/              # Cloudflare Pages Functions
     │   ├── _middleware.js      # 地址替换中间件
@@ -143,7 +143,7 @@ Usage4Claude/
 --claude-dark: #1F1F1F;        /* 标题 */
 --claude-text: #2D2D2D;        /* 正文 */
 
-/* Usage4Claude状态色 */
+/* UsagePaceCC状态色 */
 --safe-green: #34C759;         /* 5小时安全 */
 --warn-orange: #FF9500;        /* 警告 */
 --danger-red: #FF3B30;         /* 危险 */
@@ -513,4 +513,4 @@ python3 -m http.server 8000
 
 ---
 
-*Usage4Claude项目 | 2025年12月18日*
+*UsagePaceCC项目 | 2025年12月18日*
