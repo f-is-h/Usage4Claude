@@ -2,7 +2,7 @@
 
 ## 1. Project Positioning
 
-Usage4Claude is a menu bar utility the author built for personal use and for users with similar needs. It has the following non-negotiable attributes:
+UsagePaceCC is a menu bar utility the author built for personal use and for users with similar needs. It has the following non-negotiable attributes:
 
 - **Small and beautiful**: Not chasing broad feature coverage, large user base, or market size
 - **Restraint**: Not every reasonable request will be accepted; the author's aesthetic is the baseline

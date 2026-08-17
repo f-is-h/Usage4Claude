@@ -9,7 +9,7 @@
 import SwiftUI
 import Combine
 
-/// Usage4Claude 应用主入口
+/// UsagePaceCC 应用主入口
 @main
 struct ClaudeUsageMonitorApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate

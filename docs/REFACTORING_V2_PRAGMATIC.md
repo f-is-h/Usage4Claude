@@ -1,4 +1,4 @@
-# Usage4Claude v2-Pragmatic 重构文档
+# UsagePaceCC v2-Pragmatic 重构文档
 
 > 从单一巨型类到清晰分层架构的演进历程
 
