@@ -5,7 +5,11 @@ import XCTest
 /// that backs the main /api/organizations/<id>/usage fetch.
 ///
 /// Specs the production code intends to honor:
-/// - 5-hour data is always parsed (utilization + resets_at).
+/// - 5-hour data is parsed when present (utilization + resets_at). The field
+///   is optional: some account types (Team accounts have been observed doing
+///   this) return `"five_hour": null` alongside every other limit field, and
+///   that alone must not fail decoding of the whole response — it degrades
+///   to `fiveHour == nil`, same as the opus/sonnet "no data" case.
 /// - 7-day always emits a placeholder. Every Claude account has a 7-day limit
 ///   even before usage starts; when `seven_day` is missing OR returns
 ///   (utilization=0, resets_at=null), the transform yields a 0% placeholder
@@ -70,6 +74,31 @@ final class UsageResponseTests: XCTestCase {
         let usage = try decode(json).toUsageData()
         XCTAssertEqual(usage.fiveHour?.percentage, 0)
         XCTAssertNil(usage.fiveHour?.resetsAt)
+    }
+
+    func testFiveHourNullDoesNotFailWholeResponseDecode() throws {
+        // Regression test for a report where a Team account's usage response
+        // came back with every limit field, including five_hour, set to null
+        // (only `extra_usage` — decoded by a separate response type — had
+        // real data). With `five_hour` previously declared non-optional,
+        // JSONDecoder threw `valueNotFound` on this single field and the
+        // production `try? decoder.decode(UsageResponse.self, ...)` call
+        // turned that into a total "failed to parse response data" failure,
+        // even though every other field decoded fine.
+        let json = """
+        {
+            "five_hour": null,
+            "seven_day": null,
+            "seven_day_oauth_apps": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null
+        }
+        """
+        let usage = try decode(json).toUsageData()
+        XCTAssertNil(usage.fiveHour)
+        // The rest of the response still degrades gracefully, same as any
+        // other brand-new/empty account.
+        XCTAssertEqual(usage.sevenDay?.percentage, 0)
     }
 
     // MARK: - 7-day limit (always emits a placeholder)

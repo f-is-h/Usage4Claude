@@ -49,7 +49,11 @@ nonisolated struct Organization: Codable, Sendable, Identifiable, Equatable {
 /// 对应 Claude API 返回的 JSON 结构
 nonisolated struct UsageResponse: Codable, Sendable {
     /// 5小时用量限制数据
-    let five_hour: LimitUsage
+    /// - Note: 绝大多数账号都会带上这个字段，但部分账号类型（如 Team）观察到
+    ///   API 会把它和其它限制字段一起返回 null。声明为可选，这样单个字段为
+    ///   null 不会让整条响应解码失败——之前 `try? decoder.decode(...)` 在这种
+    ///   情况下会直接返回 nil，导致整个用量拉取失败。
+    let five_hour: LimitUsage?
     /// 7天用量限制数据
     let seven_day: LimitUsage?
     /// 7天 OAuth 应用用量（暂未使用）
@@ -101,8 +105,13 @@ nonisolated struct UsageResponse: Codable, Sendable {
     /// - Returns: 转换后的 UsageData 实例
     /// - Note: 会自动处理时间四舍五入，确保显示准确
     func toUsageData() -> UsageData {
-        // 解析5小时限制数据
-        let fiveHourData = parseLimitData(five_hour)
+        // 解析5小时限制数据。与 opus/sonnet 一致：字段缺失时留空（nil），
+        // 而不是像 seven_day 那样伪造 0% 占位——我们并不知道该账号是否真的
+        // 存在这项限制，所以交给 UI 的既有 nil 处理逻辑隐藏这一行。
+        let fiveHourData: UsageData.LimitData? = five_hour.map { limit in
+            let parsed = parseLimitData(limit)
+            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
+        }
 
         // 解析7天限制数据。所有 Claude 账号都有 7 天限制；
         // 未开始使用时 API 可能返回 0 且无 resets_at，仍保留为 0% 占位。
@@ -165,7 +174,7 @@ nonisolated struct UsageResponse: Codable, Sendable {
         })
 
         return UsageData(
-            fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
+            fiveHour: fiveHourData,
             sevenDay: sevenDayData,
             weeklyModels: weeklyModels,
             extraUsage: nil  // Extra Usage 将在阶段5通过单独的 API 获取
