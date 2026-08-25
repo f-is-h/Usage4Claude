@@ -490,7 +490,7 @@ class MenuBarManager: ObservableObject {
             // 切换为 regular 模式，使应用显示在 Dock 中
             NSApp.setActivationPolicy(.regular)
             
-            let settingsView = SettingsView(initialTab: tab, codexUsageData: codexUsageData)
+            let settingsView = SettingsView(initialTab: tab, dataManager: dataManager)
             let hostingController = NSHostingController(rootView: settingsView)
             
             settingsWindow = NSWindow(

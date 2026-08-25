@@ -30,7 +30,7 @@
 - **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex monitoring
 - **🎯 Multi-Limit Support** - Claude supports 5-hour, 7-day, and Extra Usage limits plus weekly per-model usage for any number of models (e.g. Opus, Sonnet, Fable), while Codex supports 5-hour, 7-day, and Extra Usage/credits
 - **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
-- **⚙️ Custom Display** - Manually select from the limit types currently available to your account
+- **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
 - **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
 - **🔔 Usage Notifications** - Warning notification at 90% usage, reset notification when quota resets
 - **👥 Multi-Account Management** - Support multiple Claude accounts / multiple organizations per account, plus independent Codex account management and quick switching

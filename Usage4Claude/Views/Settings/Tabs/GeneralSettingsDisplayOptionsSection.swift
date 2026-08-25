@@ -113,29 +113,17 @@ struct GeneralSettingsDisplayOptionsSection: View {
 
     // MARK: - Display Options Helpers
 
-    /// Keeps all choices before the first response, then shows only active Codex windows.
     private var availableLimitTypes: [LimitType] {
         guard let codexUsageData else { return LimitType.allCases }
-
-        return LimitType.allCases.filter { limitType in
-            switch limitType {
-            case .codexPrimary:
-                return codexUsageData.primary != nil
-            case .codexSecondary:
-                return codexUsageData.secondary != nil
-            case .codexExtraUsage:
-                return codexUsageData.extraUsage?.enabled == true
-            default:
-                return true
-            }
-        }
+        return codexUsageData.primary == nil
+            ? LimitType.allCases.filter { $0 != .codexPrimary }
+            : LimitType.allCases
     }
 
     /// 判断是否只剩一个圆形图标
     private var hasOnlyOneCircularIcon: Bool {
         let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
-        let availableTypes = Set(availableLimitTypes)
-        let selectedCircular = settings.customDisplayTypes.intersection(circularTypes).intersection(availableTypes)
+        let selectedCircular = settings.customDisplayTypes.intersection(circularTypes).intersection(Set(availableLimitTypes))
         return selectedCircular.count == 1
     }
 
@@ -156,10 +144,11 @@ struct GeneralSettingsDisplayOptionsSection: View {
         #endif
 
         let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
+        let availableTypes = Set(availableLimitTypes)
 
         // 如果这是最后一个选中的圆形图标，则禁用
         if circularTypes.contains(limitType) {
-            let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
+            let selectedCircular = settings.customDisplayTypes.intersection(circularTypes).intersection(availableTypes)
             return selectedCircular.count == 1 && selectedCircular.contains(limitType)
         }
 
