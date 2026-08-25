@@ -14,6 +14,7 @@ import ServiceManagement
 /// 各卡片内容按主题拆到 GeneralSettings*Section.swift，保持本文件体量可控
 struct GeneralSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
+    let codexUsageData: CodexUsageData?
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
 
@@ -21,7 +22,7 @@ struct GeneralSettingsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 GeneralSettingsDisplaySection()
-                GeneralSettingsDisplayOptionsSection()
+                GeneralSettingsDisplayOptionsSection(codexUsageData: codexUsageData)
 
                 // 刷新设置卡片
                 SettingCard(

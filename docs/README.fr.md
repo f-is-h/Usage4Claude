@@ -30,7 +30,7 @@
 - **📊 Surveillance en temps réel** - Affiche le quota d'utilisation de l'abonnement Claude (Free/Pro/Team/Max) dans la barre des menus, avec surveillance Codex optionnelle
 - **🎯 Support multi-limites** - Claude prend en charge les limites 5h / 7j / Extra Usage ainsi que l'utilisation hebdomadaire par modèle pour un nombre illimité de modèles (p. ex. Opus, Sonnet, Fable), Codex prend en charge 5h, 7j et Extra Usage/credits
 - **🎨 Mode d'affichage intelligent** - Détection et affichage automatiques de tous les types de limites avec données disponibles
-- **⚙️ Affichage personnalisé** - Sélection manuelle des types de limites à afficher, toute combinaison possible
+- **⚙️ Affichage personnalisé** - Sélection manuelle des types de limites actuellement disponibles pour votre compte
 - **🎨 Couleurs intelligentes** - Changement automatique des couleurs selon l'utilisation, chaque type de limite a son propre schéma
 - **🔔 Notifications d'utilisation** - Avertissement à 90 % d'utilisation, notification lors de la réinitialisation du quota
 - **👥 Gestion multi-comptes** - Support de plusieurs comptes Claude / plusieurs organisations par compte, avec gestion de comptes Codex indépendante et changement rapide

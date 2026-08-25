@@ -12,12 +12,14 @@ import SwiftUI
 /// 使用 Toolbar 风格布局，包含通用设置、认证信息和关于三个标签页
 struct SettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
+    let codexUsageData: CodexUsageData?
     @State private var selectedTab: Int
     @Environment(\.dismiss) private var dismiss
     @StateObject private var localization = LocalizationManager.shared
 
-    init(initialTab: Int = 0) {
+    init(initialTab: Int = 0, codexUsageData: CodexUsageData? = nil) {
         _selectedTab = State(initialValue: initialTab)
+        self.codexUsageData = codexUsageData
     }
 
     var body: some View {
@@ -68,13 +70,13 @@ struct SettingsView: View {
             Group {
                 switch selectedTab {
                 case 0:
-                    GeneralSettingsView()
+                    GeneralSettingsView(codexUsageData: codexUsageData)
                 case 1:
                     AuthSettingsView()
                 case 2:
                     AboutView()
                 default:
-                    GeneralSettingsView()
+                    GeneralSettingsView(codexUsageData: codexUsageData)
                 }
             }
         }

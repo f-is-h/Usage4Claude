@@ -30,7 +30,7 @@
 - **📊 Echtzeit-Überwachung** – Zeigt das Nutzungskontingent deines Claude-Abonnements (Free/Pro/Team/Max) live in der Menüleiste an, optional auch die Codex-Nutzung
 - **🎯 Mehrere Limits** – Claude unterstützt die Limits 5 Stunden / 7 Tage / Zusätzliche Nutzung sowie die wöchentliche Nutzung pro Modell für beliebig viele Modelle (z. B. Opus, Sonnet, Fable), Codex unterstützt 5-Stunden-, 7-Tage- und Zusätzliche-Nutzung/Credits
 - **🎨 Intelligenter Anzeigemodus** – Erkennt und zeigt automatisch alle Limit-Typen mit vorhandenen Daten an
-- **⚙️ Benutzerdefinierte Anzeige** – Wähle manuell aus, welche Limit-Typen angezeigt werden, in beliebiger Kombination
+- **⚙️ Benutzerdefinierte Anzeige** - Wähle manuell aus den für dein Konto aktuell verfügbaren Limit-Typen
 - **🎨 Intelligente Farben** – Warnt durch automatischen Farbwechsel je nach Auslastung; jeder Limit-Typ hat sein eigenes Farbschema
 - **🔔 Nutzungsbenachrichtigungen** – Sendet eine Warnung bei 90 % Auslastung und eine Benachrichtigung beim Zurücksetzen des Kontingents
 - **👥 Verwaltung mehrerer Accounts** – Unterstützt mehrere Claude-Accounts / mehrere Organisationen pro Account sowie eine eigenständige Codex-Account-Verwaltung mit schnellem Wechsel

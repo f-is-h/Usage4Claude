@@ -1099,7 +1099,8 @@ class UserSettings: ObservableObject {
             return types
 
         case .custom:
-            // 自定义模式：按用户选择排序，无论数据是否存在都显示
+            // 自定义模式：按用户选择排序。Codex 已返回用量数据时，仅显示
+            // 当前账户实际提供的窗口，避免把不可用窗口渲染为空白指标。
             // Codex 类型仅在有 Codex 账号时纳入候选；Debug mock 模式例外
             var orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
             var shouldIncludeCodexTypes = !codexAccounts.isEmpty
@@ -1111,7 +1112,22 @@ class UserSettings: ObservableObject {
             if shouldIncludeCodexTypes {
                 orderedTypes.append(contentsOf: [.codexPrimary, .codexSecondary, .codexExtraUsage])
             }
-            return orderedTypes.filter { customDisplayTypes.contains($0) }
+            return orderedTypes.filter { limitType in
+                guard customDisplayTypes.contains(limitType) else { return false }
+
+                guard let codex = codexUsageData else { return true }
+
+                switch limitType {
+                case .codexPrimary:
+                    return codex.primary != nil
+                case .codexSecondary:
+                    return codex.secondary != nil
+                case .codexExtraUsage:
+                    return codex.extraUsage?.enabled == true
+                default:
+                    return true
+                }
+            }
         }
     }
 

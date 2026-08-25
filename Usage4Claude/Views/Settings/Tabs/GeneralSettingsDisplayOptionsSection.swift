@@ -12,6 +12,7 @@ import SwiftUI
 /// 从 GeneralSettingsView 拆出，便于保持单文件体量可控
 struct GeneralSettingsDisplayOptionsSection: View {
     @ObservedObject private var settings = UserSettings.shared
+    let codexUsageData: CodexUsageData?
 
     var body: some View {
         SettingCard(
@@ -48,7 +49,7 @@ struct GeneralSettingsDisplayOptionsSection: View {
                             .foregroundColor(.secondary)
 
                         VStack(alignment: .leading, spacing: 8) {
-                            ForEach(LimitType.allCases, id: \.self) { limitType in
+                            ForEach(availableLimitTypes, id: \.self) { limitType in
                                 LimitTypeCheckbox(
                                     limitType: limitType,
                                     isSelected: settings.customDisplayTypes.contains(limitType),
@@ -112,10 +113,29 @@ struct GeneralSettingsDisplayOptionsSection: View {
 
     // MARK: - Display Options Helpers
 
+    /// Keeps all choices before the first response, then shows only active Codex windows.
+    private var availableLimitTypes: [LimitType] {
+        guard let codexUsageData else { return LimitType.allCases }
+
+        return LimitType.allCases.filter { limitType in
+            switch limitType {
+            case .codexPrimary:
+                return codexUsageData.primary != nil
+            case .codexSecondary:
+                return codexUsageData.secondary != nil
+            case .codexExtraUsage:
+                return codexUsageData.extraUsage?.enabled == true
+            default:
+                return true
+            }
+        }
+    }
+
     /// 判断是否只剩一个圆形图标
     private var hasOnlyOneCircularIcon: Bool {
         let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
-        let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
+        let availableTypes = Set(availableLimitTypes)
+        let selectedCircular = settings.customDisplayTypes.intersection(circularTypes).intersection(availableTypes)
         return selectedCircular.count == 1
     }
 
@@ -123,7 +143,7 @@ struct GeneralSettingsDisplayOptionsSection: View {
     private var canUseColoredTheme: Bool {
         // 现在所有限制类型都支持彩色显示
         // 只要有选择任何限制类型就可以使用彩色主题
-        return !settings.customDisplayTypes.isEmpty
+        return !settings.customDisplayTypes.intersection(Set(availableLimitTypes)).isEmpty
     }
 
     /// 判断是否应该禁用某个复选框
