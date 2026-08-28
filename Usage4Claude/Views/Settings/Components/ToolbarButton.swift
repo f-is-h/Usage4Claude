@@ -21,13 +21,16 @@ struct ToolbarButton: View {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(isSelected ? .accentColor : .secondary)
+                    .frame(width: 24, height: 24)
 
                 Text(title)
                     .font(.caption)
                     .foregroundColor(isSelected ? .primary : .secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
+            .frame(height: 54)
             .background(isSelected ? Color.secondary.opacity(0.1) : Color.clear)
             .cornerRadius(8)
             .contentShape(Rectangle())  // 扩大点击区域到整个背景

@@ -102,7 +102,7 @@
 "settings.about.github" = "造訪 GitHub 儲存庫";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025–2026";
 
 // MARK: - Welcome View
 "welcome.title" = "歡迎使用 Usage4Claude";
