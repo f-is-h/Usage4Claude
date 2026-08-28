@@ -102,7 +102,7 @@
 "settings.about.github" = "GitHub 저장소 방문";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025–2026";
 
 // MARK: - Welcome View
 "welcome.title" = "Usage4Claude에 오신 것을 환영합니다";

@@ -54,7 +54,8 @@ struct AboutView: View {
                 AboutInfoRow(icon: "doc.text", title: L.SettingsAbout.license, value: L.SettingsAbout.licenseValue)
             }
             
-            Spacer()
+            // 内容区高度固定时允许中间留白完全收缩，避免反向顶起顶部导航。
+            Spacer(minLength: 0)
             
             // 链接按钮
             VStack(spacing: 8) {
@@ -98,14 +99,21 @@ struct AboutView: View {
                 .focusable(false)
             }
             
-            // 版权信息
-            Text(L.SettingsAbout.copyright)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.bottom)
+            // 版权信息：版权持有人名称链接到其 GitHub 主页。
+            HStack(spacing: 4) {
+                Text(L.SettingsAbout.copyright)
+
+                Link(destination: URL(string: "https://github.com/f-is-h")!) {
+                    Text("f-is-h")
+                        .underline()
+                }
+                .buttonStyle(.plain)
+                .help("GitHub: f-is-h")
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
