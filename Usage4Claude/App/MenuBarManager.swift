@@ -427,7 +427,7 @@ class MenuBarManager: ObservableObject {
     }
 
     @objc func openGithubSponsor() {
-        if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time") {
+        if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=app&metadata_placement=menu") {
             NSWorkspace.shared.open(url)
         }
     }
