@@ -105,12 +105,13 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
         }
 
         if let json = try? JSONDecoder().decode(UsageResponse.self, from: data) {
+            let fiveHourSummary = json.five_hour.map { "\($0.utilization)" } ?? "n/a"
             return DiagnosticStep(
                 name: stepName, success: true,
                 httpStatusCode: statusCode, responseTime: responseTime,
                 responseType: .json, errorType: nil, errorDescription: nil,
                 responseHeaders: headers,
-                responseBodyPreview: "Valid usage data received (utilization: \(json.five_hour.utilization)%)",
+                responseBodyPreview: "Valid usage data received (utilization: \(fiveHourSummary)%)",
                 cloudflareChallenge: false,
                 cfMitigated: headers["cf-mitigated"] != nil,
                 notes: nil
