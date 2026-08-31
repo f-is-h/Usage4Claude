@@ -328,6 +328,7 @@ enum L {
         static var noCredentials: String { localized("error.no_credentials") }
         static var networkFailed: String { localized("error.network_failed") }
         static var decodingFailed: String { localized("error.decoding_failed") }
+        static var usageDashboardUnavailable: String { localized("error.usage_dashboard_unavailable") }
         static var noOrganizationsFound: String { localized("error.no_organizations_found") }
         static var unauthorized: String { localized("error.unauthorized") }
         static var rateLimited: String { localized("error.rate_limited") }

@@ -166,6 +166,7 @@
 "error.no_credentials" = "请先在设置中配置认证信息";
 "error.network_failed" = "网络请求失败，请检查网络连接";
 "error.decoding_failed" = "解析响应数据失败，请检查认证信息是否正确";
+"error.usage_dashboard_unavailable" = "当前账号套餐不提供用量数据。免费版没有用量看板；Team/Enterprise 请联系管理员开启成员用量看板。";
 "error.no_organizations_found" = "未找到组织";
 "error.unauthorized" = "认证失败，请检查您的凭据";
 "error.rate_limited" = "请求过于频繁，请稍后再试";

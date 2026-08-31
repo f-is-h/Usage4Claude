@@ -165,6 +165,7 @@
 "error.no_credentials" = "Bitte zuerst die Anmeldedaten in den Einstellungen konfigurieren";
 "error.network_failed" = "Netzwerkanfrage fehlgeschlagen. Bitte die Internetverbindung prüfen.";
 "error.decoding_failed" = "Antwortdaten konnten nicht verarbeitet werden. Bitte prüfen, ob die Anmeldedaten korrekt sind.";
+"error.usage_dashboard_unavailable" = "Der Tarif dieses Kontos stellt keine Nutzungsdaten bereit. Kostenlose Konten haben kein Nutzungs-Dashboard; bei Team/Enterprise bitte einen Administrator um die Aktivierung des Mitglieder-Dashboards bitten.";
 "error.no_organizations_found" = "Keine Organisationen gefunden";
 "error.unauthorized" = "Anmeldung fehlgeschlagen, bitte die Anmeldedaten prüfen";
 "error.rate_limited" = "Zu viele Anfragen, bitte später erneut versuchen";

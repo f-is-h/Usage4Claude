@@ -420,4 +420,131 @@ final class UsageResponseTests: XCTestCase {
         XCTAssertNil(usage.opus)
         XCTAssertNil(usage.opusModelName)
     }
+
+    // MARK: - Plans without a usage dashboard (Issue #83 / #74)
+
+    /// Free Tier and Team/Enterprise orgs that haven't enabled the member
+    /// usage dashboard answer HTTP 200 with every limit window set to null.
+    /// `five_hour` used to be non-optional, so the whole payload failed to
+    /// decode and surfaced as "credentials are incorrect" — the wrong advice
+    /// for credentials that are in fact valid.
+    func testAllLimitsNullStillDecodes() throws {
+        let json = """
+        {
+            "five_hour": null,
+            "seven_day": null,
+            "seven_day_oauth_apps": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null,
+            "extra_usage": { "is_enabled": true, "monthly_limit": 2000000, "used_credits": 1309.0 }
+        }
+        """
+        let response = try decode(json)
+        XCTAssertNil(response.five_hour)
+        XCTAssertTrue(response.hasNoLimitData)
+        XCTAssertTrue(response.isUsageDashboardUnavailable)
+    }
+
+    func testDashboardFlagFalseWithNoDataIsUnavailable() throws {
+        let json = """
+        {
+            "member_dashboard_available": false,
+            "five_hour": null,
+            "seven_day": null
+        }
+        """
+        XCTAssertTrue(try decode(json).isUsageDashboardUnavailable)
+    }
+
+    /// Real data wins over the flag. `member_dashboard_available` is decoded
+    /// for logging and the diagnostic report, but its exact semantics are
+    /// unverified: if personal Pro/Max accounts also report `false` (meaning
+    /// "not part of an org dashboard" rather than "no usage data"), trusting
+    /// it would mark every healthy account as unavailable.
+    func testDashboardFlagFalseWithRealDataStaysUsable() throws {
+        let json = """
+        {
+            "member_dashboard_available": false,
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null
+        }
+        """
+        let response = try decode(json)
+        XCTAssertFalse(response.hasNoLimitData)
+        XCTAssertFalse(response.isUsageDashboardUnavailable)
+        XCTAssertEqual(response.toUsageData().fiveHour?.percentage, 20)
+    }
+
+    func testDashboardFlagIsDecodedForDiagnostics() throws {
+        let json = """
+        {
+            "member_dashboard_available": false,
+            "five_hour": null,
+            "seven_day": null
+        }
+        """
+        XCTAssertEqual(try decode(json).member_dashboard_available, false)
+        // Absent from the payload entirely: nil, never defaulted to true/false.
+        XCTAssertNil(try decode(#"{ "five_hour": null }"#).member_dashboard_available)
+    }
+
+    func testResponseWithoutFlagAndWithDataIsUsable() throws {
+        // The overwhelmingly common case: no flag in the payload, real windows.
+        let json = """
+        {
+            "five_hour": { "utilization": 20, "resets_at": "2026-07-03T18:19:59.000Z" },
+            "seven_day": null,
+            "seven_day_opus": null,
+            "seven_day_sonnet": null
+        }
+        """
+        XCTAssertFalse(try decode(json).isUsageDashboardUnavailable)
+    }
+
+    /// A null 5-hour window alongside a real 7-day window is not a dead
+    /// account — keep the 7-day row and leave the 5-hour slot empty rather
+    /// than faking a 0% placeholder.
+    func testNullFiveHourWithRealSevenDayKeepsSevenDay() throws {
+        let json = """
+        {
+            "five_hour": null,
+            "seven_day": { "utilization": 37.5, "resets_at": "2026-07-08T00:00:00.000Z" }
+        }
+        """
+        let response = try decode(json)
+        XCTAssertFalse(response.isUsageDashboardUnavailable)
+
+        let usage = response.toUsageData()
+        XCTAssertNil(usage.fiveHour)
+        XCTAssertEqual(usage.sevenDay?.percentage, 37.5)
+        // primaryLimit falls back to the 7-day window when 5-hour is absent.
+        XCTAssertEqual(usage.primaryLimit?.percentage, 37.5)
+    }
+
+    /// An empty `limits` array carries no more information than a missing one.
+    func testEmptyLimitsArrayWithAllNullWindowsIsUnavailable() throws {
+        let json = """
+        {
+            "five_hour": null,
+            "seven_day": null,
+            "limits": []
+        }
+        """
+        XCTAssertTrue(try decode(json).isUsageDashboardUnavailable)
+    }
+
+    /// Claude 5 style payloads can carry everything in `limits` while the
+    /// legacy windows stay null — that is live data, not an empty dashboard.
+    func testLimitsArrayAloneIsNotTreatedAsUnavailable() throws {
+        let json = """
+        {
+            "five_hour": null,
+            "seven_day": null,
+            "limits": [
+                { "kind": "session", "group": "session", "percent": 20, "scope": null }
+            ]
+        }
+        """
+        XCTAssertFalse(try decode(json).isUsageDashboardUnavailable)
+    }
 }
