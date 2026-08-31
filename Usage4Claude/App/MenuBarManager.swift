@@ -69,6 +69,8 @@ class MenuBarManager: ObservableObject {
     @Published var codexErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Published var codexNeedsRelogin = false
+    /// Codex 官方重置预告（Beta，从 dataManager 同步）
+    @Published var codexResetAnnouncement: CodexResetAnnouncement?
     /// 是否有可用更新（由 Sparkle 的 SPUUpdaterDelegate 回调驱动）
     @Published var hasAvailableUpdate = false
     /// 最新版本号（来自 Sparkle 发现的 appcast 条目）
@@ -123,6 +125,9 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexNeedsRelogin
             .assign(to: &$codexNeedsRelogin)
+
+        dataManager.$codexResetAnnouncement
+            .assign(to: &$codexResetAnnouncement)
     }
     
     /// 处理菜单栏图标点击事件
@@ -340,6 +345,10 @@ class MenuBarManager: ObservableObject {
             ),
             codexNeedsRelogin: Binding(
                 get: { self.codexNeedsRelogin },
+                set: { _ in }
+            ),
+            codexResetAnnouncement: Binding(
+                get: { self.codexResetAnnouncement },
                 set: { _ in }
             ),
             refreshState: self.refreshState,

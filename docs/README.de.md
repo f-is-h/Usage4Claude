@@ -60,6 +60,7 @@ Alle Plattformen teilen sich dasselbe Nutzungskontingent – überwache es an ei
 - Unterstützt Informationen zu Codex 5-Stunden-, 7-Tage- und Zusätzlicher Nutzung/Credits
 - Codex-Accounts werden über die Anmeldung bei ChatGPT im integrierten Browser hinzugefügt
 - Claude-only-Nutzer brauchen keine zusätzliche Konfiguration; ohne hinzugefügten Codex-Account bleibt die Oberfläche wie gewohnt
+- **🧪 Reset-Ankündigung (Beta)**: Zeigt ein kleines Badge neben dem Codex-Ring, aber nur wenn OpenAI öffentlich einen noch bevorstehenden globalen Reset angekündigt hat — meistens gibt es absichtlich nichts anzuzeigen. Die Daten stammen von [codex-reset.com](https://codex-reset.com), einem unabhängigen Drittanbieterprojekt (inoffiziell); lässt sich in den Einstellungen deaktivieren
 
 ### 🎨 Personalisierung
 

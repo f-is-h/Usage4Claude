@@ -495,6 +495,15 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 是否显示 Codex 重置预告（Beta，第三方数据源 codex-reset.com）。默认开启；
+    /// 状态驱动——只有登录 Codex 后此开关才在设置页可见，关闭后不再发起任何第三方请求。
+    @Published var showCodexResetAnnouncement: Bool {
+        didSet {
+            defaults.set(showCodexResetAnnouncement, forKey: "showCodexResetAnnouncement")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 开机启动的注册/注销/状态同步都在 LaunchAtLoginManager 里，这里只做门面转发。
     /// isEnabled 直接派生自 SMAppService.mainApp.status（唯一事实来源），
     /// 不再需要存储 Bool + 标志位防递归，失败时 Toggle 会随 status 不变而自动弹回。
@@ -635,6 +644,84 @@ class UserSettings: ObservableObject {
     @Published var debugKeepDetailWindowOpen: Bool {
         didSet {
             defaults.set(debugKeepDetailWindowOpen, forKey: "debugKeepDetailWindowOpen")
+        }
+    }
+
+    /// 调试用：Codex 重置预告场景注入（见 DebugCodexAnnouncementScenario）。
+    /// 真实预告很罕见（历史上约 10/53 次事件才带预告，窗口通常只有几十分钟到几小时），
+    /// 没有这个开关几乎无法验收该 UI。
+    @Published var debugCodexAnnouncementScenario: DebugCodexAnnouncementScenario {
+        didSet {
+            defaults.set(debugCodexAnnouncementScenario.rawValue, forKey: "debugCodexAnnouncementScenario")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
+    /// Codex 重置预告的调试注入场景
+    enum DebugCodexAnnouncementScenario: String, CaseIterable {
+        /// 关闭注入，走真实的 CodexResetAnnouncementService 网络请求
+        case off = "off"
+        /// "around 2 PM" 型：target_kind == "center"
+        case center = "center"
+        /// "within an hour" 型：target_kind == "deadline"
+        case deadline = "deadline"
+        /// 只有起止窗口、无明确目标点（对应 target_kind 缺失）
+        case range = "range"
+        /// 已过期的预告，用于验证徽章是否正确自动隐藏
+        case expired = "expired"
+
+        var displayName: String {
+            switch self {
+            case .off: return "关闭（真实网络请求）"
+            case .center: return "预告：约 X 后（center）"
+            case .deadline: return "预告：X 内（deadline）"
+            case .range: return "预告：仅窗口（range）"
+            case .expired: return "预告：已过期（验证自动隐藏）"
+            }
+        }
+
+        /// 构造对应场景的虚构预告；`.off` 返回 nil（不覆盖真实数据）
+        func mockAnnouncement(now: Date = Date()) -> CodexResetAnnouncement? {
+            switch self {
+            case .off:
+                return nil
+            case .center:
+                let target = now.addingTimeInterval(3600 * 2.2)
+                return CodexResetAnnouncement(
+                    label: "around 2 PM PT (debug)",
+                    summary: "[调试注入] Reset will land around 2pm PT.",
+                    windowEnd: target.addingTimeInterval(3600),
+                    target: target,
+                    kind: .center
+                )
+            case .deadline:
+                let end = now.addingTimeInterval(1800)
+                return CodexResetAnnouncement(
+                    label: "within 30 minutes (debug)",
+                    summary: "[调试注入] Full reset within 30 minutes.",
+                    windowEnd: end,
+                    target: end,
+                    kind: .deadline
+                )
+            case .range:
+                let end = now.addingTimeInterval(3600 * 5)
+                return CodexResetAnnouncement(
+                    label: "later today (debug)",
+                    summary: "[调试注入] Another reset coming later today.",
+                    windowEnd: end,
+                    target: end,
+                    kind: .range
+                )
+            case .expired:
+                let end = now.addingTimeInterval(-60)
+                return CodexResetAnnouncement(
+                    label: "within an hour (debug, expired)",
+                    summary: "[调试注入] 已过期，验证徽章是否正确隐藏。",
+                    windowEnd: end,
+                    target: end,
+                    kind: .deadline
+                )
+            }
         }
     }
 
@@ -788,6 +875,9 @@ class UserSettings: ObservableObject {
         // 加载通知设置，默认开启
         self.notificationsEnabled = defaults.object(forKey: "notificationsEnabled") as? Bool ?? true
 
+        // 加载 Codex 重置预告开关（Beta），默认开启
+        self.showCodexResetAnnouncement = defaults.object(forKey: "showCodexResetAnnouncement") as? Bool ?? true
+
         // 开机启动状态的加载已搬进 LaunchAtLoginManager.init()
 
         // MARK: - 初始化调试模式设置
@@ -811,6 +901,9 @@ class UserSettings: ObservableObject {
         self.simulateUpdateAvailable = defaults.bool(forKey: "simulateUpdateAvailable")
         self.debugShowAllShapesIndividually = defaults.bool(forKey: "debugShowAllShapesIndividually")
         self.debugKeepDetailWindowOpen = defaults.bool(forKey: "debugKeepDetailWindowOpen")
+        self.debugCodexAnnouncementScenario = DebugCodexAnnouncementScenario(
+            rawValue: defaults.string(forKey: "debugCodexAnnouncementScenario") ?? "off"
+        ) ?? .off
         #endif
 
         // 账户加载/迁移、开机启动注册状态、外观应用与系统主题监听都已分别搬进
@@ -895,6 +988,7 @@ class UserSettings: ObservableObject {
         customDisplayTypes = Self.defaultCustomDisplayTypes
         customDisplayMenuBarOnly = false
         notificationsEnabled = true
+        showCodexResetAnnouncement = true
 
         // 重置智能模式状态
         lastUtilization = nil

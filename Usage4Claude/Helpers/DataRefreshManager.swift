@@ -21,6 +21,8 @@ class DataRefreshManager: ObservableObject {
     private let apiService = ClaudeAPIService()
     /// Codex API 服务实例
     private let codexApiService = CodexAPIService()
+    /// Codex 重置预告服务实例（Beta，第三方数据源）——独立于用量刷新链路
+    private let codexAnnouncementService = CodexResetAnnouncementService()
     /// 定时器管理器
     private let timerManager = TimerManager()
     /// 用户设置实例
@@ -38,6 +40,10 @@ class DataRefreshManager: ObservableObject {
     @Published var errorMessage: String?
     /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
     @Published var codexErrorMessage: String?
+    /// Codex 官方重置预告（Beta，第三方数据源）。完全旁路 refreshState/isLoading/codexErrorMessage——
+    /// 失败静默契约：无论「没有预告」「网络失败」「解析失败」「功能已关闭」，UI 表现都必须是 nil，
+    /// 逐像素一致，绝不打扰用户（见项目计划文档）。
+    @Published var codexResetAnnouncement: CodexResetAnnouncement?
     /// 刷新状态管理器
     let refreshState = RefreshState()
 
@@ -340,6 +346,9 @@ class DataRefreshManager: ObservableObject {
     func refreshOnPopoverOpen() {
         let now = Date()
 
+        // 独立旁支，放在最前面：即使下面因 30 秒防抖提前 return，预告检查仍应按自己的频率策略执行
+        fetchCodexResetAnnouncementIfNeeded()
+
         // 用户打开详细界面，强制切换到活跃模式（1分钟刷新）
         if settings.refreshMode == .smart {
             let wasIdle = settings.currentMonitoringMode != .active
@@ -362,6 +371,57 @@ class DataRefreshManager: ObservableObject {
         }
 
         fetchUsage()
+    }
+
+    // MARK: - Codex Reset Announcement (Beta)
+
+    /// 独立于用量刷新链路的旁支：Codex 官方重置预告（第三方数据源 codex-reset.com）。
+    /// 频率/退避/缓存全部委托给 CodexResetAnnouncementService（内部用
+    /// CodexAnnouncementFetchPolicy 判定，安静期/关闭状态下几乎不产生网络请求）。
+    /// 绝不触碰 refreshState/isLoading/codexErrorMessage——失败静默契约（见项目计划文档）。
+    private func fetchCodexResetAnnouncementIfNeeded() {
+        guard settings.showCodexResetAnnouncement else {
+            if codexResetAnnouncement != nil {
+                setCodexResetAnnouncement(nil)
+            }
+            return
+        }
+
+        #if DEBUG
+        // 调试注入独立于「已登录 Codex 账户」和「总调试开关 debugModeEnabled」——只要
+        // 选了非 .off 场景就立即生效，方便在没有真实 Codex 账户、也不想连带模拟用量数据
+        // 的情况下单独验收这个 Beta 徽章。真实预告很罕见（历史上约 10/53 次事件），
+        // 没有这个开关几乎无法验收 UI。
+        if let mock = settings.debugCodexAnnouncementScenario.mockAnnouncement() {
+            setCodexResetAnnouncement(mock)
+            return
+        }
+        let codexActive = settings.debugModeEnabled || settings.hasValidCodexCredentials
+        #else
+        let codexActive = settings.hasValidCodexCredentials
+        #endif
+
+        guard codexActive else {
+            if codexResetAnnouncement != nil {
+                setCodexResetAnnouncement(nil)
+            }
+            return
+        }
+
+        codexAnnouncementService.announcement { [weak self] announcement in
+            self?.setCodexResetAnnouncement(announcement)
+        }
+    }
+
+    /// `UsageDetailView` 通过 @Binding 接收 codexResetAnnouncement，但它自己不持有
+    /// DataRefreshManager/MenuBarManager 作为 @ObservedObject——只有它实际观察的
+    /// `refreshState` 发布变更时，body 才会重新求值、重新读取 binding 的最新值
+    /// （其余数据字段能"自动"刷新，都是搭了 fetchUsage() 结束时必然重置
+    /// refreshState.isRefreshing 的顺风车）。这里手动 ping 一次 refreshState 的
+    /// objectWillChange，不改动它任何实际字段，因此不会触发刷新动画/加载态。
+    private func setCodexResetAnnouncement(_ announcement: CodexResetAnnouncement?) {
+        codexResetAnnouncement = announcement
+        refreshState.objectWillChange.send()
     }
 
     /// 处理手动刷新

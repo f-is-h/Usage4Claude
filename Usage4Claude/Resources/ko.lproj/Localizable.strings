@@ -436,3 +436,12 @@
 "weblogin.claude_oauth_manual_prompt" = "브라우저 주소창의 링크를 여기에 붙여넣으세요 (http://localhost 로 시작)";
 "weblogin.claude_oauth_manual_submit" = "이 링크로 로그인";
 "weblogin.claude_oauth_manual_invalid" = "인증 코드를 찾을 수 없습니다. 브라우저 주소창의 전체 링크를 복사한 후 다시 시도하세요.";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "리셋 예고";
+"codex_announcement.tooltip_countdown" = "리셋 예정: %@";
+"codex_announcement.tooltip_countdown_deadline" = "늦어도 리셋: %@";
+"codex_announcement.tooltip_footer" = "Beta · 제3자 codex-reset.com 데이터 · 클릭하여 열기";
+"settings.general.codex_announcement_section" = "Codex 리셋 예고 (Beta)";
+"settings.general.codex_announcement_enable" = "리셋 예고 배지 표시";
+"settings.general.codex_announcement_hint" = "OpenAI의 Tibo Sottiaux가 아직 지나지 않은 전역 리셋을 공개적으로 예고했을 때만 Codex 링 옆에 작은 배지가 표시됩니다. 대부분의 시간에는 아무것도 표시되지 않습니다. 데이터는 독립 커뮤니티 프로젝트인 codex-reset.com에서 제공됩니다(Beta: 데이터 출처가 변경되거나 중단될 수 있음). 끄면 해당 사이트로 어떤 요청도 보내지 않습니다.";

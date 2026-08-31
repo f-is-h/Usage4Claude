@@ -23,6 +23,26 @@ struct GeneralSettingsView: View {
                 GeneralSettingsDisplaySection()
                 GeneralSettingsDisplayOptionsSection()
 
+                // Codex 重置预告卡片（Beta）：状态驱动，只登录 Claude 时完全不出现这个词
+                if settings.hasValidCodexCredentials {
+                    SettingCard(
+                        icon: "bell.and.waves.left.and.right",
+                        iconColor: .teal,
+                        title: L.SettingsGeneral.codexAnnouncementSection,
+                        hint: L.SettingsGeneral.codexAnnouncementHint
+                    ) {
+                        HStack {
+                            Toggle("", isOn: $settings.showCodexResetAnnouncement)
+                                .toggleStyle(.switch)
+                                .controlSize(.mini)
+                                .focusable(false)
+                                .labelsHidden()
+                            Text(L.SettingsGeneral.codexAnnouncementEnable)
+                            Spacer()
+                        }
+                    }
+                }
+
                 // 刷新设置卡片
                 SettingCard(
                     icon: "clock.arrow.trianglehead.2.counterclockwise.rotate.90",

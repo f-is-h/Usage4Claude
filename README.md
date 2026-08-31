@@ -60,6 +60,7 @@ All platforms share the same usage quota, monitored in one place!
 - Supports Codex 5-hour, 7-day, and Extra Usage/credits information
 - Add a Codex account by logging in to ChatGPT with the built-in browser
 - Claude-only users need no extra setup; the existing experience stays unchanged until a Codex account is added
+- **🧪 Reset Announcement (Beta)**: shows a small badge next to the Codex ring only when OpenAI has publicly announced a still-pending global reset — most of the time there's nothing to show, by design. Data comes from [codex-reset.com](https://codex-reset.com), an independent third-party community project, not an official API; can be turned off in Settings
 
 ### 🎨 Personalization
 

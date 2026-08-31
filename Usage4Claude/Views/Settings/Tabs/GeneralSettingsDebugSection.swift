@@ -251,6 +251,27 @@ struct GeneralSettingsDebugSection: View {
                         .foregroundColor(.secondary)
                 }
 
+                // Codex 重置预告场景注入（Beta）：真实预告很罕见，没有这个开关几乎无法验收 UI
+                Divider()
+                    .padding(.vertical, 4)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Codex 重置预告场景（Beta）：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Picker("", selection: $settings.debugCodexAnnouncementScenario) {
+                        ForEach(UserSettings.DebugCodexAnnouncementScenario.allCases, id: \.self) { scenario in
+                            Text(scenario.displayName).tag(scenario)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    // fixedSize 让下拉框只占内容自身宽度并紧贴左边；否则 .menu 样式的
+                    // Picker 会拉伸填满给定宽度，看起来是浮在中间的一条长条
+                    .fixedSize()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
                 // Codex 续期防线测试（仅适用于 Codex）
                 Divider()
                     .padding(.vertical, 4)

@@ -60,6 +60,7 @@ Toutes les plateformes partagent le même quota d'utilisation, surveillé en un 
 - Prend en charge les informations Codex 5h, 7j et Extra Usage/credits
 - Ajoutez un compte Codex en vous connectant à ChatGPT dans le navigateur intégré
 - Les utilisateurs Claude-only n'ont rien à configurer ; l'expérience reste inchangée tant qu'aucun compte Codex n'est ajouté
+- **🧪 Annonce de réinitialisation (bêta)** : affiche un petit badge à côté de l'anneau Codex uniquement lorsqu'OpenAI a publiquement annoncé une réinitialisation globale encore à venir — la plupart du temps, il n'y a volontairement rien à afficher. Les données proviennent de [codex-reset.com](https://codex-reset.com), un projet tiers indépendant (non officiel) ; peut être désactivé dans les réglages
 
 ### 🎨 Personnalisation
 

@@ -105,6 +105,21 @@ enum L {
         static var interfaceLanguage: String { localized("settings.general.interface_language") }
         static var languageHint: String { localized("settings.general.language_hint") }
         static var resetButton: String { localized("settings.general.reset_button") }
+        static var codexAnnouncementSection: String { localized("settings.general.codex_announcement_section") }
+        static var codexAnnouncementEnable: String { localized("settings.general.codex_announcement_enable") }
+        static var codexAnnouncementHint: String { localized("settings.general.codex_announcement_hint") }
+    }
+
+    // MARK: - Codex Reset Announcement (Beta)
+    enum CodexAnnouncement {
+        static var title: String { localized("codex_announcement.title") }
+        static var tooltipFooter: String { localized("codex_announcement.tooltip_footer") }
+        static func tooltipCountdown(_ duration: String) -> String {
+            String(format: localized("codex_announcement.tooltip_countdown"), duration)
+        }
+        static func tooltipCountdownDeadline(_ duration: String) -> String {
+            String(format: localized("codex_announcement.tooltip_countdown_deadline"), duration)
+        }
     }
     
     // MARK: - Settings Authentication
