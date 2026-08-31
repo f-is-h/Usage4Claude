@@ -436,3 +436,12 @@
 "weblogin.claude_oauth_manual_prompt" = "把浏览器地址栏里的链接粘贴到这里（以 http://localhost 开头）";
 "weblogin.claude_oauth_manual_submit" = "用此链接登录";
 "weblogin.claude_oauth_manual_invalid" = "没有从粘贴的内容中找到授权码。请复制浏览器地址栏里的完整链接后重试。";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "重置预告";
+"codex_announcement.tooltip_countdown" = "预计重置：%@";
+"codex_announcement.tooltip_countdown_deadline" = "最迟重置：%@";
+"codex_announcement.tooltip_footer" = "Beta · 第三方数据，来自 codex-reset.com · 点击打开";
+"settings.general.codex_announcement_section" = "Codex 重置预告（Beta）";
+"settings.general.codex_announcement_enable" = "显示重置预告徽章";
+"settings.general.codex_announcement_hint" = "仅当 OpenAI 的 Tibo Sottiaux 公开预告了一个尚未到达的全局重置时，才会在 Codex 圆环旁显示一个小徽章——大部分时间不会有任何显示。数据来自第三方社区项目 codex-reset.com（Beta：数据源可能变更或失效）。关闭后将不再向该网站发起任何请求。";

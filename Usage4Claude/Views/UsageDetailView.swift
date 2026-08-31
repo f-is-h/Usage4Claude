@@ -17,6 +17,8 @@ struct UsageDetailView: View {
     @Binding var codexErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Binding var codexNeedsRelogin: Bool
+    /// Codex 官方重置预告（Beta，第三方数据源 codex-reset.com）；nil 表示无预告或功能已关闭
+    @Binding var codexResetAnnouncement: CodexResetAnnouncement?
     @ObservedObject var refreshState: RefreshState
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
@@ -599,6 +601,7 @@ struct UsageDetailView: View {
                 animationType: $codexAnimationType,
                 rotationAngle: $rotationAngle,
                 remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                codexResetAnnouncement: codexResetAnnouncement,
                 onRefresh: { onMenuAction?(.refreshCodex) },
                 onAnimationHint: { showAnimationHint($0, provider: .codex) },
                 onToggleRemainingMode: toggleRemainingMode
@@ -881,6 +884,7 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
     @State static var codexNeedsRelogin = false
+    @State static var codexResetAnnouncement: CodexResetAnnouncement? = nil
     @StateObject static var refreshState = RefreshState()
     @State static var hasUpdate = false
     @State static var shouldShowBadge = false
@@ -892,6 +896,7 @@ struct UsageDetailView_Previews: PreviewProvider {
             errorMessage: $errorMsg,
             codexErrorMessage: $codexErrorMsg,
             codexNeedsRelogin: $codexNeedsRelogin,
+            codexResetAnnouncement: $codexResetAnnouncement,
             refreshState: refreshState,
             hasAvailableUpdate: $hasUpdate,
             shouldShowUpdateBadge: $shouldShowBadge

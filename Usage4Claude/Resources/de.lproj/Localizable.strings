@@ -435,3 +435,12 @@
 "weblogin.claude_oauth_manual_prompt" = "Den Link aus der Adressleiste des Browsers einfügen (beginnt mit http://localhost)";
 "weblogin.claude_oauth_manual_submit" = "Mit diesem Link anmelden";
 "weblogin.claude_oauth_manual_invalid" = "Kein Autorisierungscode gefunden. Den vollständigen Link aus der Adressleiste des Browsers kopieren und erneut versuchen.";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "Reset erwartet";
+"codex_announcement.tooltip_countdown" = "Reset erwartet: %@";
+"codex_announcement.tooltip_countdown_deadline" = "Reset spätestens: %@";
+"codex_announcement.tooltip_footer" = "Beta · Drittanbieterdaten von codex-reset.com · zum Öffnen klicken";
+"settings.general.codex_announcement_section" = "Codex-Reset-Ankündigung (Beta)";
+"settings.general.codex_announcement_enable" = "Reset-Ankündigungs-Badge anzeigen";
+"settings.general.codex_announcement_hint" = "Zeigt ein kleines Badge neben dem Codex-Ring, aber nur wenn Tibo Sottiaux von OpenAI öffentlich einen noch bevorstehenden globalen Reset angekündigt hat — meistens gibt es nichts anzuzeigen. Die Daten stammen von codex-reset.com, einem unabhängigen Community-Projekt (Beta: die Quelle kann sich ändern oder wegfallen). Wird diese Option deaktiviert, werden keine Anfragen mehr an diese Website gesendet.";

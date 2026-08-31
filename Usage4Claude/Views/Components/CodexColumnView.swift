@@ -16,6 +16,8 @@ struct CodexColumnView: View {
     @Binding var animationType: UsageDetailView.LoadingAnimationType
     @Binding var rotationAngle: Double
     let remainingModeAnimationTrigger: Int
+    /// Codex 官方重置预告（Beta，第三方数据源）；nil 表示没有预告（绝大多数时间）或功能已关闭
+    var codexResetAnnouncement: CodexResetAnnouncement? = nil
     var onRefresh: (() -> Void)?
     var onAnimationHint: ((String) -> Void)?
     var onToggleRemainingMode: (() -> Void)?
@@ -153,6 +155,23 @@ struct CodexColumnView: View {
                 animationType = allTypes[(currentIndex + 1) % allTypes.count]
 
                 onAnimationHint?(animationType.name)
+            }
+            // 先撑满列宽，overlay 才能以整列为参照系定位到右上角（ZStack 自身只会
+            // hug 住圆环的 ~122pt）。高度仍是 114，与上面一致——这里只改宽度，不影响
+            // 圆环的垂直位置。必须放在 contentShape/手势之后，否则 Circle() 会被拉伸成
+            // 贴合整列的椭圆，点按/长按热区跟着撑满整列，误触发刷新/切换动画。
+            .frame(maxWidth: .infinity)
+            .frame(height: 114)
+            // 角标落在圆环右上方本就空白的区域：圆环含扫光直径 122pt 居中，但在角标所在
+            // 高度（顶部下方约 9pt）圆环横向只占到 x≈183，右侧到列边缘还有约 90pt 空白，
+            // 足够放下约 72pt 宽的角标。因此这里不需要任何 offset——不挤压圆环、不超出
+            // popover 手算的 contentHeight 边界（否则会被窗口裁切、且裁切区收不到鼠标事件）。
+            .overlay(alignment: .topTrailing) {
+                if let announcement = codexResetAnnouncement {
+                    CodexResetAnnouncementBadge(announcement: announcement)
+                        .padding(.trailing, 8)
+                        .padding(.top, 2)
+                }
             }
 
             // 限制行

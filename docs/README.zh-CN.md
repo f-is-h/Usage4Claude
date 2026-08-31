@@ -60,6 +60,7 @@
 - 支持 Codex 5小时、7天与额外用量/credits 信息
 - 通过内置浏览器登录 ChatGPT 添加 Codex 账户
 - Claude-only 用户无需额外配置；未添加 Codex 账户时界面保持原有体验
+- **🧪 重置预告（测试版）**：仅当 OpenAI 公开预告了一个尚未到达的全局重置时，才会在 Codex 圆环旁显示一个小徽章——大部分时间不会有任何显示，这是刻意的设计。数据来自第三方社区项目 [codex-reset.com](https://codex-reset.com)，非官方接口；可在设置中关闭
 
 ### 🎨 个性化
 

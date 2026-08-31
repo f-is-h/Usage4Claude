@@ -60,6 +60,7 @@
 - 支援 Codex 5小時、7天與額外用量/credits 資訊
 - 透過內建瀏覽器登入 ChatGPT 新增 Codex 帳戶
 - Claude-only 使用者無需額外設定；未新增 Codex 帳戶時介面保持原有體驗
+- **🧪 重置預告（測試版）**：僅當 OpenAI 公開預告了一個尚未到達的全域重置時，才會在 Codex 圓環旁顯示一個小徽章——大部分時間不會有任何顯示，這是刻意的設計。資料來自第三方社群專案 [codex-reset.com](https://codex-reset.com)，非官方介面；可在設定中關閉
 
 ### 🎨 個人化
 

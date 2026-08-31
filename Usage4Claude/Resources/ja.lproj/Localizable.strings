@@ -436,3 +436,12 @@
 "weblogin.claude_oauth_manual_prompt" = "ブラウザのアドレスバーのリンクを貼り付けてください（http://localhost で始まります）";
 "weblogin.claude_oauth_manual_submit" = "このリンクでサインイン";
 "weblogin.claude_oauth_manual_invalid" = "認証コードが見つかりませんでした。ブラウザのアドレスバーの完全なリンクをコピーして、もう一度お試しください。";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "リセット予告";
+"codex_announcement.tooltip_countdown" = "リセット予定：%@";
+"codex_announcement.tooltip_countdown_deadline" = "遅くともリセット：%@";
+"codex_announcement.tooltip_footer" = "Beta · サードパーティ codex-reset.com のデータ · クリックで開く";
+"settings.general.codex_announcement_section" = "Codex リセット予告（Beta）";
+"settings.general.codex_announcement_enable" = "リセット予告バッジを表示";
+"settings.general.codex_announcement_hint" = "OpenAI の Tibo Sottiaux が未確定のグローバルリセットを公に予告した場合のみ、Codex のリング横に小さなバッジが表示されます。ほとんどの場合は何も表示されません。データはサードパーティのコミュニティプロジェクト codex-reset.com から取得しています（Beta：データソースは変更・停止される可能性があります）。オフにすると、このサイトへのリクエストは一切送信されなくなります。";
