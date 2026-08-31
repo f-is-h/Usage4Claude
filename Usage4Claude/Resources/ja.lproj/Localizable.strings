@@ -166,6 +166,7 @@
 "error.no_credentials" = "まず設定で認証情報を設定してください";
 "error.network_failed" = "ネットワークリクエストが失敗しました。インターネット接続を確認してください。";
 "error.decoding_failed" = "レスポンスデータの解析に失敗しました。認証情報が正しいか確認してください。";
+"error.usage_dashboard_unavailable" = "現在のプランでは使用量データを取得できません。無料プランには使用量ダッシュボードがありません。Team/Enterprise の場合は、管理者にメンバー使用量ダッシュボードの有効化を依頼してください。";
 "error.no_organizations_found" = "組織が見つかりませんでした";
 "error.unauthorized" = "認証に失敗しました。認証情報を確認してください";
 "error.rate_limited" = "リクエストが多すぎます。しばらくしてから再試行してください";

@@ -252,6 +252,13 @@ class ClaudeAPIService {
             // 解析成功响应
             do {
                 let response = try decoder.decode(UsageResponse.self, from: data)
+                // Free Tier / 未开放成员用量看板的组织：HTTP 200 但所有限额窗口为 null。
+                // 凭据本身有效，必须与「解析失败」区分开，否则用户会被引去反复重新登录。
+                if response.isUsageDashboardUnavailable {
+                    Logger.api.info("Claude usage 未返回任何限额数据（member_dashboard_available=\(response.member_dashboard_available.map(String.init) ?? "nil")），判定为该账号未开放用量看板")
+                    complete(.failure(UsageError.usageDashboardUnavailable))
+                    return
+                }
                 let usageData = response.toUsageData()
                 complete(.success(usageData))
             } catch {
@@ -569,6 +576,13 @@ class ClaudeAPIService {
             do {
                 // 复用现有 UsageResponse 解码器（five_hour/seven_day/opus/sonnet 字段名一致）
                 let baseResponse = try decoder.decode(UsageResponse.self, from: data)
+                // 与 Cookie 路径一致：限额窗口全为 null 说明该账号未开放用量看板，
+                // 不是解码失败，也不是凭据失效。
+                if baseResponse.isUsageDashboardUnavailable {
+                    Logger.api.info("Claude OAuth usage 未返回任何限额数据（member_dashboard_available=\(baseResponse.member_dashboard_available.map(String.init) ?? "nil")），判定为该账号未开放用量看板")
+                    complete(.failure(UsageError.usageDashboardUnavailable))
+                    return
+                }
                 var usageData = baseResponse.toUsageData()
 
                 // 尝试额外解码 extra_usage 字段
@@ -697,6 +711,7 @@ enum UsageError: LocalizedError {
     case noCredentials
     case networkError
     case decodingError
+    case usageDashboardUnavailable // 账号套餐未开放用量看板（Free Tier / 未开启成员看板的 Team）
     case unauthorized              // 401 未授权
     case rateLimited               // 429 请求频率过高
     case httpError(statusCode: Int)  // 其他 HTTP 错误
@@ -717,6 +732,8 @@ enum UsageError: LocalizedError {
             return L.Error.networkFailed
         case .decodingError:
             return L.Error.decodingFailed
+        case .usageDashboardUnavailable:
+            return L.Error.usageDashboardUnavailable
         case .unauthorized:
             return L.Error.unauthorized
         case .rateLimited:

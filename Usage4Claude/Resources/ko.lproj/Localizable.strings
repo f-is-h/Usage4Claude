@@ -166,6 +166,7 @@
 "error.no_credentials" = "설정에서 먼저 인증 정보를 설정하세요";
 "error.network_failed" = "네트워크 요청 실패, 네트워크 연결을 확인하세요";
 "error.decoding_failed" = "응답 데이터 파싱 실패, 인증 정보가 올바른지 확인하세요";
+"error.usage_dashboard_unavailable" = "현재 요금제에서는 사용량 데이터를 제공하지 않습니다. 무료 플랜에는 사용량 대시보드가 없으며, Team/Enterprise는 관리자에게 멤버 사용량 대시보드 활성화를 요청하세요.";
 "error.no_organizations_found" = "조직을 찾을 수 없습니다";
 "error.unauthorized" = "인증 실패, 자격 증명을 확인하세요";
 "error.rate_limited" = "요청이 너무 빈번합니다. 잠시 후 다시 시도하세요";

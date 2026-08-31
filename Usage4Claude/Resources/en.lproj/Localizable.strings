@@ -166,6 +166,7 @@
 "error.no_credentials" = "Please configure authentication information in settings first";
 "error.network_failed" = "Network request failed. Please check your internet connection.";
 "error.decoding_failed" = "Failed to parse response data. Please check if your credentials are correct.";
+"error.usage_dashboard_unavailable" = "Your plan does not provide usage data. Free accounts have no usage dashboard; on Team/Enterprise, ask an admin to enable the member usage dashboard.";
 "error.no_organizations_found" = "No organizations found";
 "error.unauthorized" = "Authentication failed, please check your credentials";
 "error.rate_limited" = "Too many requests, please try again later";

@@ -166,6 +166,7 @@
 "error.no_credentials" = "請先在設定中設定認證資訊";
 "error.network_failed" = "網路請求失敗，請檢查網路連線";
 "error.decoding_failed" = "解析回應資料失敗，請檢查認證資訊是否正確";
+"error.usage_dashboard_unavailable" = "目前帳號方案不提供用量資料。免費版沒有用量儀表板；Team/Enterprise 請聯絡管理員開啟成員用量儀表板。";
 "error.no_organizations_found" = "未找到組織";
 "error.unauthorized" = "認證失敗，請檢查您的憑據";
 "error.rate_limited" = "請求過於頻繁，請稍後再試";

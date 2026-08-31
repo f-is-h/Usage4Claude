@@ -48,8 +48,11 @@ nonisolated struct Organization: Codable, Sendable, Identifiable, Equatable {
 /// API 响应数据模型
 /// 对应 Claude API 返回的 JSON 结构
 nonisolated struct UsageResponse: Codable, Sendable {
-    /// 5小时用量限制数据
-    let five_hour: LimitUsage
+    /// 5小时用量限制数据。
+    /// Free Tier、以及未开放成员用量看板的 Team/Enterprise 组织会返回 null
+    /// （Issue #83 / #74）——此前声明为非可选，一个 null 就让整包解码抛
+    /// valueNotFound，被上层统一归类成「凭据错误」，把用户引向错误的排查方向。
+    let five_hour: LimitUsage?
     /// 7天用量限制数据
     let seven_day: LimitUsage?
     /// 7天 OAuth 应用用量（暂未使用）
@@ -64,6 +67,30 @@ nonisolated struct UsageResponse: Codable, Sendable {
     /// 独立字段，而是以 `kind == "weekly_scoped"` 的条目出现在这里，
     /// 通过 `scope.model.display_name` 标识具体模型。
     let limits: [LimitEntry]?
+
+    /// 组织是否向成员开放用量看板。
+    /// Free Tier 以及未开启该功能的 Team/Enterprise 组织返回 false，此时所有限额窗口均为 null。
+    let member_dashboard_available: Bool?
+
+    /// 响应里是否完全没有任何限额数据（所有窗口字段为 null 且 `limits` 数组为空）。
+    var hasNoLimitData: Bool {
+        five_hour == nil
+            && seven_day == nil
+            && seven_day_oauth_apps == nil
+            && seven_day_opus == nil
+            && seven_day_sonnet == nil
+            && (limits?.isEmpty ?? true)
+    }
+
+    /// 该账号是否拿不到任何用量数据。这不是凭据问题（HTTP 200，且 extra_usage 往往仍有真实值），
+    /// 调用方应据此提示「当前套餐不提供用量数据」，而不是要求用户重新登录。
+    ///
+    /// 判定只看实际数据，刻意不采信 `member_dashboard_available`：该字段的确切语义尚未核实，
+    /// 若个人 Pro/Max 账号也返回 false（表示「不隶属组织看板」而非「没有用量数据」），
+    /// 仅凭它判断会把正常账号全部误判为不可用。该字段只用于日志与诊断报告的解释。
+    var isUsageDashboardUnavailable: Bool {
+        hasNoLimitData
+    }
 
     /// 通用限制用量详情（适用于5小时、7天等各种限制）
     struct LimitUsage: Codable, Sendable {
@@ -101,8 +128,12 @@ nonisolated struct UsageResponse: Codable, Sendable {
     /// - Returns: 转换后的 UsageData 实例
     /// - Note: 会自动处理时间四舍五入，确保显示准确
     func toUsageData() -> UsageData {
-        // 解析5小时限制数据
-        let fiveHourData = parseLimitData(five_hour)
+        // 解析5小时限制数据。字段为 null 时（未开放用量看板的账号）保持 nil，
+        // 交由 UI 走「无 5 小时数据」的既有分支，不伪造 0% 占位。
+        let fiveHourData: UsageData.LimitData? = five_hour.map { limit in
+            let parsed = parseLimitData(limit)
+            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
+        }
 
         // 解析7天限制数据。所有 Claude 账号都有 7 天限制；
         // 未开始使用时 API 可能返回 0 且无 resets_at，仍保留为 0% 占位。
@@ -165,7 +196,7 @@ nonisolated struct UsageResponse: Codable, Sendable {
         })
 
         return UsageData(
-            fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
+            fiveHour: fiveHourData,
             sevenDay: sevenDayData,
             weeklyModels: weeklyModels,
             extraUsage: nil  // Extra Usage 将在阶段5通过单独的 API 获取

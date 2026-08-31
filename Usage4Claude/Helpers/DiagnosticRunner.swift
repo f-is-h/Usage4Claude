@@ -105,12 +105,28 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
         }
 
         if let json = try? JSONDecoder().decode(UsageResponse.self, from: data) {
+            // 解码成功但一条限额都没有：账号未开放用量看板（Issue #83 / #74）。
+            // 报告必须把它和「凭据错误」分开，否则诊断结论会把用户带偏。
+            if json.isUsageDashboardUnavailable {
+                return DiagnosticStep(
+                    name: stepName, success: false,
+                    httpStatusCode: statusCode, responseTime: responseTime,
+                    responseType: .json, errorType: .usageDashboardUnavailable,
+                    errorDescription: L.Error.usageDashboardUnavailable,
+                    responseHeaders: headers,
+                    responseBodyPreview: String(bodyString.prefix(500)),
+                    cloudflareChallenge: false,
+                    cfMitigated: headers["cf-mitigated"] != nil,
+                    notes: nil
+                )
+            }
+            let utilizationPreview = json.five_hour.map { "\($0.utilization)%" } ?? "n/a"
             return DiagnosticStep(
                 name: stepName, success: true,
                 httpStatusCode: statusCode, responseTime: responseTime,
                 responseType: .json, errorType: nil, errorDescription: nil,
                 responseHeaders: headers,
-                responseBodyPreview: "Valid usage data received (utilization: \(json.five_hour.utilization)%)",
+                responseBodyPreview: "Valid usage data received (utilization: \(utilizationPreview))",
                 cloudflareChallenge: false,
                 cfMitigated: headers["cf-mitigated"] != nil,
                 notes: nil
@@ -205,6 +221,12 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
                 DiagnosticMessage.suggestionUpdateSessionKey,
                 DiagnosticMessage.suggestionCheckBrowser
             ], .medium)
+        case .usageDashboardUnavailable:
+            return (DiagnosticMessage.diagnosisDashboardUnavailable, [
+                DiagnosticMessage.suggestionCheckPlanDashboard,
+                DiagnosticMessage.suggestionAskOrgAdmin,
+                DiagnosticMessage.suggestionUpgradePlan
+            ], .high)
         case .networkError:
             return (DiagnosticMessage.diagnosisNetwork, [
                 DiagnosticMessage.suggestionCheckInternet,

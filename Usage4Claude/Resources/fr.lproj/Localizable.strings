@@ -166,6 +166,7 @@
 "error.no_credentials" = "Veuillez d'abord configurer les informations d'authentification dans les réglages";
 "error.network_failed" = "Échec de la requête réseau. Veuillez vérifier votre connexion Internet.";
 "error.decoding_failed" = "Échec de l'analyse des données de réponse. Veuillez vérifier si vos identifiants sont corrects.";
+"error.usage_dashboard_unavailable" = "Votre offre ne fournit pas de données d'utilisation. Les comptes gratuits n'ont pas de tableau de bord d'utilisation ; pour Team/Enterprise, demandez à un administrateur d'activer le tableau de bord des membres.";
 "error.no_organizations_found" = "Aucune organisation trouvée";
 "error.unauthorized" = "Échec de l'authentification, veuillez vérifier vos identifiants";
 "error.rate_limited" = "Trop de requêtes, veuillez réessayer plus tard";
