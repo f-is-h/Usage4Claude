@@ -332,6 +332,7 @@ enum L {
         static var noOrganizationsFound: String { localized("error.no_organizations_found") }
         static var unauthorized: String { localized("error.unauthorized") }
         static var rateLimited: String { localized("error.rate_limited") }
+        static var showingCachedData: String { localized("error.showing_cached_data") }
     }
 
     // MARK: - Diagnostics

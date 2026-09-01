@@ -169,6 +169,7 @@
 "error.no_organizations_found" = "Keine Organisationen gefunden";
 "error.unauthorized" = "Anmeldung fehlgeschlagen, bitte die Anmeldedaten prüfen";
 "error.rate_limited" = "Zu viele Anfragen, bitte später erneut versuchen";
+"error.showing_cached_data" = "Letzte abgerufene Daten werden angezeigt";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Aktiviert";

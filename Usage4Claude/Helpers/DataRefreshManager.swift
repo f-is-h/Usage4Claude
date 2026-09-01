@@ -38,6 +38,9 @@ class DataRefreshManager: ObservableObject {
     @Published var isLoading = false
     /// 错误消息
     @Published var errorMessage: String?
+    /// 当前 errorMessage 是否为需要用户处理的认证类错误（未授权/会话过期/未配置）。
+    /// 视图层据此决定：认证错误全屏提示引导去设置，瞬时错误（限流/网络）保留缓存数据只显示横幅
+    @Published var errorRequiresAuthAction = false
     /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
     @Published var codexErrorMessage: String?
     /// Codex 官方重置预告（Beta，第三方数据源）。完全旁路 refreshState/isLoading/codexErrorMessage——
@@ -130,6 +133,7 @@ class DataRefreshManager: ObservableObject {
     func fetchUsage() {
         isLoading = true
         errorMessage = nil
+        errorRequiresAuthAction = false
         codexErrorMessage = nil
         lastAPIFetchTime = Date()
 
@@ -147,6 +151,7 @@ class DataRefreshManager: ObservableObject {
             isLoading = false
             endRefreshAnimationWithMinimumDuration { }
             errorMessage = UsageError.noCredentials.localizedDescription
+            errorRequiresAuthAction = true
             return
         }
 
@@ -197,6 +202,7 @@ class DataRefreshManager: ObservableObject {
                     let previousData = self.usageData
                     self.usageData = data
                     self.errorMessage = nil
+                    self.errorRequiresAuthAction = false
                     monitoringUtilizations[.claude] = data.percentage
 
                     if self.settings.notificationsEnabled {
@@ -214,6 +220,7 @@ class DataRefreshManager: ObservableObject {
 
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
+                    self.errorRequiresAuthAction = self.requiresAuthAction(error)
                     Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
 
                 case .none:
@@ -229,6 +236,16 @@ class DataRefreshManager: ObservableObject {
         usageData = nil
         lastResetsAt = nil
         cancelResetVerification()
+    }
+
+    /// 判断错误是否需要用户去设置里处理认证信息（区别于限流/网络等可自愈的瞬时错误）
+    private func requiresAuthAction(_ error: Error) -> Bool {
+        switch error {
+        case UsageError.unauthorized, UsageError.sessionExpired, UsageError.noCredentials:
+            return true
+        default:
+            return false
+        }
     }
 
     private func clearCodexUsageState(clearError: Bool = true) {
@@ -518,6 +535,7 @@ class DataRefreshManager: ObservableObject {
         }
         isLoading = true
         errorMessage = nil
+        errorRequiresAuthAction = false
         lastAPIFetchTime = Date()
 
         // ClaudeAPIService.fetchUsage 保证 completion 一律在主线程回调，此处无需再包一层 DispatchQueue.main.async
@@ -531,6 +549,7 @@ class DataRefreshManager: ObservableObject {
                 let previousData = self.usageData
                 self.usageData = data
                 self.errorMessage = nil
+                self.errorRequiresAuthAction = false
                 if self.settings.notificationsEnabled {
                     NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                 }
@@ -543,8 +562,9 @@ class DataRefreshManager: ObservableObject {
                 }
                 self.lastResetsAt = newResetsAt
             case .failure(let error):
-                self.clearClaudeUsageState()
+                // 保留缓存数据（与 fetchUsage 的失败路径一致），瞬时错误下 UI 只显示横幅
                 self.errorMessage = error.localizedDescription
+                self.errorRequiresAuthAction = self.requiresAuthAction(error)
                 Logger.menuBar.error("Claude API 请求失败: \(error.localizedDescription)")
             }
         }
@@ -704,6 +724,7 @@ class DataRefreshManager: ObservableObject {
         switch provider {
         case .claude:
             errorMessage = nil
+            errorRequiresAuthAction = false
             clearClaudeUsageState()
             if shouldFetchClaudeUsage {
                 fetchClaudeOnly()
