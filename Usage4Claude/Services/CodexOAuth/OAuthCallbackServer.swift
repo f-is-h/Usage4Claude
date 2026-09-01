@@ -23,6 +23,11 @@ final class OAuthCallbackServer {
     private var onCallback: (([String: String]) -> Void)?
     private var didDeliver = false
 
+    deinit {
+        // 登录窗口可能先于回调流程销毁，服务器销毁时一并释放监听器。
+        listener?.cancel()
+    }
+
     /// 依次尝试端口列表，绑定第一个可用端口
     /// - Returns: 成功绑定的端口；全部失败返回 nil
     func start(ports: [UInt16], onCallback: @escaping ([String: String]) -> Void) -> UInt16? {

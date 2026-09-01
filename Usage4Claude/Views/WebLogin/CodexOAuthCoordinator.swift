@@ -25,6 +25,9 @@ import OSLog
 @MainActor
 final class CodexOAuthCoordinator: ObservableObject {
 
+    /// 独立持有活动中的浏览器登录流程，避免进度窗口重建或关闭时中断回调。
+    static let shared = CodexOAuthCoordinator()
+
     enum LoginState: Equatable {
         case starting
         case waitingForBrowser
@@ -49,6 +52,10 @@ final class CodexOAuthCoordinator: ObservableObject {
     // MARK: - Public
 
     func start(onAccountCreated: ((Account) -> Void)? = nil) {
+        // 重新打开登录窗口时开始新的 PKCE 事务；替换回调和 state 前先停止旧监听。
+        timeoutTask?.cancel()
+        timeoutTask = nil
+        server.stop()
         self.onAccountCreated = onAccountCreated
         finished = false
         loginState = .starting
@@ -88,6 +95,21 @@ final class CodexOAuthCoordinator: ObservableObject {
         NSWorkspace.shared.open(url)
     }
 
+    /// 当浏览器显示 localhost 回调但未把请求送到回环监听器时，允许手动粘贴回调。
+    /// 仍使用同一套 code/state 校验流程。
+    @discardableResult
+    func submitManualCallback(_ pasted: String) -> Bool {
+        guard !finished else { return false }
+        let query = Self.parseManualCallback(pasted)
+        guard query["code"] != nil || query["error"] != nil else {
+            Logger.settings.error("CodexOAuth: 粘贴的回调不包含 code")
+            return false
+        }
+        Logger.settings.notice("CodexOAuth: 使用粘贴的回调完成登录")
+        handleCallback(query)
+        return true
+    }
+
     func cancel() {
         cleanup()
     }
@@ -104,10 +126,40 @@ final class CodexOAuthCoordinator: ObservableObject {
             URLQueryItem(name: "code_challenge", value: pkce.codeChallenge),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
             URLQueryItem(name: "id_token_add_organizations", value: "true"),
+            // 与 Codex CLI 注册的客户端流程保持一致；请求 connector scope 时需要此标志。
+            URLQueryItem(name: "codex_cli_simplified_flow", value: "true"),
             URLQueryItem(name: "originator", value: CodexOAuthConfig.originator),
             URLQueryItem(name: "state", value: pkce.state)
         ]
         return comps?.url
+    }
+
+    /// 解析用户粘贴的 OAuth 回调参数，支持完整 URL、`code#state` 和裸 code。
+    static func parseManualCallback(_ raw: String) -> [String: String] {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return [:] }
+
+        // URLComponents 会处理回调 URL 的 percent-decoding。
+        if let items = URLComponents(string: text)?.queryItems, !items.isEmpty {
+            var result: [String: String] = [:]
+            for key in ["code", "state", "error"] {
+                if let value = items.first(where: { $0.name == key })?.value, !value.isEmpty {
+                    result[key] = value
+                }
+            }
+            return result
+        }
+
+        // 某些终端或浏览器只保留 `code#state` 形式。
+        if text.contains("#"), !text.contains("?"), !text.contains("/") {
+            let parts = text.split(separator: "#", maxSplits: 1).map(String.init)
+            var result = ["code": parts[0]]
+            if parts.count > 1, !parts[1].isEmpty { result["state"] = parts[1] }
+            return result
+        }
+
+        // 裸 code 会因缺少 state 被拒绝，并提示用户粘贴完整 URL。
+        return ["code": text]
     }
 
     private func handleCallback(_ query: [String: String]) {
