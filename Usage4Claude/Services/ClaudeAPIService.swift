@@ -496,12 +496,14 @@ class ClaudeAPIService {
                 }
             }
 
-            // refresh_token 轮换：若响应携带新值则静默写回账户
+            // refresh_token 轮换：若响应携带新值则静默写回账户。
+            // 用 refreshToken（发起本次刷新时的旧值）反查账号，而不是写「当前选中账号」——
+            // 这段 await 期间用户可能已经切走，按「当前」写会把本账号的新 token 覆盖到别人头上。
             let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
             if newRefresh != refreshToken {
                 Logger.api.notice("Claude OAuth: refresh_token 已轮换，静默写回")
                 await MainActor.run {
-                    UserSettings.shared.silentlyUpdateCurrentClaudeSessionToken(newRefresh)
+                    UserSettings.shared.silentlyUpdateClaudeSessionToken(newRefresh, replacing: refreshToken)
                 }
             }
 

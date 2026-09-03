@@ -27,6 +27,9 @@ final class CodexTokenRefreshCoordinator: NSObject {
     private var dataTask: URLSessionDataTask?
     private var urlSession: URLSession?
     private var completion: ((Result<String, Error>) -> Void)?
+    /// 发起本次刷新时该账号持有的 session-token。
+    /// 请求期间用户可能切换账号，因此写回时用它反查账号而不是取「当前账号」
+    private var refreshingFromToken: String?
 
     private override init() {}
 
@@ -48,6 +51,7 @@ final class CodexTokenRefreshCoordinator: NSObject {
 
         isRefreshing = true
         self.completion = completion
+        self.refreshingFromToken = sessionToken
 
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
@@ -108,11 +112,13 @@ final class CodexTokenRefreshCoordinator: NSObject {
             let chatgptURL = URL(string: "https://chatgpt.com")!
             let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
             if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies) {
-                let currentToken = UserSettings.shared.codexSessionToken
-                if newToken != currentToken {
+                // 与发起刷新时捕获的 token 比较并据此写回：期间用户可能已切换账号，
+                // 取「当前账号」会把本账号的新 token 写进别人的条目
+                let originalToken = self.refreshingFromToken ?? ""
+                if newToken != originalToken {
                     Logger.settings.notice("CodexTokenRefresh: URLSession 检测到新 session-token，静默写回")
                     DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                        UserSettings.shared.silentlyUpdateCodexSessionToken(newToken, replacing: originalToken)
                     }
                 } else {
                     Logger.settings.debug("CodexTokenRefresh: session-token 未变化")
@@ -189,6 +195,7 @@ final class CodexTokenRefreshCoordinator: NSObject {
         isRefreshing = false
         dataTask = nil
         urlSession = nil
+        refreshingFromToken = nil
         let cb = completion
         completion = nil
         cb?(result)

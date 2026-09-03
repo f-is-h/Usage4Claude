@@ -225,7 +225,9 @@ class CodexAPIService {
                         Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
                         effectiveSessionToken = newToken
                         DispatchQueue.main.async {
-                            UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newToken)
+                            // 用捕获的 sessionToken 反查账号，与上面的比较保持同一基准：
+                            // 请求期间用户可能切换账号，写「当前账号」会污染别人的凭据
+                            UserSettings.shared.silentlyUpdateCodexSessionToken(newToken, replacing: sessionToken)
                         }
                     }
 
@@ -273,7 +275,8 @@ class CodexAPIService {
         if newRefresh != refreshToken {
             Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
             await MainActor.run {
-                UserSettings.shared.silentlyUpdateCurrentCodexSessionToken(newRefresh)
+                // 用 refreshToken（发起本次刷新时的旧值）反查账号，理由同 Claude 侧
+                UserSettings.shared.silentlyUpdateCodexSessionToken(newRefresh, replacing: refreshToken)
             }
         }
 

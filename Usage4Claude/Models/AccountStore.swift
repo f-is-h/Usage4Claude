@@ -287,15 +287,23 @@ final class AccountStore: ObservableObject {
         Logger.settings.notice("更新账户别名: \(displayName)")
     }
 
-    /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
+    /// 静默更新 Claude 账户的 session-token（不触发 accountChanged 通知）
     /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
-    func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
-        guard let id = currentAccountId,
-              let index = accounts.firstIndex(where: { $0.id == id }) else { return }
-        guard accounts[index].sessionKey != token else { return }
-        // Account 是 struct，下标赋值触发 accounts.didSet → saveAccounts()，自动持久化
-        accounts[index].sessionKey = token
-        Logger.settings.notice("Claude session-token 已静默更新（自动续期）")
+    ///
+    /// - Important: 用 `oldToken` 反查账号，而不是写「当前选中账号」。刷新是异步的，
+    ///   回调到达时用户可能已经切走，按「当前」写会把 A 的新 token 写进 B 的条目；
+    ///   而 refresh_token 一经轮换旧值即失效，那会让两个账号同时永久登出。
+    func silentlyUpdateClaudeSessionToken(_ newToken: String, replacing oldToken: String) {
+        switch AccountTokenRotation.resolve(accounts: accounts, replacing: oldToken, with: newToken) {
+        case .apply(let index):
+            // Account 是 struct，下标赋值触发 accounts.didSet → saveAccounts()，自动持久化
+            accounts[index].sessionKey = newToken
+            Logger.settings.notice("Claude session-token 已静默更新（自动续期）")
+        case .skip(.accountGone):
+            Logger.settings.notice("Claude session-token 轮换已丢弃：发起刷新的账号不在列表中（已删除或已被其它刷新写过）")
+        case .skip(.unchanged), .skip(.emptyToken):
+            break
+        }
     }
 
     // MARK: - Codex Account Management
@@ -373,15 +381,22 @@ final class AccountStore: ObservableObject {
         Logger.settings.notice("更新 Codex 账户别名: \(self.codexAccounts[index].displayName)")
     }
 
-    /// 静默更新当前 Codex 账户的 session-token（不触发 accountChanged 通知）
+    /// 静默更新 Codex 账户的 session-token（不触发 accountChanged 通知）
     /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
-    func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
-        guard let id = currentCodexAccountId,
-              let index = codexAccounts.firstIndex(where: { $0.id == id }) else { return }
-        guard codexAccounts[index].sessionKey != token else { return }
-        // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
-        codexAccounts[index].sessionKey = token
-        Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+    ///
+    /// - Important: 同 `silentlyUpdateClaudeSessionToken`，用 `oldToken` 反查账号而非写
+    ///   「当前选中账号」。Codex 静默刷新最长可跑 25 秒，切换账号的窗口比 Claude 侧更大。
+    func silentlyUpdateCodexSessionToken(_ newToken: String, replacing oldToken: String) {
+        switch AccountTokenRotation.resolve(accounts: codexAccounts, replacing: oldToken, with: newToken) {
+        case .apply(let index):
+            // Account 是 struct，下标赋值触发 codexAccounts.didSet → saveCodexAccounts()，自动持久化
+            codexAccounts[index].sessionKey = newToken
+            Logger.settings.notice("Codex session-token 已静默更新（自动续期）")
+        case .skip(.accountGone):
+            Logger.settings.notice("Codex session-token 轮换已丢弃：发起刷新的账号不在列表中（已删除或已被其它刷新写过）")
+        case .skip(.unchanged), .skip(.emptyToken):
+            break
+        }
     }
 
     // MARK: - Shared Helpers

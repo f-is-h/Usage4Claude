@@ -1109,16 +1109,18 @@ class UserSettings: ObservableObject {
         accountStore.updateCodexAccount(account, alias: alias)
     }
 
-    /// 静默更新当前 Codex 账户的 session-token（不触发 accountChanged 通知）
+    /// 静默更新 Codex 账户的 session-token（不触发 accountChanged 通知）
     /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
-    func silentlyUpdateCurrentCodexSessionToken(_ token: String) {
-        accountStore.silentlyUpdateCurrentCodexSessionToken(token)
+    /// - Parameter oldToken: 发起刷新时该账号持有的 token，用于反查账号，详见 AccountTokenRotation
+    func silentlyUpdateCodexSessionToken(_ newToken: String, replacing oldToken: String) {
+        accountStore.silentlyUpdateCodexSessionToken(newToken, replacing: oldToken)
     }
 
-    /// 静默更新当前 Claude 账户的 session-token（不触发 accountChanged 通知）
+    /// 静默更新 Claude 账户的 session-token（不触发 accountChanged 通知）
     /// 用于 OAuth refresh_token 轮换场景——只更新持久化数据，不触发重新拉取循环
-    func silentlyUpdateCurrentClaudeSessionToken(_ token: String) {
-        accountStore.silentlyUpdateCurrentClaudeSessionToken(token)
+    /// - Parameter oldToken: 发起刷新时该账号持有的 token，用于反查账号，详见 AccountTokenRotation
+    func silentlyUpdateClaudeSessionToken(_ newToken: String, replacing oldToken: String) {
+        accountStore.silentlyUpdateClaudeSessionToken(newToken, replacing: oldToken)
     }
 
     private func ensureDefaultCodexDisplayTypesForCustomMode() {

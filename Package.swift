@@ -36,7 +36,9 @@ let package = Package(
                 "Helpers/NotificationDecisionEngine.swift",
                 "Models/CodexUsageData.swift",
                 "Models/CodexResetAnnouncement.swift",
-                "Helpers/CodexAnnouncementFetchPolicy.swift"
+                "Helpers/CodexAnnouncementFetchPolicy.swift",
+                "Models/Account.swift",
+                "Models/AccountTokenRotation.swift"
             ]
         ),
         .testTarget(
