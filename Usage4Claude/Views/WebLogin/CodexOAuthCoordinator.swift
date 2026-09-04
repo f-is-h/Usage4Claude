@@ -9,7 +9,6 @@
 import AppKit
 import Combine
 import Foundation
-import OSLog
 
 /// Codex OAuth 登录协调器
 ///
@@ -80,7 +79,7 @@ final class CodexOAuthCoordinator: ObservableObject {
         authorizeURL = url
         NSWorkspace.shared.open(url)
         loginState = .waitingForBrowser
-        Logger.settings.notice("CodexOAuth: 已打开系统浏览器等待授权（回调端口 \(port)）")
+        AppLog.event(.auth, "Codex OAuth opened the system browser and is waiting for authorisation on callback port \(port)")
 
         timeoutTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64((self?.loginTimeout ?? 300) * 1_000_000_000))
@@ -102,10 +101,10 @@ final class CodexOAuthCoordinator: ObservableObject {
         guard !finished else { return false }
         let query = Self.parseManualCallback(pasted)
         guard query["code"] != nil || query["error"] != nil else {
-            Logger.settings.error("CodexOAuth: 粘贴的回调不包含 code")
+            AppLog.error(.auth, "Codex OAuth: the pasted callback URL contains no authorisation code")
             return false
         }
-        Logger.settings.notice("CodexOAuth: 使用粘贴的回调完成登录")
+        AppLog.event(.auth, "Codex OAuth is completing sign-in from the pasted callback URL")
         handleCallback(query)
         return true
     }
@@ -167,12 +166,12 @@ final class CodexOAuthCoordinator: ObservableObject {
 
         // 校验 state，防 CSRF
         guard let returnedState = query["state"], returnedState == pkce?.state else {
-            Logger.settings.error("CodexOAuth: state 校验失败")
+            AppLog.error(.auth, "Codex OAuth state validation failed; rejecting the callback")
             fail(L.WebLogin.codexOAuthFailed)
             return
         }
         if let error = query["error"] {
-            Logger.settings.error("CodexOAuth: 授权端返回错误 \(error)")
+            AppLog.error(.auth, "Codex OAuth authorisation server returned an error: \(error)")
             fail(L.WebLogin.codexOAuthFailed)
             return
         }
@@ -192,12 +191,12 @@ final class CodexOAuthCoordinator: ObservableObject {
 
         switch result {
         case .failure(let error):
-            Logger.settings.error("CodexOAuth: token 交换失败 \(error.localizedDescription)")
+            AppLog.error(.auth, "Codex OAuth token exchange failed: \(error.localizedDescription)")
             fail(L.WebLogin.codexOAuthFailed)
 
         case .success(let tokens):
             guard !tokens.refreshToken.isEmpty else {
-                Logger.settings.error("CodexOAuth: 响应缺少 refresh_token")
+                AppLog.error(.auth, "Codex OAuth token response carried no refresh_token")
                 fail(L.WebLogin.codexOAuthFailed)
                 return
             }
@@ -216,7 +215,7 @@ final class CodexOAuthCoordinator: ObservableObject {
 
             loginState = .success(accountName: stored.displayName)
             onAccountCreated?(stored)
-            Logger.settings.notice("CodexOAuth: 账户创建成功 - \(stored.displayName)")
+            AppLog.event(.auth, "Codex OAuth sign-in succeeded; created account: \(stored.displayName)")
             finishCleanup()
         }
     }

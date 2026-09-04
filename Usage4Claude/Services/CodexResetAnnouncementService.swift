@@ -31,7 +31,6 @@
 //
 
 import Foundation
-import OSLog
 
 final class CodexResetAnnouncementService {
 
@@ -123,7 +122,7 @@ final class CodexResetAnnouncementService {
             return announcement
         } catch {
             // 失败静默契约：只记日志，绝不向调用方传播错误
-            Logger.api.debug("Codex reset announcement (Beta) fetch failed, silently ignored: \(error.localizedDescription)")
+            AppLog.trace(.api, "Codex reset announcement (Beta) fetch failed; ignoring silently by design: \(error.localizedDescription)")
             consecutiveFailures += 1
             return nil
         }

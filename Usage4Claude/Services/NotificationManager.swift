@@ -8,7 +8,6 @@
 
 import Foundation
 import UserNotifications
-import OSLog
 
 /// 用量通知管理器
 /// 负责在用量达到阈值或重置时发送 macOS 系统通知
@@ -52,9 +51,9 @@ final class NotificationManager: NSObject {
     func requestPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let error = error {
-                Logger.menuBar.error("请求通知权限失败: \(error.localizedDescription)")
+                AppLog.error(.settings, "Requesting notification permission failed: \(error.localizedDescription)")
             }
-            Logger.menuBar.info("通知权限: \(granted ? "已授权" : "未授权")")
+            AppLog.event(.settings, "Notification permission \(granted ? "granted" : "denied")")
         }
     }
 
@@ -224,11 +223,11 @@ final class NotificationManager: NSObject {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                Logger.menuBar.error("发送用量警告通知失败: \(error.localizedDescription)")
+                AppLog.error(.settings, "Delivering the usage warning notification failed: \(error.localizedDescription)")
             }
         }
 
-        Logger.menuBar.info("已发送用量警告: \(limitType.displayName) \(Int(percentage))%")
+        AppLog.event(.settings, "Delivered a usage warning notification: \(limitType.displayName) at \(Int(percentage))%")
     }
 
     /// 发送用量重置通知
@@ -246,11 +245,11 @@ final class NotificationManager: NSObject {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                Logger.menuBar.error("发送重置通知失败: \(error.localizedDescription)")
+                AppLog.error(.settings, "Delivering the limit reset notification failed: \(error.localizedDescription)")
             }
         }
 
-        Logger.menuBar.info("已发送重置通知: \(limitType.displayName)")
+        AppLog.event(.settings, "Delivered a limit reset notification: \(limitType.displayName)")
     }
 
     /// 发送 Codex 登录已过期系统通知（仅发送一次，不重复打扰）
@@ -269,11 +268,11 @@ final class NotificationManager: NSObject {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                Logger.menuBar.error("发送 Codex 过期通知失败: \(error.localizedDescription)")
+                AppLog.error(.settings, "Delivering the Codex session expiry notification failed: \(error.localizedDescription)")
             }
         }
 
-        Logger.menuBar.info("已发送 Codex 登录过期通知")
+        AppLog.event(.settings, "Delivered a Codex session expiry notification")
     }
 
     /// 重置所有已通知记录

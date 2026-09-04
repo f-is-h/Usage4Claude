@@ -9,7 +9,6 @@
 import SwiftUI
 import AppKit
 import Combine
-import OSLog
 import Sparkle
 
 /// 刷新状态管理器
@@ -263,12 +262,12 @@ class MenuBarManager: ObservableObject {
                     self.hasAvailableUpdate = true
                     self.latestVersion = "2.0.0"
                     self.updateMenuBarIcon()
-                    Logger.menuBar.debug("模拟更新已启用")
+                    AppLog.trace(.menuBar, "Simulated update mode enabled")
                 } else {
                     self.hasAvailableUpdate = false
                     self.latestVersion = nil
                     self.updateMenuBarIcon()
-                    Logger.menuBar.debug("模拟更新已禁用")
+                    AppLog.trace(.menuBar, "Simulated update mode disabled")
                 }
             }
             .store(in: &cancellables)
@@ -296,7 +295,7 @@ class MenuBarManager: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                Logger.menuBar.notice("账户已切换，刷新数据")
+                AppLog.event(.menuBar, "Active account changed; refreshing data")
                 let providerRaw = notification.userInfo?[Notification.UserInfoKey.provider] as? String
                 let provider = providerRaw.flatMap { ProviderType(rawValue: $0) }
                 // 清除图标缓存，确保新数据到达时重新渲染
@@ -454,7 +453,7 @@ class MenuBarManager: ObservableObject {
     /// - Parameter sender: 发送菜单项，representedObject 包含 Account 对象
     @objc func switchAccount(_ sender: NSMenuItem) {
         guard let account = sender.representedObject as? Account else {
-            Logger.menuBar.error("切换账户失败：无法获取账户信息")
+            AppLog.error(.menuBar, "Account switch failed: the account details could not be read")
             return
         }
 
@@ -479,7 +478,7 @@ class MenuBarManager: ObservableObject {
         // 通过 AppDelegate.shared 访问控制器是因为 `NSApp.delegate as? AppDelegate`
         // 在 NSApplicationDelegateAdaptor 包装下不能可靠转换。
         guard let appDelegate = AppDelegate.shared else {
-            Logger.menuBar.error("checkForUpdates: AppDelegate.shared not set")
+            AppLog.error(.menuBar, "Update check aborted: AppDelegate.shared is not set")
             return
         }
         appDelegate.updaterController.checkForUpdates(self)

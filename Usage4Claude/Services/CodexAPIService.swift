@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 
 /// Codex API 服务类
 /// 两步认证流程：
@@ -62,9 +61,9 @@ class CodexAPIService {
         fetchAccessToken(sessionToken: settings.codexSessionToken) { result in
             switch result {
             case .success:
-                Logger.api.debug("Codex accessToken: 主动续期检查完成")
+                AppLog.trace(.auth, "Codex accessToken proactive renewal check finished")
             case .failure(let error):
-                Logger.api.warning("Codex accessToken: 主动续期失败（\(error.localizedDescription)），用量拉取时再试")
+                AppLog.warning(.auth, "Codex accessToken proactive renewal failed (\(error.localizedDescription)); will retry when usage is next fetched")
             }
         }
     }
@@ -156,7 +155,7 @@ class CodexAPIService {
                     break
                 default:
                     if let fallback = await tokenCache.validCachedToken(refreshToken: sessionToken) {
-                        Logger.api.warning("Codex token 刷新失败（\(error.localizedDescription)），回退未过期的缓存 token")
+                        AppLog.warning(.auth, "Codex token refresh failed (\(error.localizedDescription)); falling back to the cached token that has not expired yet")
                         await MainActor.run { completion(.success(fallback)) }
                         return
                     }
@@ -183,26 +182,26 @@ class CodexAPIService {
             let task = session.dataTask(with: request) { data, response, error in
                 let result: Result<OAuthTokenCache.Tokens, Error> = {
                     if let error {
-                        Logger.api.debug("Codex session error: \(error.localizedDescription)")
+                        AppLog.error(.api, "Codex session request failed with a network error: \(error.localizedDescription)")
                         return .failure(UsageError.networkError)
                     }
                     guard let data else { return .failure(UsageError.noData) }
 
-                    Logger.api.debug("Codex session response received: \(data.count) bytes")
+                    AppLog.trace(.api, "Codex session response received: \(data.count) bytes")
                     if let jsonString = String(data: data, encoding: .utf8),
                        jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
                         return .failure(UsageError.cloudflareBlocked)
                     }
 
                     if let httpResponse = response as? HTTPURLResponse {
-                        Logger.api.debug("Codex session HTTP status: \(httpResponse.statusCode)")
+                        AppLog.event(.api, "Codex session response received: HTTP \(httpResponse.statusCode)")
                         // Phase 0 诊断：检查 /api/auth/session 是否下发新 session-token
                         let setCookieHeaders = httpResponse.allHeaderFields
                             .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
                             .compactMap { $0.value as? String }
-                        Logger.api.debug("Codex session Set-Cookie 数量=\(setCookieHeaders.count)")
+                        AppLog.trace(.auth, "Codex session returned \(setCookieHeaders.count) Set-Cookie header(s)")
                         for cookieStr in setCookieHeaders where cookieStr.contains("next-auth.session-token") {
-                            Logger.api.info("Codex session Set-Cookie [SESSION-TOKEN] \(cookieStr.prefix(80))")
+                            AppLog.trace(.auth, "Codex session returned a new session-token cookie: \(cookieStr.prefix(80))")
                         }
 
                         switch httpResponse.statusCode {
@@ -222,7 +221,7 @@ class CodexAPIService {
                     let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
                     if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies),
                        newToken != sessionToken {
-                        Logger.api.notice("Codex session: 检测到新 session-token，静默写回")
+                        AppLog.event(.auth, "Codex session-token rotated; writing the new token back to the account")
                         effectiveSessionToken = newToken
                         DispatchQueue.main.async {
                             // 用捕获的 sessionToken 反查账号，与上面的比较保持同一基准：
@@ -234,14 +233,14 @@ class CodexAPIService {
                     do {
                         let sessionResponse = try JSONDecoder().decode(CodexSessionResponse.self, from: data)
                         guard let accessToken = sessionResponse.accessToken, !accessToken.isEmpty else {
-                            Logger.api.error("Codex session response missing accessToken")
+                            AppLog.error(.auth, "Codex session response carried no accessToken — the session token has expired or the user is signed out")
                             return .failure(UsageError.sessionExpired)
                         }
                         let exp = jwtExpiry(from: accessToken)
                         if let exp {
-                            Logger.api.info("Codex accessToken expires at \(exp) (in \(Int(exp.timeIntervalSinceNow / 60)) min)")
+                            AppLog.event(.auth, "Codex accessToken expires at \(exp), in \(Int(exp.timeIntervalSinceNow / 60)) min")
                         } else {
-                            Logger.api.debug("Codex accessToken: exp 不可解析，缓存30分钟")
+                            AppLog.warning(.auth, "Codex accessToken has no readable exp claim; caching it for 30 minutes")
                         }
                         return .success(OAuthTokenCache.Tokens(
                             accessToken: accessToken,
@@ -249,7 +248,7 @@ class CodexAPIService {
                             expiresAt: exp ?? Date().addingTimeInterval(30 * 60)
                         ))
                     } catch {
-                        Logger.api.debug("Codex session decode error: \(error.localizedDescription)")
+                        AppLog.error(.api, "Codex session response could not be decoded: \(error.localizedDescription)")
                         return .failure(UsageError.decodingError)
                     }
                 }()
@@ -273,7 +272,7 @@ class CodexAPIService {
 
         let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
         if newRefresh != refreshToken {
-            Logger.api.notice("Codex OAuth: refresh_token 已轮换，静默写回")
+            AppLog.event(.auth, "Codex OAuth refresh_token rotated; writing the new token back to the account")
             await MainActor.run {
                 // 用 refreshToken（发起本次刷新时的旧值）反查账号，理由同 Claude 侧
                 UserSettings.shared.silentlyUpdateCodexSessionToken(newRefresh, replacing: refreshToken)
@@ -320,7 +319,7 @@ class CodexAPIService {
 
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Codex usage error: \(error.localizedDescription)")
+                AppLog.error(.api, "Codex usage request failed with a network error: \(error.localizedDescription)")
                 completion(.failure(UsageError.networkError))
                 return
             }
@@ -331,7 +330,7 @@ class CodexAPIService {
             }
 
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Codex usage response received: \(data.count) bytes")
+                AppLog.trace(.api, "Codex usage response received: \(data.count) bytes")
                 if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
                     completion(.failure(UsageError.cloudflareBlocked))
                     return
@@ -339,7 +338,7 @@ class CodexAPIService {
             }
 
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("Codex usage HTTP status: \(httpResponse.statusCode)")
+                AppLog.event(.api, "Codex usage response received: HTTP \(httpResponse.statusCode)")
                 switch httpResponse.statusCode {
                 case 200...299: break
                 case 401:
@@ -364,7 +363,7 @@ class CodexAPIService {
                 let usageData = usageResponse.toCodexUsageData()
                 completion(.success(usageData))
             } catch {
-                Logger.api.debug("Codex usage decode error: \(error.localizedDescription)")
+                AppLog.error(.api, "Codex usage response could not be decoded: \(error.localizedDescription)")
                 completion(.failure(UsageError.decodingError))
             }
         }
@@ -404,7 +403,7 @@ class CodexAPIService {
             }
 
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Codex validate session response received: \(data.count) bytes")
+                AppLog.trace(.auth, "Codex session validation response received: \(data.count) bytes")
                 if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
                     DispatchQueue.main.async { completion(.failure(UsageError.cloudflareBlocked)) }
                     return
@@ -438,7 +437,7 @@ class CodexAPIService {
                 // session-token 是 JWE 无法本地解密，但内部 accessToken 是普通 JWT
                 // 若 accessToken 已过期，说明 OAuth refresh token 也失效，拒绝此 session
                 if let exp = jwtExpiry(from: accessToken), exp < Date() {
-                    Logger.api.warning("Codex validate: session stale (accessToken expired at \(exp)), rejecting login")
+                    AppLog.warning(.auth, "Codex session validation rejected the login: the accessToken had already expired at \(exp)")
                     DispatchQueue.main.async { completion(.failure(UsageError.sessionExpired)) }
                     return
                 }
@@ -502,6 +501,6 @@ extension CodexAPIService: UsageProvider {
         activeTasks.removeAll()
         tasksLock.unlock()
         tasks.forEach { $0.cancel() }
-        Logger.api.debug("Codex: 已取消所有网络请求")
+        AppLog.event(.api, "Cancelled all in-flight Codex network requests")
     }
 }

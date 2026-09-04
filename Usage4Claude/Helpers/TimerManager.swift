@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 
 /// 定时器统一管理器
 /// 负责应用内所有定时器的创建、调度和清理，防止内存泄漏
@@ -63,7 +62,7 @@ class TimerManager {
                 self.timers[identifier] = timer
             }
 
-            Logger.menuBar.info("⏰ Timer scheduled: \(identifier) (interval: \(interval)s, repeats: \(repeats))")
+            AppLog.trace(.refresh, "Timer scheduled: \(identifier) (interval \(interval)s, repeats: \(repeats))")
         }
     }
 
@@ -83,7 +82,7 @@ class TimerManager {
             if let timer = self.timers[identifier] {
                 timer.invalidate()
                 self.timers.removeValue(forKey: identifier)
-                Logger.menuBar.info("⏹️ Timer invalidated: \(identifier)")
+                AppLog.trace(.refresh, "Timer invalidated: \(identifier)")
             }
         }
     }
@@ -95,7 +94,7 @@ class TimerManager {
             let count = self.timers.count
             self.timers.values.forEach { $0.invalidate() }
             self.timers.removeAll()
-            Logger.menuBar.info("🛑 All timers invalidated (count: \(count))")
+            AppLog.event(.refresh, "All timers invalidated (\(count) total)")
         }
     }
 

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Logging rebuilt as one system**: The app ran two parallel loggers — `Logger` (OSLog) with 205 call sites, and a file logger with zero, which is the one the "Open Log Folder" button opened, so that folder was empty for everyone. Measured against the real unified log, only about 22% of those 205 calls produced anything a user could export: 64 sat at `.debug`, which never reaches disk, and 122 interpolated a string, which OSLog redacts to `<private>` by default. Both are replaced by `AppLog`, a single entry point writing to the unified log and to a file. Messages are redacted at the entry point and then written with `privacy: .public`, so an exported log is readable instead of a column of `<private>`. Levels collapse from six to four (`trace`/`event`/`warning`/`error`), each with a stated contract, and all 205 messages were rewritten in English (reported by @vyrti, #79)
+- **Log files have a hard disk ceiling**: The previous design opened a 5 MB file per day and pruned only `.old` archives, leaving the daily files to grow without bound. Logs now live in two fixed files of 256 KB each — a 512 KB ceiling, covered by a test that sustains 8,000 writes and asserts the cap holds. Repeated messages collapse into a count instead of one line per repeat, single messages are truncated at 512 characters, `trace` never touches disk in a release build, and debug builds write to their own files so they cannot corrupt a release instance's log
+
+### Added
+- **Diagnostics report how the previous session ended**: The app never calls `exit()` and a silent quit leaves no `.ips`, which left nothing to go on for reports of the app vanishing on its own. A clean-exit marker is now written on `applicationWillTerminate`; its absence on the next launch means the process was killed externally (crash, force quit, or the system reclaiming memory) rather than quitting. The diagnostic report carries that verdict, the recent log, and current log disk usage (reported by @vyrti, #79)
+
 ## [3.4.0] - 2026-09-04
 
 ### Added

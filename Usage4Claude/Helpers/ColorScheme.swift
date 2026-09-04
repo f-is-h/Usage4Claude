@@ -8,7 +8,6 @@
 
 import SwiftUI
 import AppKit
-import OSLog
 
 /// 统一配色方案管理
 /// 提供5小时和7天限制的颜色配置，支持 AppKit 和 SwiftUI

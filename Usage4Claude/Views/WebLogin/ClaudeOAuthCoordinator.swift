@@ -9,7 +9,6 @@
 import AppKit
 import Combine
 import Foundation
-import OSLog
 
 /// Claude OAuth 登录协调器
 ///
@@ -68,7 +67,7 @@ final class ClaudeOAuthCoordinator: ObservableObject {
         authorizeURL = url
         NSWorkspace.shared.open(url)
         loginState = .waitingForBrowser
-        Logger.settings.notice("ClaudeOAuth: 已打开系统浏览器等待授权（回调端口 \(port)）")
+        AppLog.event(.auth, "Claude OAuth opened the system browser and is waiting for authorisation on callback port \(port)")
 
         timeoutTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64((self?.loginTimeout ?? 300) * 1_000_000_000))
@@ -94,10 +93,10 @@ final class ClaudeOAuthCoordinator: ObservableObject {
         // code 或 error 至少有其一才交给 handleCallback：error 场景由其给出准确的失败原因，
         // 两者皆无（粘贴内容无效）则返回 false，由 UI 内联提示重新粘完整链接。
         guard query["code"] != nil || query["error"] != nil else {
-            Logger.settings.error("ClaudeOAuth: 手动粘贴内容未解析出 code")
+            AppLog.error(.auth, "Claude OAuth: the pasted callback URL contains no authorisation code")
             return false
         }
-        Logger.settings.notice("ClaudeOAuth: 使用手动粘贴的回调链接完成登录")
+        AppLog.event(.auth, "Claude OAuth is completing sign-in from the pasted callback URL")
         handleCallback(query)
         return true
     }
@@ -156,12 +155,12 @@ final class ClaudeOAuthCoordinator: ObservableObject {
         guard !finished else { return }
 
         guard let returnedState = query["state"], returnedState == pkce?.state else {
-            Logger.settings.error("ClaudeOAuth: state 校验失败")
+            AppLog.error(.auth, "Claude OAuth state validation failed; rejecting the callback")
             fail(L.WebLogin.codexOAuthFailed)
             return
         }
         if let error = query["error"] {
-            Logger.settings.error("ClaudeOAuth: 授权端返回错误 \(error)")
+            AppLog.error(.auth, "Claude OAuth authorisation server returned an error: \(error)")
             fail(L.WebLogin.codexOAuthFailed)
             return
         }
@@ -186,12 +185,12 @@ final class ClaudeOAuthCoordinator: ObservableObject {
 
         switch result {
         case .failure(let error):
-            Logger.settings.error("ClaudeOAuth: token 交换失败 \(error.localizedDescription)")
+            AppLog.error(.auth, "Claude OAuth token exchange failed: \(error.localizedDescription)")
             fail(L.WebLogin.codexOAuthFailed)
 
         case .success(let tokens):
             guard !tokens.refreshToken.isEmpty else {
-                Logger.settings.error("ClaudeOAuth: 响应缺少 refresh_token")
+                AppLog.error(.auth, "Claude OAuth token response carried no refresh_token")
                 fail(L.WebLogin.codexOAuthFailed)
                 return
             }
@@ -233,7 +232,7 @@ final class ClaudeOAuthCoordinator: ObservableObject {
 
         loginState = .success(accountName: account.displayName)
         onAccountCreated?(account)
-        Logger.settings.notice("ClaudeOAuth: 账户创建成功 - \(account.displayName)")
+        AppLog.event(.auth, "Claude OAuth sign-in succeeded; created account: \(account.displayName)")
         finishCleanup()
     }
 

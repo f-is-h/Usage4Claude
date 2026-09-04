@@ -121,4 +121,51 @@ class SensitiveDataRedactor {
 
         return sanitized
     }
+
+    /// 脱敏文本中的令牌：JSON 令牌字段与裸 JWT
+    ///
+    /// `redactText` 只认 sessionKey / Organization ID 这类形态，认不出
+    /// `"accessToken": "<JWT>"`。日志和诊断报告都要经过这一道。
+    /// - Parameter text: 原始文本
+    /// - Returns: 令牌被替换后的文本
+    static func redactTokens(_ text: String) -> String {
+        var sanitized = text
+
+        // JSON 里的令牌字段：accessToken / access_token / refresh_token / id_token / token / authorization
+        let tokenFieldPattern = "\"(access_?token|refresh_?token|id_?token|session_?token|token|authorization)\"\\s*:\\s*\"[^\"]+\""
+        if let regex = try? NSRegularExpression(pattern: tokenFieldPattern, options: .caseInsensitive) {
+            let range = NSRange(sanitized.startIndex..., in: sanitized)
+            sanitized = regex.stringByReplacingMatches(
+                in: sanitized,
+                options: [],
+                range: range,
+                withTemplate: "\"$1\": \"***REDACTED***\""
+            )
+        }
+
+        // 裸 JWT（三段 base64url）：兜住不在已知字段名下的令牌
+        let jwtPattern = "eyJ[A-Za-z0-9_-]{6,}\\.[A-Za-z0-9_-]{6,}\\.[A-Za-z0-9_-]+"
+        if let regex = try? NSRegularExpression(pattern: jwtPattern, options: []) {
+            let range = NSRange(sanitized.startIndex..., in: sanitized)
+            sanitized = regex.stringByReplacingMatches(
+                in: sanitized,
+                options: [],
+                range: range,
+                withTemplate: "***REDACTED_JWT***"
+            )
+        }
+
+        return sanitized
+    }
+
+    /// 脱敏一条日志消息
+    ///
+    /// `AppLog` 强制每条消息都过这里再写盘/写系统日志。我们靠自己的脱敏保证安全，
+    /// 而不是靠 OSLog 的 `<private>` —— 后者只是默认不显示（装上 Apple 的 logging
+    /// profile 即可读出），而且它会把错误详情一并埋掉，让日志失去诊断价值。
+    /// - Parameter message: 原始日志消息
+    /// - Returns: 可安全写入并公开展示的消息
+    static func redactLogMessage(_ message: String) -> String {
+        redactTokens(redactText(message))
+    }
 }

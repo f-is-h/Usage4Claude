@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 
 /// Codex session token 静默刷新协调器
 /// 通过 URLSession GET chatgpt.com，触发服务端 SSR OAuth refresh，
@@ -38,7 +37,7 @@ final class CodexTokenRefreshCoordinator: NSObject {
     /// 刷新 accessToken。成功时 Result.success 携带新鲜的 accessToken 字符串。
     func refresh(completion: @escaping (Result<String, Error>) -> Void) {
         guard !isRefreshing else {
-            Logger.settings.debug("CodexTokenRefresh: 刷新已在进行中，跳过")
+            AppLog.trace(.auth, "SSR token refresh already in progress; skipping this request")
             completion(.failure(UsageError.networkError))
             return
         }
@@ -76,28 +75,30 @@ final class CodexTokenRefreshCoordinator: NSObject {
         request.setValue("navigate", forHTTPHeaderField: "sec-fetch-mode")
         request.setValue("document", forHTTPHeaderField: "sec-fetch-dest")
 
-        Logger.settings.info("CodexTokenRefresh: URLSession GET chatgpt.com 触发 SSR OAuth refresh")
+        AppLog.event(.auth, "SSR token refresh: requesting chatgpt.com to trigger a server-side OAuth refresh")
 
         let task = urlSession?.dataTask(with: request) { [weak self] data, response, error in
             guard let self else { return }
 
             if let error = error {
-                Logger.settings.error("CodexTokenRefresh: 请求失败 - \(error.localizedDescription)")
+                AppLog.error(.auth, "SSR token refresh request failed: \(error.localizedDescription)")
                 DispatchQueue.main.async { self.finish(result: .failure(error)) }
                 return
             }
 
             if let http = response as? HTTPURLResponse {
-                Logger.settings.debug("CodexTokenRefresh: HTTP \(http.statusCode)")
+                AppLog.event(.auth, "SSR token refresh response received: HTTP \(http.statusCode)")
                 // Phase 0 诊断：记录 Set-Cookie 响应头，确认服务端是否续期 session-token
                 let setCookieHeaders = http.allHeaderFields
                     .filter { ($0.key as? String)?.lowercased() == "set-cookie" }
                     .compactMap { $0.value as? String }
-                Logger.settings.debug("CodexTokenRefresh: Set-Cookie 响应头数量=\(setCookieHeaders.count)")
-                for cookieStr in setCookieHeaders {
-                    let isSessionToken = cookieStr.contains("next-auth.session-token")
-                    Logger.settings.info("CodexTokenRefresh: Set-Cookie [\(isSessionToken ? "SESSION-TOKEN" : "other")] \(cookieStr.prefix(80))")
-                }
+                // 只记 cookie 名，不记值：名字足以说明服务端下发了什么，而值一旦
+                // 截断就会误导——allHeaderFields 会把多个 Set-Cookie 合并成一个
+                // 逗号连接的串，截前 80 字符只能看到第一个 cookie，却让整串的
+                // 「含 session-token」判断看起来像是在描述那一个。
+                let cookieNames = setCookieHeaders
+                    .flatMap { Self.cookieNames(inCombinedSetCookieHeader: $0) }
+                AppLog.trace(.auth, "SSR token refresh set cookies: \(cookieNames.isEmpty ? "none" : cookieNames.joined(separator: ", "))")
 
                 guard (200...299).contains(http.statusCode) else {
                     let err: Error = http.statusCode == 403
@@ -116,26 +117,26 @@ final class CodexTokenRefreshCoordinator: NSObject {
                 // 取「当前账号」会把本账号的新 token 写进别人的条目
                 let originalToken = self.refreshingFromToken ?? ""
                 if newToken != originalToken {
-                    Logger.settings.notice("CodexTokenRefresh: URLSession 检测到新 session-token，静默写回")
+                    AppLog.event(.auth, "SSR token refresh returned a rotated session-token; writing it back")
                     DispatchQueue.main.async {
                         UserSettings.shared.silentlyUpdateCodexSessionToken(newToken, replacing: originalToken)
                     }
                 } else {
-                    Logger.settings.debug("CodexTokenRefresh: session-token 未变化")
+                    AppLog.trace(.auth, "SSR token refresh returned the same session-token; nothing to write back")
                 }
             }
 
             guard let data,
                   let html = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
-                Logger.settings.error("CodexTokenRefresh: 响应无法解码")
+                AppLog.error(.auth, "SSR token refresh response could not be decoded as text")
                 DispatchQueue.main.async { self.finish(result: .failure(UsageError.noData)) }
                 return
             }
 
-            Logger.settings.debug("CodexTokenRefresh: 收到 HTML 响应 \(html.count) 字节")
+            AppLog.trace(.auth, "SSR token refresh received \(html.count) bytes of HTML")
 
             if html.contains("Just a moment") || html.contains("cf-browser-verification") {
-                Logger.settings.error("CodexTokenRefresh: Cloudflare 挑战页")
+                AppLog.error(.auth, "SSR token refresh was served a Cloudflare challenge page")
                 DispatchQueue.main.async { self.finish(result: .failure(UsageError.cloudflareBlocked)) }
                 return
             }
@@ -151,18 +152,18 @@ final class CodexTokenRefreshCoordinator: NSObject {
 
     private static func extractBootstrapAccessToken(from html: String) -> Result<String, Error> {
         guard let idRange = html.range(of: "id=\"client-bootstrap\"") else {
-            Logger.settings.error("CodexTokenRefresh: HTML 中未找到 client-bootstrap 元素")
+            AppLog.error(.auth, "SSR token refresh could not find the client-bootstrap element in the HTML")
             return .failure(UsageError.sessionExpired)
         }
 
         guard let gtRange = html.range(of: ">", range: idRange.upperBound..<html.endIndex),
               let jsonStart = html.range(of: "{", range: gtRange.upperBound..<html.endIndex) else {
-            Logger.settings.error("CodexTokenRefresh: 无法定位 client-bootstrap JSON 起点")
+            AppLog.error(.auth, "SSR token refresh could not locate the start of the client-bootstrap JSON")
             return .failure(UsageError.sessionExpired)
         }
 
         guard let scriptEnd = html.range(of: "</script>", range: jsonStart.lowerBound..<html.endIndex) else {
-            Logger.settings.error("CodexTokenRefresh: 无法定位 client-bootstrap 结束标签")
+            AppLog.error(.auth, "SSR token refresh could not locate the client-bootstrap closing tag")
             return .failure(UsageError.sessionExpired)
         }
 
@@ -170,7 +171,7 @@ final class CodexTokenRefreshCoordinator: NSObject {
 
         guard let jsonData = jsonString.data(using: .utf8),
               let bootstrap = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
-            Logger.settings.error("CodexTokenRefresh: client-bootstrap JSON 解析失败")
+            AppLog.error(.auth, "SSR token refresh could not parse the client-bootstrap JSON")
             return .failure(UsageError.decodingError)
         }
 
@@ -178,17 +179,32 @@ final class CodexTokenRefreshCoordinator: NSObject {
         guard let session = bootstrap["session"] as? [String: Any],
               let accessToken = session["accessToken"] as? String,
               !accessToken.isEmpty else {
-            Logger.settings.error("CodexTokenRefresh: bootstrap 无 accessToken (authStatus=\(authStatus))")
+            AppLog.error(.auth, "SSR token refresh bootstrap carried no accessToken (authStatus=\(authStatus))")
             return .failure(UsageError.sessionExpired)
         }
 
         if let exp = jwtExpiry(from: accessToken), exp < Date() {
-            Logger.settings.error("CodexTokenRefresh: bootstrap accessToken 仍已过期 exp=\(exp)")
+            AppLog.error(.auth, "SSR token refresh returned an accessToken that is already expired (exp=\(exp))")
             return .failure(UsageError.sessionExpired)
         }
 
-        Logger.settings.info("CodexTokenRefresh: SSR 成功返回新鲜 accessToken (authStatus=\(authStatus))")
+        AppLog.event(.auth, "SSR token refresh succeeded and returned a fresh accessToken (authStatus=\(authStatus))")
         return .success(accessToken)
+    }
+
+    /// 从（可能被 URLSession 合并过的）Set-Cookie 头里取出所有 cookie 名
+    ///
+    /// `HTTPURLResponse.allHeaderFields` 会把多条 Set-Cookie 合并成一个逗号连接的
+    /// 字符串，所以不能按整串判断「这是哪个 cookie」。这里只提取名字，值不进日志。
+    static func cookieNames(inCombinedSetCookieHeader header: String) -> [String] {
+        // cookie 名出现在串首，或某个 ", " 之后，形如 `name=value`
+        let pattern = "(?:^|,\\s*)([A-Za-z0-9_.\\-]+)="
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(header.startIndex..., in: header)
+        return regex.matches(in: header, range: range).compactMap { match in
+            guard let r = Range(match.range(at: 1), in: header) else { return nil }
+            return String(header[r])
+        }
     }
 
     private func finish(result: Result<String, Error>) {

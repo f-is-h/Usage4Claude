@@ -10,7 +10,6 @@ import Foundation
 import SwiftUI
 import Combine
 import ServiceManagement
-import OSLog
 
 // MARK: - Display Modes
 
@@ -1047,7 +1046,7 @@ class UserSettings: ObservableObject {
         keychain.deleteCredentials()
         organizationId = ""
         sessionKey = ""
-        Logger.settings.notice("已清除所有认证信息")
+        AppLog.event(.settings, "Cleared all stored credentials")
     }
     
     /// 更新智能监控模式
@@ -1085,7 +1084,7 @@ class UserSettings: ObservableObject {
             .idleMedium: "中期静默 (5分钟)",
             .idleLong: "长期静默 (10分钟)"
         ]
-        Logger.settings.debug("监控模式切换: \(modeNames[from] ?? "") -> \(modeNames[to] ?? "")")
+        AppLog.event(.refresh, "Smart monitoring mode changed: \(modeNames[from] ?? "") -> \(modeNames[to] ?? "")")
     }
 
     /// 重置智能监控模式状态

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 
 /// Claude API 服务类
 /// 负责与 Claude.ai API 通信，获取用户的使用情况数据
@@ -128,7 +127,7 @@ class ClaudeAPIService {
                 extraUsageData = data  // 可能为 nil（功能未启用或失败）
             case .failure:
                 // Extra Usage 失败不影响主功能，保持 extraUsageData 为 nil
-                Logger.api.info("Extra Usage API failed, continuing with main usage data only")
+                AppLog.warning(.api, "Extra Usage request failed; continuing with main usage data only")
             }
             dispatchGroup.leave()
         }
@@ -188,7 +187,7 @@ class ClaudeAPIService {
         // 创建并保存任务引用
         currentTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Network error: \(error.localizedDescription)")
+                AppLog.error(.api, "Usage request failed with a network error: \(error.localizedDescription)")
                 complete(.failure(UsageError.networkError))
                 return
             }
@@ -200,11 +199,11 @@ class ClaudeAPIService {
 
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Main Usage API Response: \(jsonString)")
+                AppLog.trace(.api, "Usage response body: \(jsonString)")
 
                 // 检查是否是HTML响应（Cloudflare拦截）
                 if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
-                    Logger.api.debug("⚠️ Received HTML response, possibly intercepted by Cloudflare.")
+                    AppLog.warning(.api, "Usage endpoint returned HTML instead of JSON — likely a Cloudflare challenge")
                     complete(.failure(UsageError.cloudflareBlocked))
                     return
                 }
@@ -212,7 +211,7 @@ class ClaudeAPIService {
 
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("Main Usage HTTP Status: \(httpResponse.statusCode)")
+                AppLog.event(.api, "Usage response received: HTTP \(httpResponse.statusCode)")
 
                 // 处理各种 HTTP 错误状态码
                 switch httpResponse.statusCode {
@@ -233,7 +232,7 @@ class ClaudeAPIService {
                     return
                 default:
                     // 其他 HTTP 错误
-                    Logger.api.error("HTTP error: \(httpResponse.statusCode)")
+                    AppLog.error(.api, "Usage request failed: unexpected HTTP \(httpResponse.statusCode)")
                     complete(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
                 }
@@ -255,14 +254,14 @@ class ClaudeAPIService {
                 // Free Tier / 未开放成员用量看板的组织：HTTP 200 但所有限额窗口为 null。
                 // 凭据本身有效，必须与「解析失败」区分开，否则用户会被引去反复重新登录。
                 if response.isUsageDashboardUnavailable {
-                    Logger.api.info("Claude usage 未返回任何限额数据（member_dashboard_available=\(response.member_dashboard_available.map(String.init) ?? "nil")），判定为该账号未开放用量看板")
+                    AppLog.event(.api, "Usage response carried no limit windows (member_dashboard_available=\(response.member_dashboard_available.map(String.init) ?? "nil")); treating this account as having no usage dashboard")
                     complete(.failure(UsageError.usageDashboardUnavailable))
                     return
                 }
                 let usageData = response.toUsageData()
                 complete(.success(usageData))
             } catch {
-                Logger.api.debug("Decoding error: \(error.localizedDescription)")
+                AppLog.error(.api, "Usage response could not be decoded: \(error.localizedDescription)")
                 complete(.failure(UsageError.decodingError))
             }
         }
@@ -310,7 +309,7 @@ class ClaudeAPIService {
 
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Network error: \(error.localizedDescription)")
+                AppLog.error(.api, "Organizations request failed with a network error: \(error.localizedDescription)")
                 complete(.failure(UsageError.networkError))
                 return
             }
@@ -322,12 +321,12 @@ class ClaudeAPIService {
 
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Organizations API Response: \(jsonString)")
+                AppLog.trace(.api, "Organizations response body: \(jsonString)")
             }
 
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("HTTP Status Code: \(httpResponse.statusCode)")
+                AppLog.event(.api, "Organizations response received: HTTP \(httpResponse.statusCode)")
 
                 switch httpResponse.statusCode {
                 case 200...299:
@@ -344,7 +343,7 @@ class ClaudeAPIService {
                     complete(.failure(isHTML ? UsageError.cloudflareBlocked : UsageError.unauthorized))
                     return
                 default:
-                    Logger.api.error("HTTP error: \(httpResponse.statusCode)")
+                    AppLog.error(.api, "Organizations request failed: unexpected HTTP \(httpResponse.statusCode)")
                     complete(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
                 }
@@ -356,7 +355,7 @@ class ClaudeAPIService {
                 let organizations = try decoder.decode([Organization].self, from: data)
                 complete(.success(organizations))
             } catch {
-                Logger.api.debug("Decoding error: \(error.localizedDescription)")
+                AppLog.error(.api, "Organizations response could not be decoded: \(error.localizedDescription)")
                 complete(.failure(UsageError.decodingError))
             }
         }
@@ -399,7 +398,7 @@ class ClaudeAPIService {
 
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Extra Usage API network error: \(error.localizedDescription)")
+                AppLog.warning(.api, "Extra Usage request failed with a network error: \(error.localizedDescription)")
                 complete(.failure(UsageError.networkError))
                 return
             }
@@ -411,12 +410,12 @@ class ClaudeAPIService {
 
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Extra Usage API Response: \(jsonString)")
+                AppLog.trace(.api, "Extra Usage response body: \(jsonString)")
             }
 
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("Extra Usage HTTP Status: \(httpResponse.statusCode)")
+                AppLog.trace(.api, "Extra Usage response received: HTTP \(httpResponse.statusCode)")
 
                 switch httpResponse.statusCode {
                 case 200...299:
@@ -424,14 +423,14 @@ class ClaudeAPIService {
                     break
                 case 403, 404:
                     // Extra Usage 未启用或无权限，返回 nil 表示功能不可用
-                    Logger.api.info("Extra Usage not available (HTTP \(httpResponse.statusCode))")
+                    AppLog.event(.api, "Extra Usage is not available for this account (HTTP \(httpResponse.statusCode))")
                     complete(.success(nil))
                     return
                 case 401:
                     complete(.failure(UsageError.unauthorized))
                     return
                 default:
-                    Logger.api.warning("Extra Usage HTTP error: \(httpResponse.statusCode)")
+                    AppLog.warning(.api, "Extra Usage request failed: unexpected HTTP \(httpResponse.statusCode)")
                     complete(.success(nil))  // 优雅降级
                     return
                 }
@@ -444,7 +443,7 @@ class ClaudeAPIService {
                 let extraUsageData = extraUsageResponse.toExtraUsageData()
                 complete(.success(extraUsageData))
             } catch {
-                Logger.api.debug("Extra Usage decoding error: \(error.localizedDescription)")
+                AppLog.warning(.api, "Extra Usage response could not be decoded: \(error.localizedDescription)")
                 complete(.success(nil))  // 优雅降级
             }
         }
@@ -501,7 +500,7 @@ class ClaudeAPIService {
             // 这段 await 期间用户可能已经切走，按「当前」写会把本账号的新 token 覆盖到别人头上。
             let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
             if newRefresh != refreshToken {
-                Logger.api.notice("Claude OAuth: refresh_token 已轮换，静默写回")
+                AppLog.event(.auth, "Claude OAuth refresh_token rotated; writing the new token back to the account")
                 await MainActor.run {
                     UserSettings.shared.silentlyUpdateClaudeSessionToken(newRefresh, replacing: refreshToken)
                 }
@@ -511,7 +510,7 @@ class ClaudeAPIService {
             let expiry = tokens.expiresAt ?? Date().addingTimeInterval(30 * 60)
             return OAuthTokenCache.Tokens(accessToken: tokens.accessToken, refreshToken: newRefresh, expiresAt: expiry)
         } catch {
-            Logger.api.error("Claude OAuth refresh 失败: \(error.localizedDescription)")
+            AppLog.error(.auth, "Claude OAuth token refresh failed: \(error.localizedDescription)")
             throw error
         }
     }
@@ -534,7 +533,7 @@ class ClaudeAPIService {
 
         session.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
-                Logger.api.error("Claude OAuth usage 网络错误: \(error.localizedDescription)")
+                AppLog.error(.api, "Claude OAuth usage request failed with a network error: \(error.localizedDescription)")
                 complete(.failure(UsageError.networkError))
                 return
             }
@@ -543,7 +542,7 @@ class ClaudeAPIService {
                 return
             }
             if let http = response as? HTTPURLResponse {
-                Logger.api.debug("Claude OAuth usage HTTP \(http.statusCode)")
+                AppLog.event(.api, "Claude OAuth usage response received: HTTP \(http.statusCode)")
                 switch http.statusCode {
                 case 200...299: break
                 case 401:
@@ -552,7 +551,7 @@ class ClaudeAPIService {
                     // 用 Task 顺序 await 清缓存再重试，避免 clear 与重试的缓存读取产生竞态
                     // （二者都要进 actor，若各开一个 Task 无法保证 clear 先于重试执行）。
                     if retryOnUnauthorized {
-                        Logger.api.info("Claude OAuth usage 401，清缓存后立即用 refresh_token 换新 access_token 重试一次")
+                        AppLog.event(.auth, "Claude OAuth usage returned 401; clearing the cached access token and retrying once with the refresh_token")
                         Task {
                             await self?.oauthTokenCache.clear()
                             self?.fetchOAuthUsage(retryOnUnauthorized: false, completion: completion)
@@ -571,7 +570,7 @@ class ClaudeAPIService {
                 }
             }
             if let raw = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Claude OAuth usage response: \(raw.prefix(500))")
+                AppLog.trace(.api, "Claude OAuth usage response body: \(raw.prefix(500))")
             }
 
             let decoder = JSONDecoder()
@@ -581,7 +580,7 @@ class ClaudeAPIService {
                 // 与 Cookie 路径一致：限额窗口全为 null 说明该账号未开放用量看板，
                 // 不是解码失败，也不是凭据失效。
                 if baseResponse.isUsageDashboardUnavailable {
-                    Logger.api.info("Claude OAuth usage 未返回任何限额数据（member_dashboard_available=\(baseResponse.member_dashboard_available.map(String.init) ?? "nil")），判定为该账号未开放用量看板")
+                    AppLog.event(.api, "Claude OAuth usage response carried no limit windows (member_dashboard_available=\(baseResponse.member_dashboard_available.map(String.init) ?? "nil")); treating this account as having no usage dashboard")
                     complete(.failure(UsageError.usageDashboardUnavailable))
                     return
                 }
@@ -594,12 +593,12 @@ class ClaudeAPIService {
                     if let extraJson = json["extra_usage"] as? [String: Any] {
                         // 诊断用：即使解码成功也打一行 keys，因为 ExtraUsageResponse 全字段可选，
                         // 字段名对不上时不会抛错，只会静默产出全 nil 的“已禁用”结果。
-                        Logger.api.debug("Claude OAuth usage extra_usage keys=\(Array(extraJson.keys).sorted())")
+                        AppLog.trace(.api, "Claude OAuth usage extra_usage keys: \(Array(extraJson.keys).sorted())")
                         if let extraData = try? JSONSerialization.data(withJSONObject: extraJson) {
                             do {
                                 let extraResponse = try decoder.decode(ExtraUsageResponse.self, from: extraData)
                                 let extraUsageData = extraResponse.toExtraUsageData()
-                                Logger.api.debug("Claude OAuth usage extra_usage 解析结果: enabled=\(extraUsageData?.enabled ?? false)")
+                                AppLog.trace(.api, "Claude OAuth usage extra_usage decoded: enabled=\(extraUsageData?.enabled ?? false)")
                                 usageData = UsageData(
                                     fiveHour: usageData.fiveHour,
                                     sevenDay: usageData.sevenDay,
@@ -607,19 +606,19 @@ class ClaudeAPIService {
                                     extraUsage: extraUsageData
                                 )
                             } catch {
-                                Logger.api.error("Claude OAuth usage extra_usage 解码失败: \(error.localizedDescription)，keys=\(Array(extraJson.keys))")
+                                AppLog.warning(.api, "Claude OAuth usage extra_usage could not be decoded: \(error.localizedDescription); keys=\(Array(extraJson.keys))")
                             }
                         } else {
-                            Logger.api.error("Claude OAuth usage extra_usage 字段无法重新序列化为 JSON，keys=\(Array(extraJson.keys))")
+                            AppLog.warning(.api, "Claude OAuth usage extra_usage could not be re-serialised to JSON; keys=\(Array(extraJson.keys))")
                         }
                     } else {
-                        Logger.api.info("Claude OAuth usage 无 extra_usage 字段，顶层 keys=\(Array(json.keys))")
+                        AppLog.trace(.api, "Claude OAuth usage response has no extra_usage field; top-level keys: \(Array(json.keys))")
                     }
                 }
 
                 complete(.success(usageData))
             } catch {
-                Logger.api.error("Claude OAuth usage 解析失败: \(error.localizedDescription)")
+                AppLog.error(.api, "Claude OAuth usage response could not be decoded: \(error.localizedDescription)")
                 complete(.failure(UsageError.decodingError))
             }
         }.resume()
@@ -630,7 +629,7 @@ class ClaudeAPIService {
     func cancelAllRequests() {
         currentTask?.cancel()
         currentTask = nil
-        Logger.api.debug("已取消所有网络请求")
+        AppLog.event(.api, "Cancelled all in-flight network requests")
     }
 
     // MARK: - Async 包装

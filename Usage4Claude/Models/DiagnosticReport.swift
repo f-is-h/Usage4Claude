@@ -73,6 +73,16 @@ struct DiagnosticReport: Codable {
     let refreshInterval: String?
     let displayMode: String
 
+    // MARK: - 运行时信息
+
+    /// 上一次会话是怎么结束的。静默退出类问题（Issue #79）全靠这一项定性：
+    /// 正常退出会写结束标记，被 SIGKILL（崩溃、强制退出、系统回收内存）则不会。
+    let previousSessionOutcome: SessionLogScanner.PreviousSessionOutcome
+    /// 日志占用的磁盘字节数，用于确认保留策略确实生效
+    let logDiskUsageBytes: UInt64
+    /// 最近若干行日志，已在写入时脱敏
+    let recentLogLines: String?
+
     // MARK: - Provider 诊断结果
 
     let providers: [ProviderDiagnosticResult]
@@ -126,6 +136,8 @@ struct DiagnosticReport: Codable {
             report += renderProviderSection(result)
         }
 
+        report += renderRuntimeSection()
+
         report += """
 
         ---
@@ -138,6 +150,34 @@ struct DiagnosticReport: Codable {
 
         """
         return report
+    }
+
+    /// 运行时段落：上次退出方式 + 最近日志
+    ///
+    /// 用户导出一份报告就该够了，不必再让他去终端跑 log show —— 沙盒挡死了 app
+    /// 自己读系统日志（`OSLogStore(scope:.system)` 报 "Connection to logd failed"），
+    /// 所以这里嵌的是我们自己的文件日志。
+    private func renderRuntimeSection() -> String {
+        var section = "\n## Runtime\n\n"
+
+        let outcomeText: String
+        switch previousSessionOutcome {
+        case .clean:
+            outcomeText = "✅ Clean exit"
+        case .terminatedUnexpectedly:
+            outcomeText = "⚠️ Terminated externally — no clean-exit marker was written. The process was killed (crash, force quit, or the system reclaiming memory) rather than quitting on its own."
+        case .unknown:
+            outcomeText = "No previous session on record (first launch, or the log has since rotated)"
+        }
+        section += "- **Previous session**: \(outcomeText)\n"
+        section += "- **Log disk usage**: \(logDiskUsageBytes / 1024) KB of \(LogRetentionPolicy.maxTotalBytes / 1024) KB cap\n"
+
+        if let recentLogLines, !recentLogLines.isEmpty {
+            section += "\n### Recent Log\n\n```\n\(recentLogLines)\n```\n"
+        }
+
+        section += "\n---\n"
+        return section
     }
 
     private func renderProviderSection(_ result: ProviderDiagnosticResult) -> String {

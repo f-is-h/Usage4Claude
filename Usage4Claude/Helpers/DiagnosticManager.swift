@@ -57,6 +57,9 @@ class DiagnosticManager: ObservableObject {
             refreshMode: settings.refreshMode == .smart ? "Smart" : "Fixed",
             refreshInterval: settings.refreshMode == .fixed ? "\(settings.refreshInterval) min" : nil,
             displayMode: settings.iconDisplayMode.rawValue,
+            previousSessionOutcome: AppLog.previousSessionOutcome,
+            logDiskUsageBytes: AppLog.diskUsageBytes(),
+            recentLogLines: AppLog.recentLines(),
             providers: providerResults
         )
 
@@ -120,6 +123,9 @@ class DiagnosticManager: ObservableObject {
             refreshMode: settings.refreshMode == .smart ? "Smart" : "Fixed",
             refreshInterval: settings.refreshMode == .fixed ? "\(settings.refreshInterval) min" : nil,
             displayMode: settings.iconDisplayMode.rawValue,
+            previousSessionOutcome: AppLog.previousSessionOutcome,
+            logDiskUsageBytes: AppLog.diskUsageBytes(),
+            recentLogLines: AppLog.recentLines(),
             providers: [noAccountsResult]
         )
     }

@@ -8,7 +8,6 @@
 
 import Foundation
 import Network
-import OSLog
 
 /// 本地 OAuth 回调服务器（基于 Network.framework，无第三方依赖）
 ///
@@ -59,7 +58,7 @@ final class OAuthCallbackServer {
         do {
             listener = try NWListener(using: params, on: nwPort)
         } catch {
-            Logger.settings.error("OAuthCallbackServer: 端口 \(port) 创建监听失败 - \(error.localizedDescription, privacy: .public)")
+            AppLog.error(.auth, "OAuth callback server could not create a listener on port \(port): \(error.localizedDescription)")
             return false
         }
 
@@ -73,10 +72,10 @@ final class OAuthCallbackServer {
             case .waiting(let error):
                 // 端口被占用时 NWListener 进入 waiting（持续重试），不会 failed。
                 // 立即 signal 以便快速切换到下一个端口，并记录真实原因。
-                Logger.settings.error("OAuthCallbackServer: 端口 \(port) 不可用（\(error.localizedDescription, privacy: .public)），尝试下一个")
+                AppLog.warning(.auth, "OAuth callback server port \(port) is unavailable (\(error.localizedDescription)); trying the next one")
                 sema.signal()
             case .failed(let error):
-                Logger.settings.error("OAuthCallbackServer: 端口 \(port) 监听失败 - \(error.localizedDescription, privacy: .public)")
+                AppLog.error(.auth, "OAuth callback server failed to listen on port \(port): \(error.localizedDescription)")
                 sema.signal()
             case .cancelled:
                 sema.signal()
@@ -93,11 +92,11 @@ final class OAuthCallbackServer {
         _ = sema.wait(timeout: .now() + 2)
         if ready {
             self.listener = listener
-            Logger.settings.info("OAuthCallbackServer: 监听 localhost:\(port)")
+            AppLog.event(.auth, "OAuth callback server is listening on localhost:\(port)")
             return true
         }
         listener.cancel()
-        Logger.settings.error("OAuthCallbackServer: 端口 \(port) 未能在超时内就绪")
+        AppLog.error(.auth, "OAuth callback server on port \(port) did not become ready before the timeout")
         return false
     }
 

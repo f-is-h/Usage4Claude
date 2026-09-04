@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 
 /// OAuth token 端点返回的凭据
 struct CodexOAuthTokens {
@@ -94,7 +93,7 @@ enum CodexOAuthService {
     private static func send(_ request: URLRequest, completion: @escaping (Result<CodexOAuthTokens, Error>) -> Void) {
         session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.error("Codex OAuth token 请求失败: \(error.localizedDescription)")
+                AppLog.error(.auth, "Codex OAuth token request failed: \(error.localizedDescription)")
                 completion(.failure(UsageError.networkError))
                 return
             }
@@ -104,7 +103,7 @@ enum CodexOAuthService {
             }
             if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
                 let bodyText = String(data: data, encoding: .utf8) ?? ""
-                Logger.api.error("Codex OAuth token HTTP \(http.statusCode): \(bodyText.prefix(200))")
+                AppLog.error(.auth, "Codex OAuth token request returned HTTP \(http.statusCode): \(bodyText.prefix(200))")
                 completion(.failure(http.statusCode == 401 ? UsageError.unauthorized
                                     : UsageError.httpError(statusCode: http.statusCode)))
                 return

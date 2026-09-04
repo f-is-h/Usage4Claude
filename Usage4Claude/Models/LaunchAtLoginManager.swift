@@ -15,7 +15,6 @@
 import Foundation
 import Combine
 import ServiceManagement
-import OSLog
 
 /// 开机启动的注册/注销与状态同步
 final class LaunchAtLoginManager: ObservableObject {
@@ -39,9 +38,9 @@ final class LaunchAtLoginManager: ObservableObject {
     func enable() {
         do {
             try SMAppService.mainApp.register()
-            Logger.settings.notice("开机启动已启用")
+            AppLog.event(.settings, "Launch at login enabled")
         } catch {
-            Logger.settings.error("启用开机启动失败: \(error.localizedDescription)")
+            AppLog.error(.settings, "Enabling launch at login failed: \(error.localizedDescription)")
             NotificationCenter.default.post(
                 name: .launchAtLoginError,
                 object: nil,
@@ -58,16 +57,16 @@ final class LaunchAtLoginManager: ObservableObject {
 
         // 如果服务未注册或未找到，直接同步状态，不执行 unregister 操作
         guard currentStatus != .notRegistered && currentStatus != .notFound else {
-            Logger.settings.notice("开机启动服务未注册，已更新设置")
+            AppLog.event(.settings, "Launch-at-login service was not registered; updated the setting to match")
             refreshStatus()
             return
         }
 
         do {
             try SMAppService.mainApp.unregister()
-            Logger.settings.notice("开机启动已禁用")
+            AppLog.event(.settings, "Launch at login disabled")
         } catch {
-            Logger.settings.error("禁用开机启动失败: \(error.localizedDescription)")
+            AppLog.error(.settings, "Disabling launch at login failed: \(error.localizedDescription)")
             NotificationCenter.default.post(
                 name: .launchAtLoginError,
                 object: nil,
@@ -88,6 +87,6 @@ final class LaunchAtLoginManager: ObservableObject {
             // 镜像写入 UserDefaults，兼容任何仍读取这个 key 的旧逻辑（目前没有）
             self.defaults.set(newStatus == .enabled, forKey: "launchAtLogin")
         }
-        Logger.settings.debug("开机启动状态: \(String(describing: newStatus))")
+        AppLog.trace(.settings, "Launch-at-login status is now \(String(describing: newStatus))")
     }
 }

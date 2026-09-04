@@ -47,8 +47,7 @@ struct DiagnosticsView: View {
                 }
 
                 Button(L.Diagnostic.openLogFolder) {
-                    if let logPath = DiagnosticLogger.shared.getLogFilePath() {
-                        let folderURL = URL(fileURLWithPath: logPath).deletingLastPathComponent()
+                    if let folderURL = AppLog.logDirectory {
                         NSWorkspace.shared.open(folderURL)
                     }
                 }

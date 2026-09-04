@@ -119,7 +119,7 @@ final class WebLoginCoordinator: ObservableObject {
         sourceStore.getAllCookies { cookies in
             let relevant = cookies.filter { c in domains.contains { c.domain.contains($0) } }
             for cookie in relevant { destStore.setCookie(cookie) { } }
-            Logger.settings.info("WebLogin: 复制 \(relevant.count) 个 Claude cookie 到 default store")
+            AppLog.trace(.auth, "Claude web login copied \(relevant.count) cookie(s) into the default store")
         }
     }
 
@@ -146,7 +146,7 @@ final class WebLoginCoordinator: ObservableObject {
             // 将 WebView 的完整 cookie（含 cf_clearance/__cf_bm）拼成 header，
             // 避免验证请求因缺少 Cloudflare 通行证而被拦截
             let cookieHeader = claudeCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
-            Logger.settings.info("WebLogin: 检测到 sessionKey Cookie")
+            AppLog.event(.auth, "Claude web login detected the sessionKey cookie")
 
             DispatchQueue.main.async {
                 self.cookieTimer?.invalidate()
@@ -185,7 +185,7 @@ final class WebLoginCoordinator: ObservableObject {
                         self.onAccountCreated?(account)
                         self.transferCookiesToDefaultStore(domains: ["claude.ai"])
 
-                        Logger.settings.notice("WebLogin: 账户创建成功 - \(account.displayName)")
+                        AppLog.event(.auth, "Claude web login succeeded; created account: \(account.displayName)")
                     } else {
                         self.loginState = .failed(message: L.Error.noOrganizationsFound)
                     }
@@ -198,7 +198,7 @@ final class WebLoginCoordinator: ObservableObject {
                         message = error.localizedDescription
                     }
                     self.loginState = .failed(message: message)
-                    Logger.settings.error("WebLogin: 验证失败 - \(message)")
+                    AppLog.error(.auth, "Claude web login validation failed: \(message)")
 
                     // 验证失败后重新开始监听
                     self.startCookieMonitoring()

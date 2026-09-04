@@ -8,7 +8,6 @@
 
 import Foundation
 import Security
-import OSLog
 
 /// 凭据存储后端协议：Debug 用 UserDefaults（便于开发测试、不触发系统弹窗），
 /// Release 用 Keychain（安全存储）。两种实现各自独立，`KeychainManager` 只在
@@ -61,7 +60,7 @@ private struct KeychainCredentialStorage: CredentialStorage {
         if status == errSecSuccess {
             return true
         } else {
-            Logger.keychain.error("Keychain 保存失败: \(key), 状态码: \(status)")
+            AppLog.error(.keychain, "Keychain write failed for \(key), OSStatus \(status)")
             return false
         }
     }
@@ -83,7 +82,7 @@ private struct KeychainCredentialStorage: CredentialStorage {
            let value = String(data: data, encoding: .utf8) {
             return value
         } else if status != errSecItemNotFound {
-            Logger.keychain.error("Keychain 读取失败: \(key), 状态码: \(status)")
+            AppLog.error(.keychain, "Keychain read failed for \(key), OSStatus \(status)")
         }
         return nil
     }
@@ -100,7 +99,7 @@ private struct KeychainCredentialStorage: CredentialStorage {
         if status == errSecSuccess || status == errSecItemNotFound {
             return true
         } else {
-            Logger.keychain.error("Keychain 删除失败: \(key), 状态码: \(status)")
+            AppLog.error(.keychain, "Keychain delete failed for \(key), OSStatus \(status)")
             return false
         }
     }
@@ -208,12 +207,12 @@ class KeychainManager {
     private func saveAccountsList(_ accounts: [Account], key: String) -> Bool {
         guard let jsonData = try? JSONEncoder().encode(accounts),
               let jsonString = String(data: jsonData, encoding: .utf8) else {
-            Logger.keychain.error("账户列表编码失败 (\(key))")
+            AppLog.error(.keychain, "Encoding the account list failed for \(key)")
             return false
         }
         let result = storage.save(key: key, value: jsonString)
         if result {
-            Logger.keychain.debug("保存 \(accounts.count) 个账户 (\(key))")
+            AppLog.trace(.keychain, "Stored \(accounts.count) account(s) under \(key)")
         }
         return result
     }
@@ -224,10 +223,10 @@ class KeychainManager {
             return nil
         }
         guard let accounts = try? JSONDecoder().decode([Account].self, from: jsonData) else {
-            Logger.keychain.error("账户列表解码失败 (\(key))")
+            AppLog.error(.keychain, "Decoding the account list failed for \(key)")
             return nil
         }
-        Logger.keychain.debug("读取 \(accounts.count) 个账户 (\(key))")
+        AppLog.trace(.keychain, "Loaded \(accounts.count) account(s) from \(key)")
         return accounts
     }
 }

@@ -122,7 +122,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
                 c.domain.contains("chatgpt.com") || c.domain.contains("openai.com")
             }
             for cookie in relevant { destStore.setCookie(cookie) { } }
-            Logger.settings.info("CodexWebLogin: 复制 \(relevant.count) 个 cookie 到 default store")
+            AppLog.trace(.auth, "Codex web login copied \(relevant.count) cookie(s) into the default store")
         }
     }
 
@@ -144,7 +144,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
             guard let sessionToken = Self.extractSessionToken(from: chatgptCookies) else { return }
 
             let cookieHeader = chatgptCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
-            Logger.settings.info("CodexWebLogin: 检测到 session-token Cookie")
+            AppLog.event(.auth, "Codex web login detected the session-token cookie")
 
             DispatchQueue.main.async {
                 self.cookieTimer?.invalidate()
@@ -206,11 +206,11 @@ final class CodexWebLoginCoordinator: ObservableObject {
                 self.onAccountCreated?(storedAccount)
                 self.transferCookiesToDefaultStore()
 
-                Logger.settings.notice("CodexWebLogin: 账户创建成功 - \(storedAccount.displayName)")
+                AppLog.event(.auth, "Codex web login succeeded; created account: \(storedAccount.displayName)")
 
             case .failure(let error):
                 self.loginState = .failed(message: error.localizedDescription)
-                Logger.settings.error("CodexWebLogin: 验证失败 - \(error.localizedDescription)")
+                AppLog.error(.auth, "Codex web login validation failed: \(error.localizedDescription)")
 
                 // 验证失败后重新开始监听
                 self.startCookieMonitoring()

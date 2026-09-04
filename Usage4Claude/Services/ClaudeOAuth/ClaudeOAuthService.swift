@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 
 /// Claude OAuth token 端点返回的凭据
 struct ClaudeOAuthTokens {
@@ -107,7 +106,7 @@ enum ClaudeOAuthService {
 
         session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.error("Claude OAuth token 请求失败: \(error.localizedDescription)")
+                AppLog.error(.auth, "Claude OAuth token request failed: \(error.localizedDescription)")
                 completion(.failure(UsageError.networkError))
                 return
             }
@@ -117,7 +116,7 @@ enum ClaudeOAuthService {
             }
             if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
                 let bodyText = String(data: data, encoding: .utf8) ?? ""
-                Logger.api.error("Claude OAuth token HTTP \(http.statusCode): \(bodyText.prefix(200))")
+                AppLog.error(.auth, "Claude OAuth token request returned HTTP \(http.statusCode): \(bodyText.prefix(200))")
                 completion(.failure(http.statusCode == 401 ? UsageError.unauthorized
                                     : UsageError.httpError(statusCode: http.statusCode)))
                 return

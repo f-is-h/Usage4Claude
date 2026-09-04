@@ -76,6 +76,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// 应用启动完成时调用
     /// 初始化菜单栏管理器，根据是否首次启动显示欢迎窗口或开始刷新数据
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 必须最先执行：它会先判定上一次会话是否异常终止，再写入本次会话的开始标记。
+        // 放在任何一条 AppLog 调用之后都会让判定结果被本次的日志污染。
+        AppLog.startSession()
+
         NSApp.setActivationPolicy(.accessory)
 
         // 请求通知权限
@@ -159,6 +163,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         welcomeWindow?.close()
         welcomeWindow = nil
         cancellables.removeAll()
+
+        // 正常退出标记。这行不写出来，下次启动就会判定为「被外部终止」——
+        // 崩溃、强制退出和系统内存回收都走不到这里，这正是我们要的区分（Issue #79）。
+        AppLog.endSession()
     }
 }
 
