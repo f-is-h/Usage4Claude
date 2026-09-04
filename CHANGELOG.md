@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-09-04
+
+### Added
+- **Menu bar icon size setting**: Choose Compact / Standard / Prominent for menu bar icons; one setting drives the rings, Opus/Sonnet/Extra Usage shapes, the no-data placeholder, and the Claude/Codex brand logos. Shape-icon drawing parameters are now derived from the canvas instead of being absolutes tuned on an 18pt canvas
+- **Codex reset announcement badge (Beta)**: Show a badge next to the Codex ring when OpenAI has publicly announced a still-pending global usage reset, sourced from the third-party codex-reset.com. Deliberately surfaces announcements only, never a probability number. Two-stage probing keeps traffic low, fetch cadence lives in the testable `CodexAnnouncementFetchPolicy`, and every failure path is silent by design. Enabled by default, switchable off, and the settings card appears only once a Codex account exists
+
+### Changed
+- **Transient errors keep showing cached data**: A failed refresh no longer replaces the popover with a full-screen error when usable data is cached; it renders the normal view with a compact "showing last fetched data" banner instead. The full-screen error is reserved for having no cached data or for errors needing user action (thanks @KurtGood, #75)
+- **Sponsorship links carry attribution metadata**: Added GitHub Sponsors transaction metadata to all 14 sponsorship links across READMEs, website footers, and in-app entry points
+- **Documentation**: Overhauled the French README with proper accented orthography and the missing sections, moved localization credits inline, added the Cmd-U shortcut to the usage guides, and bumped the copyright year. Added `CLAUDE.md`, `scripts/check_l10n.py` for localization key verification (wired into CI), and archived four one-off planning documents (thanks @schaitl, #70)
+
+### Fixed
+- **Free Tier and Team accounts reported as credential errors**: Accounts without a usage dashboard answer with HTTP 200 and every limit window null, which aborted the whole decode and surfaced as "credentials are incorrect", sending users to re-authenticate credentials that were never the problem. `five_hour` is now optional and these plans get a dedicated "usage dashboard unavailable" error plus a matching diagnostic verdict (thanks @yairixStudio, #80; reported by @genu, #74 and @Yohan-Janolin, #83)
+- **Rotated OAuth tokens written to the wrong account**: Token write-backs targeted whichever account was selected when the async callback landed, so switching accounts mid-refresh put one account's new token into another's entry. Because refresh_tokens rotate and the old one is invalidated immediately, this signed both accounts out permanently. Write-backs now locate the account by the token held when the refresh started, and drop the write when that account is gone
+- **Codex OAuth callback refused by the browser**: The login view owned the OAuth coordinator, so tearing down the progress window stopped the callback listener before the browser could reach it. The coordinator is now app-owned and survives view recreation, with a manual paste fallback that still enforces PKCE and state validation (thanks @realjoenguyen, #77)
+- **"Go to Settings" button missing in most languages**: The error view matched localized message text, so the button only appeared in English and Chinese; error kind is now tracked explicitly
+- **Single-provider refresh discarding cached data**: `fetchClaudeOnly` no longer clears cached usage on failure, matching the combined refresh path
+- **Menu bar icon size jump when data arrived**: The no-data placeholder was 22pt while data-bearing icons were 18pt, so the icon visibly shrank the moment data loaded
+- **Settings tab stability**
+- **Ko-fi handle typo**: All 7 READMEs pointed at `ko-fi.com/1attle` instead of `ko-fi.com/1atte`
+
+### Internal
+- Reverted the redundant `ENABLE_INCOMING_NETWORK_CONNECTIONS` build setting introduced by #77: the target signs with the static entitlements file, which has carried `com.apple.security.network.server` since the browser-based OAuth flow shipped
+- Extracted `AccountTokenRotation` as a pure resolver with 10 tests, and removed the current-account token-write API entirely so the pitfall cannot be reintroduced
+- `ShapeIconRenderer` takes the canvas size as a parameter and holds no size state
+
 ## [3.3.0] - 2026-07-14
 
 ### Added
@@ -529,6 +555,7 @@ Key, Organization ID)
 
 ---
 
+[3.4.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.4.0
 [3.3.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.3.0
 [3.2.2]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.2
 [3.2.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.1

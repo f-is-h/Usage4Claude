@@ -13,6 +13,22 @@
 > 版本号权威源仍是 CHANGELOG.md（与 Xcode `MARKETING_VERSION` 校验一致）。
 > 发版时本文件必须有对应的 `## [X.Y.Z]` 段落，否则 Sparkle / Release 正文会为空。
 
+## [3.4.0] - 2026-09-04
+
+### Added
+- **Menu bar icon size**: Pick Compact, Standard or Prominent in Settings → General → Display. Menu bar height and eyesight vary, so the icons no longer come in one fixed size
+- **Codex reset announcement badge (Beta)**: A badge appears next to the Codex ring when OpenAI has publicly announced a pending global usage reset. It shows announcements only, never a prediction, and can be turned off in settings
+
+### Changed
+- **Brief network errors no longer blank the popover**: A rate limit or dropped connection now keeps your last usage on screen with a small notice on top, instead of replacing everything with an error page (thanks @KurtGood, #75)
+
+### Fixed
+- **Free Tier and Team accounts wrongly told to sign in again**: Plans without a usage dashboard were reported as a credential problem, sending people to re-enter credentials that were fine. They now get a clear message explaining the plan does not provide usage data (thanks @yairixStudio, #80; reported by @genu, #74 and @Yohan-Janolin, #83)
+- **Signing in to Codex failing with a connection error**: The browser could come back to a closed door if the sign-in window was recreated mid-flow. If it still gets stuck, you can now paste the callback link to finish (thanks @realjoenguyen, #77)
+- **Accounts signed out after switching during a refresh**: Switching accounts while usage was refreshing could write one account's renewed credentials into another's, signing both out for good. Renewed credentials now always go back to the account that requested them
+- **"Go to Settings" button missing outside English and Chinese**: The button now appears for sign-in errors in every language
+- **Menu bar icon resizing when data loaded**: The icon no longer changes size the moment usage data arrives
+
 ## [3.3.0] - 2026-07-14
 
 ### Added
