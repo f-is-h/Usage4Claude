@@ -57,8 +57,9 @@ class ClaudeAPIService {
     // MARK: - Claude OAuth Support
 
     /// 判断凭据是否为 Claude OAuth refresh_token（以 "sk-ant-ort01-" 开头）
+    /// 判定规则收在 `ProviderAuthPath`，诊断层与此共用同一处，避免两边脱钩
     static func isOAuthRefreshToken(_ credential: String) -> Bool {
-        credential.hasPrefix("sk-ant-ort01-")
+        ProviderAuthPath.forClaude(credential: credential) == .oauth
     }
 
     /// 清除 OAuth access_token 缓存（账户切换时调用；401 重试路径见 fetchClaudeOAuthUsageData，

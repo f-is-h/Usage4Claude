@@ -32,6 +32,7 @@ let package = Package(
                 "Helpers/SmartRefreshPolicy.swift",
                 "Services/OAuthTokenCache.swift",
                 "Helpers/SensitiveDataRedactor.swift",
+                "Helpers/DiagnosticResponseClassifier.swift",
                 "Helpers/LogFormatting.swift",
                 "Helpers/AppLog.swift",
                 "Helpers/ResetTimeChange.swift",
@@ -41,7 +42,8 @@ let package = Package(
                 "Helpers/CodexAnnouncementFetchPolicy.swift",
                 "Models/Account.swift",
                 "Models/AccountTokenRotation.swift",
-                "Models/CodexSessionTokenRotation.swift"
+                "Models/CodexSessionTokenRotation.swift",
+                "Models/ProviderAuthPath.swift"
             ]
         ),
         .testTarget(

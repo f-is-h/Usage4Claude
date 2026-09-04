@@ -168,4 +168,15 @@ class SensitiveDataRedactor {
     static func redactLogMessage(_ message: String) -> String {
         redactTokens(redactText(message))
     }
+
+    /// 脱敏诊断报告里要展示的响应体片段
+    ///
+    /// 诊断报告是给用户导出到 GitHub Issue 的，响应体必须先过一遍脱敏。
+    /// - Parameters:
+    ///   - text: 原始响应体
+    ///   - maxLength: 截断长度，默认 500 字符，与报告里的说明一致
+    /// - Returns: 脱敏并截断后的片段
+    static func redactBodyPreview(_ text: String, maxLength: Int = 500) -> String {
+        String(redactLogMessage(text).prefix(maxLength))
+    }
 }

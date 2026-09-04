@@ -302,6 +302,8 @@ enum DiagnosticMessage {
 
     static let diagnosisSuccess = "Connection is working properly. API returned valid usage data."
     static let diagnosisCloudflare = "Request was blocked by Cloudflare security system. This may be due to IP reputation or network configuration."
+    static let diagnosisAuthFailed = "Claude rejected the credentials. The Session Key has expired or no longer matches this Organization ID — logging out of claude.ai in the browser also invalidates it."
+    static let diagnosisOAuthAuthFailed = "The OAuth login was rejected. The refresh token has expired or was revoked, which happens when the Claude account signs out everywhere or the authorisation is withdrawn."
     static let diagnosisDecoding = "Server returned data but it couldn't be parsed. This usually means credentials are incorrect or don't match."
     static let diagnosisDashboardUnavailable = "Credentials are valid (HTTP 200), but the account's plan returns no usage windows at all. Free accounts have no usage dashboard, and Team/Enterprise organizations must enable the member usage dashboard."
     static let diagnosisNetwork = "Network connection failed. Please check your internet connection."
@@ -320,6 +322,7 @@ enum DiagnosticMessage {
     static let suggestionCheckPlanDashboard = "Open claude.ai/settings/usage in your browser — if it shows no usage data either, the plan simply doesn't expose it"
     static let suggestionAskOrgAdmin = "On a Team/Enterprise plan, ask an organization admin to enable the member usage dashboard"
     static let suggestionUpgradePlan = "Usage tracking requires a Pro or Max subscription"
+    static let suggestionReloginOAuth = "Sign in to this account again from Settings — OAuth accounts cannot be repaired by pasting a key"
     static let suggestionCheckInternet = "Check your internet connection"
     static let suggestionCheckFirewall = "Check firewall or antivirus settings"
     static let suggestionRetryLater = "Try again later"
@@ -340,6 +343,7 @@ enum DiagnosticMessage {
     static let diagnosisCodexUsageFailed = "Session token is valid but the usage API returned an unexpected response."
     static let diagnosisCodexUsageCloudflare = "Usage endpoint was blocked by Cloudflare. ChatGPT may have flagged your IP."
 
+    static let diagnosisCodexOAuthFailed = "The Codex OAuth login was rejected. The refresh token has expired or was revoked, so the account has to be signed in again."
     static let suggestionCodexRelogin = "Please log in to Codex again from Settings"
     static let suggestionCodexRestartApp = "Restart the app — it will automatically refresh the access token via SSR"
     static let suggestionCodexCheckChatGPTBrowser = "Visit chatgpt.com in your browser to complete any security challenges"

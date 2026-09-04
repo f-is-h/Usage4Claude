@@ -30,10 +30,18 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
 
         let orgId = settings.organizationId
         let sessionKey = settings.sessionKey
-        let credentials: [String: String] = [
+        var credentials: [String: String] = [
             "Organization ID": SensitiveDataRedactor.redactOrganizationId(orgId),
             "Session Key": SensitiveDataRedactor.redactSessionKey(sessionKey)
         ]
+
+        // 必须和服务层走同一条路：OAuth 账号的凭据是 refresh_token，拿它当 sessionKey
+        // Cookie 发出去只会稳定拿到 403，然后被误报成「凭据已过期」。
+        let authPath = ProviderAuthPath.forClaude(credential: sessionKey)
+        credentials["Auth Path"] = authPath.displayName
+        if authPath == .oauth {
+            return await runOAuthPath(credentials: credentials)
+        }
 
         let urlString = "https://claude.ai/api/organizations/\(orgId)/usage"
         guard let url = URL(string: urlString) else {
@@ -65,6 +73,58 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
         }
     }
 
+    // MARK: - OAuth Path
+
+    /// OAuth 账号的诊断：走服务层的真实取数路径，**绝不自己换 token**
+    ///
+    /// OAuth refresh_token 每次续期都会轮换，服务端在发放新值的同时立刻作废旧值。
+    /// 诊断若自己调 `ClaudeOAuthService.refresh`，换回来的新 token 无处写回、随手丢弃，
+    /// 存储里的旧 token 当场失效——点一次「测试连接」就把账号登出了。
+    /// `CLAUDE.md` 记着这条不变式：任何取 token 的新路径都必须复用 `OAuthTokenCache`
+    /// 的单飞与轮换写回，也就是只能经由服务层。
+    ///
+    /// 代价是拿不到 HTTP 状态码与响应头。这是刻意的取舍：诊断的价值在于结论可信，
+    /// 而重造一条会和服务层脱钩的请求链正是这轮 bug 的来源。
+    private func runOAuthPath(credentials: [String: String]) async -> ProviderDiagnosticResult {
+        let startTime = Date()
+        let result = await ClaudeAPIService.shared.fetchUsageResult()
+        let responseTime = Date().timeIntervalSince(startTime) * 1000
+
+        let step: DiagnosticStep
+        switch result {
+        case .success(let usage):
+            step = DiagnosticStep(
+                name: "OAuth Usage API", success: true,
+                httpStatusCode: nil, responseTime: responseTime,
+                responseType: .json, errorType: nil, errorDescription: nil,
+                responseHeaders: [:],
+                responseBodyPreview: "Valid usage data received (utilization: \(usage.percentage)%)",
+                cloudflareChallenge: false, cfMitigated: false, notes: nil
+            )
+        case .failure(let error):
+            let usageError = error as? UsageError
+            let errorType: DiagnosticErrorType
+            switch usageError {
+            case .cloudflareBlocked:           errorType = .cloudflareBlocked
+            case .usageDashboardUnavailable:   errorType = .usageDashboardUnavailable
+            case .networkError:                errorType = .networkError
+            case .sessionExpired, .unauthorized: errorType = .authenticationFailed
+            default:                           errorType = .unknown
+            }
+            step = DiagnosticStep(
+                name: "OAuth Usage API", success: false,
+                httpStatusCode: nil, responseTime: responseTime,
+                responseType: .unknown, errorType: errorType,
+                errorDescription: error.localizedDescription,
+                responseHeaders: [:], responseBodyPreview: nil,
+                cloudflareChallenge: errorType == .cloudflareBlocked,
+                cfMitigated: false, notes: nil
+            )
+        }
+
+        return buildResult(credentials: credentials, steps: [step], authPath: .oauth)
+    }
+
     // MARK: - Response Analysis
 
     private func analyzeResponse(
@@ -79,84 +139,81 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
 
         let statusCode = httpResponse.statusCode
         let headers = extractSafeHeaders(from: httpResponse)
-
-        guard let bodyString = String(data: data, encoding: .utf8) else {
-            return makeUnknownResponseStep(name: stepName, data: data, responseTime: responseTime,
-                                           statusCode: statusCode, headers: headers)
+        let cfMitigated = headers["cf-mitigated"] != nil
+        // 报告要导出到 GitHub Issue，响应体一律先脱敏再截断
+        let bodyPreview = String(data: data, encoding: .utf8).map {
+            SensitiveDataRedactor.redactBodyPreview($0)
         }
 
-        let isHTML = bodyString.contains("<!DOCTYPE html>") || bodyString.contains("<html")
-        let hasCloudflare = bodyString.localizedCaseInsensitiveContains("cloudflare") ||
-                            bodyString.contains("cf-mitigated") ||
-                            bodyString.contains("Just a moment")
-
-        if isHTML && (statusCode == 403 || hasCloudflare) {
-            return DiagnosticStep(
-                name: stepName, success: false,
+        func makeStep(
+            success: Bool,
+            responseType: DiagnosticStep.ResponseType,
+            errorType: DiagnosticErrorType?,
+            errorDescription: String?,
+            preview: String?,
+            cloudflare: Bool = false,
+            notes: String? = nil
+        ) -> DiagnosticStep {
+            DiagnosticStep(
+                name: stepName, success: success,
                 httpStatusCode: statusCode, responseTime: responseTime,
-                responseType: .html, errorType: .cloudflareBlocked,
-                errorDescription: L.Error.cloudflareBlocked,
+                responseType: responseType, errorType: errorType,
+                errorDescription: errorDescription,
                 responseHeaders: headers,
-                responseBodyPreview: String(bodyString.prefix(500)),
-                cloudflareChallenge: true,
-                cfMitigated: headers["cf-mitigated"] != nil,
-                notes: nil
+                responseBodyPreview: preview,
+                cloudflareChallenge: cloudflare,
+                cfMitigated: cfMitigated,
+                notes: notes
             )
         }
 
-        if let json = try? JSONDecoder().decode(UsageResponse.self, from: data) {
+        switch DiagnosticResponseClassifier.classifyClaudeUsage(statusCode: statusCode, body: data) {
+        case .cloudflareChallenge:
+            return makeStep(success: false, responseType: .html, errorType: .cloudflareBlocked,
+                            errorDescription: L.Error.cloudflareBlocked, preview: bodyPreview,
+                            cloudflare: true)
+
+        case .credentialsRejected(let detail):
+            // 凭据过期是最常见的失败。必须报成鉴权失败而不是解析失败，否则诊断建议会把用户
+            // 引去核对根本没错的 Organization ID，最后跑来提 issue（Issue #84）。
+            return makeStep(success: false, responseType: .json, errorType: .authenticationFailed,
+                            errorDescription: L.Error.sessionExpired, preview: bodyPreview,
+                            notes: detail)
+
+        case .usageDashboardUnavailable:
             // 解码成功但一条限额都没有：账号未开放用量看板（Issue #83 / #74）。
             // 报告必须把它和「凭据错误」分开，否则诊断结论会把用户带偏。
-            if json.isUsageDashboardUnavailable {
-                return DiagnosticStep(
-                    name: stepName, success: false,
-                    httpStatusCode: statusCode, responseTime: responseTime,
-                    responseType: .json, errorType: .usageDashboardUnavailable,
-                    errorDescription: L.Error.usageDashboardUnavailable,
-                    responseHeaders: headers,
-                    responseBodyPreview: String(bodyString.prefix(500)),
-                    cloudflareChallenge: false,
-                    cfMitigated: headers["cf-mitigated"] != nil,
-                    notes: nil
-                )
-            }
-            let utilizationPreview = json.five_hour.map { "\($0.utilization)%" } ?? "n/a"
-            return DiagnosticStep(
-                name: stepName, success: true,
-                httpStatusCode: statusCode, responseTime: responseTime,
-                responseType: .json, errorType: nil, errorDescription: nil,
-                responseHeaders: headers,
-                responseBodyPreview: "Valid usage data received (utilization: \(utilizationPreview))",
-                cloudflareChallenge: false,
-                cfMitigated: headers["cf-mitigated"] != nil,
-                notes: nil
-            )
-        }
+            return makeStep(success: false, responseType: .json, errorType: .usageDashboardUnavailable,
+                            errorDescription: L.Error.usageDashboardUnavailable, preview: bodyPreview)
 
-        return DiagnosticStep(
-            name: stepName, success: false,
-            httpStatusCode: statusCode, responseTime: responseTime,
-            responseType: .unknown, errorType: .decodingError,
-            errorDescription: L.Error.decodingFailed,
-            responseHeaders: headers,
-            responseBodyPreview: String(bodyString.prefix(500)),
-            cloudflareChallenge: false,
-            cfMitigated: headers["cf-mitigated"] != nil,
-            notes: nil
-        )
+        case .usageDataAvailable(let utilizationPreview):
+            return makeStep(success: true, responseType: .json, errorType: nil, errorDescription: nil,
+                            preview: "Valid usage data received (utilization: \(utilizationPreview))")
+
+        case .unparsable:
+            return makeStep(success: false, responseType: .unknown, errorType: .decodingError,
+                            errorDescription: L.Error.decodingFailed, preview: bodyPreview)
+        }
     }
 
     // MARK: - Result Builders
 
-    private func buildResult(credentials: [String: String], steps: [DiagnosticStep]) -> ProviderDiagnosticResult {
-        let mainStep = steps.first
-        let success = mainStep?.success ?? false
-        let errorType = mainStep?.errorType
+    private func buildResult(
+        credentials: [String: String],
+        steps: [DiagnosticStep],
+        authPath: ProviderAuthPath = .cookie
+    ) -> ProviderDiagnosticResult {
+        // 多步路径（OAuth 是「换 token → 拉用量」两步）必须全部通过才算成功，
+        // 只看 steps.first 会把「token 换到了但用量拿不到」误报成连接正常
+        let failingStep = steps.first { !$0.success }
+        let success = !steps.isEmpty && failingStep == nil
+        let errorType = failingStep?.errorType
 
         let (diagnosis, suggestions, confidence) = diagnosisFor(
             success: success,
             errorType: errorType,
-            cloudflare: mainStep?.cloudflareChallenge ?? false
+            cloudflare: failingStep?.cloudflareChallenge ?? false,
+            authPath: authPath
         )
 
         return ProviderDiagnosticResult(
@@ -202,7 +259,8 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
     private func diagnosisFor(
         success: Bool,
         errorType: DiagnosticErrorType?,
-        cloudflare: Bool
+        cloudflare: Bool,
+        authPath: ProviderAuthPath
     ) -> (diagnosis: String, suggestions: [String], confidence: ProviderDiagnosticResult.ConfidenceLevel) {
         if success {
             return (DiagnosticMessage.diagnosisSuccess, [DiagnosticMessage.suggestionSuccess], .high)
@@ -214,6 +272,19 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
                 DiagnosticMessage.suggestionWaitAndRetry,
                 DiagnosticMessage.suggestionCheckVPN,
                 DiagnosticMessage.suggestionUseSmartMode
+            ], .high)
+        case .authenticationFailed, .invalidCredentials:
+            // OAuth 账号没有 Session Key 可填，指向「重新登录」而不是「核对凭据」
+            if authPath == .oauth {
+                return (DiagnosticMessage.diagnosisOAuthAuthFailed, [
+                    DiagnosticMessage.suggestionReloginOAuth,
+                    DiagnosticMessage.suggestionCheckBrowser
+                ], .high)
+            }
+            return (DiagnosticMessage.diagnosisAuthFailed, [
+                DiagnosticMessage.suggestionUpdateSessionKey,
+                DiagnosticMessage.suggestionVerifyCredentials,
+                DiagnosticMessage.suggestionCheckBrowser
             ], .high)
         case .decodingError:
             return (DiagnosticMessage.diagnosisDecoding, [
@@ -259,6 +330,15 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
         var credentials: [String: String] = [
             "Session Token": SensitiveDataRedactor.redactCodexSessionToken(sessionToken)
         ]
+
+        // 与服务层同一个判定：OAuth 账号的凭据是 refresh_token，拿它当 session-token
+        // Cookie 发给 /api/auth/session 只会得到一个空 session，然后被误报成「session 已过期」。
+        let authPath = ProviderAuthPath.forCodex(credential: sessionToken)
+        credentials["Auth Path"] = authPath.displayName
+        if authPath == .oauth {
+            return await runOAuthPath(credentials: credentials)
+        }
+
         var steps: [DiagnosticStep] = []
 
         // Step 1: /api/auth/session — 用 session-token Cookie 换 accessToken
@@ -287,6 +367,72 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
         return aggregateResult(credentials: credentials, steps: steps)
     }
 
+    // MARK: - OAuth Path
+
+    /// OAuth 账号的诊断：走服务层的真实取数路径，**绝不自己换 token**
+    ///
+    /// 理由同 Claude 侧：OAuth refresh_token 每次续期都会轮换并立刻作废旧值，
+    /// 只有服务层的 `OAuthTokenCache` 路径会把新值写回账号。诊断自己调
+    /// `CodexOAuthService.refresh` 会把新 token 丢掉，点一次就把账号登出。
+    ///
+    /// 也不跑 SSR 探测——那是 cookie 账号的续期兜底，对 OAuth 账号没有意义。
+    private func runOAuthPath(credentials: [String: String]) async -> ProviderDiagnosticResult {
+        let startTime = Date()
+        let result = await CodexAPIService.shared.fetchUsageResult()
+        let responseTime = Date().timeIntervalSince(startTime) * 1000
+
+        let step: DiagnosticStep
+        let diagnosis: String
+        let suggestions: [String]
+
+        switch result {
+        case .success:
+            step = DiagnosticStep(
+                name: "OAuth Usage API", success: true,
+                httpStatusCode: nil, responseTime: responseTime,
+                responseType: .json, errorType: nil, errorDescription: nil,
+                responseHeaders: [:],
+                responseBodyPreview: "Valid Codex usage data received",
+                cloudflareChallenge: false, cfMitigated: false, notes: nil
+            )
+            diagnosis = DiagnosticMessage.diagnosisCodexSuccess
+            suggestions = [DiagnosticMessage.suggestionSuccess]
+
+        case .failure(let error):
+            var isCloudflare = false
+            if let usageError = error as? UsageError, case .cloudflareBlocked = usageError {
+                isCloudflare = true
+            }
+            step = DiagnosticStep(
+                name: "OAuth Usage API", success: false,
+                httpStatusCode: nil, responseTime: responseTime,
+                responseType: .unknown,
+                errorType: isCloudflare ? .cloudflareBlocked : .sessionTokenInvalid,
+                errorDescription: error.localizedDescription,
+                responseHeaders: [:], responseBodyPreview: nil,
+                cloudflareChallenge: isCloudflare, cfMitigated: false, notes: nil
+            )
+            diagnosis = isCloudflare
+                ? DiagnosticMessage.diagnosisCodexUsageCloudflare
+                : DiagnosticMessage.diagnosisCodexOAuthFailed
+            suggestions = isCloudflare
+                ? [DiagnosticMessage.suggestionCodexCheckChatGPTBrowser, DiagnosticMessage.suggestionWaitAndRetry]
+                : [DiagnosticMessage.suggestionReloginOAuth]
+        }
+
+        return ProviderDiagnosticResult(
+            providerType: .codex,
+            credentials: credentials,
+            steps: [step],
+            success: step.success,
+            errorType: step.errorType,
+            diagnosis: diagnosis,
+            suggestions: suggestions,
+            confidence: .high
+        )
+    }
+
+    // MARK: - Step: Session
     // MARK: - Step: Session
 
     private func runSessionStep(sessionToken: String) async -> (step: DiagnosticStep, accessToken: String?) {
@@ -314,47 +460,49 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
 
             let statusCode = httpResponse.statusCode
             let headers = extractSafeHeaders(from: httpResponse)
-
-            if let bodyString = String(data: data, encoding: .utf8) {
-                let isHTML = bodyString.contains("<!DOCTYPE html>") || bodyString.contains("<html")
-                let hasCloudflare = bodyString.localizedCaseInsensitiveContains("cloudflare") ||
-                                    bodyString.contains("Just a moment")
-
-                if isHTML && hasCloudflare {
-                    let step = DiagnosticStep(
-                        name: stepName, success: false,
-                        httpStatusCode: statusCode, responseTime: responseTime,
-                        responseType: .html, errorType: .cloudflareBlocked,
-                        errorDescription: "Cloudflare blocked the session endpoint",
-                        responseHeaders: headers,
-                        responseBodyPreview: String(bodyString.prefix(500)),
-                        cloudflareChallenge: true,
-                        cfMitigated: headers["cf-mitigated"] != nil,
-                        notes: nil
-                    )
-                    return (step, nil)
-                }
+            let cfMitigated = headers["cf-mitigated"] != nil
+            // session 响应带 accessToken，报告要导出，务必先脱敏
+            let bodyPreview = String(data: data, encoding: .utf8).map {
+                SensitiveDataRedactor.redactBodyPreview($0)
             }
 
-            if statusCode == 401 || statusCode == 403 {
-                let step = DiagnosticStep(
-                    name: stepName, success: false,
+            func makeStep(
+                success: Bool,
+                responseType: DiagnosticStep.ResponseType,
+                errorType: DiagnosticErrorType?,
+                errorDescription: String?,
+                preview: String?,
+                cloudflare: Bool = false,
+                notes: String? = nil
+            ) -> DiagnosticStep {
+                DiagnosticStep(
+                    name: stepName, success: success,
                     httpStatusCode: statusCode, responseTime: responseTime,
-                    responseType: .unknown, errorType: .sessionTokenInvalid,
-                    errorDescription: "Session token rejected (HTTP \(statusCode))",
+                    responseType: responseType, errorType: errorType,
+                    errorDescription: errorDescription,
                     responseHeaders: headers,
-                    responseBodyPreview: nil,
-                    cloudflareChallenge: false,
-                    cfMitigated: headers["cf-mitigated"] != nil,
-                    notes: nil
+                    responseBodyPreview: preview,
+                    cloudflareChallenge: cloudflare,
+                    cfMitigated: cfMitigated,
+                    notes: notes
                 )
-                return (step, nil)
             }
 
-            let decoder = JSONDecoder()
-            if let sessionResponse = try? decoder.decode(CodexSessionResponse.self, from: data),
-               let accessToken = sessionResponse.accessToken, !accessToken.isEmpty {
+            switch DiagnosticResponseClassifier.classifyCodexSession(statusCode: statusCode, body: data) {
+            case .cloudflareChallenge:
+                let step = makeStep(success: false, responseType: .html, errorType: .cloudflareBlocked,
+                                    errorDescription: "Cloudflare blocked the session endpoint",
+                                    preview: bodyPreview, cloudflare: true)
+                return (step, nil)
 
+            case .sessionRejected(let detail):
+                // 未登录时 chatgpt.com 返回 200 + 只有 WARNING_BANNER 的空 body。曾被当成
+                // 解析失败，导致下游 diagnoseCodex 匹配不到任何分支、退化成 Unknown（Issue #84）。
+                let step = makeStep(success: false, responseType: .json, errorType: .sessionTokenInvalid,
+                                    errorDescription: detail, preview: bodyPreview)
+                return (step, nil)
+
+            case .authenticated(let accessToken, let email):
                 var notes: String? = nil
                 if let expDate = jwtExpiry(from: accessToken) {
                     let remaining = expDate.timeIntervalSince(Date())
@@ -365,34 +513,17 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
                         notes = "Access token is already expired"
                     }
                 }
-
-                let step = DiagnosticStep(
-                    name: stepName, success: true,
-                    httpStatusCode: statusCode, responseTime: responseTime,
-                    responseType: .json, errorType: nil, errorDescription: nil,
-                    responseHeaders: headers,
-                    responseBodyPreview: "Session response received (user: \(sessionResponse.user?.email ?? "unknown"))",
-                    cloudflareChallenge: false,
-                    cfMitigated: headers["cf-mitigated"] != nil,
-                    notes: notes
-                )
+                let step = makeStep(success: true, responseType: .json, errorType: nil, errorDescription: nil,
+                                    preview: "Session response received (user: \(email ?? "unknown"))",
+                                    notes: notes)
                 return (step, accessToken)
-            }
 
-            // 解析失败
-            let bodyPreview = String(data: data, encoding: .utf8).map { String($0.prefix(500)) }
-            let step = DiagnosticStep(
-                name: stepName, success: false,
-                httpStatusCode: statusCode, responseTime: responseTime,
-                responseType: .unknown, errorType: .decodingError,
-                errorDescription: "Session response could not be parsed",
-                responseHeaders: headers,
-                responseBodyPreview: bodyPreview,
-                cloudflareChallenge: false,
-                cfMitigated: headers["cf-mitigated"] != nil,
-                notes: nil
-            )
-            return (step, nil)
+            case .unparsable:
+                let step = makeStep(success: false, responseType: .unknown, errorType: .decodingError,
+                                    errorDescription: "Session response could not be parsed",
+                                    preview: bodyPreview)
+                return (step, nil)
+            }
 
         } catch {
             let responseTime = Date().timeIntervalSince(startTime) * 1000
@@ -477,7 +608,9 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
                 )
             }
 
-            let bodyPreview = data.isEmpty ? nil : String(data: data, encoding: .utf8).map { String($0.prefix(500)) }
+            let bodyPreview = data.isEmpty ? nil : String(data: data, encoding: .utf8).map {
+                SensitiveDataRedactor.redactBodyPreview($0)
+            }
             return DiagnosticStep(
                 name: stepName, success: false,
                 httpStatusCode: statusCode, responseTime: responseTime,
@@ -674,6 +807,16 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
                 DiagnosticMessage.suggestionCheckInternet,
                 DiagnosticMessage.suggestionCheckFirewall
             ], .high)
+        }
+
+        // 兜底：SSR 刷新是最后一道恢复手段，它都失败了就说明 session 确实没救了。
+        // 上面任何一条分支都没命中时，仍然优先给出这个结论，而不是让报告输出
+        // 「Unknown error，请找开发者」把用户推去提 issue（Issue #84）。
+        if let ssrStep, !ssrStep.success {
+            return (DiagnosticMessage.diagnosisCodexSsrFailed, [
+                DiagnosticMessage.suggestionCodexRelogin,
+                DiagnosticMessage.suggestionCodexClearWebViewCache
+            ], .medium)
         }
 
         return (DiagnosticMessage.diagnosisUnknown, [

@@ -89,4 +89,38 @@ final class SensitiveDataRedactorTests: XCTestCase {
         let text = "no sensitive data here, just a normal log line"
         XCTAssertEqual(SensitiveDataRedactor.redactText(text), text)
     }
+
+    // MARK: - redactBodyPreview
+
+    /// The diagnostic report is meant to be pasted into a public GitHub issue,
+    /// so a session response carrying an accessToken must never survive intact.
+    func testRedactBodyPreviewRedactsAccessTokenField() {
+        let body = #"{"accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijk","user":{"email":"ada@example.com"}}"#
+        let redacted = SensitiveDataRedactor.redactBodyPreview(body)
+
+        XCTAssertFalse(redacted.contains("eyJhbGciOiJIUzI1NiJ9"), "JWT leaked: \(redacted)")
+        XCTAssertTrue(redacted.contains("***REDACTED***"))
+        XCTAssertTrue(redacted.contains("ada@example.com"), "Non-secret context should survive")
+    }
+
+    func testRedactBodyPreviewRedactsBareJWT() {
+        let body = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhYmMifQ.SflKxwRJSMeKKF2QT4"
+        let redacted = SensitiveDataRedactor.redactBodyPreview(body)
+
+        XCTAssertFalse(redacted.contains("SflKxwRJSMeKKF2QT4"))
+        XCTAssertTrue(redacted.contains("***REDACTED_JWT***"))
+    }
+
+    func testRedactBodyPreviewTruncatesToMaxLength() {
+        let body = String(repeating: "a", count: 900)
+        XCTAssertEqual(SensitiveDataRedactor.redactBodyPreview(body).count, 500)
+        XCTAssertEqual(SensitiveDataRedactor.redactBodyPreview(body, maxLength: 10).count, 10)
+    }
+
+    /// The signed-out ChatGPT response holds no secret; it must stay readable so
+    /// the report still shows why the session step failed.
+    func testRedactBodyPreviewLeavesNonSensitiveBodyIntact() {
+        let body = #"{"WARNING_BANNER":"DO NOT SHARE ANY PART OF THE INFORMATION YOU SEE HERE."}"#
+        XCTAssertEqual(SensitiveDataRedactor.redactBodyPreview(body), body)
+    }
 }

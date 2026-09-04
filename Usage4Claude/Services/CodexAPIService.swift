@@ -13,6 +13,15 @@ import Foundation
 ///   1. GET /api/auth/session（用 session-token Cookie）→ 获取 accessToken
 ///   2. GET /backend-api/wham/usage（用 Bearer token）→ 获取用量数据
 class CodexAPIService {
+    // MARK: - Properties
+
+    /// 一次性校验与诊断场景复用的共享实例。
+    ///
+    /// 与 `ClaudeAPIService.shared` 同理：OAuth token 的单飞与轮换写回都挂在实例的
+    /// `OAuthTokenCache` 上，短生命周期的局部实例会绕开它们。诊断尤其不能另起炉灶——
+    /// refresh_token 每次续期都会轮换，换回来的新值若不经服务层写回就等于把账号登出。
+    static let shared = CodexAPIService()
+
 
     // MARK: - Properties
 
@@ -120,10 +129,11 @@ class CodexAPIService {
 
     // MARK: - Private: Step 1 — 凭据 → accessToken
 
-    /// 判断账户凭据是否为 OAuth refresh_token（OpenAI 格式以 "rt." 开头）
-    /// 旧 session-token 是 next-auth 加密串，不会命中此前缀
+    /// 判断账户凭据是否为 OAuth refresh_token
+    ///
+    /// 判定规则收在 `ProviderAuthPath`，诊断层与此共用同一处，避免两边脱钩
     static func isOAuthRefreshToken(_ credential: String) -> Bool {
-        credential.hasPrefix("rt.")
+        ProviderAuthPath.forCodex(credential: credential) == .oauth
     }
 
     /// 第一步：用账户凭据换取 accessToken
