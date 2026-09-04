@@ -13,6 +13,47 @@ import SwiftUI
 /// 负责绘制非圆形图标（矩形、菱形、六边形）的进度环
 class ShapeIconRenderer {
 
+    // MARK: - Metrics
+
+    // 画布尺寸由调用方（MenuBarIconRenderer）按用户设置传入，本类型保持无状态。
+    //
+    // 以下所有绘制参数都写成「原始设计值 / 当时的基准」的比例形式，而不是小数：
+    // 这些图形最初是在 18pt 画布（内缩 2pt 后 14pt 绘制区、六边形直径 16pt）上逐个
+    // 调出来的，保留原始数字既能一眼看出设计意图，也保证换算回 18pt 时逐像素不变。
+
+    /// 画布到绘制区的内缩比例（原 18pt 画布上内缩 2pt）
+    private static let insetRatio: CGFloat = 2.0 / 18.0
+
+    // 以下比例相对「绘制区宽度」（原基准为 14pt）
+    private static let cornerRadiusRatio: CGFloat = 3.0 / 14.0
+    private static let borderWidthRatio: CGFloat = 1.5 / 14.0
+    private static let progressWidthRatio: CGFloat = 2.5 / 14.0
+    /// 菱形右上角斜切大小
+    private static let chamferRatio: CGFloat = 3.5 / 14.0
+    private static let fontRatio: CGFloat = 7.2 / 14.0
+    /// 满 100% 时要塞下三位数，字号相应收小
+    private static let fontRatioAtFull: CGFloat = 5.0 / 14.0
+
+    /// 六边形直径相对画布的比例（原 18pt 画布上直径 16pt）
+    private static let hexagonDiameterRatio: CGFloat = 16.0 / 18.0
+
+    // 以下比例相对「六边形直径」（原基准为 16pt）
+    private static let hexBorderWidthRatio: CGFloat = 1.5 / 16.0
+    private static let hexProgressWidthRatio: CGFloat = 2.5 / 16.0
+    private static let hexFontRatio: CGFloat = 7.2 / 16.0
+    private static let hexFontRatioAtFull: CGFloat = 5.0 / 16.0
+
+    /// 绘制区尺寸相对画布内缩后的结果，供入口方法统一使用
+    private static func drawingRect(in size: NSSize) -> NSRect {
+        let inset = size.width * insetRatio
+        return NSRect(x: 0, y: 0, width: size.width, height: size.height).insetBy(dx: inset, dy: inset)
+    }
+
+    /// 百分比文字字号：按绘制区宽度等比缩放，满 100% 时收小以容纳三位数
+    private static func scaledFontSize(forWidth width: CGFloat, percentage: Double) -> CGFloat {
+        width * (percentage >= 100 ? fontRatioAtFull : fontRatio)
+    }
+
     // MARK: - Helper Methods
 
     /// 计算单色主题下的不透明度（基于百分比）
@@ -38,9 +79,10 @@ class ShapeIconRenderer {
     ///   - button: 状态栏按钮（用于获取颜色）
     ///   - removeBackground: 是否移除背景填充
     static func drawRoundedSquareWithPercentage(in rect: NSRect, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
-        let cornerRadius: CGFloat = 3.0
-        let borderWidth: CGFloat = 1.5
-        let progressWidth: CGFloat = 2.5  // 进度线条加粗
+        // 全部按绘制区宽度等比推导，画布尺寸变化时图形整体缩放
+        let cornerRadius = rect.width * cornerRadiusRatio
+        let borderWidth = rect.width * borderWidthRatio
+        let progressWidth = rect.width * progressWidthRatio  // 进度线条加粗
         let center = NSPoint(x: rect.midX, y: rect.midY)
 
         // 1. 绘制背景填充（彩色背景模式）
@@ -149,7 +191,7 @@ class ShapeIconRenderer {
 
         // 3. 绘制百分比文字
         let percentageText = "\(Int(percentage))"
-        let percentageFontSize: CGFloat = percentage >= 100 ? 5.0 : 7.2
+        let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: percentage)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
@@ -168,10 +210,10 @@ class ShapeIconRenderer {
     ///   - removeBackground: 是否移除背景填充
     static func drawDiamondWithPercentage(in rect: NSRect, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
         // 完全复制Opus的参数设置
-        let cornerRadius: CGFloat = 3.0
-        let borderWidth: CGFloat = 1.5
-        let progressWidth: CGFloat = 2.5  // 进度线条加粗
-        let cutSize: CGFloat = 3.5  // 右上角斜切大小（微调小一点）
+        let cornerRadius = rect.width * cornerRadiusRatio
+        let borderWidth = rect.width * borderWidthRatio
+        let progressWidth = rect.width * progressWidthRatio  // 进度线条加粗
+        let cutSize = rect.width * chamferRatio  // 右上角斜切大小（微调小一点）
         let center = NSPoint(x: rect.midX, y: rect.midY)
 
         // 创建右上角斜切的圆角矩形路径（与Opus相同，只是右上角砍掉）
@@ -332,7 +374,7 @@ class ShapeIconRenderer {
 
         // 3. 绘制百分比文字（与Opus完全一致）
         let percentageText = "\(Int(percentage))"
-        let percentageFontSize: CGFloat = percentage >= 100 ? 5.0 : 7.2
+        let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: percentage)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
@@ -352,8 +394,9 @@ class ShapeIconRenderer {
     ///   - removeBackground: 是否移除背景填充
     static func drawHexagonWithPercentage(center: NSPoint, size: CGFloat, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) {
         let radius = size / 2
-        let borderWidth: CGFloat = 1.5
-        let progressWidth: CGFloat = 2.5  // 进度线条加粗
+        // 六边形的基准是直径而非绘制区，比例常量单独一套
+        let borderWidth = size * hexBorderWidthRatio
+        let progressWidth = size * hexProgressWidthRatio  // 进度线条加粗
 
         // 创建平顶六边形路径（flat top - 上下两边是平的）
         let hexagonPath = NSBezierPath()
@@ -456,7 +499,7 @@ class ShapeIconRenderer {
 
         // 3. 绘制百分比文字
         let percentageText = "\(Int(percentage))"
-        let percentageFontSize: CGFloat = percentage >= 100 ? 5.0 : 7.2
+        let percentageFontSize = size * (percentage >= 100 ? hexFontRatioAtFull : hexFontRatio)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
@@ -471,16 +514,17 @@ class ShapeIconRenderer {
     /// 创建圆角正方形图标（Opus）
     /// - Parameters:
     ///   - percentage: 使用百分比
+    ///   - canvasSize: 图标画布边长，由用户的菜单栏图标尺寸设置决定
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景填充
-    /// - Returns: 图标图像 (18×18)
-    static func createVerticalRectangleIcon(percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+    /// - Returns: 图标图像（边长为 canvasSize）
+    static func createVerticalRectangleIcon(percentage: Double, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+        let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
-        let rect = NSRect(x: 0, y: 0, width: size.width, height: size.height).insetBy(dx: 2, dy: 2)
+        let rect = drawingRect(in: size)
         drawRoundedSquareWithPercentage(in: rect, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         image.unlockFocus()
@@ -491,16 +535,17 @@ class ShapeIconRenderer {
     /// 创建菱形图标（Sonnet - 45度旋转的正方形）
     /// - Parameters:
     ///   - percentage: 使用百分比
+    ///   - canvasSize: 图标画布边长，由用户的菜单栏图标尺寸设置决定
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景填充
-    /// - Returns: 图标图像 (18×18)
-    static func createHorizontalRectangleIcon(percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+    /// - Returns: 图标图像（边长为 canvasSize）
+    static func createHorizontalRectangleIcon(percentage: Double, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+        let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
-        let rect = NSRect(x: 0, y: 0, width: size.width, height: size.height).insetBy(dx: 2, dy: 2)
+        let rect = drawingRect(in: size)
         drawDiamondWithPercentage(in: rect, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         image.unlockFocus()
@@ -511,17 +556,19 @@ class ShapeIconRenderer {
     /// 创建平顶六边形图标（Extra Usage）
     /// - Parameters:
     ///   - percentage: 使用百分比
+    ///   - canvasSize: 图标画布边长，由用户的菜单栏图标尺寸设置决定
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景（默认false）
-    /// - Returns: 图标图像 (18×18)
-    static func createHexagonIcon(percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+    /// - Returns: 图标图像（边长为 canvasSize）
+    static func createHexagonIcon(percentage: Double, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) -> NSImage {
+        let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
-        drawHexagonWithPercentage(center: center, size: 16, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: colorOverride)
+        let diameter = size.width * hexagonDiameterRatio
+        drawHexagonWithPercentage(center: center, size: diameter, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: colorOverride)
 
         image.unlockFocus()
         image.isTemplate = isMonochrome

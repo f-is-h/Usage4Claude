@@ -18,10 +18,14 @@ class MenuBarIconRenderer {
     
     /// 用户设置实例
     private let settings: UserSettings
-    /// 菜单栏品牌图标尺寸
-    private let providerBrandIconSize: CGFloat = 16
-    /// 菜单栏指标图标尺寸
-    private let metricIconSize: CGFloat = 18
+    /// 菜单栏指标图标尺寸，由用户在「通用 → 显示设置」选择的档位决定。
+    /// 圆环、矩形、菱形、六边形以及无数据占位都必须走这里，否则切换状态或形状时图标会跳变
+    private var metricIconSize: CGFloat { settings.menuBarIconSize.pointSize }
+
+    /// 菜单栏品牌图标（Claude / Codex logo）尺寸。
+    /// 按 16/18 的原始比例跟随指标图标缩放：实心 logo 的视觉重量比空心圆环大，
+    /// 略小才平衡；写死成 16 会让它随着指标图标放大而相对越缩越小
+    private var providerBrandIconSize: CGFloat { metricIconSize * (16.0 / 18.0) }
     
     // MARK: - Initialization
     
@@ -72,7 +76,7 @@ class MenuBarIconRenderer {
         } else {
             // Claude-only 路径（原有逻辑）
             guard let data = usageData else {
-                let size = NSSize(width: 22, height: 22)
+                let size = NSSize(width: metricIconSize, height: metricIconSize)
                 let defaultIcon: NSImage
                 if settings.iconDisplayMode == .none {
                     defaultIcon = createMenuBarDividerIcon(isMonochrome: isMonochrome)
@@ -438,7 +442,7 @@ class MenuBarIconRenderer {
 
     /// 创建简单圆形图标（备用）
     private func createSimpleCircleIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+        let size = NSSize(width: metricIconSize, height: metricIconSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -541,29 +545,29 @@ class MenuBarIconRenderer {
             let percentage = data.fiveHour?.percentage ?? (showPlaceholder ? 0 : nil)
             guard let percentage = percentage else { return nil }
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
             } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: removeBackground)
+                return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: removeBackground)
             }
 
         case .sevenDay:
             let percentage = data.sevenDay?.percentage ?? (showPlaceholder ? 0 : nil)
             guard let percentage = percentage else { return nil }
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
             } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayColor: true, button: button, removeBackground: removeBackground)
+                return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayColor: true, button: button, removeBackground: removeBackground)
             }
 
         case .opusWeekly:
             let percentage = data.opus?.percentage ?? (showPlaceholder ? 0 : nil)
             guard let percentage = percentage else { return nil }
-            return ShapeIconRenderer.createVerticalRectangleIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            return ShapeIconRenderer.createVerticalRectangleIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         case .sonnetWeekly:
             let percentage = data.sonnet?.percentage ?? (showPlaceholder ? 0 : nil)
             guard let percentage = percentage else { return nil }
-            return ShapeIconRenderer.createHorizontalRectangleIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            return ShapeIconRenderer.createHorizontalRectangleIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         case .extraUsage:
             let percentage: Double?
@@ -575,7 +579,7 @@ class MenuBarIconRenderer {
                 percentage = nil
             }
             guard let percentage = percentage else { return nil }
-            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         case .codexPrimary, .codexSecondary, .codexExtraUsage:
             // Codex 数据在 Phase 4 通过 createCodexIcon 独立渲染
@@ -596,21 +600,21 @@ class MenuBarIconRenderer {
         switch type {
         case .codexPrimary:
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
             }
             let color = UsageColorScheme.codexPrimaryColorAdaptive(percentage, for: button)
-            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), colorOverride: color, button: button, removeBackground: removeBackground)
+            return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, button: button, removeBackground: removeBackground)
 
         case .codexSecondary:
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: 18, height: 18), useSevenDayStyle: true, button: button, removeBackground: true)
+                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
             }
             let color = UsageColorScheme.codexSecondaryColorAdaptive(percentage, for: button)
-            return createCircleImage(percentage: percentage, size: NSSize(width: 18, height: 18), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
+            return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
 
         case .codexExtraUsage:
             let color = UsageColorScheme.codexExtraUsageColorAdaptive(percentage, for: button)
-            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
+            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
 
         default:
             return nil

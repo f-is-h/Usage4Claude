@@ -54,6 +54,7 @@
 "settings.general.menubar_icon" = "메뉴바 아이콘";
 "settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
 "settings.general.menubar_theme" = "메뉴바 테마";
+"settings.general.menubar_icon_size" = "아이콘 크기";
 "settings.general.display_content" = "표시 내용";
 "settings.general.monochrome_no_icon_hint" = "단색 테마에서는 아이콘 표시를 지원하지 않습니다";
 "settings.general.refresh_section" = "새로고침 설정";
@@ -71,6 +72,10 @@
 "icon_style.color_translucent_desc" = "컬러 링, 투명 배경, 대부분의 메뉴바 스타일에 적합";
 "icon_style.color_with_background_desc" = "컬러 링과 반투명 흰색 배경, 어두운 배경에서 컬러 반투명이 잘 보이지 않을 때 적합";
 "icon_style.monochrome_desc" = "시스템 메뉴바 스타일에 자동 적응, 간결하고 우아함";
+
+"menu_bar_icon_size.small" = "작게";
+"menu_bar_icon_size.medium" = "표준";
+"menu_bar_icon_size.large" = "크게";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "Claude 인증 정보 얻는 방법";

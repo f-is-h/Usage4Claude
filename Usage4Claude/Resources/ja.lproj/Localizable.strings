@@ -54,6 +54,7 @@
 "settings.general.menubar_icon" = "メニューバーアイコン";
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
 "settings.general.menubar_theme" = "メニューバーテーマ";
+"settings.general.menubar_icon_size" = "アイコンサイズ";
 "settings.general.display_content" = "表示内容";
 "settings.general.monochrome_no_icon_hint" = "モノクロームテーマではアイコン表示に対応していません";
 "settings.general.refresh_section" = "更新設定";
@@ -71,6 +72,10 @@
 "icon_style.color_translucent_desc" = "カラーリング、背景透明、ほとんどのメニューバースタイルに適しています";
 "icon_style.color_with_background_desc" = "カラーリングと半透明の白い背景、ダークな壁紙でカラー透明のパフォーマンスが悪い場合に最適";
 "icon_style.monochrome_desc" = "システムメニューバースタイルに自動適応、シンプルでエレガント";
+
+"menu_bar_icon_size.small" = "コンパクト";
+"menu_bar_icon_size.medium" = "標準";
+"menu_bar_icon_size.large" = "大きめ";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "Claude認証情報の取得方法";

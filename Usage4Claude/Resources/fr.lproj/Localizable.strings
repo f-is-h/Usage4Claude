@@ -54,6 +54,7 @@
 "settings.general.menubar_icon" = "Icône de la barre des menus";
 "settings.general.menubar_hint" = "Choisir ce qui s'affiche dans la barre des menus";
 "settings.general.menubar_theme" = "Thème de la barre des menus";
+"settings.general.menubar_icon_size" = "Taille des icônes";
 "settings.general.display_content" = "Contenu affiché";
 "settings.general.monochrome_no_icon_hint" = "L'affichage de l'icône n'est pas disponible avec le thème monochrome";
 "settings.general.refresh_section" = "Réglages d'actualisation";
@@ -71,6 +72,10 @@
 "icon_style.color_translucent_desc" = "Anneaux colorés sur fond transparent, adapté à la plupart des styles de barre des menus";
 "icon_style.color_with_background_desc" = "Anneaux colorés sur fond blanc translucide, idéal lorsque le mode translucide rend mal sur les fonds sombres";
 "icon_style.monochrome_desc" = "S'adapte automatiquement au style de la barre des menus, sobre et élégant";
+
+"menu_bar_icon_size.small" = "Compacte";
+"menu_bar_icon_size.medium" = "Standard";
+"menu_bar_icon_size.large" = "Grande";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "Comment obtenir les informations d'authentification";

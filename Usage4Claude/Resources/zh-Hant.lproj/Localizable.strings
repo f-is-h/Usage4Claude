@@ -54,6 +54,7 @@
 "settings.general.menubar_icon" = "選單列圖示";
 "settings.general.menubar_hint" = "選擇選單列中顯示的內容";
 "settings.general.menubar_theme" = "選單列主題";
+"settings.general.menubar_icon_size" = "圖示大小";
 "settings.general.display_content" = "顯示內容";
 "settings.general.monochrome_no_icon_hint" = "單色主題下不支援顯示圖示";
 "settings.general.refresh_section" = "重新整理設定";
@@ -71,6 +72,10 @@
 "icon_style.color_translucent_desc" = "彩色圓環，背景透明，適合大部分選單列樣式";
 "icon_style.color_with_background_desc" = "彩色圓環帶半透明白色背景，適合彩色通透主題在深色壁紙表現不佳時";
 "icon_style.monochrome_desc" = "自動適應系統選單列樣式，簡潔優雅";
+
+"menu_bar_icon_size.small" = "緊湊";
+"menu_bar_icon_size.medium" = "標準";
+"menu_bar_icon_size.large" = "醒目";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "如何取得Claude認證資訊";

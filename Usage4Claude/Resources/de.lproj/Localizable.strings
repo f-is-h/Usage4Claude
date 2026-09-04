@@ -53,6 +53,7 @@
 "settings.general.menubar_icon" = "Menüleisten-Symbol";
 "settings.general.menubar_hint" = "Legt fest, was in der Menüleiste angezeigt wird";
 "settings.general.menubar_theme" = "Menüleisten-Theme";
+"settings.general.menubar_icon_size" = "Symbolgröße";
 "settings.general.display_content" = "Angezeigter Inhalt";
 "settings.general.monochrome_no_icon_hint" = "Die Symbolanzeige wird im einfarbigen Theme nicht unterstützt";
 "settings.general.refresh_section" = "Aktualisierungseinstellungen";
@@ -70,6 +71,10 @@
 "icon_style.color_translucent_desc" = "Farbige Ringe mit transparentem Hintergrund, passend für die meisten Menüleisten-Stile";
 "icon_style.color_with_background_desc" = "Farbige Ringe mit transparent-weißem Hintergrund, ideal wenn „Farbig transparent“ auf dunklen Hintergründen schlecht wirkt";
 "icon_style.monochrome_desc" = "Passt sich automatisch dem Stil der System-Menüleiste an, schlicht und elegant";
+
+"menu_bar_icon_size.small" = "Kompakt";
+"menu_bar_icon_size.medium" = "Standard";
+"menu_bar_icon_size.large" = "Groß";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "So lassen sich die Claude-Anmeldedaten ermitteln";

@@ -39,6 +39,35 @@ enum IconDisplayMode: String, CaseIterable, Codable {
     }
 }
 
+/// 菜单栏图标尺寸档位。
+/// 菜单栏本身高 22pt（刘海机型更高），叠加显示器 DPI 与视力差异，不存在对所有人都合适的
+/// 单一取值，因此交由用户选择。取值即绘制画布的边长，圆环与不规则图标共用。
+enum MenuBarIconSize: String, CaseIterable, Codable {
+    /// 紧凑（3.3.0 及之前的固定值）
+    case small = "small"
+    /// 标准（默认）
+    case medium = "medium"
+    /// 醒目——在非刘海机型上几乎贴满 22pt 菜单栏，上下无留白
+    case large = "large"
+
+    /// 图标绘制画布边长（pt）
+    var pointSize: CGFloat {
+        switch self {
+        case .small: return 18
+        case .medium: return 20
+        case .large: return 22
+        }
+    }
+
+    var localizedName: String {
+        switch self {
+        case .small: return L.IconSize.small
+        case .medium: return L.IconSize.medium
+        case .large: return L.IconSize.large
+        }
+    }
+}
+
 /// 菜单栏图标样式模式
 enum IconStyleMode: String, CaseIterable, Codable {
     /// 彩色通透（默认，彩色无背景）
@@ -409,6 +438,14 @@ class UserSettings: ObservableObject {
         }
     }
     
+    /// 菜单栏图标尺寸档位
+    @Published var menuBarIconSize: MenuBarIconSize {
+        didSet {
+            defaults.set(menuBarIconSize.rawValue, forKey: "menuBarIconSize")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 刷新模式（智能/固定）
     @Published var refreshMode: RefreshMode {
         didSet {
@@ -817,6 +854,13 @@ class UserSettings: ObservableObject {
             self.iconStyleMode = .colorTranslucent  // 默认彩色通透
         }
         
+        if let sizeString = defaults.string(forKey: "menuBarIconSize"),
+           let size = MenuBarIconSize(rawValue: sizeString) {
+            self.menuBarIconSize = size
+        } else {
+            self.menuBarIconSize = .medium  // 默认标准尺寸
+        }
+
         // 加载刷新模式，默认为智能模式
         if let modeString = defaults.string(forKey: "refreshMode"),
            let mode = RefreshMode(rawValue: modeString) {
@@ -980,6 +1024,7 @@ class UserSettings: ObservableObject {
         appearance = .system
         iconDisplayMode = .percentageOnly
         iconStyleMode = .colorTranslucent
+        menuBarIconSize = .medium
         refreshMode = .smart
         refreshInterval = 180  // 固定模式默认3分钟
         language = Self.detectSystemLanguage()

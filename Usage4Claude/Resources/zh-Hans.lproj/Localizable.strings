@@ -54,6 +54,7 @@
 "settings.general.menubar_icon" = "菜单栏图标";
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
 "settings.general.menubar_theme" = "菜单栏主题";
+"settings.general.menubar_icon_size" = "图标大小";
 "settings.general.display_content" = "显示内容";
 "settings.general.monochrome_no_icon_hint" = "单色主题下不支持显示图标";
 "settings.general.refresh_section" = "刷新设置";
@@ -71,6 +72,10 @@
 "icon_style.color_translucent_desc" = "彩色圆环，背景透明，适合大部分菜单栏样式";
 "icon_style.color_with_background_desc" = "彩色圆环带半透明白色背景，适合彩色通透主题在深色壁纸表现不佳时";
 "icon_style.monochrome_desc" = "自动适应系统菜单栏样式，简洁优雅";
+
+"menu_bar_icon_size.small" = "紧凑";
+"menu_bar_icon_size.medium" = "标准";
+"menu_bar_icon_size.large" = "醒目";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "如何获取Claude认证信息";

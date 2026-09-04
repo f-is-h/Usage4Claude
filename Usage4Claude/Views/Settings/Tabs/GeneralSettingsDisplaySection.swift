@@ -54,6 +54,25 @@ struct GeneralSettingsDisplaySection: View {
 
                 Divider()
 
+                // 图标大小选择
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L.SettingsGeneral.menubarIconSize)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+
+                    Picker("", selection: $settings.menuBarIconSize) {
+                        ForEach(MenuBarIconSize.allCases, id: \.self) { size in
+                            Text(size.localizedName).tag(size)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .focusable(false)
+                }
+
+                Divider()
+
                 // 显示内容选择
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L.SettingsGeneral.displayContent)

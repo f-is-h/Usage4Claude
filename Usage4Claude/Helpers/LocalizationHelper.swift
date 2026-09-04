@@ -94,6 +94,7 @@ enum L {
         static var menubarIcon: String { localized("settings.general.menubar_icon") }
         static var menubarHint: String { localized("settings.general.menubar_hint") }
         static var menubarTheme: String { localized("settings.general.menubar_theme") }
+        static var menubarIconSize: String { localized("settings.general.menubar_icon_size") }
         static var displayContent: String { localized("settings.general.display_content") }
         static var monochromeNoIconHint: String { localized("settings.general.monochrome_no_icon_hint") }
         static var refreshSection: String { localized("settings.general.refresh_section") }
@@ -216,6 +217,12 @@ enum L {
     }
     
     // MARK: - Icon Style Mode
+    enum IconSize {
+        static var small: String { localized("menu_bar_icon_size.small") }
+        static var medium: String { localized("menu_bar_icon_size.medium") }
+        static var large: String { localized("menu_bar_icon_size.large") }
+    }
+
     enum IconStyle {
         static var colorTranslucent: String { localized("icon_style.color_translucent") }
         static var colorWithBackground: String { localized("icon_style.color_with_background") }
