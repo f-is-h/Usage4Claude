@@ -254,6 +254,22 @@ jobs:
         run: |
           echo "Building Usage4Claude..."
           ./scripts/build.sh --config ${{ env.BUILD_CONFIG }}
+
+      # build.sh 把 xcodebuild 的输出写进 build.log 而不是 stdout，构建失败时
+      # CI 日志里只剩一句 "exit code 65"，看不到编译错误。把它打出来，
+      # 否则只能靠本地复现——而本地 SDK 与 CI 钉死的 Xcode 未必一致。
+      - name: Show build log on failure
+        if: failure()
+        run: |
+          LOG=$(find build -name build.log -maxdepth 2 2>/dev/null | head -1)
+          if [[ -n "$LOG" ]]; then
+            echo "===== $LOG (last 200 lines) ====="
+            tail -200 "$LOG"
+            echo "===== compile errors ====="
+            grep -E "error:" "$LOG" | head -40 || echo "(no lines matched 'error:')"
+          else
+            echo "No build.log found under build/"
+          fi
       
       - name: Generate SHA256 checksum
         run: |

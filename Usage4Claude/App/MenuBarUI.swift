@@ -425,15 +425,27 @@ class MenuBarUI {
     }
 
     /// 为菜单项赋图标，并声明图标始终可见
+    ///
     /// macOS 27 起 AppKit 接管了菜单项图标的显示决策，默认会隐藏图标，
-    /// 必须显式声明 .visible 才会显示
+    /// 必须显式声明 visible 才会显示。
+    ///
+    /// 这里刻意用 KVC 而不是直接写 `item.preferredImageVisibility = .visible`：
+    /// 那个符号带 `API_AVAILABLE(macos(27.0))`，只存在于 macOS 27 SDK，而发版 CI
+    /// 固定用 Xcode 26.6 构建（见 .github/workflows/release.yml 的版本钉死说明），
+    /// 直接引用会编译不过。`#available` 只保证运行时可用性，无法让编译期缺失的符号
+    /// 凭空出现，所以换成运行时查找——`responds(to:)` 同时兼作低版本系统的守卫。
+    ///
+    /// - Note: CI 升到带 macOS 27 SDK 的 Xcode 之后，可以换回类型安全的写法。
     /// - Parameters:
     ///   - image: 图标
     ///   - item: 菜单项
     private func assignIcon(_ image: NSImage, to item: NSMenuItem) {
         item.image = image
-        if #available(macOS 27.0, *) {
-            item.preferredImageVisibility = .visible
+
+        // NSMenuItemImageVisibilityVisible == 1
+        let setter = NSSelectorFromString("setPreferredImageVisibility:")
+        if item.responds(to: setter) {
+            item.setValue(NSNumber(value: 1), forKey: "preferredImageVisibility")
         }
     }
 
