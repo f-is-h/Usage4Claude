@@ -117,8 +117,14 @@ enum ClaudeOAuthService {
             if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
                 let bodyText = String(data: data, encoding: .utf8) ?? ""
                 AppLog.error(.auth, "Claude OAuth token request returned HTTP \(http.statusCode): \(bodyText.prefix(200))")
-                completion(.failure(http.statusCode == 401 ? UsageError.unauthorized
-                                    : UsageError.httpError(statusCode: http.statusCode)))
+                // 授权失效必须报成 sessionExpired，界面才会引导「重新登录」。
+                // 只看 401 会漏掉 Anthropic 的 400 + invalid_grant，那时界面提示的是
+                // 「运行诊断」——诊断修不了一个已经死掉的授权。
+                completion(.failure(
+                    OAuthGrantFailure.isDeadGrant(statusCode: http.statusCode, body: bodyText)
+                        ? UsageError.sessionExpired
+                        : UsageError.httpError(statusCode: http.statusCode)
+                ))
                 return
             }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

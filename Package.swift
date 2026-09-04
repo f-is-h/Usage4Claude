@@ -43,7 +43,8 @@ let package = Package(
                 "Models/Account.swift",
                 "Models/AccountTokenRotation.swift",
                 "Models/CodexSessionTokenRotation.swift",
-                "Models/ProviderAuthPath.swift"
+                "Models/ProviderAuthPath.swift",
+                "Helpers/OAuthGrantFailure.swift"
             ]
         ),
         .testTarget(
