@@ -190,11 +190,11 @@ final class CodexWebLoginCoordinator: ObservableObject {
             guard let self = self else { return }
 
             switch result {
-            case .success(let info):
+            case .success(let validation):
                 let account = Account(
                     sessionKey: sessionToken,
-                    organizationId: info.email,
-                    organizationName: info.displayName,
+                    organizationId: validation.email,
+                    organizationName: validation.displayName,
                     alias: nil,
                     provider: .codex
                 )

@@ -34,6 +34,10 @@ final class CodexSilentRefreshCoordinator: NSObject {
     /// 刷新最长跑 25 秒，期间用户可能切换账号，因此写回时用它反查账号而不是取「当前账号」
     private var refreshingFromToken: String?
 
+    /// 用于在写回前校验新 session-token。校验成功返回的 accessToken 是
+    /// 「会话确实已登录」的证明，见 `CodexSessionTokenRotation`。
+    private let apiService = CodexAPIService()
+
     private let timeoutInterval: TimeInterval = 25
     private let safariUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
 
@@ -170,17 +174,44 @@ final class CodexSilentRefreshCoordinator: NSObject {
                 return
             }
 
-            // 与发起刷新时捕获的 token 比较并据此写回：期间用户可能已切换账号，
+            // 与发起刷新时捕获的 token 比较：期间用户可能已切换账号，
             // 取「当前账号」会把本账号的新 token 写进别人的条目
             let originalToken = self.refreshingFromToken ?? ""
-            if newToken != originalToken {
-                AppLog.event(.auth, "Silent WebView refresh obtained a new session-token; writing it back to the Keychain")
-                UserSettings.shared.silentlyUpdateCodexSessionToken(newToken, replacing: originalToken)
-            } else {
+            guard let pendingRotation = CodexSessionTokenRotation.pending(
+                candidate: newToken, replacing: originalToken
+            ) else {
                 AppLog.event(.auth, "Silent WebView refresh returned the same session-token; the server did not renew it")
+                self.finish(result: .success(newToken))
+                return
             }
 
-            self.finish(result: .success(newToken))
+            // 这条路径手里只有 cookie，没有任何东西能证明会话已登录：chatgpt.com
+            // 在未登录时同样会下发一个全新的匿名 session-token。所以先校验再写回，
+            // 否则会把匿名 token 覆盖掉用户的真 token，账号被永久登出。
+            let cookieHeader = chatgptCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+            AppLog.event(.auth, "Silent WebView refresh obtained a new session-token; validating it before writing it back")
+
+            DispatchQueue.main.async {
+                self.apiService.validateSessionToken(newToken, cookieHeader: cookieHeader) { [weak self] result in
+                    guard let self else { return }
+                    switch result {
+                    case .success(let validation):
+                        guard let rotation = pendingRotation.authorized(by: validation.accessToken) else {
+                            AppLog.error(.auth, "Silent WebView refresh validation returned no proof of an authenticated session; discarding the new token")
+                            self.finish(result: .failure(UsageError.sessionExpired))
+                            return
+                        }
+                        AppLog.event(.auth, "Silent WebView refresh validated the new session-token; writing it back to the Keychain")
+                        UserSettings.shared.silentlyUpdateCodexSessionToken(rotation.newToken, replacing: rotation.replacing)
+                        self.finish(result: .success(rotation.newToken))
+
+                    case .failure(let error):
+                        // 校验失败说明这是个未登录的会话，绝不能写回
+                        AppLog.error(.auth, "Silent WebView refresh could not validate the new session-token (\(error.localizedDescription)); discarding it rather than overwriting the stored one")
+                        self.finish(result: .failure(error))
+                    }
+                }
+            }
         }
     }
 

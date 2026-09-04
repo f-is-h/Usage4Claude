@@ -254,6 +254,18 @@ extension CodexUsageData.LimitData {
 
 /// Codex /api/auth/session 响应模型
 /// 用于获取 Bearer accessToken
+/// 一次成功的 session-token 校验结果
+///
+/// 带出 `accessToken` 是刻意的：服务端只会为**已登录**会话返回它，所以它就是
+/// 「这个 session-token 确实处于已登录状态」的证明。写回轮换后的 session-token
+/// 必须凭它放行，详见 `CodexSessionTokenRotation`。
+nonisolated struct CodexSessionValidation: Sendable {
+    let email: String
+    let displayName: String
+    /// 已登录的证明
+    let accessToken: String
+}
+
 nonisolated struct CodexSessionResponse: Codable, Sendable {
     let accessToken: String?
     let user: User?

@@ -214,27 +214,34 @@ class CodexAPIService {
                         }
                     }
 
-                    // 检查 HTTPCookieStorage 是否收到轮换后的新 session-token
+                    // 检查 HTTPCookieStorage 是否收到轮换后的新 session-token。
+                    // 只是「登记」，写回要等下面解出 accessToken 之后——未登录时服务端
+                    // 同样会下发一个全新的匿名 token，先写就会覆盖掉用户的真 token。
                     // （用已捕获的 sessionToken 参数比较，避免在后台线程读取 @Published 属性）
-                    var effectiveSessionToken = sessionToken
                     let chatgptURL = URL(string: "https://chatgpt.com")!
                     let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
-                    if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies),
-                       newToken != sessionToken {
-                        AppLog.event(.auth, "Codex session-token rotated; writing the new token back to the account")
-                        effectiveSessionToken = newToken
-                        DispatchQueue.main.async {
-                            // 用捕获的 sessionToken 反查账号，与上面的比较保持同一基准：
-                            // 请求期间用户可能切换账号，写「当前账号」会污染别人的凭据
-                            UserSettings.shared.silentlyUpdateCodexSessionToken(newToken, replacing: sessionToken)
-                        }
-                    }
+                    let pendingRotation = CodexSessionTokenRotation.pending(
+                        candidate: CodexWebLoginCoordinator.extractSessionToken(from: storedCookies),
+                        replacing: sessionToken
+                    )
 
                     do {
                         let sessionResponse = try JSONDecoder().decode(CodexSessionResponse.self, from: data)
                         guard let accessToken = sessionResponse.accessToken, !accessToken.isEmpty else {
                             AppLog.error(.auth, "Codex session response carried no accessToken — the session token has expired or the user is signed out")
                             return .failure(UsageError.sessionExpired)
+                        }
+
+                        // 到这里才证明会话确实已登录，轮换可以落盘
+                        var effectiveSessionToken = sessionToken
+                        if let rotation = pendingRotation?.authorized(by: accessToken) {
+                            AppLog.event(.auth, "Codex session-token rotated on an authenticated session; writing the new token back to the account")
+                            effectiveSessionToken = rotation.newToken
+                            DispatchQueue.main.async {
+                                // 用捕获的 sessionToken 反查账号，与上面的比较保持同一基准：
+                                // 请求期间用户可能切换账号，写「当前账号」会污染别人的凭据
+                                UserSettings.shared.silentlyUpdateCodexSessionToken(rotation.newToken, replacing: rotation.replacing)
+                            }
                         }
                         let exp = jwtExpiry(from: accessToken)
                         if let exp {
@@ -378,7 +385,7 @@ class CodexAPIService {
     /// - Parameters:
     ///   - sessionToken: __Secure-next-auth.session-token 值
     ///   - completion: 成功返回 (email, displayName)，失败返回 Error
-    func validateSessionToken(_ sessionToken: String, cookieHeader: String, completion: @escaping (Result<(email: String, displayName: String), Error>) -> Void) {
+    func validateSessionToken(_ sessionToken: String, cookieHeader: String, completion: @escaping (Result<CodexSessionValidation, Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/api/auth/session") else {
             completion(.failure(UsageError.invalidURL))
             return
@@ -444,7 +451,11 @@ class CodexAPIService {
                 let email = sessionResponse.user?.email ?? ""
                 let name = sessionResponse.user?.name ?? email
                 let displayName = name.isEmpty ? "Codex" : name
-                DispatchQueue.main.async { completion(.success((email: email, displayName: displayName))) }
+                DispatchQueue.main.async {
+                    completion(.success(CodexSessionValidation(
+                        email: email, displayName: displayName, accessToken: accessToken
+                    )))
+                }
             } catch {
                 DispatchQueue.main.async { completion(.failure(UsageError.decodingError)) }
             }

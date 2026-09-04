@@ -40,7 +40,8 @@ let package = Package(
                 "Models/CodexResetAnnouncement.swift",
                 "Helpers/CodexAnnouncementFetchPolicy.swift",
                 "Models/Account.swift",
-                "Models/AccountTokenRotation.swift"
+                "Models/AccountTokenRotation.swift",
+                "Models/CodexSessionTokenRotation.swift"
             ]
         ),
         .testTarget(

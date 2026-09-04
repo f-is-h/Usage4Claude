@@ -109,22 +109,17 @@ final class CodexTokenRefreshCoordinator: NSObject {
                 }
             }
 
-            // Level 1：检查 HTTPCookieStorage 是否收到新的 session-token
+            // Level 1：登记 HTTPCookieStorage 里收到的新 session-token。
+            // 只登记不写回——未登录时 chatgpt.com 同样会下发一个全新的匿名 token，
+            // 写回要等下面从 bootstrap 解出 accessToken、证明会话已登录之后。
+            // 与发起刷新时捕获的 token 比较：期间用户可能已切换账号，
+            // 取「当前账号」会把本账号的新 token 写进别人的条目。
             let chatgptURL = URL(string: "https://chatgpt.com")!
             let storedCookies = HTTPCookieStorage.shared.cookies(for: chatgptURL) ?? []
-            if let newToken = CodexWebLoginCoordinator.extractSessionToken(from: storedCookies) {
-                // 与发起刷新时捕获的 token 比较并据此写回：期间用户可能已切换账号，
-                // 取「当前账号」会把本账号的新 token 写进别人的条目
-                let originalToken = self.refreshingFromToken ?? ""
-                if newToken != originalToken {
-                    AppLog.event(.auth, "SSR token refresh returned a rotated session-token; writing it back")
-                    DispatchQueue.main.async {
-                        UserSettings.shared.silentlyUpdateCodexSessionToken(newToken, replacing: originalToken)
-                    }
-                } else {
-                    AppLog.trace(.auth, "SSR token refresh returned the same session-token; nothing to write back")
-                }
-            }
+            let pendingRotation = CodexSessionTokenRotation.pending(
+                candidate: CodexWebLoginCoordinator.extractSessionToken(from: storedCookies),
+                replacing: self.refreshingFromToken ?? ""
+            )
 
             guard let data,
                   let html = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
@@ -142,7 +137,16 @@ final class CodexTokenRefreshCoordinator: NSObject {
             }
 
             let result = Self.extractBootstrapAccessToken(from: html)
-            DispatchQueue.main.async { self.finish(result: result) }
+
+            DispatchQueue.main.async {
+                // bootstrap 解出 accessToken 即证明这次响应代表已登录会话，
+                // 轮换到这一步才允许落盘（未登录的响应会走 failure 分支，写回被丢弃）
+                if let rotation = pendingRotation?.authorized(by: try? result.get()) {
+                    AppLog.event(.auth, "SSR token refresh rotated the session-token on an authenticated session; writing it back")
+                    UserSettings.shared.silentlyUpdateCodexSessionToken(rotation.newToken, replacing: rotation.replacing)
+                }
+                self.finish(result: result)
+            }
         }
         dataTask = task
         task?.resume()
