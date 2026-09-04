@@ -40,6 +40,29 @@
         <language>en</language>
         <!-- Items go here. Top item is the latest version. -->
         <item>
+            <title>v3.4.1</title>
+            <pubDate>Fri, 04 Sep 2026 11:26:02 +0000</pubDate>
+            <sparkle:version>3.4.1</sparkle:version>
+            <sparkle:shortVersionString>3.4.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.4.1</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Fixed
+- **Icons missing from the menu bar menu on macOS 27**: macOS 27 began hiding menu icons by default, which emptied the right-click menu of its icons and took the new-version badge with them
+- **"Test Connection" signing you out of Codex**: Running the connection test could overwrite your saved Codex sign-in with an empty one and log the account out for good. If this has happened to you, signing in again from Settings fixes it
+- **Being told to run diagnostics when the only fix was signing in again**: If a Claude sign-in was revoked or had expired, the app suggested running a connection test, which cannot restore it. It now says to sign in again
+- **Connection test blaming your credentials when nothing was wrong**: For accounts signed in with OAuth, the test checked a kind of login those accounts do not use, so it always reported a failure and told people to re-authenticate accounts that were working perfectly well (reported by @pkakr, #84)
+- **"Open Log Folder" opening an empty folder**: The app was never writing the log file that button points at. It now keeps a small log there, capped so it cannot grow on your disk, and the diagnostic report includes a recent excerpt (reported by @vyrti, #79)
+
+### Added
+- **Diagnostics can now tell when the app was shut down from outside**: If Usage4Claude disappears without warning, the next launch reports whether it quit normally or was killed by something else, such as the system reclaiming memory. That was the missing piece for reports of it vanishing on its own (reported by @vyrti, #79)
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.4.1/Usage4Claude-v3.4.1.dmg"
+              sparkle:edSignature="SXi7doLH+hfrXF4AxPdjjXctQ6xCnnBxe0QXXBNvYrS4rm8s5ZKgP+oLgjw20dmXPlDEb5I1oJu4UMEMzLtBAA==" length="5752461"
+              type="application/octet-stream"/>
+        </item>
+        <item>
             <title>v3.4.0</title>
             <pubDate>Fri, 04 Sep 2026 01:21:31 +0000</pubDate>
             <sparkle:version>3.4.0</sparkle:version>
