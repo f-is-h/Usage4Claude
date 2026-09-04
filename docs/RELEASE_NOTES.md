@@ -13,6 +13,18 @@
 > 版本号权威源仍是 CHANGELOG.md（与 Xcode `MARKETING_VERSION` 校验一致）。
 > 发版时本文件必须有对应的 `## [X.Y.Z]` 段落，否则 Sparkle / Release 正文会为空。
 
+## [3.4.1] - 2026-09-04
+
+### Fixed
+- **Icons missing from the menu bar menu on macOS 27**: macOS 27 began hiding menu icons by default, which emptied the right-click menu of its icons and took the new-version badge with them
+- **"Test Connection" signing you out of Codex**: Running the connection test could overwrite your saved Codex sign-in with an empty one and log the account out for good. If this has happened to you, signing in again from Settings fixes it
+- **Being told to run diagnostics when the only fix was signing in again**: If a Claude sign-in was revoked or had expired, the app suggested running a connection test, which cannot restore it. It now says to sign in again
+- **Connection test blaming your credentials when nothing was wrong**: For accounts signed in with OAuth, the test checked a kind of login those accounts do not use, so it always reported a failure and told people to re-authenticate accounts that were working perfectly well (reported by @pkakr, #84)
+- **"Open Log Folder" opening an empty folder**: The app was never writing the log file that button points at. It now keeps a small log there, capped so it cannot grow on your disk, and the diagnostic report includes a recent excerpt (reported by @vyrti, #79)
+
+### Added
+- **Diagnostics can now tell when the app was shut down from outside**: If Usage4Claude disappears without warning, the next launch reports whether it quit normally or was killed by something else, such as the system reclaiming memory. That was the missing piece for reports of it vanishing on its own (reported by @vyrti, #79)
+
 ## [3.4.0] - 2026-09-04
 
 ### Added
