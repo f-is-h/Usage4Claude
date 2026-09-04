@@ -330,7 +330,7 @@ class MenuBarUI {
             // 徽章图标：仅在用户未确认时显示
             if shouldShowBadge {
                 if let badgeImage = createBadgeIcon() {
-                    updateItem.image = badgeImage
+                    assignIcon(badgeImage, to: updateItem)
                 }
             } else {
                 setMenuItemIcon(updateItem, systemName: "arrow.triangle.2.circlepath")
@@ -420,7 +420,20 @@ class MenuBarUI {
         if let image = NSImage(systemSymbolName: systemName, accessibilityDescription: nil) {
             image.size = NSSize(width: 16, height: 16)
             image.isTemplate = true
-            item.image = image
+            assignIcon(image, to: item)
+        }
+    }
+
+    /// 为菜单项赋图标，并声明图标始终可见
+    /// macOS 27 起 AppKit 接管了菜单项图标的显示决策，默认会隐藏图标，
+    /// 必须显式声明 .visible 才会显示
+    /// - Parameters:
+    ///   - image: 图标
+    ///   - item: 菜单项
+    private func assignIcon(_ image: NSImage, to item: NSMenuItem) {
+        item.image = image
+        if #available(macOS 27.0, *) {
+            item.preferredImageVisibility = .visible
         }
     }
 
