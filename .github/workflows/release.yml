@@ -439,7 +439,11 @@ jobs:
           # build time, so the build number always equals the version string.
           BUILD_NUMBER="$VERSION"
 
-          PUB_DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
+          # RSS 的 pubDate 必须是 RFC 822 格式，星期与月份缩写只能是英文。
+          # %a/%b 会跟随 locale 翻译（zh_CN 下会输出「五, 04  9月 2026」），
+          # 目前 runner 是 C.UTF-8 所以正常，但那是镜像的默认值而非本仓库的约定，
+          # 故显式锁定 LC_ALL=C，避免镜像变更导致 appcast 写出 Sparkle 无法解析的日期。
+          PUB_DATE=$(LC_ALL=C date -u "+%a, %d %b %Y %H:%M:%S +0000")
 
           python3 .github/scripts/update_appcast.py \
             appcast.xml \
