@@ -15,28 +15,16 @@ struct UsageRingTrimRange: Equatable {
     let to: CGFloat
 }
 
+/// Popover 大圆环的 trim 换算。口径本身定义在 `UsageDisplayMode`，菜单栏图标读的是同一份，
+/// 这里只把它翻译成 SwiftUI `Circle().trim(from:to:)` 要的 CGFloat。
 enum UsageRingDisplay {
-    static func clampedPercentage(_ percentage: Double) -> Double {
-        min(100, max(0, percentage))
-    }
-
     static func displayedPercentage(usedPercentage: Double, showRemainingMode: Bool) -> Double {
-        let used = clampedPercentage(usedPercentage)
-        return showRemainingMode ? 100 - used : used
-    }
-
-    static func usedFraction(_ usedPercentage: Double) -> CGFloat {
-        CGFloat(clampedPercentage(usedPercentage) / 100.0)
+        UsageDisplayMode.displayedPercentage(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
     }
 
     static func displayedTrimRange(usedPercentage: Double, showRemainingMode: Bool) -> UsageRingTrimRange {
-        let used = usedFraction(usedPercentage)
-
-        if showRemainingMode {
-            return UsageRingTrimRange(from: used, to: 1)
-        }
-
-        return UsageRingTrimRange(from: 0, to: used)
+        let range = UsageDisplayMode.fillRange(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
+        return UsageRingTrimRange(from: CGFloat(range.from), to: CGFloat(range.to))
     }
 }
 

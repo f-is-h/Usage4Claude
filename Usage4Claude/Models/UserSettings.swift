@@ -494,6 +494,24 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 进度显示口径：false = 已用量填充，true = 余量填充
+    /// 由 Popover 点击切换（UsageDetailView.toggleRemainingMode），菜单栏图标跟着一起翻转，
+    /// 两处口径必须一致，否则同一时刻菜单栏说 90 而主界面说 10。
+    /// key 沿用 Popover 原来的 @AppStorage("showRemainingMode")，老用户的偏好直接继承。
+    @Published var showRemainingMode: Bool {
+        didSet {
+            // 赋同值也会走 didSet（如 resetToDefaults 重置成已是的 false）。
+            // 那时若照样发通知，菜单栏会播一段「从另一个口径切回来」的动画 ——
+            // 图标先跳到反态再弹回，观感像闪了一下
+            guard showRemainingMode != oldValue else { return }
+
+            defaults.set(showRemainingMode, forKey: "showRemainingMode")
+            // 专用通知而非 settingsChanged：后者会让菜单栏图标立即重画成终态，
+            // 切换动画就没得播了（见 MenuBarUI.animateRemainingModeTransition）
+            NotificationCenter.default.post(name: .remainingModeToggled, object: nil)
+        }
+    }
+
     /// 自定义显示的限制类型集合（仅在自定义模式下使用）
     @Published var customDisplayTypes: Set<LimitType> {
         didSet {
@@ -897,6 +915,9 @@ class UserSettings: ObservableObject {
             self.displayMode = .smart
         }
 
+        // 进度显示口径，默认展示已用量（缺键时 bool(forKey:) 返回 false，正是所需默认值）
+        self.showRemainingMode = defaults.bool(forKey: "showRemainingMode")
+
         // 加载自定义显示类型，默认为 5 小时和 7 天限制
         if let rawValues = defaults.array(forKey: "customDisplayTypes") as? [String] {
             self.customDisplayTypes = Set(rawValues.compactMap { LimitType(rawValue: $0) })
@@ -1029,6 +1050,7 @@ class UserSettings: ObservableObject {
         language = Self.detectSystemLanguage()
         timeFormatPreference = .system
         displayMode = .smart
+        showRemainingMode = false
         customDisplayTypes = Self.defaultCustomDisplayTypes
         customDisplayMenuBarOnly = false
         notificationsEnabled = true

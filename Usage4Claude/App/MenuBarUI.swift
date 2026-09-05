@@ -47,6 +47,31 @@ class MenuBarUI {
     /// 图标渲染器 - 负责所有图标绘制逻辑
     private let iconRenderer = MenuBarIconRenderer()
 
+    // MARK: - Remaining Mode Transition
+
+    /// 口径切换动画：逐帧重画菜单栏图标的定时器
+    private var transitionTimer: Timer?
+    /// 动画起始时刻，用于算 spring 进度。
+    /// 用单调的 systemUptime 而非 Date()：后者会被系统时间校准（NTP）拽动，
+    /// 动画中途跳一下就会瞬间结束或倒退
+    private var transitionStartUptime: TimeInterval?
+    /// 动画的起止口径
+    private var transitionFrom = false
+    private var transitionTo = false
+    /// 动画期间的数据快照。期间若有数据刷新，只更新这里，由下一帧带上新数据一起画，
+    /// 避免刷新和动画两条路径抢着写 button.image 造成闪烁
+    private var transitionSnapshot: IconSnapshot?
+
+    /// 画一次图标需要的全部外部输入
+    private struct IconSnapshot {
+        let usageData: UsageData?
+        let codexUsageData: CodexUsageData?
+        let hasUpdate: Bool
+        let shouldShowBadge: Bool
+        /// 实际是否画徽章
+        var showBadge: Bool { hasUpdate && shouldShowBadge }
+    }
+
     // MARK: - Initialization
 
     init() {
@@ -572,6 +597,17 @@ class MenuBarUI {
     func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
         guard let button = statusItem.button else { return }
 
+        // 切换动画进行中：把新数据交给动画，下一帧自然带上，不在这里抢着画
+        if transitionTimer != nil {
+            transitionSnapshot = IconSnapshot(
+                usageData: usageData,
+                codexUsageData: codexUsageData,
+                hasUpdate: hasUpdate,
+                shouldShowBadge: shouldShowBadge
+            )
+            return
+        }
+
         // 确定是否实际显示徽章
         let showBadge = hasUpdate && shouldShowBadge
 
@@ -603,6 +639,108 @@ class MenuBarUI {
         button.image = icon
     }
 
+    // MARK: - Remaining Mode Transition
+
+    /// 为「已用量 ↔ 余量」切换播一段过渡动画。
+    ///
+    /// Popover 那边的大圆环由 SwiftUI 的 spring 驱动；菜单栏图标是 NSImage，只能自己
+    /// 按同一条曲线逐帧重画（曲线见 `UsageDisplayMode.springProgress`），这样两处手感一致。
+    /// 动画期间的帧不进缓存 —— 中间态是一次性的，塞进去只会把 FIFO 缓存冲掉。
+    func animateRemainingModeTransition(
+        from: Bool,
+        to: Bool,
+        usageData: UsageData?,
+        codexUsageData: CodexUsageData?,
+        hasUpdate: Bool,
+        shouldShowBadge: Bool
+    ) {
+        let snapshot = IconSnapshot(
+            usageData: usageData,
+            codexUsageData: codexUsageData,
+            hasUpdate: hasUpdate,
+            shouldShowBadge: shouldShowBadge
+        )
+
+        // 没有状态栏按钮，或压根没数据可画（图标是固定的占位/分隔线），
+        // 动画没有意义，直接落到终态
+        guard statusItem.button != nil, usageData != nil || codexUsageData != nil else {
+            stopRemainingModeTransition()
+            updateMenuBarIcon(
+                usageData: usageData,
+                codexUsageData: codexUsageData,
+                hasUpdate: hasUpdate,
+                shouldShowBadge: shouldShowBadge
+            )
+            return
+        }
+
+        stopRemainingModeTransition()
+
+        transitionFrom = from
+        transitionTo = to
+        transitionSnapshot = snapshot
+        transitionStartUptime = ProcessInfo.processInfo.systemUptime
+
+        // 必须加进 .common mode：菜单栏菜单或 popover 打开时 RunLoop 会切到
+        // eventTracking，default mode 的定时器会停摆，动画就卡在半截
+        let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+            self?.stepRemainingModeTransition()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        transitionTimer = timer
+
+        // 立刻画第一帧，不等第一个 tick
+        stepRemainingModeTransition()
+    }
+
+    /// 渲染动画的一帧；到时间就收尾
+    private func stepRemainingModeTransition() {
+        guard let start = transitionStartUptime,
+              let snapshot = transitionSnapshot,
+              let button = statusItem.button else {
+            stopRemainingModeTransition()
+            return
+        }
+
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        let isFinished = elapsed >= UsageDisplayMode.Spring.duration
+        let progress = isFinished ? 1 : UsageDisplayMode.springProgress(elapsed: elapsed)
+
+        iconRenderer.transition = MenuBarIconRenderer.RemainingModeTransition(
+            from: transitionFrom,
+            to: transitionTo,
+            progress: progress
+        )
+        let icon = iconRenderer.createIcon(
+            usageData: snapshot.usageData,
+            codexUsageData: snapshot.codexUsageData,
+            hasUpdate: snapshot.showBadge,
+            button: button
+        )
+        iconRenderer.transition = nil
+        button.image = icon
+
+        guard isFinished else { return }
+
+        stopRemainingModeTransition()
+        // 收尾交回常规路径：终态那一帧才值得进缓存
+        updateMenuBarIcon(
+            usageData: snapshot.usageData,
+            codexUsageData: snapshot.codexUsageData,
+            hasUpdate: snapshot.hasUpdate,
+            shouldShowBadge: snapshot.shouldShowBadge
+        )
+    }
+
+    /// 停止切换动画并清掉一切中间状态
+    func stopRemainingModeTransition() {
+        transitionTimer?.invalidate()
+        transitionTimer = nil
+        transitionStartUptime = nil
+        transitionSnapshot = nil
+        iconRenderer.transition = nil
+    }
+
     /// 清除图标缓存
     func clearIconCache() {
         iconCache.removeAll()
@@ -618,7 +756,7 @@ class MenuBarUI {
     private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
         let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
-            var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)"
+            var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
             if let codex = codexUsageData {
                 let activeTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex, forMenuBar: true)
                     .map(\.rawValue)
@@ -655,7 +793,8 @@ class MenuBarUI {
             return key
         }
 
-        var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_mp\(isMulti)"
+        // 口径要进 key：同一个 66% 在已用/余量两种模式下画出来是不同的图
+        var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
 
         if let fiveHour = data.fiveHour {
             key += "_5h\(Int(fiveHour.percentage))"
@@ -713,6 +852,7 @@ class MenuBarUI {
     func cleanup() {
         removePopoverCloseObserver()
         removeAppResignActiveObserver()
+        stopRemainingModeTransition()
 
         if popover.isShown {
             popover.performClose(nil)

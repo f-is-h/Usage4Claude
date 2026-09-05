@@ -26,6 +26,41 @@ class MenuBarIconRenderer {
     /// 按 16/18 的原始比例跟随指标图标缩放：实心 logo 的视觉重量比空心圆环大，
     /// 略小才平衡；写死成 16 会让它随着指标图标放大而相对越缩越小
     private var providerBrandIconSize: CGFloat { metricIconSize * (16.0 / 18.0) }
+
+    /// 进度显示口径：与 Popover 共用 UserSettings 里的同一份状态。
+    /// 用户在主界面点击切换后，settings 的 didSet 会 post `.remainingModeToggled`，
+    /// MenuBarManager 借此让菜单栏图标播一段过渡动画翻转过去
+    private var showRemainingMode: Bool { settings.showRemainingMode }
+
+    /// 口径切换动画正在进行的那一帧。
+    /// 仅由 `MenuBarUI` 在逐帧重画期间写入，画完立刻清空；为 nil 时走静态口径。
+    var transition: RemainingModeTransition?
+
+    /// 口径切换动画的一帧：从哪个口径切向哪个、缓动后的进度
+    struct RemainingModeTransition {
+        let from: Bool
+        let to: Bool
+        /// 已经过 spring 缓动的进度，可能略微超过 1（过冲）
+        let progress: Double
+    }
+
+    /// 算出某个指标这一帧该画成什么样。
+    ///
+    /// 占位图标（自定义模式下无数据时画的 0% 空壳）不参与口径翻转，也不参与动画：
+    /// 翻转会把「拿不到数据」显示成「100 可用」，比空壳更容易骗到人。
+    private func displayState(usedPercentage: Double, isPlaceholder: Bool = false) -> UsageDisplayMode.State {
+        guard !isPlaceholder else {
+            return UsageDisplayMode.state(usedPercentage: usedPercentage, showRemainingMode: false)
+        }
+        guard let transition else {
+            return UsageDisplayMode.state(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
+        }
+        return UsageDisplayMode.interpolate(
+            from: UsageDisplayMode.state(usedPercentage: usedPercentage, showRemainingMode: transition.from),
+            to: UsageDisplayMode.state(usedPercentage: usedPercentage, showRemainingMode: transition.to),
+            progress: transition.progress
+        )
+    }
     
     // MARK: - Initialization
     
@@ -81,9 +116,11 @@ class MenuBarIconRenderer {
                 if settings.iconDisplayMode == .none {
                     defaultIcon = createMenuBarDividerIcon(isMonochrome: isMonochrome)
                 } else {
+                    // 无数据占位：始终是 0% 空壳，不参与已用/余量翻转
+                    // （翻转会让「拿不到数据」显示成「100 可用」，比空壳更误导）
                     defaultIcon = isMonochrome ?
-                        createCircleTemplateImage(percentage: 0, size: size, button: button, removeBackground: true) :
-                        createCircleImage(percentage: 0, size: size, button: button, removeBackground: true)
+                        createCircleTemplateImage(state: displayState(usedPercentage: 0, isPlaceholder: true), size: size, button: button, removeBackground: true) :
+                        createCircleImage(state: displayState(usedPercentage: 0, isPlaceholder: true), size: size, button: button, removeBackground: true)
                 }
                 if hasUpdate { return addBadgeToImage(defaultIcon) }
                 return defaultIcon
@@ -291,7 +328,9 @@ class MenuBarIconRenderer {
     
     // MARK: - Icon Drawing - Colored Mode (彩色模式)
 
-    private func createCircleImage(percentage: Double, size: NSSize, useSevenDayColor: Bool = false, colorOverride: NSColor? = nil, useDashedStyle: Bool = false, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+    private func createCircleImage(state: UsageDisplayMode.State, size: NSSize, useSevenDayColor: Bool = false, colorOverride: NSColor? = nil, useDashedStyle: Bool = false, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+        // 配色按已用量、弧长与数字按显示口径，见 UsageDisplayMode.State
+        let percentage = state.usedPercentage
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -318,6 +357,7 @@ class MenuBarIconRenderer {
 
         backgroundPath.stroke()
 
+        // 配色始终按已用量算：余量模式下 90% 已用仍是红色，警示语义不被口径切换反转
         let color: NSColor
         if let override = colorOverride {
             color = override
@@ -329,23 +369,27 @@ class MenuBarIconRenderer {
         let progressPath = NSBezierPath()
         let lineWidth: CGFloat = 2.5
 
-        // 计算进度角度
-        let baseAngle = CGFloat(percentage) / 100.0 * 360
+        // 计算进度角度（与 Popover 大圆环同口径，见 UsageDisplayMode）
+        let displayedPercentage = state.displayedPercentage
+        let fill = state.fill
+        let baseAngle = CGFloat(fill.length) * 360
+        // 12 点为 90°、顺时针推进；余量模式下起点落在已用弧的末端而非 12 点
+        let anchorAngle = 90 - CGFloat(fill.from) * 360
         let circumference = 2 * CGFloat.pi * radius  // 圆周长
         let capAngle = (lineWidth / circumference) * 360  // 圆头延伸对应的角度
 
         let progressAngle: CGFloat
         let startAngle: CGFloat
 
-        if percentage >= 100 {
+        if displayedPercentage >= 100 {
             // 100%: 使用完整角度和固定起点，因为 .butt 端点无延伸
             progressAngle = baseAngle
-            startAngle = 90
+            startAngle = anchorAngle
         } else {
             // 5小时/7天限制：使用渐进式减法，保持起点固定，实现平滑增长
             // 减去的角度随百分比线性增加，在50%时完成完整减法，50%-100%显示完全精确
-            progressAngle = baseAngle - capAngle * min(1.0, CGFloat(percentage / 50.0))
-            startAngle = 90 - capAngle / 2 + 0.5
+            progressAngle = baseAngle - capAngle * min(1.0, CGFloat(displayedPercentage / 50.0))
+            startAngle = anchorAngle - capAngle / 2 + 0.5
         }
 
         let endAngle = startAngle - progressAngle
@@ -353,12 +397,12 @@ class MenuBarIconRenderer {
         progressPath.appendArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
         progressPath.lineWidth = lineWidth
         // 100%时使用平头让圆环完美闭合，其他进度使用圆头
-        progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
+        progressPath.lineCapStyle = displayedPercentage >= 100 ? .butt : .round
         progressPath.stroke()
 
-        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: percentage >= 100 ? .bold : .semibold)
-        let text = "\(Int(percentage))"
+        let fontSize: CGFloat = displayedPercentage >= 100 ? size.width * 0.275 : size.width * 0.4
+        let font = NSFont.systemFont(ofSize: fontSize, weight: displayedPercentage >= 100 ? .bold : .semibold)
+        let text = "\(Int(displayedPercentage))"
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
 
@@ -373,7 +417,8 @@ class MenuBarIconRenderer {
 
     // MARK: - Icon Drawing - Template Mode (单色模式)
 
-    private func createCircleTemplateImage(percentage: Double, size: NSSize, useSevenDayStyle: Bool = false, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
+    private func createCircleTemplateImage(state: UsageDisplayMode.State, size: NSSize, useSevenDayStyle: Bool = false, button: NSStatusBarButton? = nil, removeBackground: Bool = false) -> NSImage {
+        // 单色模板由系统按菜单栏前景色统一上色，不看已用量，只取显示口径
         let image = NSImage(size: size)
         image.lockFocus()
 
@@ -397,23 +442,27 @@ class MenuBarIconRenderer {
         let progressPath = NSBezierPath()
         let lineWidth: CGFloat = 2.5
 
-        // 计算进度角度
-        let baseAngle = CGFloat(percentage) / 100.0 * 360
+        // 计算进度角度（与 Popover 大圆环同口径，见 UsageDisplayMode）
+        let displayedPercentage = state.displayedPercentage
+        let fill = state.fill
+        let baseAngle = CGFloat(fill.length) * 360
+        // 12 点为 90°、顺时针推进；余量模式下起点落在已用弧的末端而非 12 点
+        let anchorAngle = 90 - CGFloat(fill.from) * 360
         let circumference = 2 * CGFloat.pi * radius  // 圆周长
         let capAngle = (lineWidth / circumference) * 360  // 圆头延伸对应的角度
 
         let progressAngle: CGFloat
         let startAngle: CGFloat
 
-        if percentage >= 100 {
+        if displayedPercentage >= 100 {
             // 100%: 使用完整角度和固定起点，因为 .butt 端点无延伸
             progressAngle = baseAngle
-            startAngle = 90
+            startAngle = anchorAngle
         } else {
             // 单色模式：使用渐进式减法，保持起点固定，实现平滑增长
             // 减去的角度随百分比线性增加，在50%时完成完整减法，50%-100%显示完全精确
-            progressAngle = baseAngle - capAngle * min(1.0, CGFloat(percentage / 50.0))
-            startAngle = 90 - capAngle / 2 + 0.5
+            progressAngle = baseAngle - capAngle * min(1.0, CGFloat(displayedPercentage / 50.0))
+            startAngle = anchorAngle - capAngle / 2 + 0.5
         }
 
         let endAngle = startAngle - progressAngle
@@ -421,12 +470,12 @@ class MenuBarIconRenderer {
         progressPath.appendArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
         progressPath.lineWidth = lineWidth
         // 100%时使用平头让圆环完美闭合，其他进度使用圆头
-        progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
+        progressPath.lineCapStyle = displayedPercentage >= 100 ? .butt : .round
         progressPath.stroke()
 
-        let fontSize: CGFloat = percentage >= 100 ? size.width * 0.275 : size.width * 0.4
-        let font = NSFont.systemFont(ofSize: fontSize, weight: percentage >= 100 ? .bold : .semibold)
-        let text = "\(Int(percentage))"
+        let fontSize: CGFloat = displayedPercentage >= 100 ? size.width * 0.275 : size.width * 0.4
+        let font = NSFont.systemFont(ofSize: fontSize, weight: displayedPercentage >= 100 ? .bold : .semibold)
+        let text = "\(Int(displayedPercentage))"
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
@@ -542,44 +591,44 @@ class MenuBarIconRenderer {
 
         switch type {
         case .fiveHour:
-            let percentage = data.fiveHour?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage = percentage else { return nil }
+            let realPercentage = data.fiveHour?.percentage
+            guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
+            let state = displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil)
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
+                return createCircleTemplateImage(state: state, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
             } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: removeBackground)
+                return createCircleImage(state: state, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: removeBackground)
             }
 
         case .sevenDay:
-            let percentage = data.sevenDay?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage = percentage else { return nil }
+            let realPercentage = data.sevenDay?.percentage
+            guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
+            let state = displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil)
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
+                return createCircleTemplateImage(state: state, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
             } else {
-                return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayColor: true, button: button, removeBackground: removeBackground)
+                return createCircleImage(state: state, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayColor: true, button: button, removeBackground: removeBackground)
             }
 
         case .opusWeekly:
-            let percentage = data.opus?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage = percentage else { return nil }
-            return ShapeIconRenderer.createVerticalRectangleIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            let realPercentage = data.opus?.percentage
+            guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
+            return ShapeIconRenderer.createVerticalRectangleIcon(state: displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil), canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         case .sonnetWeekly:
-            let percentage = data.sonnet?.percentage ?? (showPlaceholder ? 0 : nil)
-            guard let percentage = percentage else { return nil }
-            return ShapeIconRenderer.createHorizontalRectangleIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            let realPercentage = data.sonnet?.percentage
+            guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
+            return ShapeIconRenderer.createHorizontalRectangleIcon(state: displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil), canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         case .extraUsage:
-            let percentage: Double?
+            let realPercentage: Double?
             if let extraUsage = data.extraUsage, extraUsage.enabled {
-                percentage = extraUsage.percentage
-            } else if showPlaceholder {
-                percentage = 0
+                realPercentage = extraUsage.percentage
             } else {
-                percentage = nil
+                realPercentage = nil
             }
-            guard let percentage = percentage else { return nil }
-            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+            guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
+            return ShapeIconRenderer.createHexagonIcon(state: displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil), canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         case .codexPrimary, .codexSecondary, .codexExtraUsage:
             // Codex 数据在 Phase 4 通过 createCodexIcon 独立渲染
@@ -600,21 +649,21 @@ class MenuBarIconRenderer {
         switch type {
         case .codexPrimary:
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
+                return createCircleTemplateImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
             }
             let color = UsageColorScheme.codexPrimaryColorAdaptive(percentage, for: button)
-            return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, button: button, removeBackground: removeBackground)
+            return createCircleImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, button: button, removeBackground: removeBackground)
 
         case .codexSecondary:
             if isMonochrome {
-                return createCircleTemplateImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
+                return createCircleTemplateImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
             }
             let color = UsageColorScheme.codexSecondaryColorAdaptive(percentage, for: button)
-            return createCircleImage(percentage: percentage, size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
+            return createCircleImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
 
         case .codexExtraUsage:
             let color = UsageColorScheme.codexExtraUsageColorAdaptive(percentage, for: button)
-            return ShapeIconRenderer.createHexagonIcon(percentage: percentage, canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
+            return ShapeIconRenderer.createHexagonIcon(state: displayState(usedPercentage: percentage), canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
 
         default:
             return nil

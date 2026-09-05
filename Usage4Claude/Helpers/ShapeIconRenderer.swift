@@ -78,7 +78,12 @@ class ShapeIconRenderer {
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮（用于获取颜色）
     ///   - removeBackground: 是否移除背景填充
-    static func drawRoundedSquareWithPercentage(in rect: NSRect, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
+    static func drawRoundedSquareWithPercentage(in rect: NSRect, state: UsageDisplayMode.State, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
+        // 配色按已用量、弧长与数字按显示口径，见 UsageDisplayMode.State
+        let percentage = state.usedPercentage
+        let displayedPercentage = state.displayedPercentage
+        let fill = state.fill
+
         // 全部按绘制区宽度等比推导，画布尺寸变化时图形整体缩放
         let cornerRadius = rect.width * cornerRadiusRatio
         let borderWidth = rect.width * borderWidthRatio
@@ -103,7 +108,7 @@ class ShapeIconRenderer {
         backgroundPath.stroke()
 
         // 2. 绘制进度边框（顺时针，从12点位置开始）
-        if percentage > 0 {
+        if displayedPercentage > 0 {
             // 计算圆角正方形的实际周长
             // 周长 = 4条直线段 + 4个圆角弧
             // 直线段总长 = 4 * (边长 - 2*cornerRadius)
@@ -117,8 +122,10 @@ class ShapeIconRenderer {
             // < 50%时：平滑增长，减去量从0逐步到progressWidth
             // >= 50%时：完全精确，始终减去完整progressWidth
             // = 100%时不减去因为会使用.butt平头（无延伸）
-            let baseProgressLength = perimeter * CGFloat(percentage / 100.0)
-            let progressLength = percentage >= 100 ? baseProgressLength : (baseProgressLength - progressWidth * min(1.0, CGFloat(percentage / 50.0)))
+            // 余量模式下实线段是「已用弧末端 → 终点」那一段；起点偏移交给下面的 dash phase
+            let fillOffset = CGFloat(fill.from) * perimeter
+            let baseProgressLength = CGFloat(fill.length) * perimeter
+            let progressLength = displayedPercentage >= 100 ? baseProgressLength : (baseProgressLength - progressWidth * min(1.0, CGFloat(displayedPercentage / 50.0)))
 
             // 手动构建从12点开始顺时针的路径
             let progressPath = NSBezierPath()
@@ -173,12 +180,13 @@ class ShapeIconRenderer {
 
             // 使用dash pattern绘制
             // < 100%时使用负phase让起点处预先绘制半个圆头，使减去的lineWidth均匀分布在两端
-            let phase: CGFloat = percentage >= 100 ? 0 : -progressWidth / 2
+            // 负 phase 会让实线段延后开始，余量模式正是靠再减去 fillOffset 把它推到已用弧末端
+            let phase: CGFloat = (displayedPercentage >= 100 ? 0 : -progressWidth / 2) - fillOffset
             let pattern: [CGFloat] = [progressLength, perimeter - progressLength]
             progressPath.setLineDash(pattern, count: 2, phase: phase)
             progressPath.lineWidth = progressWidth
             // 100%时使用平头让图形完美闭合，其他进度使用圆头
-            progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
+            progressPath.lineCapStyle = displayedPercentage >= 100 ? .butt : .round
 
             if isMonochrome {
                 let opacity = monochromeOpacity(for: percentage)
@@ -190,10 +198,10 @@ class ShapeIconRenderer {
         }
 
         // 3. 绘制百分比文字
-        let percentageText = "\(Int(percentage))"
-        let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: percentage)
+        let percentageText = "\(Int(displayedPercentage))"
+        let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: displayedPercentage)
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
+            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: displayedPercentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
         ]
         let textSize = percentageText.size(withAttributes: attributes)
@@ -208,7 +216,12 @@ class ShapeIconRenderer {
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮（用于获取颜色）
     ///   - removeBackground: 是否移除背景填充
-    static func drawDiamondWithPercentage(in rect: NSRect, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
+    static func drawDiamondWithPercentage(in rect: NSRect, state: UsageDisplayMode.State, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) {
+        // 配色按已用量、弧长与数字按显示口径，见 UsageDisplayMode.State
+        let percentage = state.usedPercentage
+        let displayedPercentage = state.displayedPercentage
+        let fill = state.fill
+
         // 完全复制Opus的参数设置
         let cornerRadius = rect.width * cornerRadiusRatio
         let borderWidth = rect.width * borderWidthRatio
@@ -280,7 +293,7 @@ class ShapeIconRenderer {
         backgroundPath.stroke()
 
         // 2. 绘制进度边框（顺时针，从12点位置开始）
-        if percentage > 0 {
+        if displayedPercentage > 0 {
             // 手动构建从12点开始顺时针的路径（带右上角斜切）
             let progressPath = NSBezierPath()
 
@@ -351,17 +364,20 @@ class ShapeIconRenderer {
             // < 50%时：平滑增长，减去量从0逐步到progressWidth
             // >= 50%时：完全精确，始终减去完整progressWidth
             // = 100%时不减去因为会使用.butt平头（无延伸）
-            let baseProgressLength = perimeter * CGFloat(percentage / 100.0)
-            let progressLength = percentage >= 100 ? baseProgressLength : (baseProgressLength - progressWidth * min(1.0, CGFloat(percentage / 50.0)))
+            // 余量模式下实线段是「已用弧末端 → 终点」那一段；起点偏移交给下面的 dash phase
+            let fillOffset = CGFloat(fill.from) * perimeter
+            let baseProgressLength = CGFloat(fill.length) * perimeter
+            let progressLength = displayedPercentage >= 100 ? baseProgressLength : (baseProgressLength - progressWidth * min(1.0, CGFloat(displayedPercentage / 50.0)))
 
             // 使用dash pattern绘制
             // < 100%时使用负phase让起点处预先绘制半个圆头，使减去的lineWidth均匀分布在两端
-            let phase: CGFloat = percentage >= 100 ? 0 : -progressWidth / 2
+            // 负 phase 会让实线段延后开始，余量模式正是靠再减去 fillOffset 把它推到已用弧末端
+            let phase: CGFloat = (displayedPercentage >= 100 ? 0 : -progressWidth / 2) - fillOffset
             let pattern: [CGFloat] = [progressLength, perimeter - progressLength]
             progressPath.setLineDash(pattern, count: 2, phase: phase)
             progressPath.lineWidth = progressWidth
             // 100%时使用平头让图形完美闭合，其他进度使用圆头
-            progressPath.lineCapStyle = percentage >= 100 ? .butt : .round
+            progressPath.lineCapStyle = displayedPercentage >= 100 ? .butt : .round
 
             if isMonochrome {
                 let opacity = monochromeOpacity(for: percentage)
@@ -373,10 +389,10 @@ class ShapeIconRenderer {
         }
 
         // 3. 绘制百分比文字（与Opus完全一致）
-        let percentageText = "\(Int(percentage))"
-        let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: percentage)
+        let percentageText = "\(Int(displayedPercentage))"
+        let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: displayedPercentage)
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
+            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: displayedPercentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
         ]
         let textSize = percentageText.size(withAttributes: attributes)
@@ -392,7 +408,12 @@ class ShapeIconRenderer {
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮（用于获取颜色）
     ///   - removeBackground: 是否移除背景填充
-    static func drawHexagonWithPercentage(center: NSPoint, size: CGFloat, percentage: Double, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) {
+    static func drawHexagonWithPercentage(center: NSPoint, size: CGFloat, state: UsageDisplayMode.State, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) {
+        // 配色按已用量、弧长与数字按显示口径，见 UsageDisplayMode.State
+        let percentage = state.usedPercentage
+        let displayedPercentage = state.displayedPercentage
+        let fill = state.fill
+
         let radius = size / 2
         // 六边形的基准是直径而非绘制区，比例常量单独一套
         let borderWidth = size * hexBorderWidthRatio
@@ -429,7 +450,7 @@ class ShapeIconRenderer {
         hexagonPath.stroke()
 
         // 2. 绘制进度边框
-        if percentage > 0 {
+        if displayedPercentage > 0 {
             // 计算六边形周长
             let sideLength = radius  // 正六边形每边长度等于半径
             let perimeter = sideLength * 6
@@ -439,8 +460,10 @@ class ShapeIconRenderer {
             // < 50%时：平滑增长，减去量从0逐步到progressWidth
             // >= 50%时：完全精确，始终减去完整progressWidth
             // = 100%时不减去因为会使用.butt平头（无延伸）
-            let baseProgressLength = perimeter * CGFloat(percentage / 100.0)
-            let progressLength = percentage >= 100 ? baseProgressLength : (baseProgressLength - progressWidth * min(1.0, CGFloat(percentage / 50.0)))
+            // 余量模式下实线段是「已用弧末端 → 终点」那一段；起点偏移交给下面的 dash phase
+            let fillOffset = CGFloat(fill.from) * perimeter
+            let baseProgressLength = CGFloat(fill.length) * perimeter
+            let progressLength = displayedPercentage >= 100 ? baseProgressLength : (baseProgressLength - progressWidth * min(1.0, CGFloat(displayedPercentage / 50.0)))
 
             // 手动构建从12点钟顶部开始的顺时针路径
             // 首先计算6个顶点位置（保持平顶方向）
@@ -478,12 +501,13 @@ class ShapeIconRenderer {
 
             // 使用dash pattern绘制
             // < 100%时使用负phase让起点处预先绘制半个圆头，使减去的lineWidth均匀分布在两端
-            let phase: CGFloat = percentage >= 100 ? 0 : -progressWidth / 2
+            // 负 phase 会让实线段延后开始，余量模式正是靠再减去 fillOffset 把它推到已用弧末端
+            let phase: CGFloat = (displayedPercentage >= 100 ? 0 : -progressWidth / 2) - fillOffset
             let pattern: [CGFloat] = [progressLength, perimeter - progressLength]
             progressHexagon.setLineDash(pattern, count: 2, phase: phase)
             progressHexagon.lineWidth = progressWidth
             // 100%时使用平头让图形完美闭合，其他进度使用圆头
-            progressHexagon.lineCapStyle = percentage >= 100 ? .butt : .round
+            progressHexagon.lineCapStyle = displayedPercentage >= 100 ? .butt : .round
             progressHexagon.lineJoinStyle = .round
 
             if isMonochrome {
@@ -498,10 +522,10 @@ class ShapeIconRenderer {
         }
 
         // 3. 绘制百分比文字
-        let percentageText = "\(Int(percentage))"
-        let percentageFontSize = size * (percentage >= 100 ? hexFontRatioAtFull : hexFontRatio)
+        let percentageText = "\(Int(displayedPercentage))"
+        let percentageFontSize = size * (displayedPercentage >= 100 ? hexFontRatioAtFull : hexFontRatio)
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: percentage >= 100 ? .bold : .semibold),
+            .font: NSFont.systemFont(ofSize: percentageFontSize, weight: displayedPercentage >= 100 ? .bold : .semibold),
             .foregroundColor: NSColor.black
         ]
         let textSize = percentageText.size(withAttributes: attributes)
@@ -513,19 +537,19 @@ class ShapeIconRenderer {
 
     /// 创建圆角正方形图标（Opus）
     /// - Parameters:
-    ///   - percentage: 使用百分比
+    ///   - state: 该帧要画的显示状态（配色依据 + 弧长 + 中央数字）
     ///   - canvasSize: 图标画布边长，由用户的菜单栏图标尺寸设置决定
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景填充
     /// - Returns: 图标图像（边长为 canvasSize）
-    static func createVerticalRectangleIcon(percentage: Double, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+    static func createVerticalRectangleIcon(state: UsageDisplayMode.State, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
         let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
         let rect = drawingRect(in: size)
-        drawRoundedSquareWithPercentage(in: rect, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+        drawRoundedSquareWithPercentage(in: rect, state: state, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         image.unlockFocus()
         image.isTemplate = isMonochrome
@@ -534,19 +558,19 @@ class ShapeIconRenderer {
 
     /// 创建菱形图标（Sonnet - 45度旋转的正方形）
     /// - Parameters:
-    ///   - percentage: 使用百分比
+    ///   - state: 该帧要画的显示状态（配色依据 + 弧长 + 中央数字）
     ///   - canvasSize: 图标画布边长，由用户的菜单栏图标尺寸设置决定
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景填充
     /// - Returns: 图标图像（边长为 canvasSize）
-    static func createHorizontalRectangleIcon(percentage: Double, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
+    static func createHorizontalRectangleIcon(state: UsageDisplayMode.State, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
         let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
         let rect = drawingRect(in: size)
-        drawDiamondWithPercentage(in: rect, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
+        drawDiamondWithPercentage(in: rect, state: state, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
         image.unlockFocus()
         image.isTemplate = isMonochrome
@@ -555,20 +579,20 @@ class ShapeIconRenderer {
 
     /// 创建平顶六边形图标（Extra Usage）
     /// - Parameters:
-    ///   - percentage: 使用百分比
+    ///   - state: 该帧要画的显示状态（配色依据 + 弧长 + 中央数字）
     ///   - canvasSize: 图标画布边长，由用户的菜单栏图标尺寸设置决定
     ///   - isMonochrome: 是否为单色模式
     ///   - button: 状态栏按钮
     ///   - removeBackground: 是否移除背景（默认false）
     /// - Returns: 图标图像（边长为 canvasSize）
-    static func createHexagonIcon(percentage: Double, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) -> NSImage {
+    static func createHexagonIcon(state: UsageDisplayMode.State, canvasSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?, removeBackground: Bool = false, colorOverride: NSColor? = nil) -> NSImage {
         let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
         let diameter = size.width * hexagonDiameterRatio
-        drawHexagonWithPercentage(center: center, size: diameter, percentage: percentage, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: colorOverride)
+        drawHexagonWithPercentage(center: center, size: diameter, state: state, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: colorOverride)
 
         image.unlockFocus()
         image.isTemplate = isMonochrome

@@ -78,9 +78,12 @@ struct UsageDetailView: View {
     @State private var animationTypeHintDismissWorkItem: DispatchWorkItem?
     // 显示更新通知
     @State private var showUpdateNotification = false
-    // 显示模式切换（false: 重置时间, true: 剩余时间）
-    @AppStorage("showRemainingMode") private var savedRemainingMode = false
-    @State private var showRemainingMode = UserDefaults.standard.bool(forKey: "showRemainingMode")
+    // 显示模式切换（false: 已用量填充, true: 余量填充）
+    // 真值存放在 UserSettings.showRemainingMode —— 菜单栏图标渲染读的是那一份。
+    // 这里仍保留一份 @State，是为了让 popover 的切换动画走视图本地状态：
+    // 若改成观察 UserSettings，它任何一个 @Published 变动都会重建整个 popover，
+    // 正是本文件其它地方（如 TimelineView 那处注释）刻意避开的开销。
+    @State private var showRemainingMode = UserSettings.shared.showRemainingMode
     @State private var remainingModeAnimationTrigger = 0
     
     // MARK: - Body
@@ -832,7 +835,8 @@ struct UsageDetailView: View {
             var transaction = Transaction(animation: nil)
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                showRemainingMode = savedRemainingMode
+                // 关闭期间菜单栏侧若有改动，重新打开时对齐回来
+                showRemainingMode = UserSettings.shared.showRemainingMode
             }
             // 如果打开时已经在刷新，启动旋转动画
             if refreshState.isRefreshing {
@@ -909,7 +913,9 @@ struct UsageDetailView: View {
             showRemainingMode.toggle()
             remainingModeAnimationTrigger += 1
         }
-        savedRemainingMode = showRemainingMode
+        // 写回 settings：持久化，同时它的 didSet 会 post .remainingModeToggled，
+        // MenuBarManager 收到后让菜单栏图标沿同一条 spring 曲线过渡过去
+        UserSettings.shared.showRemainingMode = showRemainingMode
     }
 }
 

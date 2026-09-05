@@ -241,6 +241,26 @@ class MenuBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        // 口径切换：不直接重画，交给动画逐帧过渡到新口径。
+        // 缓存不清 —— 键里已含口径，两个口径的图各自留着，切回去时直接命中
+        NotificationCenter.default.publisher(for: .remainingModeToggled)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                // 只有真正变化时才会收到这条通知（见 UserSettings.showRemainingMode），
+                // 所以取反就是切换前的口径，够用了
+                let to = self.settings.showRemainingMode
+                self.ui.animateRemainingModeTransition(
+                    from: !to,
+                    to: to,
+                    usageData: self.usageData,
+                    codexUsageData: self.codexUsageData,
+                    hasUpdate: self.hasAvailableUpdate,
+                    shouldShowBadge: self.shouldShowUpdateBadge
+                )
+            }
+            .store(in: &cancellables)
+
         #if DEBUG
         // customDisplayTypes/iconStyleMode 等几乎所有设置项改动都会 post settingsChanged，
         // 但只有"调试模拟模式"（debugModeEnabled）下改动才需要立即刷新——那条路径读的是本地
