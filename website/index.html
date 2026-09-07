@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Usage4Claude - Real-time Claude AI Usage Monitor for macOS</title>
-  <meta name="description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring. Supports 5-hour and 7-day limits, cross-platform, local storage, open source.">
-  <meta name="keywords" content="Claude AI, Usage Monitor, macOS, Menu Bar, Real-time Monitoring">
+  <title>Usage4Claude - Claude &amp; Codex Usage Monitor for macOS</title>
+  <meta name="description" content="Elegant macOS menu bar app for real-time Claude and Codex usage monitoring. 5-hour, 7-day and per-model limits, multi-account support, local storage, open source.">
+  <meta name="keywords" content="Claude AI, Codex, Claude Code, Usage Monitor, macOS, Menu Bar, Real-time Monitoring, Quota Tracker">
 
   <link rel="canonical" href="https://usage4claude.pages.dev/">
   <link rel="alternate" hreflang="en" href="https://usage4claude.pages.dev/">
@@ -14,12 +14,14 @@
   <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
   <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
   <link rel="alternate" hreflang="ko" href="https://usage4claude.pages.dev/index.ko.html">
+  <link rel="alternate" hreflang="fr" href="https://usage4claude.pages.dev/index.fr.html">
+  <link rel="alternate" hreflang="de" href="https://usage4claude.pages.dev/index.de.html">
   <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
-  <meta property="og:title" content="Usage4Claude - Real-time Claude AI Usage Monitor">
-  <meta property="og:description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring. Supports 5-hour and 7-day limits, cross-platform, local storage, open source.">
+  <meta property="og:title" content="Usage4Claude - Claude &amp; Codex Usage Monitor">
+  <meta property="og:description" content="Elegant macOS menu bar app for real-time Claude and Codex usage monitoring. 5-hour, 7-day and per-model limits, multi-account support, local storage, open source.">
   <meta property="og:url" content="https://usage4claude.pages.dev/">
   <meta property="og:image" content="https://usage4claude.pages.dev/images/og-image.png">
   <meta property="og:image:width" content="1224">
@@ -27,8 +29,8 @@
   <meta property="og:image:alt" content="Usage4Claude App Screenshot">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Usage4Claude - Real-time Claude AI Usage Monitor">
-  <meta name="twitter:description" content="Elegant macOS menu bar app for real-time Claude AI usage monitoring.">
+  <meta name="twitter:title" content="Usage4Claude - Claude &amp; Codex Usage Monitor">
+  <meta name="twitter:description" content="Elegant macOS menu bar app for real-time Claude and Codex usage monitoring.">
   <meta name="twitter:image" content="https://usage4claude.pages.dev/images/og-image.png">
 
   <link rel="icon" type="image/png" href="favicon.ico">
@@ -42,10 +44,12 @@
       if (!localStorage.getItem('languageSelected')) {
         const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
         const langMap = {
-          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn',
+          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn', 'zh-sg': '/index.zh-cn',
           'ja': '/index.ja', 'ja-jp': '/index.ja',
-          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw',
-          'ko': '/index.ko', 'ko-kr': '/index.ko'
+          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw', 'zh-mo': '/index.zh-tw',
+          'ko': '/index.ko', 'ko-kr': '/index.ko',
+          'fr': '/index.fr', 'fr-fr': '/index.fr', 'fr-ca': '/index.fr', 'fr-be': '/index.fr', 'fr-ch': '/index.fr',
+          'de': '/index.de', 'de-de': '/index.de', 'de-at': '/index.de', 'de-ch': '/index.de'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
         const currentPath = window.location.pathname;
@@ -72,12 +76,14 @@
         <li><a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer">GitHub</a></li>
       </ul>
 
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center flex-wrap justify-end gap-x-2.5 gap-y-1 max-w-[50%] md:max-w-none">
         <a href="/" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">EN</a>
         <a href="/index.ja" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">日本語</a>
         <a href="/index.ko" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">한국어</a>
         <a href="/index.zh-cn" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
         <a href="/index.zh-tw" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
+        <a href="/index.fr" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">FR</a>
+        <a href="/index.de" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">DE</a>
       </div>
     </nav>
   </header>
@@ -90,23 +96,23 @@
             <svg class="w-5 h-5 text-[#CC785C]" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
             </svg>
-            <span class="text-sm font-semibold text-[#CC785C]">NEW v2.0 Released</span>
+            <span class="text-sm font-semibold text-[#CC785C]" data-latest-version="NEW {version} Released">NEW v3.4.1 Released</span>
           </div>
           <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            Real-time<br>Claude AI Usage Monitor
+            Real-time<br>Claude &amp; Codex Usage Monitor
           </h1>
           <p class="text-xl lg:text-2xl text-gray-600 mb-8">
-            Elegant macOS menu bar app for all Claude platforms
+            Elegant macOS menu bar app for all Claude platforms, with optional Codex monitoring
           </p>
 
           <ul class="mb-8 space-y-3 text-lg text-gray-700">
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>Multi-Limit Display - Support up to 5 usage limits simultaneously</span>
+              <span>Multi-Limit Display - 5-hour, 7-day, Extra Usage and per-model weekly limits</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>Cross-Platform - Monitor Web/CLI/Desktop/Mobile usage</span>
+              <span>Claude + Codex - Monitor either one, or both side by side</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
@@ -140,7 +146,7 @@
     <div class="container mx-auto px-6">
       <div class="text-center mb-16">
         <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">Core Features</h2>
-        <p class="text-xl text-gray-600">Professional monitoring tool designed for Claude AI users</p>
+        <p class="text-xl text-gray-600">Professional monitoring tool designed for Claude and Codex users</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -148,7 +154,15 @@
           <div class="text-5xl mb-4">📊</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">Real-time Monitoring</h3>
           <p class="text-gray-600">
-            Monitor up to 5 usage limits: 5-hour, 7-day, Extra, 7-day Opus, 7-day Sonnet. Smart color-coded progress rings with distinctive shapes for easy identification.
+            Track the 5-hour, 7-day and Extra Usage limits, plus weekly usage for every model the API returns (Opus, Sonnet, Fable and beyond). Colour-coded rings with distinctive shapes stay readable at a glance.
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🧩</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Codex Support</h3>
+          <p class="text-gray-600">
+            Monitor Codex 5-hour, 7-day and credit usage on its own or side by side with Claude. Sign in through the system browser, and nothing changes for Claude-only users until a Codex account is added.
           </p>
         </div>
 
@@ -156,23 +170,31 @@
           <div class="text-5xl mb-4">🌐</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">Cross-Platform Support</h3>
           <p class="text-gray-600">
-            Unified monitoring for all Claude platforms: Web, Claude Code, Desktop App, Mobile App - view all usage in one place
+            Unified monitoring for all Claude products: Web, Claude Code, Desktop App, Mobile App and Cowork - they share one quota, viewed in one place.
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">👥</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Multi-Account Management</h3>
+          <p class="text-gray-600">
+            Add multiple Claude and Codex accounts, name them with aliases, and switch from the menu bar. One sign-in picks up every organisation on the account automatically.
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔔</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Usage Notifications</h3>
+          <p class="text-gray-600">
+            Native macOS alerts warn you when usage crosses 90% and tell you the moment a quota resets. Each limit type is tracked on its own, and the whole thing can be switched off.
           </p>
         </div>
 
         <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
           <div class="text-5xl mb-4">🔄</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Smart Refresh</h3>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Smart Refresh &amp; Auto Update</h3>
           <p class="text-gray-600">
-            4-level adaptive refresh frequency, 1-minute fast refresh when active, gradually reduces to 10 minutes when idle
-          </p>
-        </div>
-
-        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
-          <div class="text-5xl mb-4">🌍</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Multi-Language Support</h3>
-          <p class="text-gray-600">
-            Native support for 5 languages: English, Japanese, Korean, Simplified Chinese, Traditional Chinese. Auto-detects system language or switch manually.
+            4-level adaptive refresh runs every minute while you work and eases to 10 minutes when idle, or pick a fixed interval. The app also updates itself in place.
           </p>
         </div>
 
@@ -180,15 +202,23 @@
           <div class="text-5xl mb-4">🎨</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">Personalization</h3>
           <p class="text-gray-600">
-            Smart Mode auto-detects available limits, or customize which limits to display. 3 themes (color translucent/color with background/monochrome) for personalization.
+            Smart Mode detects the limits you actually have, or choose them yourself. 3 menu bar themes, 3 icon sizes, and system / light / dark appearance modes.
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌍</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Multi-Language Support</h3>
+          <p class="text-gray-600">
+            The app speaks 7 languages: English, Japanese, Korean, Simplified Chinese, Traditional Chinese, French and German. It follows your system language, or you can pick one.
           </p>
         </div>
 
         <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
           <div class="text-5xl mb-4">🔒</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Security & Privacy</h3>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Security &amp; Privacy</h3>
           <p class="text-gray-600">
-            All data stored locally only, Session Key encrypted via Keychain, 100% open source code, freely auditable
+            Everything stays on your Mac. Claude and Codex credentials live in the Keychain, the app runs sandboxed, and the source is fully open for anyone to audit.
           </p>
         </div>
       </div>
@@ -210,6 +240,7 @@
           <table class="mx-auto border-collapse">
             <thead>
               <tr class="border-b-2 border-gray-300">
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700"></th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Icon</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">5-Hour</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7-Day</th>
@@ -220,29 +251,52 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr class="border-b border-gray-200">
+                <td class="px-4 py-6 text-center text-sm font-semibold text-gray-700">Claude</td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.icon@2x.png" alt="Icon Only" class="inline-block" style="width: auto; height: 40px;">
+                  <img src="images/screenshots/bar.icon@2x.png" alt="Claude Icon" class="inline-block" style="width: auto; height: 40px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.5h@2x.png" alt="5-Hour Limit" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.5h@2x.png" alt="Claude 5-Hour" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7d@2x.png" alt="7-Day Limit" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7d@2x.png" alt="Claude 7-Day" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.ex@2x.png" alt="Extra Usage" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.ex@2x.png" alt="Claude Extra" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7do@2x.png" alt="7-Day Opus" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7do@2x.png" alt="Claude 7-Day Opus" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7ds@2x.png" alt="7-Day Sonnet" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7ds@2x.png" alt="Claude 7-Day Sonnet" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.mono.b@2x.png" alt="Monochrome Black" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <img src="images/screenshots/bar.mono.b@2x.png" alt="Claude Monochrome" class="inline-block mb-2" style="height: 35px; width: auto;">
                   <br>
-                  <img src="images/screenshots/bar.mono.w@2x.png" alt="Monochrome White" class="inline-block" style="height: 35px; width: auto;">
+                  <img src="images/screenshots/bar.mono.w@2x.png" alt="Claude Monochrome" class="inline-block" style="height: 35px; width: auto;">
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-6 text-center text-sm font-semibold text-gray-700">Codex</td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.icon.codex@2x.png" alt="Codex Icon" class="inline-block" style="width: auto; height: 40px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.5h.codex@2x.png" alt="Codex 5-Hour" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7d.codex@2x.png" alt="Codex 7-Day" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.ex.codex@2x.png" alt="Codex Credits" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center text-gray-400">—</td>
+                <td class="px-4 py-6 text-center text-gray-400">—</td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.mono.b.codex@2x.png" alt="Codex Monochrome" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <br>
+                  <img src="images/screenshots/bar.mono.w.codex@2x.png" alt="Codex Monochrome" class="inline-block" style="height: 35px; width: auto;">
                 </td>
               </tr>
             </tbody>
@@ -250,13 +304,20 @@
         </div>
 
         <div class="mt-8 text-center">
-          <p class="text-sm font-semibold text-gray-700 mb-4">Color Indicators:</p>
+          <p class="text-sm font-semibold text-gray-700 mb-4">Color Indicators (Claude):</p>
           <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
             <div><strong>5-Hour:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
             <div><strong>7-Day:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
             <div><strong>Extra:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
             <div><strong>Opus:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
             <div><strong>Sonnet:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
+          </div>
+
+          <p class="text-sm font-semibold text-gray-700 mt-6 mb-4">Color Indicators (Codex):</p>
+          <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
+            <div><strong>5-Hour:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #2DD4BF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #0D9488;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #134E4A;"></span></div>
+            <div><strong>7-Day:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #60A5FA;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #2563EB;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #1E3A8A;"></span></div>
+            <div><strong>Credits:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #F59E0B;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D97706;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #78350F;"></span></div>
           </div>
         </div>
       </div>
@@ -265,13 +326,17 @@
         <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">Detail Window</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div class="screenshot-card text-center">
-            <img src="images/screenshots/detail.5.en@2x.png" alt="5-Hour Limit Mode" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
-            <p class="mt-4 text-gray-600 text-sm italic">5-Hour Limit Mode</p>
+            <img src="images/screenshots/detail.claude.en@2x.png" alt="Claude-only Mode" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">Claude-only Mode</p>
           </div>
           <div class="screenshot-card text-center">
-            <img src="images/screenshots/detail.all.en@2x.png" alt="All Limits Mode" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
-            <p class="mt-4 text-gray-600 text-sm italic">All Limits Mode<br>(Any combination freely selectable)</p>
+            <img src="images/screenshots/detail.codex.en@2x.png" alt="Codex-only Mode" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">Codex-only Mode</p>
           </div>
+        </div>
+        <div class="mt-8 screenshot-card text-center">
+          <img src="images/screenshots/detail.both.en@2x.png" alt="Claude + Codex" loading="lazy" class="w-full max-w-xl mx-auto rounded-xl shadow-xl">
+          <p class="mt-4 text-gray-600 text-sm italic">Claude + Codex Mode<br>(Any combination freely selectable)</p>
         </div>
       </div>
     </div>
@@ -287,8 +352,8 @@
       </div>
 
       <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
-          Download Latest (v2.0.0)
+        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg" data-latest-version="Download Latest ({version})">
+          Download Latest (v3.4.1)
         </a>
         <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
           ⭐ Star on GitHub
@@ -312,6 +377,8 @@
           <p class="text-gray-600">Right-click and select "Open" to allow running</p>
         </div>
       </div>
+
+      <p class="mt-10 text-gray-600">Later releases install themselves - the app checks for updates and updates in place.</p>
     </div>
   </section>
 
@@ -323,7 +390,7 @@
             <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
             <span class="text-xl font-semibold text-white">Usage4Claude</span>
           </div>
-          <p class="text-sm">Elegant macOS menu bar app for real-time Claude AI usage monitoring</p>
+          <p class="text-sm">Elegant macOS menu bar app for real-time Claude and Codex usage monitoring</p>
         </div>
 
         <div class="min-w-[140px]">
@@ -366,11 +433,12 @@
 
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
         <p>&copy; 2026 f-is-h. Licensed under MIT License.</p>
-        <p class="mt-2 text-gray-500">This project is not officially associated with Anthropic or Claude AI</p>
+        <p class="mt-2 text-gray-500">This project is not officially associated with Anthropic, Claude AI or OpenAI</p>
       </div>
     </div>
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/version.js"></script>
 </body>
 </html>

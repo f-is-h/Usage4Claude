@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Usage4Claude - macOS 菜单栏实时监控 Claude AI 使用配额</title>
-  <meta name="description" content="优雅的 macOS 菜单栏应用，实时监控 Claude AI 使用配额。支持 5 小时和 7 天双限制、跨平台、本地存储、开源。">
-  <meta name="keywords" content="Claude AI, 使用监控, macOS, 菜单栏, 实时监控">
+  <title>Usage4Claude - macOS 菜单栏实时监控 Claude 与 Codex 用量</title>
+  <meta name="description" content="优雅的 macOS 菜单栏应用，实时监控 Claude 与 Codex 使用配额。支持 5 小时、7 天及各模型周用量，多账号管理，本地存储，开源透明。">
+  <meta name="keywords" content="Claude AI, Codex, Claude Code, 用量监控, macOS, 菜单栏, 实时监控, 配额">
 
   <link rel="canonical" href="https://usage4claude.pages.dev/index.zh-cn.html">
   <link rel="alternate" hreflang="en" href="https://usage4claude.pages.dev/">
@@ -14,12 +14,14 @@
   <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
   <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
   <link rel="alternate" hreflang="ko" href="https://usage4claude.pages.dev/index.ko.html">
+  <link rel="alternate" hreflang="fr" href="https://usage4claude.pages.dev/index.fr.html">
+  <link rel="alternate" hreflang="de" href="https://usage4claude.pages.dev/index.de.html">
   <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
-  <meta property="og:title" content="Usage4Claude - 实时监控 Claude AI 使用配额">
-  <meta property="og:description" content="优雅的 macOS 菜单栏应用，实时监控 Claude AI 使用配额。支持 5 小时和 7 天双限制、跨平台、本地存储、开源。">
+  <meta property="og:title" content="Usage4Claude - 实时监控 Claude 与 Codex 用量">
+  <meta property="og:description" content="优雅的 macOS 菜单栏应用，实时监控 Claude 与 Codex 使用配额。支持 5 小时、7 天及各模型周用量，多账号管理，本地存储，开源透明。">
   <meta property="og:url" content="https://usage4claude.pages.dev/index.zh-cn.html">
   <meta property="og:image" content="https://usage4claude.pages.dev/images/og-image.png">
   <meta property="og:image:width" content="1224">
@@ -27,8 +29,8 @@
   <meta property="og:image:alt" content="Usage4Claude 应用截图">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Usage4Claude - 实时监控 Claude AI 使用配额">
-  <meta name="twitter:description" content="优雅的 macOS 菜单栏应用，实时监控 Claude AI 使用配额。">
+  <meta name="twitter:title" content="Usage4Claude - 实时监控 Claude 与 Codex 用量">
+  <meta name="twitter:description" content="优雅的 macOS 菜单栏应用，实时监控 Claude 与 Codex 使用配额。">
   <meta name="twitter:image" content="https://usage4claude.pages.dev/images/og-image.png">
 
   <link rel="icon" type="image/png" href="favicon.ico">
@@ -42,10 +44,12 @@
       if (!localStorage.getItem('languageSelected')) {
         const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
         const langMap = {
-          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn',
+          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn', 'zh-sg': '/index.zh-cn',
           'ja': '/index.ja', 'ja-jp': '/index.ja',
-          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw',
-          'ko': '/index.ko', 'ko-kr': '/index.ko'
+          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw', 'zh-mo': '/index.zh-tw',
+          'ko': '/index.ko', 'ko-kr': '/index.ko',
+          'fr': '/index.fr', 'fr-fr': '/index.fr', 'fr-ca': '/index.fr', 'fr-be': '/index.fr', 'fr-ch': '/index.fr',
+          'de': '/index.de', 'de-de': '/index.de', 'de-at': '/index.de', 'de-ch': '/index.de'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
         const currentPath = window.location.pathname;
@@ -72,12 +76,14 @@
         <li><a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer">GitHub</a></li>
       </ul>
 
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center flex-wrap justify-end gap-x-2.5 gap-y-1 max-w-[50%] md:max-w-none">
         <a href="/" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">EN</a>
         <a href="/index.ja" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">日本語</a>
         <a href="/index.ko" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">한국어</a>
         <a href="/index.zh-cn" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">简中</a>
         <a href="/index.zh-tw" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
+        <a href="/index.fr" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">FR</a>
+        <a href="/index.de" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">DE</a>
       </div>
     </nav>
   </header>
@@ -90,23 +96,23 @@
             <svg class="w-5 h-5 text-[#CC785C]" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
             </svg>
-            <span class="text-sm font-semibold text-[#CC785C]">新版本 v2.0 已发布</span>
+            <span class="text-sm font-semibold text-[#CC785C]" data-latest-version="新版本 {version} 已发布">新版本 v3.4.1 已发布</span>
           </div>
           <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            实时监控<br>Claude AI 使用配额
+            实时监控<br>Claude 与 Codex 用量
           </h1>
           <p class="text-xl lg:text-2xl text-gray-600 mb-8">
-            优雅的 macOS 菜单栏应用，支持所有 Claude 平台
+            优雅的 macOS 菜单栏应用，覆盖所有 Claude 平台，并可选监控 Codex
           </p>
 
           <ul class="mb-8 space-y-3 text-lg text-gray-700">
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>多限制显示 - 最多支持同时显示 5 种配额限制</span>
+              <span>多限制显示 - 5 小时、7 天、额外用量，以及各模型周用量</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>跨平台通用 - Web/CLI/Desktop/Mobile 统一监控</span>
+              <span>Claude + Codex - 可单独监控，也可双栏并排查看</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
@@ -140,7 +146,7 @@
     <div class="container mx-auto px-6">
       <div class="text-center mb-16">
         <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">核心功能</h2>
-        <p class="text-xl text-gray-600">为 Claude AI 用户设计的专业监控工具</p>
+        <p class="text-xl text-gray-600">为 Claude 与 Codex 用户设计的专业监控工具</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -148,7 +154,15 @@
           <div class="text-5xl mb-4">📊</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">实时监控</h3>
           <p class="text-gray-600">
-            监控最多 5 种使用限制：5小时、7天、额外用量、7天 Opus、7天 Sonnet。智能色彩编码进度环，搭配独特形状标识，一目了然。
+            监控 5 小时、7 天和额外用量限制，并按接口返回展示各模型的周用量（Opus、Sonnet、Fable 等）。智能色彩进度环搭配独特形状，一眼看清。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🧩</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Codex 支持</h3>
+          <p class="text-gray-600">
+            监控 Codex 的 5 小时、7 天和积分用量，可单独使用，也可与 Claude 并排显示。通过系统浏览器登录；未添加 Codex 账号前，只用 Claude 的体验完全不变。
           </p>
         </div>
 
@@ -156,23 +170,31 @@
           <div class="text-5xl mb-4">🌐</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">跨平台支持</h3>
           <p class="text-gray-600">
-            统一监控所有 Claude 平台：Web 网页版、Claude Code、桌面应用、移动应用 - 一处查看全部使用
+            统一监控所有 Claude 产品：Web 网页版、Claude Code、桌面应用、移动应用与 Cowork —— 共用一份配额，一处查看。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">👥</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">多账号管理</h3>
+          <p class="text-gray-600">
+            可添加多个 Claude 与 Codex 账号，设置别名，从菜单栏快速切换。一次登录会自动识别该账号下的所有组织。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔔</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">用量通知</h3>
+          <p class="text-gray-600">
+            原生 macOS 通知：用量超过 90% 时提醒，配额重置时告知。每种限制类型独立跟踪，也可整体关闭。
           </p>
         </div>
 
         <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
           <div class="text-5xl mb-4">🔄</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">智能刷新</h3>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">智能刷新与自动更新</h3>
           <p class="text-gray-600">
-            4 级自适应刷新频率，活跃时 1 分钟快速刷新，闲置时逐步降至 10 分钟
-          </p>
-        </div>
-
-        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
-          <div class="text-5xl mb-4">🌍</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">多语言支持</h3>
-          <p class="text-gray-600">
-            原生支持 5 种语言：英语、日语、韩语、简体中文、繁体中文。自动跟随系统语言或手动切换。
+            4 级自适应刷新：使用时每分钟刷新，闲置时逐步降至 10 分钟，也可固定间隔。应用还会自动检查并原地完成更新。
           </p>
         </div>
 
@@ -180,7 +202,15 @@
           <div class="text-5xl mb-4">🎨</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">个性化定制</h3>
           <p class="text-gray-600">
-            智能模式自动检测可用限制，或自定义显示哪些限制。3 种主题（彩色半透明/彩色背景/单色）满足个人化需求。
+            智能模式自动识别你实际拥有的限制，也可自行选择。3 种菜单栏主题、3 档图标尺寸，以及跟随系统 / 浅色 / 深色外观。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌍</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">多语言支持</h3>
+          <p class="text-gray-600">
+            应用界面支持 7 种语言：英语、日语、韩语、简体中文、繁体中文、法语和德语。自动跟随系统语言，也可手动切换。
           </p>
         </div>
 
@@ -188,7 +218,7 @@
           <div class="text-5xl mb-4">🔒</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">安全隐私</h3>
           <p class="text-gray-600">
-            所有数据仅本地存储，Session Key 通过 Keychain 加密，100% 开源代码，可自由审计
+            所有数据只留在你的 Mac 上。Claude 与 Codex 凭据保存在 Keychain 中，应用运行于沙盒内，代码完全开源可审计。
           </p>
         </div>
       </div>
@@ -210,39 +240,63 @@
           <table class="mx-auto border-collapse">
             <thead>
               <tr class="border-b-2 border-gray-300">
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700"></th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">图标</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">5小时</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7天</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">5 小时</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7 天</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">额外用量</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7天 Opus</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7天 Sonnet</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7 天 Opus</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7 天 Sonnet</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">单色主题</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr class="border-b border-gray-200">
+                <td class="px-4 py-6 text-center text-sm font-semibold text-gray-700">Claude</td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.icon@2x.png" alt="仅图标" class="inline-block" style="width: auto; height: 40px;">
+                  <img src="images/screenshots/bar.icon@2x.png" alt="Claude 图标" class="inline-block" style="width: auto; height: 40px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.5h@2x.png" alt="5小时限制" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.5h@2x.png" alt="Claude 5 小时" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7d@2x.png" alt="7天限制" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7d@2x.png" alt="Claude 7 天" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.ex@2x.png" alt="额外用量" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.ex@2x.png" alt="Claude 额外用量" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7do@2x.png" alt="7天 Opus" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7do@2x.png" alt="Claude 7 天 Opus" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7ds@2x.png" alt="7天 Sonnet" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7ds@2x.png" alt="Claude 7 天 Sonnet" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.mono.b@2x.png" alt="单色黑色" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <img src="images/screenshots/bar.mono.b@2x.png" alt="Claude 单色主题" class="inline-block mb-2" style="height: 35px; width: auto;">
                   <br>
-                  <img src="images/screenshots/bar.mono.w@2x.png" alt="单色白色" class="inline-block" style="height: 35px; width: auto;">
+                  <img src="images/screenshots/bar.mono.w@2x.png" alt="Claude 单色主题" class="inline-block" style="height: 35px; width: auto;">
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-6 text-center text-sm font-semibold text-gray-700">Codex</td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.icon.codex@2x.png" alt="Codex 图标" class="inline-block" style="width: auto; height: 40px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.5h.codex@2x.png" alt="Codex 5 小时" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7d.codex@2x.png" alt="Codex 7 天" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.ex.codex@2x.png" alt="Codex 积分" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center text-gray-400">—</td>
+                <td class="px-4 py-6 text-center text-gray-400">—</td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.mono.b.codex@2x.png" alt="Codex 单色主题" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <br>
+                  <img src="images/screenshots/bar.mono.w.codex@2x.png" alt="Codex 单色主题" class="inline-block" style="height: 35px; width: auto;">
                 </td>
               </tr>
             </tbody>
@@ -250,13 +304,20 @@
         </div>
 
         <div class="mt-8 text-center">
-          <p class="text-sm font-semibold text-gray-700 mb-4">颜色指示器：</p>
+          <p class="text-sm font-semibold text-gray-700 mb-4">颜色指示（Claude）：</p>
           <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
-            <div><strong>5小时：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
-            <div><strong>7天：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
-            <div><strong>额外用量：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
-            <div><strong>Opus：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
-            <div><strong>Sonnet：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
+            <div><strong>5 小时:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
+            <div><strong>7 天:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
+            <div><strong>额外用量:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
+            <div><strong>Opus:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
+            <div><strong>Sonnet:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
+          </div>
+
+          <p class="text-sm font-semibold text-gray-700 mt-6 mb-4">颜色指示（Codex）：</p>
+          <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
+            <div><strong>5 小时:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #2DD4BF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #0D9488;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #134E4A;"></span></div>
+            <div><strong>7 天:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #60A5FA;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #2563EB;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #1E3A8A;"></span></div>
+            <div><strong>积分:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #F59E0B;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D97706;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #78350F;"></span></div>
           </div>
         </div>
       </div>
@@ -265,13 +326,17 @@
         <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">详情窗口</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div class="screenshot-card text-center">
-            <img src="images/screenshots/detail.5.zh-CN@2x.png" alt="5小时限制模式" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
-            <p class="mt-4 text-gray-600 text-sm italic">5小时限制模式</p>
+            <img src="images/screenshots/detail.claude.zh-CN@2x.png" alt="仅 Claude 模式" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">仅 Claude 模式</p>
           </div>
           <div class="screenshot-card text-center">
-            <img src="images/screenshots/detail.all.zh-CN@2x.png" alt="所有限制模式" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
-            <p class="mt-4 text-gray-600 text-sm italic">所有限制模式<br>（可自由选择任意组合）</p>
+            <img src="images/screenshots/detail.codex.zh-CN@2x.png" alt="仅 Codex 模式" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">仅 Codex 模式</p>
           </div>
+        </div>
+        <div class="mt-8 screenshot-card text-center">
+          <img src="images/screenshots/detail.both.zh-CN@2x.png" alt="Claude + Codex" loading="lazy" class="w-full max-w-xl mx-auto rounded-xl shadow-xl">
+          <p class="mt-4 text-gray-600 text-sm italic">Claude + Codex 模式<br>（可自由组合选择）</p>
         </div>
       </div>
     </div>
@@ -287,8 +352,8 @@
       </div>
 
       <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
-          下载最新版本 (v2.0.0)
+        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg" data-latest-version="下载最新版本 ({version})">
+          下载最新版本 (v3.4.1)
         </a>
         <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
           ⭐ Star on GitHub
@@ -309,9 +374,11 @@
         <div class="bg-white p-8 rounded-xl shadow-lg">
           <div class="w-16 h-16 bg-[#CC785C] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
           <h3 class="text-xl font-semibold mb-2 text-gray-900">首次启动</h3>
-          <p class="text-gray-600">右键点击并选择"打开"以允许运行</p>
+          <p class="text-gray-600">右键点击选择"打开"以允许运行</p>
         </div>
       </div>
+
+      <p class="mt-10 text-gray-600">之后的版本无需手动下载 —— 应用会自动检查更新并原地升级。</p>
     </div>
   </section>
 
@@ -323,7 +390,7 @@
             <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
             <span class="text-xl font-semibold text-white">Usage4Claude</span>
           </div>
-          <p class="text-sm">优雅的 macOS 菜单栏应用，实时监控 Claude AI 使用配额</p>
+          <p class="text-sm">优雅的 macOS 菜单栏应用，实时监控 Claude 与 Codex 使用配额</p>
         </div>
 
         <div class="min-w-[140px]">
@@ -343,7 +410,7 @@
               <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M8 14.25s-5-4.5-5-7.5a3.5 3.5 0 0 1 7 0c0-1.933 1.567-3.5 3.5-3.5s3.5 1.567 3.5 3.5c0 3-5 7.5-5 7.5z"/>
               </svg>
-              GitHub 赞助
+              GitHub Sponsor
             </a></li>
             <li><a href="https://ko-fi.com/1atte" class="hover:text-white transition-colors flex items-center">
               <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 16 16">
@@ -366,11 +433,12 @@
 
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
         <p>&copy; 2026 f-is-h. Licensed under MIT License.</p>
-        <p class="mt-2 text-gray-500">本项目与 Anthropic 或 Claude AI 无官方关联</p>
+        <p class="mt-2 text-gray-500">本项目与 Anthropic、Claude AI 或 OpenAI 无官方关联</p>
       </div>
     </div>
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/version.js"></script>
 </body>
 </html>

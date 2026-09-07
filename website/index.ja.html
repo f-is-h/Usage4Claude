@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Usage4Claude - macOS メニューバーで Claude AI 使用量をリアルタイム監視</title>
-  <meta name="description" content="エレガントな macOS メニューバーアプリで Claude AI 使用量をリアルタイム監視。5時間・7日間の二重制限対応、クロスプラットフォーム、ローカルストレージ、オープンソース。">
-  <meta name="keywords" content="Claude AI, 使用量監視, macOS, メニューバー, リアルタイム監視">
+  <title>Usage4Claude - macOS メニューバーで Claude と Codex の使用量をリアルタイム監視</title>
+  <meta name="description" content="エレガントな macOS メニューバーアプリで Claude と Codex の使用量をリアルタイム監視。5時間・7日間・モデル別の週間制限に対応、複数アカウント管理、ローカル保存、オープンソース。">
+  <meta name="keywords" content="Claude AI, Codex, Claude Code, 使用量監視, macOS, メニューバー, リアルタイム監視">
 
   <link rel="canonical" href="https://usage4claude.pages.dev/index.ja.html">
   <link rel="alternate" hreflang="en" href="https://usage4claude.pages.dev/">
@@ -14,12 +14,14 @@
   <link rel="alternate" hreflang="ja" href="https://usage4claude.pages.dev/index.ja.html">
   <link rel="alternate" hreflang="zh-TW" href="https://usage4claude.pages.dev/index.zh-tw.html">
   <link rel="alternate" hreflang="ko" href="https://usage4claude.pages.dev/index.ko.html">
+  <link rel="alternate" hreflang="fr" href="https://usage4claude.pages.dev/index.fr.html">
+  <link rel="alternate" hreflang="de" href="https://usage4claude.pages.dev/index.de.html">
   <link rel="alternate" hreflang="x-default" href="https://usage4claude.pages.dev/">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
-  <meta property="og:title" content="Usage4Claude - Claude AI 使用量をリアルタイム監視">
-  <meta property="og:description" content="エレガントな macOS メニューバーアプリで Claude AI 使用量をリアルタイム監視。5時間・7日間の二重制限対応、クロスプラットフォーム、ローカルストレージ、オープンソース。">
+  <meta property="og:title" content="Usage4Claude - Claude と Codex の使用量をリアルタイム監視">
+  <meta property="og:description" content="エレガントな macOS メニューバーアプリで Claude と Codex の使用量をリアルタイム監視。5時間・7日間・モデル別の週間制限に対応、複数アカウント管理、ローカル保存、オープンソース。">
   <meta property="og:url" content="https://usage4claude.pages.dev/index.ja.html">
   <meta property="og:image" content="https://usage4claude.pages.dev/images/og-image.png">
   <meta property="og:image:width" content="1224">
@@ -27,8 +29,8 @@
   <meta property="og:image:alt" content="Usage4Claude アプリスクリーンショット">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Usage4Claude - Claude AI 使用量をリアルタイム監視">
-  <meta name="twitter:description" content="エレガントな macOS メニューバーアプリで Claude AI 使用量をリアルタイム監視。">
+  <meta name="twitter:title" content="Usage4Claude - Claude と Codex の使用量をリアルタイム監視">
+  <meta name="twitter:description" content="エレガントな macOS メニューバーアプリで Claude と Codex の使用量をリアルタイム監視。">
   <meta name="twitter:image" content="https://usage4claude.pages.dev/images/og-image.png">
 
   <link rel="icon" type="image/png" href="favicon.ico">
@@ -42,10 +44,12 @@
       if (!localStorage.getItem('languageSelected')) {
         const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
         const langMap = {
-          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn',
+          'zh-cn': '/index.zh-cn', 'zh': '/index.zh-cn', 'zh-sg': '/index.zh-cn',
           'ja': '/index.ja', 'ja-jp': '/index.ja',
-          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw',
-          'ko': '/index.ko', 'ko-kr': '/index.ko'
+          'zh-tw': '/index.zh-tw', 'zh-hk': '/index.zh-tw', 'zh-mo': '/index.zh-tw',
+          'ko': '/index.ko', 'ko-kr': '/index.ko',
+          'fr': '/index.fr', 'fr-fr': '/index.fr', 'fr-ca': '/index.fr', 'fr-be': '/index.fr', 'fr-ch': '/index.fr',
+          'de': '/index.de', 'de-de': '/index.de', 'de-at': '/index.de', 'de-ch': '/index.de'
         };
         const targetPage = langMap[userLang] || langMap[userLang.split('-')[0]];
         const currentPath = window.location.pathname;
@@ -72,12 +76,14 @@
         <li><a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer">GitHub</a></li>
       </ul>
 
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center flex-wrap justify-end gap-x-2.5 gap-y-1 max-w-[50%] md:max-w-none">
         <a href="/" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">EN</a>
         <a href="/index.ja" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm font-semibold text-[#CC785C]">日本語</a>
         <a href="/index.ko" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">한국어</a>
         <a href="/index.zh-cn" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">简中</a>
         <a href="/index.zh-tw" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">繁中</a>
+        <a href="/index.fr" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">FR</a>
+        <a href="/index.de" onclick="localStorage.setItem('languageSelected', 'true')" class="text-sm text-gray-500 hover:text-gray-700">DE</a>
       </div>
     </nav>
   </header>
@@ -90,27 +96,27 @@
             <svg class="w-5 h-5 text-[#CC785C]" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
             </svg>
-            <span class="text-sm font-semibold text-[#CC785C]">新バージョン v2.0 リリース</span>
+            <span class="text-sm font-semibold text-[#CC785C]" data-latest-version="新バージョン {version} リリース">新バージョン v3.4.1 リリース</span>
           </div>
           <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            Claude AI 使用量を<br>リアルタイム監視
+            Claude と Codex の<br>使用量をリアルタイム監視
           </h1>
           <p class="text-xl lg:text-2xl text-gray-600 mb-8">
-            すべての Claude プラットフォームに対応したエレガントな macOS メニューバーアプリ
+            すべての Claude プラットフォームに対応したエレガントな macOS メニューバーアプリ。Codex の監視も選択可能
           </p>
 
           <ul class="mb-8 space-y-3 text-lg text-gray-700">
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>マルチ制限表示 - 最大 5 種類の使用量制限を同時表示</span>
+              <span>複数制限の表示 - 5時間、7日間、追加使用量、モデル別の週間使用量</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>クロスプラットフォーム - Web/CLI/Desktop/Mobile の使用量を統一監視</span>
+              <span>Claude + Codex - 単独でも、2列並べての同時監視でも</span>
             </li>
             <li class="flex items-start">
               <span class="text-2xl mr-3">•</span>
-              <span>プライバシー優先 - ローカルストレージ、オープンソース、Keychain 暗号化</span>
+              <span>プライバシー優先 - ローカル保存、オープンソース、Keychain 暗号化</span>
             </li>
           </ul>
 
@@ -129,7 +135,7 @@
             <div class="bg-white/80 backdrop-blur-md rounded-lg px-3 py-1.5 shadow-sm border border-gray-200 flex justify-center mb-3" style="width: 400px;">
               <img src="images/screenshots/bar.color.all@2x.png" alt="メニューバーアイコン" style="height: auto; transform: scale(0.85);">
             </div>
-            <img src="images/screenshots/detail@2x.gif" alt="Usage4Claude - 残り時間切り替えアニメーション" class="rounded-2xl shadow-2xl" style="width: 400px; height: auto;">
+            <img src="images/screenshots/detail@2x.gif" alt="Usage4Claude - 時間切替アニメーション" class="rounded-2xl shadow-2xl" style="width: 400px; height: auto;">
           </div>
         </div>
       </div>
@@ -140,7 +146,7 @@
     <div class="container mx-auto px-6">
       <div class="text-center mb-16">
         <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-gray-900">主な機能</h2>
-        <p class="text-xl text-gray-600">Claude AI ユーザーのために設計されたプロフェッショナル監視ツール</p>
+        <p class="text-xl text-gray-600">Claude と Codex のユーザーのために設計されたプロフェッショナル監視ツール</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -148,7 +154,15 @@
           <div class="text-5xl mb-4">📊</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">リアルタイム監視</h3>
           <p class="text-gray-600">
-            最大 5 種類の使用量制限を監視：5時間、7日間、追加使用量、7日間 Opus、7日間 Sonnet。区別しやすいように形状が異なるスマートなカラーコード付きプログレスリング。
+            5時間・7日間・追加使用量の制限に加え、API が返すすべてのモデルの週間使用量（Opus、Sonnet、Fable など）を表示。形状の異なるカラーコード付きリングで一目で判別できます。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🧩</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">Codex 対応</h3>
+          <p class="text-gray-600">
+            Codex の5時間・7日間・クレジット使用量を、単独でも Claude と並べても監視。ログインはシステムブラウザ経由。Codex アカウントを追加するまで、Claude だけの使い勝手は一切変わりません。
           </p>
         </div>
 
@@ -156,23 +170,31 @@
           <div class="text-5xl mb-4">🌐</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">クロスプラットフォーム対応</h3>
           <p class="text-gray-600">
-            すべての Claude プラットフォームを統一監視：Web版、Claude Code、デスクトップアプリ、モバイルアプリ - 一箇所ですべての使用量を確認
+            すべての Claude 製品を統一監視：Web版、Claude Code、デスクトップアプリ、モバイルアプリ、Cowork —— 同じ使用量枠を一箇所で確認。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">👥</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">複数アカウント管理</h3>
+          <p class="text-gray-600">
+            Claude と Codex のアカウントを複数追加し、エイリアスを付けてメニューバーから切り替え。1回のログインでそのアカウントの全組織を自動的に取得します。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🔔</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">使用量通知</h3>
+          <p class="text-gray-600">
+            macOS ネイティブ通知で、使用量が90%を超えたときに警告し、使用量枠がリセットされた瞬間をお知らせ。制限タイプごとに個別に追跡し、まとめてオフにもできます。
           </p>
         </div>
 
         <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
           <div class="text-5xl mb-4">🔄</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">スマート更新</h3>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">スマート更新と自動アップデート</h3>
           <p class="text-gray-600">
-            4段階の適応型更新頻度、アクティブ時は1分間隔で高速更新、アイドル時は徐々に10分間隔まで減少
-          </p>
-        </div>
-
-        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
-          <div class="text-5xl mb-4">🌍</div>
-          <h3 class="text-2xl font-semibold mb-3 text-gray-900">多言語対応</h3>
-          <p class="text-gray-600">
-            5つの言語をネイティブサポート：英語、日本語、韓国語、簡体字中国語、繁体字中国語。インターフェース言語はシステムに自動追従または手動切替可能
+            4段階の適応型更新：作業中は1分間隔、アイドル時は10分間隔まで緩やかに移行。固定間隔も選択可能。アプリ自体もその場で自動更新されます。
           </p>
         </div>
 
@@ -180,7 +202,15 @@
           <div class="text-5xl mb-4">🎨</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">パーソナライゼーション</h3>
           <p class="text-gray-600">
-            スマートモードで利用可能な制限を自動検出、またはカスタムで表示する制限を選択。3つのテーマ（カラー半透明/カラー背景付き/モノクロ）でパーソナライズ可能。
+            スマートモードが実際に利用可能な制限を自動検出、手動選択も可能。3つのメニューバーテーマ、3段階のアイコンサイズ、システム/ライト/ダークの外観モード。
+          </p>
+        </div>
+
+        <div class="feature-card p-8 rounded-xl border border-gray-200 hover:shadow-xl transition-all duration-300">
+          <div class="text-5xl mb-4">🌍</div>
+          <h3 class="text-2xl font-semibold mb-3 text-gray-900">多言語対応</h3>
+          <p class="text-gray-600">
+            アプリは7言語に対応：英語、日本語、韓国語、簡体字中国語、繁体字中国語、フランス語、ドイツ語。システム言語に自動追従、手動切替も可能。
           </p>
         </div>
 
@@ -188,7 +218,7 @@
           <div class="text-5xl mb-4">🔒</div>
           <h3 class="text-2xl font-semibold mb-3 text-gray-900">セキュリティとプライバシー</h3>
           <p class="text-gray-600">
-            すべてのデータはローカルにのみ保存、Session Key は Keychain で暗号化、100% オープンソースコード、自由に監査可能
+            すべてのデータは Mac 内にとどまります。Claude と Codex の認証情報は Keychain に保存され、アプリはサンドボックス内で動作。ソースコードは完全公開で誰でも監査できます。
           </p>
         </div>
       </div>
@@ -210,39 +240,63 @@
           <table class="mx-auto border-collapse">
             <thead>
               <tr class="border-b-2 border-gray-300">
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700"></th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">アイコン</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">5時間</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7日間</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">追加</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">追加使用量</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7日間 Opus</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">7日間 Sonnet</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">モノクロ</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr class="border-b border-gray-200">
+                <td class="px-4 py-6 text-center text-sm font-semibold text-gray-700">Claude</td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.icon@2x.png" alt="アイコンのみ" class="inline-block" style="width: auto; height: 40px;">
+                  <img src="images/screenshots/bar.icon@2x.png" alt="Claude アイコン" class="inline-block" style="width: auto; height: 40px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.5h@2x.png" alt="5時間制限" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.5h@2x.png" alt="Claude 5時間" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7d@2x.png" alt="7日間制限" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7d@2x.png" alt="Claude 7日間" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.ex@2x.png" alt="追加使用量" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.ex@2x.png" alt="Claude 追加使用量" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7do@2x.png" alt="7日間 Opus" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7do@2x.png" alt="Claude 7日間 Opus" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.7ds@2x.png" alt="7日間 Sonnet" class="inline-block" style="width: auto; height: 45px;">
+                  <img src="images/screenshots/bar.7ds@2x.png" alt="Claude 7日間 Sonnet" class="inline-block" style="width: auto; height: 45px;">
                 </td>
                 <td class="px-4 py-6 text-center">
-                  <img src="images/screenshots/bar.mono.b@2x.png" alt="モノクロ黒" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <img src="images/screenshots/bar.mono.b@2x.png" alt="Claude モノクロ" class="inline-block mb-2" style="height: 35px; width: auto;">
                   <br>
-                  <img src="images/screenshots/bar.mono.w@2x.png" alt="モノクロ白" class="inline-block" style="height: 35px; width: auto;">
+                  <img src="images/screenshots/bar.mono.w@2x.png" alt="Claude モノクロ" class="inline-block" style="height: 35px; width: auto;">
+                </td>
+              </tr>
+              <tr>
+                <td class="px-4 py-6 text-center text-sm font-semibold text-gray-700">Codex</td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.icon.codex@2x.png" alt="Codex アイコン" class="inline-block" style="width: auto; height: 40px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.5h.codex@2x.png" alt="Codex 5時間" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.7d.codex@2x.png" alt="Codex 7日間" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.ex.codex@2x.png" alt="Codex クレジット" class="inline-block" style="width: auto; height: 45px;">
+                </td>
+                <td class="px-4 py-6 text-center text-gray-400">—</td>
+                <td class="px-4 py-6 text-center text-gray-400">—</td>
+                <td class="px-4 py-6 text-center">
+                  <img src="images/screenshots/bar.mono.b.codex@2x.png" alt="Codex モノクロ" class="inline-block mb-2" style="height: 35px; width: auto;">
+                  <br>
+                  <img src="images/screenshots/bar.mono.w.codex@2x.png" alt="Codex モノクロ" class="inline-block" style="height: 35px; width: auto;">
                 </td>
               </tr>
             </tbody>
@@ -250,13 +304,20 @@
         </div>
 
         <div class="mt-8 text-center">
-          <p class="text-sm font-semibold text-gray-700 mb-4">カラーインジケーター：</p>
+          <p class="text-sm font-semibold text-gray-700 mb-4">カラーインジケーター（Claude）：</p>
           <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
-            <div><strong>5時間：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
-            <div><strong>7日間：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
-            <div><strong>追加：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
-            <div><strong>Opus：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
-            <div><strong>Sonnet：</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
+            <div><strong>5時間:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #34C759;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9500;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF3B30;"></span></div>
+            <div><strong>7日間:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #C084FC;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B450F0;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #B41EA0;"></span></div>
+            <div><strong>追加使用量:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF9ECD;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #EC4899;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D946EF;"></span></div>
+            <div><strong>Opus:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FFC864;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FBBF24;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #FF6432;"></span></div>
+            <div><strong>Sonnet:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #64C8FF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #007AFF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #4F46E5;"></span></div>
+          </div>
+
+          <p class="text-sm font-semibold text-gray-700 mt-6 mb-4">カラーインジケーター（Codex）：</p>
+          <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-600">
+            <div><strong>5時間:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #2DD4BF;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #0D9488;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #134E4A;"></span></div>
+            <div><strong>7日間:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #60A5FA;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #2563EB;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #1E3A8A;"></span></div>
+            <div><strong>クレジット:</strong> <span class="inline-block w-3 h-3 rounded-full" style="background-color: #F59E0B;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #D97706;"></span> → <span class="inline-block w-3 h-3 rounded-full" style="background-color: #78350F;"></span></div>
           </div>
         </div>
       </div>
@@ -265,13 +326,17 @@
         <h3 class="text-2xl font-semibold mb-8 text-center text-gray-800">詳細ウィンドウ</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div class="screenshot-card text-center">
-            <img src="images/screenshots/detail.5.ja@2x.png" alt="5時間制限モード" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
-            <p class="mt-4 text-gray-600 text-sm italic">5時間制限モード</p>
+            <img src="images/screenshots/detail.claude.ja@2x.png" alt="Claude のみモード" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">Claude のみモード</p>
           </div>
           <div class="screenshot-card text-center">
-            <img src="images/screenshots/detail.all.ja@2x.png" alt="全制限モード" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
-            <p class="mt-4 text-gray-600 text-sm italic">全制限モード<br>（任意の組み合わせを自由に選択可能）</p>
+            <img src="images/screenshots/detail.codex.ja@2x.png" alt="Codex のみモード" loading="lazy" class="w-full max-w-xs mx-auto rounded-xl shadow-xl">
+            <p class="mt-4 text-gray-600 text-sm italic">Codex のみモード</p>
           </div>
+        </div>
+        <div class="mt-8 screenshot-card text-center">
+          <img src="images/screenshots/detail.both.ja@2x.png" alt="Claude + Codex" loading="lazy" class="w-full max-w-xl mx-auto rounded-xl shadow-xl">
+          <p class="mt-4 text-gray-600 text-sm italic">Claude + Codex モード<br>（任意の組み合わせを自由に選択可能）</p>
         </div>
       </div>
     </div>
@@ -287,8 +352,8 @@
       </div>
 
       <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg">
-          最新版をダウンロード (v2.0.0)
+        <a href="https://github.com/f-is-h/Usage4Claude/releases/latest" class="btn-primary px-10 py-5 text-lg bg-[#CC785C] text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-lg" data-latest-version="最新版をダウンロード ({version})">
+          最新版をダウンロード (v3.4.1)
         </a>
         <a href="https://github.com/f-is-h/Usage4Claude" target="_blank" rel="noopener noreferrer" class="btn-secondary px-10 py-5 text-lg border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition-all">
           ⭐ Star on GitHub
@@ -312,6 +377,8 @@
           <p class="text-gray-600">右クリックして「開く」を選択し、実行を許可</p>
         </div>
       </div>
+
+      <p class="mt-10 text-gray-600">以降のバージョンは手動ダウンロード不要 —— アプリが更新を確認し、その場でインストールします。</p>
     </div>
   </section>
 
@@ -323,7 +390,7 @@
             <img src="images/icon.png" alt="Usage4Claude" class="w-10 h-10">
             <span class="text-xl font-semibold text-white">Usage4Claude</span>
           </div>
-          <p class="text-sm">エレガントな macOS メニューバーアプリで Claude AI 使用量をリアルタイム監視</p>
+          <p class="text-sm">エレガントな macOS メニューバーアプリで Claude と Codex の使用量をリアルタイム監視</p>
         </div>
 
         <div class="min-w-[140px]">
@@ -366,11 +433,12 @@
 
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
         <p>&copy; 2026 f-is-h. Licensed under MIT License.</p>
-        <p class="mt-2 text-gray-500">このプロジェクトは Anthropic または Claude AI と公式な関連はありません</p>
+        <p class="mt-2 text-gray-500">このプロジェクトは Anthropic、Claude AI、OpenAI と公式な関連はありません</p>
       </div>
     </div>
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/version.js"></script>
 </body>
 </html>

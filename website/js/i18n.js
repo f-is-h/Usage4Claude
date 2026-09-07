@@ -1,4 +1,18 @@
-let currentLang = localStorage.getItem('preferredLanguage') || 'en';
+// 首次访问时按浏览器语言选择，之后沿用用户在本页选过的语言
+function detectLanguage() {
+  const saved = localStorage.getItem('preferredLanguage');
+  if (saved) return saved;
+
+  const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  const langMap = {
+    'zh-cn': 'zh-CN', 'zh-sg': 'zh-CN', 'zh': 'zh-CN',
+    'zh-tw': 'zh-TW', 'zh-hk': 'zh-TW', 'zh-mo': 'zh-TW',
+    'ja': 'ja', 'ko': 'ko', 'fr': 'fr', 'de': 'de'
+  };
+  return langMap[browserLang] || langMap[browserLang.split('-')[0]] || 'en';
+}
+
+let currentLang = detectLanguage();
 
 function switchLanguage(lang) {
   currentLang = lang;
@@ -20,12 +34,13 @@ function switchLanguage(lang) {
       'zh-CN': 'zh',
       'en': 'en',
       'ja': 'ja',
+      'ko': 'ko',
       'zh-TW': 'zh-tw'
     };
     const langSuffix = langSuffixes[lang] || 'zh';
 
     // 更新图片 src
-    const baseSrc = img.src.replace(/-(zh|en|ja|zh-tw)\.(png|jpg|jpeg|webp)/, `.$2`);
+    const baseSrc = img.src.replace(/-(zh|en|ja|ko|zh-tw)\.(png|jpg|jpeg|webp)/, `.$2`);
     const newSrc = baseSrc.replace(/\.(png|jpg|jpeg|webp)/, `-${langSuffix}.$1`);
     img.src = newSrc;
   });
