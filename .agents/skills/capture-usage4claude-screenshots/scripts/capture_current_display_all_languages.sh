@@ -73,6 +73,13 @@ ensure_settings_and_language() {
 tell application "System Events"
   tell application process "Usage4Claude"
     set s to scroll area 1 of group 1 of window 1
+    -- Language is radio group 6 here, but groups[6] (zero-based) under the raw
+    -- Accessibility API, because the two disagree about the icon-size control:
+    -- it is a .segmented picker, which System Events classes as a segmented
+    -- control and skips, while the raw AX API reports it as AXRadioGroup and
+    -- counts it.  apply_scenario.sh reads the raw tree and takes display mode
+    -- from groups[2] for the same reason.  Both numbers are correct for the API
+    -- they are written against; do not "align" them.
     click radio button ${idx} of radio group 6 of s
     delay 0.5
 

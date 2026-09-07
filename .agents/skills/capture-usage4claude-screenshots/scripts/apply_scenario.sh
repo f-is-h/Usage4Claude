@@ -99,6 +99,12 @@ func settingsScrollArea() -> AXUIElement {
 func displayModeRadioGroup(in scrollArea: AXUIElement) -> AXUIElement {
     // The segmented icon-size control is also exposed as AXRadioGroup.  The
     // display mode group is therefore third in the raw AX tree.
+    //
+    // System Events classes that same control as a segmented control and leaves
+    // it out of its radio group numbering, which is why the AppleScript in
+    // capture_current_display_all_languages.sh reaches the language picker as
+    // radio group 6 while it sits at groups[6] here.  The two indices describe
+    // different trees and are both right; reconciling them would break one.
     let groups = children(of: scrollArea).filter { role(of: $0) == "AXRadioGroup" }
     guard groups.count >= 3 else {
         fputs("display mode radio group was not found\n", stderr)
