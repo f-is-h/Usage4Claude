@@ -37,6 +37,29 @@ Set the screenshot state in Usage4Claude settings before capture.
 
 After changing settings, open the main Usage4Claude popover and inspect it with Computer Use. The screenshot should show the intended language and display items before CleanShot starts.
 
+### Reference Debug Usage Values
+
+For canonical documentation screenshots, use a Debug build with Debug Mode enabled and set these eight slider values before capture:
+
+| Debug slider | Value |
+| --- | ---: |
+| Claude 5-Hour | 66% |
+| Claude 7-Day | 88% |
+| Claude Extra Usage | 66% |
+| Claude Opus 7-Day | 66% |
+| Claude Sonnet 7-Day | 66% |
+| Codex Primary | 66% |
+| Codex Secondary | 88% |
+| Codex Extra Usage | 88% |
+
+With General settings open, apply this preset through the live Accessibility slider controls:
+
+```sh
+scripts/apply_reference_debug_values.sh
+```
+
+The script reads each slider back after setting it and fails on a mismatch. It requires a Debug build with Debug Mode enabled; do not run it against a release build. It does not fix reset dates/times, account names, or Debug-only announcement badges—configure those separately when a reference image requires them.
+
 ## Required Screenshot Matrix
 
 Every full screenshot pass usually needs all supported languages for these three scenarios:
@@ -53,8 +76,9 @@ Supported screenshot filename language codes:
 - `zh-TW` -> app language `zh-Hant`
 - `ko` -> app language `ko`
 - `fr` -> app language `fr`
+- `de` -> app language `de`
 
-If the user asks for "all languages", capture in this order: `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `fr`.
+If the user asks for "all languages", capture in this order: `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `fr`, `de`.
 
 When only one group is requested, do that group first and wait for user confirmation before continuing to the next scenario.
 
@@ -77,13 +101,19 @@ The script:
 
 If the target file already exists, choose a temporary test name or ask before replacing it. Do not silently overwrite screenshots.
 
-For repeatable language captures, open the settings window once, configure the requested display scenario there, then switch languages through the settings language radio group and capture the current popover:
+For repeatable language captures, use the language script. It opens General settings, puts the app in custom display mode, and applies the requested display scenario through the Accessibility tree before it starts switching languages:
 
 ```sh
 scripts/capture_current_display_all_languages.sh claude
 ```
 
-This required language workflow assumes the current display options already match the requested scenario. It only switches the app language via the settings UI and captures `detail.<scenario>.<lang>@2x.png`. Use this for language changes; do not switch languages by editing defaults.
+`apply_scenario.sh` controls the eight limit buttons in `LimitType.allCases` order: it first enables every requested type, then disables the remaining types. It reads `AXSelected` after each click and fails if the actual state does not match; this avoids the circular-icon constraint preventing a blind click from taking effect. It also turns off the menu-bar-only fallback so the detail popover observes the selected types. Use this workflow for display options and language changes; do not switch languages or display types by editing defaults.
+
+For a full multilingual reference pass in Debug, opt into the same numeric preset before the scenario is applied:
+
+```sh
+APPLY_REFERENCE_DEBUG_VALUES=1 scripts/capture_current_display_all_languages.sh claude
+```
 
 ## Manual Fallback
 
