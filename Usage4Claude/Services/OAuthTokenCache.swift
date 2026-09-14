@@ -105,6 +105,10 @@ actor OAuthTokenCache {
         return (issuedExpiry ?? expiry, issuedExpiry == nil)
     }
 
+    func credential(forAccessToken accessToken: String) -> String? {
+        cachedAccessToken == accessToken ? cachedForRefreshToken : nil
+    }
+
     /// 清除缓存（账户切换或收到 401 时调用，强制下次重新走网络刷新）
     func clear() {
         cacheRevision += 1
