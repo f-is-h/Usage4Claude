@@ -72,6 +72,10 @@ class DataRefreshManager: ObservableObject {
     @Published private(set) var codexNeedsRelogin = false
     /// Codex 过期通知已发送，防止重复打扰
     private var codexSessionExpiredNotified = false
+    /// Claude 用量拉取的失败退避状态（限流/5xx/网络错误后暂停自动刷新，见 UsageFetchBackoffPolicy）
+    private var claudeBackoff = UsageFetchBackoffPolicy.State.initial
+    /// Codex 用量拉取的失败退避状态
+    private var codexBackoff = UsageFetchBackoffPolicy.State.initial
 
     private var shouldFetchClaudeUsage: Bool {
         #if DEBUG
@@ -129,29 +133,43 @@ class DataRefreshManager: ObservableObject {
     // MARK: - Data Fetching
 
     /// 获取用量数据（Claude + Codex 并发）
-    func fetchUsage() {
-        isLoading = true
-        errorMessage = nil
-        errorRequiresAuthAction = false
-        codexErrorMessage = nil
-        lastAPIFetchTime = Date()
+    /// - Parameter bypassBackoff: 是否无视失败退避。只有用户手动刷新传 true；定时器、系统唤醒、
+    ///   打开 Popover、重置验证等自动触发都必须遵守退避，避免限流期间按固定间隔持续重试
+    func fetchUsage(bypassBackoff: Bool = false) {
+        let claudeEnabled = shouldFetchClaudeUsage
+        let codexEnabled = shouldFetchCodexUsage
 
-        let fetchClaude = shouldFetchClaudeUsage
-        let fetchCodex = shouldFetchCodexUsage
-
-        if !fetchClaude {
+        if !claudeEnabled {
             clearClaudeUsageState()
         }
-        if !fetchCodex {
+        if !codexEnabled {
             clearCodexUsageState()
         }
 
-        guard fetchClaude || fetchCodex else {
+        guard claudeEnabled || codexEnabled else {
             isLoading = false
             endRefreshAnimationWithMinimumDuration { }
             errorMessage = UsageError.noCredentials.localizedDescription
             errorRequiresAuthAction = true
             return
+        }
+
+        let now = Date()
+        let fetchClaude = claudeEnabled && (bypassBackoff || isBackoffElapsed(for: .claude, now: now))
+        let fetchCodex = codexEnabled && (bypassBackoff || isBackoffElapsed(for: .codex, now: now))
+
+        // 两个 Provider 都在退避期内：整次自动刷新跳过，保留缓存数据和错误横幅
+        guard fetchClaude || fetchCodex else { return }
+
+        isLoading = true
+        lastAPIFetchTime = now
+        // 只清除本次实际发起请求的 Provider 的错误；因退避被跳过的一方继续显示原来的错误横幅
+        if fetchClaude {
+            errorMessage = nil
+            errorRequiresAuthAction = false
+        }
+        if fetchCodex {
+            codexErrorMessage = nil
         }
 
         // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
@@ -183,6 +201,7 @@ class DataRefreshManager: ObservableObject {
                     if case UsageError.unauthorized = error {
                         self.attemptTokenRefreshAndRetry()
                     } else {
+                        self.recordFetchFailure(error, for: .codex)
                         self.codexErrorMessage = error.localizedDescription
                         self.clearCodexUsageState(clearError: false)
                     }
@@ -190,7 +209,8 @@ class DataRefreshManager: ObservableObject {
                 case .none:
                     self.clearCodexUsageState()
                 }
-            } else {
+            } else if !codexEnabled {
+                // 仅在未配置 Codex 时清理；因退避跳过时要保留错误横幅
                 self.clearCodexUsageState()
             }
 
@@ -202,6 +222,7 @@ class DataRefreshManager: ObservableObject {
                     self.usageData = data
                     self.errorMessage = nil
                     self.errorRequiresAuthAction = false
+                    self.recordFetchSuccess(for: .claude)
                     monitoringUtilizations[.claude] = data.percentage
 
                     if self.settings.notificationsEnabled {
@@ -220,6 +241,7 @@ class DataRefreshManager: ObservableObject {
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
                     self.errorRequiresAuthAction = self.requiresAuthAction(error)
+                    self.recordFetchFailure(error, for: .claude)
                     AppLog.error(.refresh, "Claude refresh failed: \(error.localizedDescription)")
 
                 case .none:
@@ -479,8 +501,8 @@ class DataRefreshManager: ObservableObject {
             self?.refreshState.canRefresh = true
         }
 
-        // 触发刷新
-        fetchUsage()
+        // 触发刷新（用户主动操作，不受失败退避约束；10 秒防抖已限制频率）
+        fetchUsage(bypassBackoff: true)
     }
 
     /// 仅刷新 Claude 数据（Claude 圆环点击触发）
@@ -552,6 +574,7 @@ class DataRefreshManager: ObservableObject {
                 if self.settings.notificationsEnabled {
                     NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                 }
+                self.recordFetchSuccess(for: .claude)
                 self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
                 let newResetsAt = data.resetsAt
                 if hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
@@ -564,6 +587,7 @@ class DataRefreshManager: ObservableObject {
                 // 保留缓存数据（与 fetchUsage 的失败路径一致），瞬时错误下 UI 只显示横幅
                 self.errorMessage = error.localizedDescription
                 self.errorRequiresAuthAction = self.requiresAuthAction(error)
+                self.recordFetchFailure(error, for: .claude)
                 AppLog.error(.refresh, "Claude-only refresh failed; keeping cached data: \(error.localizedDescription)")
             }
         }
@@ -593,6 +617,7 @@ class DataRefreshManager: ObservableObject {
                         self.codexApiService.clearAccessTokenCache()
                         self.attemptTokenRefreshAndRetry()
                     } else {
+                        self.recordFetchFailure(error, for: .codex)
                         self.codexErrorMessage = error.localizedDescription
                         self.clearCodexUsageState(clearError: false)
                         AppLog.error(.refresh, "Codex refresh failed: \(error.localizedDescription)")
@@ -603,6 +628,7 @@ class DataRefreshManager: ObservableObject {
     }
 
     private func processCodexSuccess(_ data: CodexUsageData) {
+        recordFetchSuccess(for: .codex)
         let previousCodexData = codexUsageData
         codexUsageData = data
         codexErrorMessage = nil
@@ -689,6 +715,12 @@ class DataRefreshManager: ObservableObject {
                 switch usageResult {
                 case .success(let data):
                     self.processCodexSuccess(data)
+                case .failure(let error) where self.backoffFailure(for: error) != nil:
+                    // 新 token 仍被限流或网络失败，说明问题不在凭据：进入退避，而不是升级到 WebView 刷新再多打请求
+                    AppLog.warning(.auth, "Codex usage failed with a freshly issued accessToken for a non-auth reason (\(error.localizedDescription)); backing off instead of escalating to tier 2")
+                    self.recordFetchFailure(error, for: .codex)
+                    self.codexErrorMessage = error.localizedDescription
+                    self.clearCodexUsageState(clearError: false)
                 case .failure(let error):
                     AppLog.warning(.auth, "Codex usage still failed with a freshly issued accessToken: \(error.localizedDescription); falling back to tier 2")
                     self.attemptLevel2WebViewRefresh()
@@ -719,11 +751,13 @@ class DataRefreshManager: ObservableObject {
 
     /// 账户切换后只清理并刷新对应 Provider，避免跨账号 previousData 误判重置。
     /// 通知去重状态按账号隔离，切换账号时保留，删除账号时再由 UserSettings 精准清理。
+    /// 限流按 token 计，新账号不继承旧账号的失败退避。
     func handleAccountChanged(provider: ProviderType?) {
         switch provider {
         case .claude:
             errorMessage = nil
             errorRequiresAuthAction = false
+            claudeBackoff = .initial
             clearClaudeUsageState()
             if shouldFetchClaudeUsage {
                 fetchClaudeOnly()
@@ -731,6 +765,7 @@ class DataRefreshManager: ObservableObject {
 
         case .codex:
             resetCodexReloginState()
+            codexBackoff = .initial
             codexApiService.clearAccessTokenCache()
             clearCodexUsageState()
             if shouldFetchCodexUsage {
@@ -738,6 +773,8 @@ class DataRefreshManager: ObservableObject {
             }
 
         case .none:
+            claudeBackoff = .initial
+            codexBackoff = .initial
             clearClaudeUsageState()
             clearCodexUsageState()
             NotificationManager.shared.resetAllNotificationStates()
@@ -775,6 +812,71 @@ class DataRefreshManager: ObservableObject {
 
         // 清除开始时间记录
         refreshAnimationStartTime = nil
+    }
+
+    // MARK: - Fetch Backoff
+
+    private func backoffState(for provider: ProviderType) -> UsageFetchBackoffPolicy.State {
+        provider == .claude ? claudeBackoff : codexBackoff
+    }
+
+    private func setBackoffState(_ state: UsageFetchBackoffPolicy.State, for provider: ProviderType) {
+        switch provider {
+        case .claude: claudeBackoff = state
+        case .codex: codexBackoff = state
+        }
+    }
+
+    /// 自动刷新前检查该 Provider 是否已走出退避期；仍在退避期内时记日志并返回 false
+    /// - Note: 定时器不会为退避单独重排，退避结束后的第一个常规 tick 才会恢复请求
+    private func isBackoffElapsed(for provider: ProviderType, now: Date) -> Bool {
+        let state = backoffState(for: provider)
+        guard !UsageFetchBackoffPolicy.shouldFetch(state: state, now: now) else { return true }
+        let remaining = Int((state.retryNotBefore?.timeIntervalSince(now) ?? 0).rounded(.up))
+        AppLog.event(.refresh, "\(provider.displayName) automatic refresh skipped: backing off after \(state.consecutiveFailures) failure(s), \(remaining)s remaining")
+        return false
+    }
+
+    /// 把错误归类为可退避的失败；返回 nil 表示不进入退避。
+    /// 只有限流、5xx、网络错误、Cloudflare 拦截这类「立即重试只会加重」的错误退避；认证错误需要用户处理
+    /// （Codex 另有三级刷新链），解析错误重试也不会变好，被新一轮请求取消（requestCancelled）也不是真实失败
+    private func backoffFailure(for error: Error) -> UsageFetchBackoffPolicy.Failure? {
+        switch error {
+        case UsageError.rateLimited(let retryAfter):
+            return .rateLimited(retryAfter: retryAfter)
+        case UsageError.httpError(let statusCode) where statusCode == 429:
+            // OAuth token 端点的 429 以 httpError 形式透传，没有 Retry-After 可用
+            return .rateLimited(retryAfter: nil)
+        case UsageError.httpError(let statusCode) where statusCode >= 500:
+            return .serverError
+        case UsageError.cloudflareBlocked:
+            return .serverError
+        case UsageError.networkError:
+            return .network
+        default:
+            return nil
+        }
+    }
+
+    /// 记录一次拉取失败，不可退避的错误直接忽略
+    private func recordFetchFailure(_ error: Error, for provider: ProviderType) {
+        guard let failure = backoffFailure(for: error) else { return }
+        let next = UsageFetchBackoffPolicy.recordFailure(
+            state: backoffState(for: provider),
+            failure: failure,
+            now: Date(),
+            jitterFraction: Double.random(in: 0...UsageFetchBackoffPolicy.maxJitterFraction)
+        )
+        setBackoffState(next, for: provider)
+        let delay = Int((next.retryNotBefore?.timeIntervalSinceNow ?? 0).rounded(.up))
+        AppLog.warning(.refresh, "\(provider.displayName) automatic refreshes backing off for \(delay)s after \(next.consecutiveFailures) consecutive failure(s)")
+    }
+
+    private func recordFetchSuccess(for provider: ProviderType) {
+        let state = backoffState(for: provider)
+        guard state != .initial else { return }
+        AppLog.event(.refresh, "\(provider.displayName) fetch succeeded after \(state.consecutiveFailures) failure(s); backoff cleared")
+        setBackoffState(.initial, for: provider)
     }
 
     // MARK: - Reset Verification

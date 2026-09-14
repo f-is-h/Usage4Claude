@@ -193,7 +193,7 @@ class CodexAPIService {
                 let result: Result<OAuthTokenCache.Tokens, Error> = {
                     if let error {
                         AppLog.error(.api, "Codex session request failed with a network error: \(error.localizedDescription)")
-                        return .failure(UsageError.networkError)
+                        return .failure(UsageError.fromTransportError(error))
                     }
                     guard let data else { return .failure(UsageError.noData) }
 
@@ -218,7 +218,7 @@ class CodexAPIService {
                         case 200...299: break
                         case 401: return .failure(UsageError.unauthorized)
                         case 403: return .failure(UsageError.cloudflareBlocked)
-                        case 429: return .failure(UsageError.rateLimited)
+                        case 429: return .failure(UsageError.fromRateLimitResponse(httpResponse))
                         default:
                             return .failure(UsageError.httpError(statusCode: httpResponse.statusCode))
                         }
@@ -337,7 +337,7 @@ class CodexAPIService {
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
                 AppLog.error(.api, "Codex usage request failed with a network error: \(error.localizedDescription)")
-                completion(.failure(UsageError.networkError))
+                completion(.failure(UsageError.fromTransportError(error)))
                 return
             }
 
@@ -367,7 +367,7 @@ class CodexAPIService {
                     }
                     return
                 case 403: completion(.failure(UsageError.cloudflareBlocked)); return
-                case 429: completion(.failure(UsageError.rateLimited)); return
+                case 429: completion(.failure(UsageError.fromRateLimitResponse(httpResponse))); return
                 default:
                     completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
