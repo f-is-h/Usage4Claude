@@ -66,90 +66,105 @@ struct CodexColumnView: View {
     var body: some View {
         VStack(spacing: 15) {
             // 圆环区域
-            ZStack {
-                if let primary = primaryRingData {
-                    let primaryColor = primaryRingColor(for: primary.percentage)
-                    let primaryRange = UsageRingDisplay.displayedTrimRange(
-                        usedPercentage: primary.percentage,
-                        showRemainingMode: showRemainingMode
-                    )
-
-                    // 背景圆环
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                        .frame(width: 100, height: 100)
-
-                    // 主进度条（刷新中显示加载动画）
-                    if isCodexRefreshing {
-                        codexLoadingAnimation()
-                    } else {
-                        Circle()
-                            .trim(from: primaryRange.from, to: primaryRange.to)
-                            .stroke(
-                                primaryColor,
-                                style: StrokeStyle(lineWidth: 10, lineCap: .round)
+            // 根据用户设置选择圆形或线性图表
+            Group {
+                switch UserSettings.shared.graphDisplayType {
+                case .circular:
+                    ZStack {
+                        if let primary = primaryRingData {
+                            let primaryColor = primaryRingColor(for: primary.percentage)
+                            let primaryRange = UsageRingDisplay.displayedTrimRange(
+                                usedPercentage: primary.percentage,
+                                showRemainingMode: showRemainingMode
                             )
-                            .frame(width: 100, height: 100)
-                            .rotationEffect(.degrees(-90))
-                            .animation(
-                                .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
-                                value: primaryRange
-                            )
-                    }
 
-                    // 外层细圆环（Secondary / 7天）
-                    if showSecondaryRing, let secondary = secondaryData {
-                        let secondaryRange = UsageRingDisplay.displayedTrimRange(
-                            usedPercentage: secondary.percentage,
-                            showRemainingMode: showRemainingMode
-                        )
-
-                        Circle()
-                            .stroke(Color.gray.opacity(0.15), lineWidth: 3)
-                            .frame(width: 114, height: 114)
-
-                        if isCodexRefreshing {
-                            codexOuterLoadingAnimation()
-                        } else {
+                            // 背景圆环
                             Circle()
-                                .trim(from: secondaryRange.from, to: secondaryRange.to)
-                                .stroke(
-                                    UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
-                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                                .frame(width: 100, height: 100)
+
+                            // 主进度条（刷新中显示加载动画）
+                            if isCodexRefreshing {
+                                codexLoadingAnimation()
+                            } else {
+                                Circle()
+                                    .trim(from: primaryRange.from, to: primaryRange.to)
+                                    .stroke(
+                                        primaryColor,
+                                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                                    )
+                                    .frame(width: 100, height: 100)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(
+                                        .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                        value: primaryRange
+                                    )
+                            }
+
+                            // 外层细圆环（Secondary / 7天）
+                            if showSecondaryRing, let secondary = secondaryData {
+                                let secondaryRange = UsageRingDisplay.displayedTrimRange(
+                                    usedPercentage: secondary.percentage,
+                                    showRemainingMode: showRemainingMode
                                 )
-                                .frame(width: 114, height: 114)
-                                .rotationEffect(.degrees(-90))
-                                .animation(
-                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
-                                    value: secondaryRange
+
+                                Circle()
+                                    .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                                    .frame(width: 114, height: 114)
+
+                                if isCodexRefreshing {
+                                    codexOuterLoadingAnimation()
+                                } else {
+                                    Circle()
+                                        .trim(from: secondaryRange.from, to: secondaryRange.to)
+                                        .stroke(
+                                            UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
+                                            style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                        )
+                                        .frame(width: 114, height: 114)
+                                        .rotationEffect(.degrees(-90))
+                                        .animation(
+                                            .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                            value: secondaryRange
+                                        )
+                                }
+                            }
+
+                            if !isCodexRefreshing {
+                                DetailUsageRingSweep(
+                                    trigger: remainingModeAnimationTrigger,
+                                    diameter: 122,
+                                    lineWidth: 3,
+                                    color: primaryColor
                                 )
+                            }
+
+                            // 中心百分比
+                            DetailUsageRingCenterText(
+                                usedPercentage: primary.percentage,
+                                showRemainingMode: showRemainingMode
+                            )
                         }
                     }
-
-                    if !isCodexRefreshing {
-                        DetailUsageRingSweep(
-                            trigger: remainingModeAnimationTrigger,
-                            diameter: 122,
-                            lineWidth: 3,
-                            color: primaryColor
-                        )
-                    }
-
-                    // 中心百分比
-                    DetailUsageRingCenterText(
-                        usedPercentage: primary.percentage,
-                        showRemainingMode: showRemainingMode
+                    .frame(height: 114)
+                    .contentShape(Circle())
+                case .linear:
+                    LinearUsageGraphView(
+                        codexUsageData: codexUsageData,
+                        activeDisplayTypes: activeCodexTypes,
+                        isRefreshing: isCodexRefreshing
                     )
+                    .contentShape(Rectangle())
                 }
             }
-            .frame(height: 114)
-            .contentShape(Circle())
             .onTapGesture {
                 if refreshState.canRefresh && !refreshState.isRefreshing {
                     onRefresh?()
                 }
             }
             .onLongPressGesture(minimumDuration: 3.0) {
+                // 长按圆环切换动画类型（仅圆形模式有效）
+                guard UserSettings.shared.graphDisplayType == .circular else { return }
                 let allTypes = UsageDetailView.LoadingAnimationType.allCases
                 let currentIndex = allTypes.firstIndex(of: animationType) ?? 0
                 animationType = allTypes[(currentIndex + 1) % allTypes.count]
