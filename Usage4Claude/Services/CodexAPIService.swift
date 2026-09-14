@@ -59,6 +59,21 @@ class CodexAPIService {
             expiresAt: jwtExpiry(from: tokens.accessToken) ?? Date().addingTimeInterval(30 * 60)
         )
         await sharedTokenCache.store(cached)
+        let timing = await oauthTokenTimingDescription(refreshToken: tokens.refreshToken)
+        AppLog.event(.auth, "Codex OAuth login access token cached; \(timing)")
+    }
+
+    static func oauthTokenTimingDescription(refreshToken: String) async -> String {
+        guard let timing = await sharedTokenCache.tokenTiming(refreshToken: refreshToken) else {
+            return "Access token expiry unavailable: no token cached for this account"
+        }
+        let timestamp = ISO8601DateFormatter().string(from: timing.expiresAt)
+        if timing.isEstimated {
+            return "Access token expiry unknown (no readable exp claim); app cache deadline: \(timestamp) (estimated)"
+        }
+        let seconds = Int(timing.expiresAt.timeIntervalSinceNow)
+        let remaining = seconds > 0 ? "\(seconds) seconds remaining" : "expired"
+        return "Access token expires at \(timestamp) (\(remaining)); server may revoke earlier"
     }
 
     /// 线程安全地记录进行中的任务，供 cancelAllRequests 统一取消
@@ -296,11 +311,22 @@ class CodexAPIService {
     /// 只会在 OAuthTokenCache 判定「确实需要发起新刷新」时被调用一次（并发调用共享同一次结果）。
     /// refresh_token 轮换时静默写回账户存储，并作为返回的 refreshToken（缓存键跟随新值）。
     private func refreshOAuthTokens(refreshToken: String) async throws -> OAuthTokenCache.Tokens {
-        let tokens = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CodexOAuthTokens, Error>) in
-            CodexOAuthService.refresh(refreshToken: refreshToken) { result in
-                continuation.resume(with: result)
+        AppLog.event(.auth, "Codex OAuth refresh attempt started (network request, not a cache hit)")
+        let tokens: CodexOAuthTokens
+        do {
+            tokens = try await withCheckedThrowingContinuation { continuation in
+                CodexOAuthService.refresh(refreshToken: refreshToken) { result in
+                    continuation.resume(with: result)
+                }
             }
+        } catch {
+            AppLog.warning(.auth, "Codex OAuth refresh attempt failed: \(error.localizedDescription)")
+            throw error
         }
+
+        let expiry = jwtExpiry(from: tokens.accessToken)
+        let expiryDescription = expiry.map { ISO8601DateFormatter().string(from: $0) } ?? "unknown (no readable exp claim)"
+        AppLog.event(.auth, "Codex OAuth refresh succeeded; new access token expiry: \(expiryDescription)")
 
         let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
         if newRefresh != refreshToken {

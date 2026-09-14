@@ -96,6 +96,15 @@ actor OAuthTokenCache {
         return cached
     }
 
+    /// Credential-free timing metadata, including expired tokens for diagnostics.
+    func tokenTiming(refreshToken: String) -> (expiresAt: Date, isEstimated: Bool)? {
+        guard cachedForRefreshToken == refreshToken,
+              let token = cachedAccessToken, !token.isEmpty,
+              let expiry = cachedExpiry else { return nil }
+        let issuedExpiry = jwtExpiry(from: token)
+        return (issuedExpiry ?? expiry, issuedExpiry == nil)
+    }
+
     /// 清除缓存（账户切换或收到 401 时调用，强制下次重新走网络刷新）
     func clear() {
         cacheRevision += 1

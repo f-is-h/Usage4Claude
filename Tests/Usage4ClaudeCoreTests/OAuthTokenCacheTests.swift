@@ -62,6 +62,29 @@ final class OAuthTokenCacheTests: XCTestCase {
         XCTAssertEqual(token, "renewed")
     }
 
+    func testTimingReportsActualExpiryEvenAfterExpiration() async throws {
+        let cache = OAuthTokenCache()
+        let payload = Data(#"{"exp":1700000000}"#.utf8).base64EncodedString()
+        await cache.store(makeTokens(access: "header.\(payload).signature", refresh: "rt.login"))
+        let timing = await cache.tokenTiming(refreshToken: "rt.login")
+        XCTAssertEqual(timing?.expiresAt, Date(timeIntervalSince1970: 1700000000))
+        XCTAssertEqual(timing?.isEstimated, false)
+        let foreign = await cache.tokenTiming(refreshToken: "rt.other")
+        XCTAssertNil(foreign)
+        await cache.clear()
+        let cleared = await cache.tokenTiming(refreshToken: "rt.login")
+        XCTAssertNil(cleared)
+    }
+
+    func testTimingLabelsFallbackAsEstimated() async {
+        let cache = OAuthTokenCache()
+        let tokens = makeTokens(access: "opaque-token", refresh: "rt.login")
+        await cache.store(tokens)
+        let timing = await cache.tokenTiming(refreshToken: "rt.login")
+        XCTAssertEqual(timing?.expiresAt, tokens.expiresAt)
+        XCTAssertEqual(timing?.isEstimated, true)
+    }
+
     func testOlderRefreshCannotOverwriteNewLogin() async throws {
         let cache = OAuthTokenCache()
         _ = try await cache.accessToken(refreshToken: "rt.old") { rt in

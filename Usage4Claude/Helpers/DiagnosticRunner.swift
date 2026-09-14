@@ -380,6 +380,8 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
         let startTime = Date()
         let result = await CodexAPIService.shared.fetchUsageResult()
         let responseTime = Date().timeIntervalSince(startTime) * 1000
+        let timing = await CodexAPIService.oauthTokenTimingDescription(refreshToken: settings.codexSessionToken)
+        let notes = "\(timing)\nUsage success can use a cached token and does not prove renewal. Actual refresh attempts and outcomes appear in the Auth log."
 
         let step: DiagnosticStep
         let diagnosis: String
@@ -393,7 +395,7 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
                 responseType: .json, errorType: nil, errorDescription: nil,
                 responseHeaders: [:],
                 responseBodyPreview: "Valid Codex usage data received",
-                cloudflareChallenge: false, cfMitigated: false, notes: nil
+                cloudflareChallenge: false, cfMitigated: false, notes: notes
             )
             diagnosis = DiagnosticMessage.diagnosisCodexSuccess
             suggestions = [DiagnosticMessage.suggestionSuccess]
@@ -410,7 +412,7 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
                 errorType: isCloudflare ? .cloudflareBlocked : .sessionTokenInvalid,
                 errorDescription: error.localizedDescription,
                 responseHeaders: [:], responseBodyPreview: nil,
-                cloudflareChallenge: isCloudflare, cfMitigated: false, notes: nil
+                cloudflareChallenge: isCloudflare, cfMitigated: false, notes: notes
             )
             diagnosis = isCloudflare
                 ? DiagnosticMessage.diagnosisCodexUsageCloudflare

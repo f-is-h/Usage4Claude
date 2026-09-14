@@ -133,6 +133,13 @@ private struct ProviderResultCard: View {
             if !result.steps.isEmpty {
                 ForEach(result.steps, id: \.name) { step in
                     StepSummaryRow(step: step)
+                    if let notes = step.notes {
+                        Text(notes)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    }
                 }
             }
 
