@@ -11,6 +11,7 @@ import SwiftUI
 
 /// Web 登录窗口管理单例
 /// 负责创建、显示和关闭登录窗口
+/// 登录 WebView 使用 nonPersistent 数据存储，确保多账号添加时不会因已有 session 而 auto-SSO
 final class WebLoginWindowManager {
     static let shared = WebLoginWindowManager()
 
@@ -19,46 +20,38 @@ final class WebLoginWindowManager {
 
     private init() {}
 
-    /// 显示登录窗口
-    /// - Parameter onAccountCreated: 账户创建成功后的回调
+    // MARK: - Claude Login
+
     func showLoginWindow(onAccountCreated: ((Account) -> Void)? = nil) {
-        // 如果窗口已存在，直接前置
         if let window = loginWindow, window.isVisible {
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
 
-        let loginView = WebLoginView(onAccountCreated: onAccountCreated)
-        let hostingView = NSHostingView(rootView: loginView)
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 700),
-            styleMask: [.titled, .closable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-
-        window.contentView = hostingView
-        window.title = L.WebLogin.windowTitle
-        window.minSize = NSSize(width: 600, height: 500)
-        window.center()
-        window.isReleasedWhenClosed = false
-        window.level = .floating
-
+        // 改用 OAuth（系统浏览器）登录，替代内嵌 WKWebView，
+        // 以支持 Google / 微软 / 企业 SSO / passkey 等在嵌入式 WebView 中受限的登录方式（Issue #49）
+        let loginView = ClaudeOAuthLoginView(onAccountCreated: onAccountCreated)
+        let window = makeCompactWindow(title: L.WebLogin.windowTitle, content: loginView, width: 440, height: 380)
         self.loginWindow = window
+
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in self?.loginWindow = nil }
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    /// 关闭登录窗口
     func closeLoginWindow() {
         loginWindow?.close()
         loginWindow = nil
     }
 
-    /// 显示 Codex 登录窗口
+    // MARK: - Codex Login
+
     func showCodexLoginWindow(onAccountCreated: ((Account) -> Void)? = nil) {
         if let window = codexLoginWindow, window.isVisible {
             window.makeKeyAndOrderFront(nil)
@@ -66,32 +59,58 @@ final class WebLoginWindowManager {
             return
         }
 
-        let loginView = CodexWebLoginView(onAccountCreated: onAccountCreated)
-        let hostingView = NSHostingView(rootView: loginView)
+        // 改用 OAuth（系统浏览器）登录，替代内嵌 WKWebView，
+        // 以支持 Google / 微软 / 企业 SSO / passkey 等在嵌入式 WebView 中受限的登录方式
+        let loginView = CodexOAuthLoginView(onAccountCreated: onAccountCreated)
+        let window = makeCompactWindow(title: L.WebLogin.codexWindowTitle, content: loginView, width: 440, height: 380)
+        self.codexLoginWindow = window
 
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in self?.codexLoginWindow = nil }
+
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func closeCodexLoginWindow() {
+        codexLoginWindow?.close()
+        codexLoginWindow = nil
+    }
+
+    // MARK: - Private
+
+    private func makeWindow<V: View>(title: String, content: V) -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 800, height: 700),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
-
-        window.contentView = hostingView
-        window.title = L.WebLogin.codexWindowTitle
+        window.contentView = NSHostingView(rootView: content)
+        window.title = title
         window.minSize = NSSize(width: 600, height: 500)
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .floating
-
-        self.codexLoginWindow = window
-
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        return window
     }
 
-    /// 关闭 Codex 登录窗口
-    func closeCodexLoginWindow() {
-        codexLoginWindow?.close()
-        codexLoginWindow = nil
+    /// 固定尺寸的小窗口（用于 OAuth 进度展示，不可缩放）
+    private func makeCompactWindow<V: View>(title: String, content: V, width: CGFloat, height: CGFloat) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = NSHostingView(rootView: content)
+        window.title = title
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+        return window
     }
 }

@@ -15,9 +15,12 @@ struct CodexColumnView: View {
     let refreshState: RefreshState
     @Binding var animationType: UsageDetailView.LoadingAnimationType
     @Binding var rotationAngle: Double
-    @AppStorage("showRemainingMode") private var savedRemainingMode = false
+    let remainingModeAnimationTrigger: Int
+    /// Codex 官方重置预告（Beta，第三方数据源）；nil 表示没有预告（绝大多数时间）或功能已关闭
+    var codexResetAnnouncement: CodexResetAnnouncement? = nil
     var onRefresh: (() -> Void)?
     var onAnimationHint: ((String) -> Void)?
+    var onToggleRemainingMode: (() -> Void)?
 
     private var activeCodexTypes: [LimitType] {
         UserSettings.shared.getActiveDisplayTypes(usageData: nil, codexUsageData: codexUsageData)
@@ -36,7 +39,7 @@ struct CodexColumnView: View {
 
     private var primaryRingData: CodexUsageData.LimitData? {
         let placeholder = CodexUsageData.LimitData(percentage: 0, resetsAt: nil)
-        let showPlaceholder = UserSettings.shared.displayMode == .custom
+        let showPlaceholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
 
         switch primaryRingType {
         case .codexPrimary:
@@ -65,6 +68,12 @@ struct CodexColumnView: View {
             // 圆环区域
             ZStack {
                 if let primary = primaryRingData {
+                    let primaryColor = primaryRingColor(for: primary.percentage)
+                    let primaryRange = UsageRingDisplay.displayedTrimRange(
+                        usedPercentage: primary.percentage,
+                        showRemainingMode: showRemainingMode
+                    )
+
                     // 背景圆环
                     Circle()
                         .stroke(Color.gray.opacity(0.2), lineWidth: 10)
@@ -75,18 +84,26 @@ struct CodexColumnView: View {
                         codexLoadingAnimation()
                     } else {
                         Circle()
-                            .trim(from: 0, to: CGFloat(primary.percentage) / 100.0)
+                            .trim(from: primaryRange.from, to: primaryRange.to)
                             .stroke(
-                                primaryRingColor(for: primary.percentage),
+                                primaryColor,
                                 style: StrokeStyle(lineWidth: 10, lineCap: .round)
                             )
                             .frame(width: 100, height: 100)
                             .rotationEffect(.degrees(-90))
-                            .animation(.easeInOut, value: primary.percentage)
+                            .animation(
+                                .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                value: primaryRange
+                            )
                     }
 
                     // 外层细圆环（Secondary / 7天）
                     if showSecondaryRing, let secondary = secondaryData {
+                        let secondaryRange = UsageRingDisplay.displayedTrimRange(
+                            usedPercentage: secondary.percentage,
+                            showRemainingMode: showRemainingMode
+                        )
+
                         Circle()
                             .stroke(Color.gray.opacity(0.15), lineWidth: 3)
                             .frame(width: 114, height: 114)
@@ -95,25 +112,34 @@ struct CodexColumnView: View {
                             codexOuterLoadingAnimation()
                         } else {
                             Circle()
-                                .trim(from: 0, to: CGFloat(secondary.percentage) / 100.0)
+                                .trim(from: secondaryRange.from, to: secondaryRange.to)
                                 .stroke(
                                     UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
-                                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [5, 2])
+                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
                                 )
                                 .frame(width: 114, height: 114)
                                 .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut, value: secondary.percentage)
+                                .animation(
+                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                    value: secondaryRange
+                                )
                         }
                     }
 
-                    // 中心百分比
-                    VStack(spacing: 2) {
-                        Text("\(Int(primary.percentage))%")
-                            .font(.system(size: 28, weight: .bold))
-                        Text(L.Usage.used)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    if !isCodexRefreshing {
+                        DetailUsageRingSweep(
+                            trigger: remainingModeAnimationTrigger,
+                            diameter: 122,
+                            lineWidth: 3,
+                            color: primaryColor
+                        )
                     }
+
+                    // 中心百分比
+                    DetailUsageRingCenterText(
+                        usedPercentage: primary.percentage,
+                        showRemainingMode: showRemainingMode
+                    )
                 }
             }
             .frame(height: 114)
@@ -130,6 +156,23 @@ struct CodexColumnView: View {
 
                 onAnimationHint?(animationType.name)
             }
+            // 先撑满列宽，overlay 才能以整列为参照系定位到右上角（ZStack 自身只会
+            // hug 住圆环的 ~122pt）。高度仍是 114，与上面一致——这里只改宽度，不影响
+            // 圆环的垂直位置。必须放在 contentShape/手势之后，否则 Circle() 会被拉伸成
+            // 贴合整列的椭圆，点按/长按热区跟着撑满整列，误触发刷新/切换动画。
+            .frame(maxWidth: .infinity)
+            .frame(height: 114)
+            // 角标落在圆环右上方本就空白的区域：圆环含扫光直径 122pt 居中，但在角标所在
+            // 高度（顶部下方约 9pt）圆环横向只占到 x≈183，右侧到列边缘还有约 90pt 空白，
+            // 足够放下约 72pt 宽的角标。因此这里不需要任何 offset——不挤压圆环、不超出
+            // popover 手算的 contentHeight 边界（否则会被窗口裁切、且裁切区收不到鼠标事件）。
+            .overlay(alignment: .topTrailing) {
+                if let announcement = codexResetAnnouncement {
+                    CodexResetAnnouncementBadge(announcement: announcement)
+                        .padding(.trailing, 8)
+                        .padding(.top, 2)
+                }
+            }
 
             // 限制行
             VStack(spacing: 5) {
@@ -143,10 +186,7 @@ struct CodexColumnView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showRemainingMode.toggle()
-                }
-                savedRemainingMode = showRemainingMode
+                onToggleRemainingMode?()
             }
             .padding(.horizontal, 14)
         }

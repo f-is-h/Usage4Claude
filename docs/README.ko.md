@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 <div align="center">
 
@@ -28,7 +28,7 @@
 ### 🎯 핵심 기능
 
 - **📊 실시간 모니터링** - 메뉴 바에서 Claude 구독(Free/Pro/Team/Max) 사용 할당량을 실시간 표시하고, Codex 사용량도 선택적으로 모니터링
-- **🎯 다중 제한 지원** - Claude는 최대 5가지 제한(5시간/7일/추가 사용량/7일 Opus/7일 Sonnet), Codex는 5시간/7일/추가 사용량/credits 지원
+- **🎯 다중 제한 지원** - Claude는 5시간/7일/추가 사용량 제한과 함께 모델별 주간 사용량(Opus, Sonnet, Fable 등 모델 수 제한 없음)을 지원하며, Codex는 5시간/7일/추가 사용량/credits 지원
 - **🎨 스마트 표시 모드** - 데이터가 있는 모든 제한 유형을 자동 감지하여 표시
 - **⚙️ 사용자 정의 표시** - 표시할 제한 유형을 수동으로 선택, 모든 조합 지원
 - **🎨 스마트 컬러** - 사용률에 따라 자동 색상 변경, 각 제한 유형별 고유한 색상 체계
@@ -60,6 +60,7 @@
 - Codex 5시간, 7일, 추가 사용량/credits 정보 지원
 - 내장 브라우저에서 ChatGPT에 로그인해 Codex 계정 추가
 - Claude-only 사용자는 추가 설정이 필요 없으며, Codex 계정을 추가하기 전까지 기존 경험이 유지됩니다
+- **🧪 리셋 예고 (베타)**: OpenAI가 아직 지나지 않은 전역 리셋을 공개적으로 예고했을 때만 Codex 링 옆에 작은 배지가 표시됩니다 — 대부분의 시간에는 아무것도 표시되지 않는 것이 의도된 동작입니다. 데이터는 독립 커뮤니티 프로젝트인 [codex-reset.com](https://codex-reset.com)에서 제공되며 비공식입니다. 설정에서 끌 수 있습니다
 
 ### 🎨 개인화
 
@@ -74,15 +75,16 @@
   - 简体中文
   - 繁體中文
   - 한국어
-  - Français
-  - 더 많은 언어 지원 예정...
+  - Français ([@mtreize](https://github.com/mtreize) 님 기여)
+  - Deutsch ([@schaitl](https://github.com/schaitl) 님 기여)
+  - 더 많은 언어 지원 예정... (현지화 PR을 환영합니다!)
 
 ### 🔧 편리한 기능
 
 - **⚙️ 시각적 설정** - 코드 수정 없이 GUI로 모든 옵션 구성
 - **🆕 스마트 업데이트 알림** - 메뉴 바 배지와 무지개 애니메이션으로 새 버전 알림
 - **🚀 로그인 시 실행** - 시스템 시작 시 자동 실행 옵션
-- **⌨️ 키보드 단축키** - 일반적인 작업에 단축키 지원(⌘R, ⌘,, ⌘Q)
+- **⌨️ 키보드 단축키** - 일반적인 작업에 단축키 지원(⌘R | ⌘, | ⌘Q)
 - **👋 친절한 안내** - 첫 실행 시 상세한 설정 마법사 제공
 - **… 메뉴 표시** - 다양한 메뉴 접근 방법, 상세 보기 및 우클릭
 - **🔔 사용량 알림** - Claude 사용량 경고 및 리셋 알림 지원, 설정에서 켜기/끄기 가능
@@ -239,6 +241,7 @@ open Usage4Claude.xcodeproj
   - ⌘R - 수동으로 데이터 새로고침
   - ⌘, - 일반 설정 열기
   - ⌘⇧A - 인증 설정 열기
+  - ⌘U - 업데이트 확인
   - ⌘Q - 앱 종료
 - **업데이트 알림** - 새 버전이 있을 때 메뉴 바 아이콘에 배지 표시, 메뉴 항목에 무지개 텍스트 표시
 - **업데이트 확인** - 메뉴 → 업데이트 확인
@@ -302,7 +305,7 @@ A: 매우 가볍습니다:
 <details>
 <summary><b>Q: 어떤 macOS 버전을 지원하나요?</b></summary>
 
-A: macOS 13.0(Ventura) 이상이 필요합니다. Intel 및 Apple Silicon(M1/M2/M3) 칩 모두 지원합니다.
+A: macOS 13.0(Ventura) 이상이 필요합니다. Intel 및 Apple Silicon(M1/M2/M3/M4/M5) 칩 모두 지원합니다.
 
 </details>
 
@@ -539,12 +542,12 @@ Star를 주는 것이 가장 큰 격려입니다!
 ### ☕ 커피 사주기
 
 <!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=ko">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
 </a>
 
 <!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
+<a href="https://ko-fi.com/1atte">
   <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
 </a>
 
@@ -565,7 +568,7 @@ Star를 주는 것이 가장 큰 격려입니다!
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 소프트웨어의 사본을 자유롭게 사용, 복사, 수정, 병합, 게시, 배포, 재라이선스 및/또는 판매할 수 있습니다.
 ```

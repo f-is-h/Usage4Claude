@@ -14,7 +14,14 @@ struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
     @Binding var errorMessage: String?
+    /// 当前错误是否为认证类错误：认证错误全屏提示引导去设置；
+    /// 瞬时错误（限流/网络）在有缓存数据时保留数据展示，只显示顶部横幅
+    @Binding var errorRequiresAuthAction: Bool
     @Binding var codexErrorMessage: String?
+    /// Codex 三级刷新均失败，需要用户手动重新登录
+    @Binding var codexNeedsRelogin: Bool
+    /// Codex 官方重置预告（Beta，第三方数据源 codex-reset.com）；nil 表示无预告或功能已关闭
+    @Binding var codexResetAnnouncement: CodexResetAnnouncement?
     @ObservedObject var refreshState: RefreshState
     /// 菜单操作回调
     var onMenuAction: ((MenuAction) -> Void)? = nil
@@ -23,7 +30,7 @@ struct UsageDetailView: View {
     @Binding var hasAvailableUpdate: Bool
     /// 是否应显示更新徽章（用户未确认时才显示徽章）
     @Binding var shouldShowUpdateBadge: Bool
-    
+
     /// 加载动画效果类型
     enum LoadingAnimationType: Int, CaseIterable {
         case rainbow = 0   // 彩虹渐变旋转
@@ -50,13 +57,15 @@ struct UsageDetailView: View {
         case authSettings
         case checkForUpdates
         case about
-        case webUsage
+        case claudeStatus
+        case codexStatus
         case coffee
         case githubSponsor
         case quit
         case refresh
         case refreshClaude
         case refreshCodex
+        case codexRelogin
     }
     
     // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
@@ -69,9 +78,13 @@ struct UsageDetailView: View {
     @State private var animationTypeHintDismissWorkItem: DispatchWorkItem?
     // 显示更新通知
     @State private var showUpdateNotification = false
-    // 显示模式切换（false: 重置时间, true: 剩余时间）
-    @AppStorage("showRemainingMode") private var savedRemainingMode = false
-    @State private var showRemainingMode = false
+    // 显示模式切换（false: 已用量填充, true: 余量填充）
+    // 真值存放在 UserSettings.showRemainingMode —— 菜单栏图标渲染读的是那一份。
+    // 这里仍保留一份 @State，是为了让 popover 的切换动画走视图本地状态：
+    // 若改成观察 UserSettings，它任何一个 @Published 变动都会重建整个 popover，
+    // 正是本文件其它地方（如 TimelineView 那处注释）刻意避开的开销。
+    @State private var showRemainingMode = UserSettings.shared.showRemainingMode
+    @State private var remainingModeAnimationTrigger = 0
     
     // MARK: - Body
 
@@ -91,7 +104,7 @@ struct UsageDetailView: View {
     }
 
     /// 获取当前 Claude 活动的显示类型
-    var activeDisplayTypes: [LimitType] {
+    private var activeDisplayTypes: [LimitType] {
         guard let data = usageData else { return [] }
         return UserSettings.shared.getActiveDisplayTypes(usageData: data)
             .filter { $0.provider == .claude }
@@ -175,20 +188,30 @@ struct UsageDetailView: View {
         isMultiProviderActive ? 580 : 290
     }
 
+    /// 瞬时错误横幅高度（两行 caption 文本 + 内边距）+ VStack 行距
+    private var staleBannerHeight: CGFloat {
+        showsStaleDataBanner ? 53 : 0
+    }
+
     private var contentHeight: CGFloat {
         if isMultiProviderActive {
-            return multiProviderHeight
+            return multiProviderHeight + staleBannerHeight
         }
         if isCodexOnlyActive {
             return codexOnlyHeight
         }
-        return dynamicHeight
+        return dynamicHeight + staleBannerHeight
+    }
+
+    /// 是否显示"数据已过期"横幅：有缓存数据的瞬时错误不清空界面，只提示
+    private var showsStaleDataBanner: Bool {
+        errorMessage != nil && usageData != nil && !errorRequiresAuthAction
     }
 
     @ViewBuilder
     private var claudeMainContent: some View {
-        if let error = errorMessage {
-            // 错误信息
+        if let error = errorMessage, usageData == nil || errorRequiresAuthAction {
+            // 错误信息（无缓存数据或认证类错误时才全屏展示）
             VStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
@@ -201,7 +224,7 @@ struct UsageDetailView: View {
                 // 操作按钮组
                 HStack(spacing: 12) {
                     // 如果是认证信息错误，显示设置按钮
-                    if error.contains("认证") || error.contains("配置") || error.contains("Authentication") || error.contains("configured") {
+                    if errorRequiresAuthAction {
                         Button(action: {
                             onMenuAction?(.authSettings)
                         }) {
@@ -233,10 +256,106 @@ struct UsageDetailView: View {
         } else if let data = usageData {
             // 使用数据
             VStack(spacing: 15) {
+                // 瞬时错误横幅：保留缓存数据展示，仅在顶部轻量提示
+                if showsStaleDataBanner, let error = errorMessage {
+                    staleDataBanner(error)
+                }
+
                 // 根据用户设置选择圆形或线性图表
-                usageGraphView(data: data)
+                Group {
+                    switch UserSettings.shared.graphDisplayType {
+                    case .circular:
+                        // 圆形进度条
+                        ZStack {
+                            let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
+
+                            if let primary = primaryLimitData {
+                                let primaryRingColor = colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes)
+                                let primaryRingRange = UsageRingDisplay.displayedTrimRange(
+                                    usedPercentage: primary.percentage,
+                                    showRemainingMode: showRemainingMode
+                                )
+
+                                Circle()
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                                    .frame(width: 100, height: 100)
+
+                                if isClaudeRefreshing {
+                                    loadingAnimation()
+                                } else {
+                                    Circle()
+                                        .trim(from: primaryRingRange.from, to: primaryRingRange.to)
+                                        .stroke(
+                                            primaryRingColor,
+                                            style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                                        )
+                                        .frame(width: 100, height: 100)
+                                        .rotationEffect(.degrees(-90))
+                                        .animation(
+                                            .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                            value: primaryRingRange
+                                        )
+                                }
+
+                                if activeDisplayTypes.contains(.fiveHour) &&
+                                   activeDisplayTypes.contains(.sevenDay) {
+                                    let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.shouldShowCustomPlaceholderInPopover ? 0 : nil)
+
+                                    if let percentage = sevenDayPercentage {
+                                        let outerRingRange = UsageRingDisplay.displayedTrimRange(
+                                            usedPercentage: percentage,
+                                            showRemainingMode: showRemainingMode
+                                        )
+
+                                        Circle()
+                                            .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                                            .frame(width: 114, height: 114)
+
+                                        if isClaudeRefreshing {
+                                            outerLoadingAnimation()
+                                        } else {
+                                            Circle()
+                                                .trim(from: outerRingRange.from, to: outerRingRange.to)
+                                                .stroke(
+                                                    colorForSevenDay(percentage),
+                                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                                )
+                                                .frame(width: 114, height: 114)
+                                                .rotationEffect(.degrees(-90))
+                                                .animation(
+                                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                                    value: outerRingRange
+                                                )
+                                        }
+                                    }
+                                }
+
+                                if !isClaudeRefreshing {
+                                    DetailUsageRingSweep(
+                                        trigger: remainingModeAnimationTrigger,
+                                        diameter: 122,
+                                        lineWidth: 3,
+                                        color: primaryRingColor
+                                    )
+                                }
+
+                                DetailUsageRingCenterText(
+                                    usedPercentage: primary.percentage,
+                                    showRemainingMode: showRemainingMode
+                                )
+                            }
+                        }
+                        .contentShape(Circle())
+                    case .linear:
+                        LinearUsageGraphView(
+                            usageData: data,
+                            activeDisplayTypes: activeDisplayTypes,
+                            isRefreshing: isClaudeRefreshing
+                        )
+                        .contentShape(Rectangle())
+                    }
+                }
                 .frame(height: 114)
-                .contentShape(Rectangle())  // 定义可点击区域
                 .onTapGesture {
                     if refreshState.canRefresh && !refreshState.isRefreshing {
                         onMenuAction?(.refreshClaude)
@@ -265,11 +384,25 @@ struct UsageDetailView: View {
                                     showRemainingMode: showRemainingMode
                                 )
                             }
+                            // 前两个模型走上面的 opus / sonnet 槽位；第三个及以后的模型
+                            // （如同时出现 Fable + Opus + Sonnet）在此按 Claude API 顺序补齐，
+                            // 形状在圆角方 / 斜切方之间轮换，标签用 API 返回的模型名。
+                            // 仅智能模式展开全部；自定义模式尊重用户勾选的固定槽位。
+                            if UserSettings.shared.displayMode == .smart {
+                                let overflow = Array(data.weeklyModels.enumerated()).dropFirst(2)
+                                ForEach(overflow, id: \.offset) { entry in
+                                    UnifiedLimitRow(
+                                        type: entry.offset % 2 == 0 ? .opusWeekly : .sonnetWeekly,
+                                        data: data,
+                                        showRemainingMode: showRemainingMode,
+                                        weeklyModelOverride: entry.element
+                                    )
+                                }
+                            }
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.2)) { showRemainingMode.toggle() }
-                            savedRemainingMode = showRemainingMode
+                            toggleRemainingMode()
                         }
                     } else if activeTypes.count == 1 {
                         let singleType = activeTypes.first!
@@ -318,6 +451,34 @@ struct UsageDetailView: View {
             }
             .frame(height: 100)
         }
+    }
+
+    /// 瞬时错误（如 429 限流）横幅：错误文案单行截断，完整内容见悬停提示
+    @ViewBuilder
+    private func staleDataBanner(_ error: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(error)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Text(L.Error.showingCachedData)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.orange.opacity(0.12))
+        )
+        .padding(.horizontal, 14)
+        .help(error)
     }
 
     // MARK: - Header Buttons
@@ -398,8 +559,15 @@ struct UsageDetailView: View {
                     Label(L.Menu.about, systemImage: "info.circle")
                 }
                 Divider()
-                Button(action: { onMenuAction?(.webUsage) }) {
-                    Label(L.Menu.webUsage, systemImage: "safari")
+                if !UserSettings.shared.accounts.isEmpty {
+                    Button(action: { onMenuAction?(.claudeStatus) }) {
+                        Label(L.Menu.claudeStatus, systemImage: "safari")
+                    }
+                }
+                if !UserSettings.shared.codexAccounts.isEmpty {
+                    Button(action: { onMenuAction?(.codexStatus) }) {
+                        Label(L.Menu.codexStatus, systemImage: "safari.fill")
+                    }
                 }
                 Button(action: { onMenuAction?(.coffee) }) {
                     Label(L.Menu.coffee, systemImage: "cup.and.saucer")
@@ -496,12 +664,15 @@ struct UsageDetailView: View {
                 refreshState: refreshState,
                 animationType: $codexAnimationType,
                 rotationAngle: $rotationAngle,
+                remainingModeAnimationTrigger: remainingModeAnimationTrigger,
+                codexResetAnnouncement: codexResetAnnouncement,
                 onRefresh: { onMenuAction?(.refreshCodex) },
-                onAnimationHint: { showAnimationHint($0, provider: .codex) }
+                onAnimationHint: { showAnimationHint($0, provider: .codex) },
+                onToggleRemainingMode: toggleRemainingMode
             )
         } else if let error = codexErrorMessage {
             VStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
+                Image(systemName: codexNeedsRelogin ? "lock.open.trianglebadge.exclamationmark.fill" : "exclamationmark.triangle.fill")
                     .font(.system(size: 40))
                     .foregroundColor(.orange)
                 Text(error)
@@ -509,30 +680,45 @@ struct UsageDetailView: View {
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
 
-                HStack(spacing: 12) {
+                if codexNeedsRelogin {
+                    // 三级刷新均失败：提供一键重新登录入口
                     Button(action: {
-                        onMenuAction?(.authSettings)
+                        onMenuAction?(.codexRelogin)
                     }) {
-                        Label(L.Usage.goToSettings, systemImage: "key.fill")
-                            .padding(.horizontal, 16)
+                        Label(L.Usage.codexRelogin, systemImage: "arrow.counterclockwise.circle.fill")
+                            .padding(.horizontal, 20)
                             .padding(.vertical, 8)
                             .background(Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
+                } else {
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            onMenuAction?(.authSettings)
+                        }) {
+                            Label(L.Usage.goToSettings, systemImage: "key.fill")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
 
-                    Button(action: {
-                        onMenuAction?(.authSettings)
-                    }) {
-                        Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.orange)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                        Button(action: {
+                            onMenuAction?(.authSettings)
+                        }) {
+                            Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.orange)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding()
@@ -661,7 +847,12 @@ struct UsageDetailView: View {
         .animation(.easeInOut(duration: 0.25), value: showAnimationTypeHint)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
-            showRemainingMode = savedRemainingMode
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                // 关闭期间菜单栏侧若有改动，重新打开时对齐回来
+                showRemainingMode = UserSettings.shared.showRemainingMode
+            }
             // 如果打开时已经在刷新，启动旋转动画
             if refreshState.isRefreshing {
                 startRotationAnimation()
@@ -731,6 +922,16 @@ struct UsageDetailView: View {
         animationTypeHintDismissWorkItem = dismissWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: dismissWorkItem)
     }
+
+    private func toggleRemainingMode() {
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05)) {
+            showRemainingMode.toggle()
+            remainingModeAnimationTrigger += 1
+        }
+        // 写回 settings：持久化，同时它的 didSet 会 post .remainingModeToggled，
+        // MenuBarManager 收到后让菜单栏图标沿同一条 spring 曲线过渡过去
+        UserSettings.shared.showRemainingMode = showRemainingMode
+    }
 }
 
 // 预览
@@ -747,8 +948,11 @@ struct UsageDetailView_Previews: PreviewProvider {
     )
 
     @State static var errorMsg: String? = nil
+    @State static var errorRequiresAuth = false
     @State static var codexErrorMsg: String? = nil
     @State static var codexData: CodexUsageData? = nil
+    @State static var codexNeedsRelogin = false
+    @State static var codexResetAnnouncement: CodexResetAnnouncement? = nil
     @StateObject static var refreshState = RefreshState()
     @State static var hasUpdate = false
     @State static var shouldShowBadge = false
@@ -758,7 +962,10 @@ struct UsageDetailView_Previews: PreviewProvider {
             usageData: $sampleData,
             codexUsageData: $codexData,
             errorMessage: $errorMsg,
+            errorRequiresAuthAction: $errorRequiresAuth,
             codexErrorMessage: $codexErrorMsg,
+            codexNeedsRelogin: $codexNeedsRelogin,
+            codexResetAnnouncement: $codexResetAnnouncement,
             refreshState: refreshState,
             hasAvailableUpdate: $hasUpdate,
             shouldShowUpdateBadge: $shouldShowBadge

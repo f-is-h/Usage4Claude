@@ -11,7 +11,8 @@
 "menu.auth_settings" = "认证信息";
 "menu.check_updates" = "检查更新";
 "menu.about" = "关于";
-"menu.web_usage" = "访问 Claude 用量";
+"menu.claude_status" = "Claude 状态页面";
+"menu.codex_status" = "OpenAI 状态页面";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "退出 Usage4Claude";
@@ -23,6 +24,7 @@
 "usage.not_started" = "开始使用后显示";
 "usage.reset_in" = "距离重置还剩";
 "usage.remaining" = "剩余时间";
+"usage.available" = "剩余用量";
 "usage.loading" = "加载中...";
 "usage.not_configured" = "未配置认证信息";
 "usage.go_to_settings" = "去设置认证信息";
@@ -37,6 +39,7 @@
 "usage.refresh_cooldown" = "请稍后再试";
 "usage.run_diagnostic" = "运行诊断";
 "usage.codex_title" = "Codex 使用情况";
+"usage.codex_relogin" = "重新登录";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "通用";
@@ -51,6 +54,7 @@
 "settings.general.menubar_icon" = "菜单栏图标";
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
 "settings.general.menubar_theme" = "菜单栏主题";
+"settings.general.menubar_icon_size" = "图标大小";
 "settings.general.display_content" = "显示内容";
 "settings.general.monochrome_no_icon_hint" = "单色主题下不支持显示图标";
 "settings.general.refresh_section" = "刷新设置";
@@ -68,6 +72,10 @@
 "icon_style.color_translucent_desc" = "彩色圆环，背景透明，适合大部分菜单栏样式";
 "icon_style.color_with_background_desc" = "彩色圆环带半透明白色背景，适合彩色通透主题在深色壁纸表现不佳时";
 "icon_style.monochrome_desc" = "自动适应系统菜单栏样式，简洁优雅";
+
+"menu_bar_icon_size.small" = "紧凑";
+"menu_bar_icon_size.medium" = "标准";
+"menu_bar_icon_size.large" = "醒目";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "如何获取Claude认证信息";
@@ -99,7 +107,7 @@
 "settings.about.github" = "访问 GitHub 仓库";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025–2026";
 
 // MARK: - Welcome View
 "welcome.title" = "欢迎使用 Usage4Claude";
@@ -107,24 +115,8 @@
 "welcome.setup_button" = "去设置认证信息";
 "welcome.later_button" = "稍后设置";
 
-// MARK: - Update Checker
-"update.new_version_title" = "发现新版本";
-"update.latest_version" = "最新版本";
-"update.current_version" = "当前版本";
-"update.view_details_hint" = "点击【查看详情】查看完整更新内容";
-"update.view_release_page" = "查看完整更新内容请访问Release页面";
-"update.download_button" = "下载更新";
-"update.remind_later_button" = "稍后提醒";
-"update.view_details_button" = "查看详情";
-"update.up_to_date_title" = "已是最新版本";
-"update.up_to_date_message" = "当前版本 %@ 已是最新版本。";
+// MARK: - Update
 "update.ok_button" = "好的";
-"update.check_failed_title" = "检查更新失败";
-"update.confirm_button" = "确定";
-"update.error.invalid_url" = "无效的URL";
-"update.error.network" = "网络错误，请检查网络连接";
-"update.error.no_data" = "无法获取数据";
-"update.error.parse_failed" = "解析更新信息失败";
 
 // MARK: - Update Notification
 "update.notification.available" = "有新版本可用！";
@@ -154,6 +146,7 @@
 "language.chinese_traditional" = "中文（繁体）";
 "language.korean" = "한국어";
 "language.french" = "Français";
+"language.german" = "Deutsch";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 设置";
@@ -178,9 +171,11 @@
 "error.no_credentials" = "请先在设置中配置认证信息";
 "error.network_failed" = "网络请求失败，请检查网络连接";
 "error.decoding_failed" = "解析响应数据失败，请检查认证信息是否正确";
+"error.usage_dashboard_unavailable" = "当前账号套餐不提供用量数据。免费版没有用量看板；Team/Enterprise 请联系管理员开启成员用量看板。";
 "error.no_organizations_found" = "未找到组织";
 "error.unauthorized" = "认证失败，请检查您的凭据";
 "error.rate_limited" = "请求过于频繁，请稍后再试";
+"error.showing_cached_data" = "显示上次获取的数据";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "已启用";
@@ -193,7 +188,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "连接诊断";
-"diagnostic.section_description" = "测试与 Claude API 的连接并诊断问题。报告中的所有敏感信息都会自动脱敏处理。";
+"diagnostic.section_description" = "测试与 API 的连接并诊断问题。报告中的所有敏感信息都会自动脱敏处理。";
 "diagnostic.test_button" = "测试连接";
 "diagnostic.view_details_button" = "查看详情";
 "diagnostic.export_button" = "导出报告";
@@ -273,6 +268,8 @@
 "select_limit_types" = "选择要显示的限制类型";
 "circular_icon_constraint" = "至少必须选择一个圆形限制";
 "colored_theme_unavailable" = "彩色主题仅在显示1-2个圆形图标且无其他类型时可用";
+"custom_display.menu_bar_only_toggle" = "仅应用于菜单栏";
+"custom_display.menu_bar_only_description" = "开启后，详情窗口将忽略上面的选择，按智能模式显示所有可用的限制类型。";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "主题";
@@ -344,6 +341,7 @@
 "usage_data.compact_remaining_minutes" = "还剩 %d分钟";
 "usage_data.compact_remaining_hours" = "还剩 %d小时%d分钟";
 "usage_data.compact_remaining_days" = "还剩 %d天%d小时";
+"usage_data.compact_remaining_days_with_minutes" = "还剩 %d天%d小时%d分";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "未启用";
@@ -406,6 +404,8 @@
 "notification.warning_body" = "%@ 已达到 %d%% 用量";
 "notification.reset_title" = "用量已重置";
 "notification.reset_body" = "%@ 用量已重置";
+"notification.codex_session_expired_title" = "Codex 登录已过期";
+"notification.codex_session_expired_body" = "请重新登录以继续查看 Codex 用量。";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "登录 Claude";
@@ -437,3 +437,28 @@
 "graph_style.hint" = "选择使用量的显示方式";
 "graph_style.circular_description" = "以百分比圆环显示使用量";
 "graph_style.linear_description" = "以时间线和速度预测显示使用量";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "正在准备登录…";
+"weblogin.codex_oauth_waiting_browser" = "请在浏览器中继续登录";
+"weblogin.codex_oauth_waiting_hint" = "请在浏览器中完成 ChatGPT 登录（支持 Google、微软、企业 SSO 和 passkey），完成后会自动返回。";
+"weblogin.codex_oauth_exchanging" = "正在完成登录…";
+"weblogin.codex_oauth_failed" = "登录失败，请重试。";
+"weblogin.codex_oauth_timeout" = "登录超时，请重试。";
+"weblogin.codex_oauth_port_busy" = "本地端口 1455/1457 被占用，无法接收登录回调。请关闭占用该端口的程序后重试。";
+"weblogin.codex_oauth_reopen_browser" = "重新打开浏览器";
+"weblogin.codex_oauth_retry" = "重试";
+"weblogin.claude_oauth_port_busy" = "无法启动本地登录回调服务，请稍后重试。";
+"weblogin.claude_oauth_manual_hint" = "没有自动返回？";
+"weblogin.claude_oauth_manual_prompt" = "把浏览器地址栏里的链接粘贴到这里（以 http://localhost 开头）";
+"weblogin.claude_oauth_manual_submit" = "用此链接登录";
+"weblogin.claude_oauth_manual_invalid" = "没有从粘贴的内容中找到授权码。请复制浏览器地址栏里的完整链接后重试。";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "重置预告";
+"codex_announcement.tooltip_countdown" = "预计重置：%@";
+"codex_announcement.tooltip_countdown_deadline" = "最迟重置：%@";
+"codex_announcement.tooltip_footer" = "Beta · 第三方数据，来自 codex-reset.com · 点击打开";
+"settings.general.codex_announcement_section" = "Codex 重置预告（Beta）";
+"settings.general.codex_announcement_enable" = "显示重置预告徽章";
+"settings.general.codex_announcement_hint" = "仅当 OpenAI 的 Tibo Sottiaux 公开预告了一个尚未到达的全局重置时，才会在 Codex 圆环旁显示一个小徽章——大部分时间不会有任何显示。数据来自第三方社区项目 codex-reset.com（Beta：数据源可能变更或失效）。关闭后将不再向该网站发起任何请求。";

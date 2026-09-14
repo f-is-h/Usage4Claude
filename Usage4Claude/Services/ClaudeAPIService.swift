@@ -7,28 +7,41 @@
 //
 
 import Foundation
-import OSLog
 
 /// Claude API 服务类
 /// 负责与 Claude.ai API 通信，获取用户的使用情况数据
 /// 包含请求构建、认证处理、Cloudflare 绕过和数据解析功能
 class ClaudeAPIService {
     // MARK: - Properties
-    
+
+    /// 一次性校验场景（登录页/设置页验证 sessionKey）复用的共享实例。
+    /// 这类调用点过去各自 `ClaudeAPIService()` 创建局部实例，其 URLSession 从不
+    /// `finishTasksAndInvalidate()`；若实例在请求进行中被释放，`[weak self]` 闭包
+    /// 里挂起的单飞等待者也会随之丢失。复用同一长生命周期实例可一并避免这两个问题。
+    static let shared = ClaudeAPIService()
+
     /// API 基础 URL
     private let baseURL = "https://claude.ai/api/organizations"
-    
+
     /// 用户设置实例，用于获取认证信息
     private let settings = UserSettings.shared
-    
+
     /// 共享的 URLSession 实例
     private let session: URLSession
 
     /// 当前正在执行的网络请求任务
     private var currentTask: URLSessionDataTask?
 
+    // MARK: - Claude OAuth 单飞 & 缓存
+    //
+    // Claude OAuth refresh_token 每次续期后都会轮换（旧值立即失效）。
+    // 多个并发刷新调用可能用同一个 refresh_token，导致后到者触发 401。
+    // 单飞合并 + 缓存都委托给 OAuthTokenCache（actor，见 Services/OAuthTokenCache.swift），
+    // 用 actor 的串行化天然替代手写 NSLock + 等待者数组。
+    private let oauthTokenCache = OAuthTokenCache()
+
     // MARK: - Initialization
-    
+
     init() {
         // 配置 URLSession
         let configuration = URLSessionConfiguration.default
@@ -37,8 +50,22 @@ class ClaudeAPIService {
         configuration.httpCookieAcceptPolicy = .always
         configuration.httpShouldSetCookies = true
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData  // 不使用缓存
-        
+
         self.session = URLSession(configuration: configuration)
+    }
+
+    // MARK: - Claude OAuth Support
+
+    /// 判断凭据是否为 Claude OAuth refresh_token（以 "sk-ant-ort01-" 开头）
+    /// 判定规则收在 `ProviderAuthPath`，诊断层与此共用同一处，避免两边脱钩
+    static func isOAuthRefreshToken(_ credential: String) -> Bool {
+        ProviderAuthPath.forClaude(credential: credential) == .oauth
+    }
+
+    /// 清除 OAuth access_token 缓存（账户切换时调用；401 重试路径见 fetchClaudeOAuthUsageData，
+    /// 那里需要等 clear 完成后再重试，走的是 oauthTokenCache.clear() 的 await 版本）
+    func clearOAuthTokenCache() {
+        Task { await oauthTokenCache.clear() }
     }
     
     // MARK: - Public Methods
@@ -65,7 +92,13 @@ class ClaudeAPIService {
 
         // 检查认证信息
         guard settings.hasValidCredentials else {
-            completion(.failure(UsageError.noCredentials))
+            DispatchQueue.main.async { completion(.failure(UsageError.noCredentials)) }
+            return
+        }
+
+        // OAuth 账户：凭据是 refresh_token，走 /api/oauth/usage 路径，跳过 Cloudflare cookie 流程
+        if Self.isOAuthRefreshToken(settings.sessionKey) {
+            fetchOAuthUsage(completion: completion)
             return
         }
 
@@ -95,7 +128,7 @@ class ClaudeAPIService {
                 extraUsageData = data  // 可能为 nil（功能未启用或失败）
             case .failure:
                 // Extra Usage 失败不影响主功能，保持 extraUsageData 为 nil
-                Logger.api.info("Extra Usage API failed, continuing with main usage data only")
+                AppLog.warning(.api, "Extra Usage request failed; continuing with main usage data only")
             }
             dispatchGroup.leave()
         }
@@ -114,12 +147,11 @@ class ClaudeAPIService {
                 return
             }
 
-            // 创建包含 Extra Usage 的完整数据
+            // 创建包含 Extra Usage 的完整数据（整体保留所有模型槽，如 Fable / Opus / Sonnet）
             finalData = UsageData(
                 fiveHour: finalData.fiveHour,
                 sevenDay: finalData.sevenDay,
-                opus: finalData.opus,
-                sonnet: finalData.sonnet,
+                weeklyModels: finalData.weeklyModels,
                 extraUsage: extraUsageData  // 可能为 nil
             )
 
@@ -130,10 +162,15 @@ class ClaudeAPIService {
     /// 获取主 Usage API 数据（内部方法）
     /// - Parameter completion: 完成回调
     private func fetchMainUsage(completion: @escaping (Result<UsageData, Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<UsageData, Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         let urlString = "\(baseURL)/\(settings.organizationId)/usage"
 
         guard let url = URL(string: urlString) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
 
@@ -151,31 +188,31 @@ class ClaudeAPIService {
         // 创建并保存任务引用
         currentTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Network error: \(error.localizedDescription)")
-                completion(.failure(UsageError.networkError))
+                AppLog.error(.api, "Usage request failed with a network error: \(error.localizedDescription)")
+                complete(.failure(UsageError.networkError))
                 return
             }
 
             guard let data = data else {
-                completion(.failure(UsageError.noData))
+                complete(.failure(UsageError.noData))
                 return
             }
 
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Main Usage API Response: \(jsonString)")
+                AppLog.trace(.api, "Usage response body: \(jsonString)")
 
                 // 检查是否是HTML响应（Cloudflare拦截）
                 if jsonString.contains("<!DOCTYPE html>") || jsonString.contains("<html") {
-                    Logger.api.debug("⚠️ Received HTML response, possibly intercepted by Cloudflare.")
-                    completion(.failure(UsageError.cloudflareBlocked))
+                    AppLog.warning(.api, "Usage endpoint returned HTML instead of JSON — likely a Cloudflare challenge")
+                    complete(.failure(UsageError.cloudflareBlocked))
                     return
                 }
             }
 
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("Main Usage HTTP Status: \(httpResponse.statusCode)")
+                AppLog.event(.api, "Usage response received: HTTP \(httpResponse.statusCode)")
 
                 // 处理各种 HTTP 错误状态码
                 switch httpResponse.statusCode {
@@ -184,20 +221,20 @@ class ClaudeAPIService {
                     break
                 case 401:
                     // 未授权，通常是认证信息无效
-                    completion(.failure(UsageError.unauthorized))
+                    complete(.failure(UsageError.unauthorized))
                     return
                 case 403:
-                    // 禁止访问，可能是 Cloudflare 拦截
-                    completion(.failure(UsageError.cloudflareBlocked))
+                    // HTML 已在上方提前返回 cloudflareBlocked，此处 403 均为 JSON 鉴权失败
+                    complete(.failure(UsageError.unauthorized))
                     return
                 case 429:
                     // 请求频率过高
-                    completion(.failure(UsageError.rateLimited))
+                    complete(.failure(UsageError.rateLimited))
                     return
                 default:
                     // 其他 HTTP 错误
-                    Logger.api.error("HTTP error: \(httpResponse.statusCode)")
-                    completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
+                    AppLog.error(.api, "Usage request failed: unexpected HTTP \(httpResponse.statusCode)")
+                    complete(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
                 }
             }
@@ -208,18 +245,25 @@ class ClaudeAPIService {
             // 检查是否是错误响应
             if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data),
                errorResponse.error.type == "permission_error" {
-                completion(.failure(UsageError.sessionExpired))
+                complete(.failure(UsageError.sessionExpired))
                 return
             }
 
             // 解析成功响应
             do {
                 let response = try decoder.decode(UsageResponse.self, from: data)
+                // Free Tier / 未开放成员用量看板的组织：HTTP 200 但所有限额窗口为 null。
+                // 凭据本身有效，必须与「解析失败」区分开，否则用户会被引去反复重新登录。
+                if response.isUsageDashboardUnavailable {
+                    AppLog.event(.api, "Usage response carried no limit windows (member_dashboard_available=\(response.member_dashboard_available.map(String.init) ?? "nil")); treating this account as having no usage dashboard")
+                    complete(.failure(UsageError.usageDashboardUnavailable))
+                    return
+                }
                 let usageData = response.toUsageData()
-                completion(.success(usageData))
+                complete(.success(usageData))
             } catch {
-                Logger.api.debug("Decoding error: \(error.localizedDescription)")
-                completion(.failure(UsageError.decodingError))
+                AppLog.error(.api, "Usage response could not be decoded: \(error.localizedDescription)")
+                complete(.failure(UsageError.decodingError))
             }
         }
 
@@ -230,13 +274,19 @@ class ClaudeAPIService {
     /// 获取用户的组织列表
     /// - Parameters:
     ///   - sessionKey: 可选的 sessionKey，如果不提供则使用 settings.sessionKey
+    ///   - cookieHeader: 可选的完整 Cookie header 字符串（由 WebView 登录流程提供，含 cf_clearance/__cf_bm）
     ///   - completion: 完成回调，包含成功的组织数组或失败的 Error
     /// - Note: 用于自动获取 Organization ID，简化用户配置流程
-    func fetchOrganizations(sessionKey: String? = nil, completion: @escaping (Result<[Organization], Error>) -> Void) {
+    func fetchOrganizations(sessionKey: String? = nil, cookieHeader: String? = nil, completion: @escaping (Result<[Organization], Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<[Organization], Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         let urlString = "\(baseURL.replacingOccurrences(of: "/organizations", with: ""))/organizations"
 
         guard let url = URL(string: urlString) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
 
@@ -252,51 +302,50 @@ class ClaudeAPIService {
             organizationId: nil,  // 获取组织列表不需要 organizationId
             sessionKey: actualSessionKey
         )
+        // 若提供了来自 WebView 的完整 Cookie header（含 cf_clearance/__cf_bm），
+        // 覆盖 applyHeaders 仅含 sessionKey 的 Cookie 字段，确保 Cloudflare 通行证一并携带
+        if let cookieHeader = cookieHeader {
+            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        }
 
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Network error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.networkError))
-                }
+                AppLog.error(.api, "Organizations request failed with a network error: \(error.localizedDescription)")
+                complete(.failure(UsageError.networkError))
                 return
             }
 
             guard let data = data else {
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.noData))
-                }
+                complete(.failure(UsageError.noData))
                 return
             }
 
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Organizations API Response: \(jsonString)")
+                AppLog.trace(.api, "Organizations response body: \(jsonString)")
             }
 
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("HTTP Status Code: \(httpResponse.statusCode)")
+                AppLog.event(.api, "Organizations response received: HTTP \(httpResponse.statusCode)")
 
                 switch httpResponse.statusCode {
                 case 200...299:
                     // 成功响应，继续处理
                     break
                 case 401:
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.unauthorized))
-                    }
+                    complete(.failure(UsageError.unauthorized))
                     return
                 case 403:
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.cloudflareBlocked))
-                    }
+                    // Cloudflare 拦截返回 HTML；API 鉴权失败返回 JSON
+                    let isHTML = String(data: data, encoding: .utf8).map {
+                        $0.contains("<!DOCTYPE html>") || $0.contains("<html")
+                    } ?? false
+                    complete(.failure(isHTML ? UsageError.cloudflareBlocked : UsageError.unauthorized))
                     return
                 default:
-                    Logger.api.error("HTTP error: \(httpResponse.statusCode)")
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
-                    }
+                    AppLog.error(.api, "Organizations request failed: unexpected HTTP \(httpResponse.statusCode)")
+                    complete(.failure(UsageError.httpError(statusCode: httpResponse.statusCode)))
                     return
                 }
             }
@@ -305,14 +354,10 @@ class ClaudeAPIService {
             let decoder = JSONDecoder()
             do {
                 let organizations = try decoder.decode([Organization].self, from: data)
-                DispatchQueue.main.async {
-                    completion(.success(organizations))
-                }
+                complete(.success(organizations))
             } catch {
-                Logger.api.debug("Decoding error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.decodingError))
-                }
+                AppLog.error(.api, "Organizations response could not be decoded: \(error.localizedDescription)")
+                complete(.failure(UsageError.decodingError))
             }
         }
 
@@ -323,16 +368,21 @@ class ClaudeAPIService {
     /// - Parameter completion: 完成回调，包含成功的 ExtraUsageData 或失败的 Error
     /// - Note: 此方法是可选的，即使失败也不应影响主要功能
     func fetchExtraUsage(completion: @escaping (Result<ExtraUsageData?, Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<ExtraUsageData?, Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
         // 检查认证信息
         guard settings.hasValidCredentials else {
-            completion(.failure(UsageError.noCredentials))
+            complete(.failure(UsageError.noCredentials))
             return
         }
 
         let urlString = "\(baseURL)/\(settings.organizationId)/overage_spend_limit"
 
         guard let url = URL(string: urlString) else {
-            completion(.failure(UsageError.invalidURL))
+            complete(.failure(UsageError.invalidURL))
             return
         }
 
@@ -349,28 +399,24 @@ class ClaudeAPIService {
 
         let task = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.api.debug("Extra Usage API network error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.networkError))
-                }
+                AppLog.warning(.api, "Extra Usage request failed with a network error: \(error.localizedDescription)")
+                complete(.failure(UsageError.networkError))
                 return
             }
 
             guard let data = data else {
-                DispatchQueue.main.async {
-                    completion(.failure(UsageError.noData))
-                }
+                complete(.failure(UsageError.noData))
                 return
             }
 
             // 打印原始响应用于调试
             if let jsonString = String(data: data, encoding: .utf8) {
-                Logger.api.debug("Extra Usage API Response: \(jsonString)")
+                AppLog.trace(.api, "Extra Usage response body: \(jsonString)")
             }
 
             // 检查HTTP状态码
             if let httpResponse = response as? HTTPURLResponse {
-                Logger.api.debug("Extra Usage HTTP Status: \(httpResponse.statusCode)")
+                AppLog.trace(.api, "Extra Usage response received: HTTP \(httpResponse.statusCode)")
 
                 switch httpResponse.statusCode {
                 case 200...299:
@@ -378,21 +424,15 @@ class ClaudeAPIService {
                     break
                 case 403, 404:
                     // Extra Usage 未启用或无权限，返回 nil 表示功能不可用
-                    Logger.api.info("Extra Usage not available (HTTP \(httpResponse.statusCode))")
-                    DispatchQueue.main.async {
-                        completion(.success(nil))
-                    }
+                    AppLog.event(.api, "Extra Usage is not available for this account (HTTP \(httpResponse.statusCode))")
+                    complete(.success(nil))
                     return
                 case 401:
-                    DispatchQueue.main.async {
-                        completion(.failure(UsageError.unauthorized))
-                    }
+                    complete(.failure(UsageError.unauthorized))
                     return
                 default:
-                    Logger.api.warning("Extra Usage HTTP error: \(httpResponse.statusCode)")
-                    DispatchQueue.main.async {
-                        completion(.success(nil))  // 优雅降级
-                    }
+                    AppLog.warning(.api, "Extra Usage request failed: unexpected HTTP \(httpResponse.statusCode)")
+                    complete(.success(nil))  // 优雅降级
                     return
                 }
             }
@@ -402,18 +442,187 @@ class ClaudeAPIService {
             do {
                 let extraUsageResponse = try decoder.decode(ExtraUsageResponse.self, from: data)
                 let extraUsageData = extraUsageResponse.toExtraUsageData()
-                DispatchQueue.main.async {
-                    completion(.success(extraUsageData))
-                }
+                complete(.success(extraUsageData))
             } catch {
-                Logger.api.debug("Extra Usage decoding error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    completion(.success(nil))  // 优雅降级
-                }
+                AppLog.warning(.api, "Extra Usage response could not be decoded: \(error.localizedDescription)")
+                complete(.success(nil))  // 优雅降级
             }
         }
 
         task.resume()
+    }
+
+    // MARK: - OAuth Usage Path
+
+    /// OAuth 账户专用：用 refresh_token 换 access_token 后调用 /api/oauth/usage
+    /// - Parameter retryOnUnauthorized: 收到 401 时是否清缓存后立即重试一次（强制换新 access_token）。
+    ///   仿照 Codex 侧 `DataRefreshManager.fetchCodexOnly(retryOnUnauthorized:)` 的既有模式，
+    ///   避免用户在下一个刷新周期到来前一直看到错误状态。
+    private func fetchOAuthUsage(retryOnUnauthorized: Bool = true, completion: @escaping (Result<UsageData, Error>) -> Void) {
+        let refreshToken = settings.sessionKey
+        fetchOAuthAccessToken(refreshToken: refreshToken) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                DispatchQueue.main.async { completion(.failure(error)) }
+            case .success(let accessToken):
+                self.fetchClaudeOAuthUsageData(accessToken: accessToken, retryOnUnauthorized: retryOnUnauthorized, completion: completion)
+            }
+        }
+    }
+
+    /// 用 refresh_token 获取 access_token，带缓存 + 单飞合并（委托给 OAuthTokenCache actor）
+    private func fetchOAuthAccessToken(refreshToken: String, completion: @escaping (Result<String, Error>) -> Void) {
+        Task {
+            do {
+                let accessToken = try await oauthTokenCache.accessToken(refreshToken: refreshToken) { [weak self] token in
+                    guard let self else { throw UsageError.decodingError }
+                    return try await self.refreshClaudeOAuthTokens(refreshToken: token)
+                }
+                await MainActor.run { completion(.success(accessToken)) }
+            } catch {
+                await MainActor.run { completion(.failure(error)) }
+            }
+        }
+    }
+
+    /// 实际发起网络请求向 Claude OAuth 端点换取新 token；处理 refresh_token 轮换的静默写回。
+    /// 只会在 OAuthTokenCache 判定"确实需要发起新刷新"时才被调用一次（并发调用者共享同一次结果）。
+    private func refreshClaudeOAuthTokens(refreshToken: String) async throws -> OAuthTokenCache.Tokens {
+        do {
+            let tokens = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ClaudeOAuthTokens, Error>) in
+                ClaudeOAuthService.refresh(refreshToken: refreshToken) { result in
+                    continuation.resume(with: result)
+                }
+            }
+
+            // refresh_token 轮换：若响应携带新值则静默写回账户。
+            // 用 refreshToken（发起本次刷新时的旧值）反查账号，而不是写「当前选中账号」——
+            // 这段 await 期间用户可能已经切走，按「当前」写会把本账号的新 token 覆盖到别人头上。
+            let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
+            if newRefresh != refreshToken {
+                AppLog.event(.auth, "Claude OAuth refresh_token rotated; writing the new token back to the account")
+                await MainActor.run {
+                    UserSettings.shared.silentlyUpdateClaudeSessionToken(newRefresh, replacing: refreshToken)
+                }
+            }
+
+            // expires_in 通常为 3600 秒；未给出时保守使用 30 分钟
+            let expiry = tokens.expiresAt ?? Date().addingTimeInterval(30 * 60)
+            return OAuthTokenCache.Tokens(accessToken: tokens.accessToken, refreshToken: newRefresh, expiresAt: expiry)
+        } catch {
+            AppLog.error(.auth, "Claude OAuth token refresh failed: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    /// 用 access_token 调用 /api/oauth/usage，解析为 UsageData
+    private func fetchClaudeOAuthUsageData(accessToken: String, retryOnUnauthorized: Bool, completion: @escaping (Result<UsageData, Error>) -> Void) {
+        // Service 层统一约定：所有 completion 一律在主线程回调，调用方无需再包一层 DispatchQueue.main.async
+        let complete: (Result<UsageData, Error>) -> Void = { result in
+            DispatchQueue.main.async { completion(result) }
+        }
+
+        guard let url = URL(string: ClaudeOAuthConfig.usageURL) else {
+            complete(.failure(UsageError.invalidURL))
+            return
+        }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(ClaudeOAuthConfig.betaHeader, forHTTPHeaderField: "anthropic-beta")
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+
+        session.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                AppLog.error(.api, "Claude OAuth usage request failed with a network error: \(error.localizedDescription)")
+                complete(.failure(UsageError.networkError))
+                return
+            }
+            guard let data = data else {
+                complete(.failure(UsageError.noData))
+                return
+            }
+            if let http = response as? HTTPURLResponse {
+                AppLog.event(.api, "Claude OAuth usage response received: HTTP \(http.statusCode)")
+                switch http.statusCode {
+                case 200...299: break
+                case 401:
+                    // access_token 已失效，清缓存以便下次用 refresh_token 重新换取，
+                    // 避免在 5 分钟缓存窗口内反复用坏 token 触发 401。
+                    // 用 Task 顺序 await 清缓存再重试，避免 clear 与重试的缓存读取产生竞态
+                    // （二者都要进 actor，若各开一个 Task 无法保证 clear 先于重试执行）。
+                    if retryOnUnauthorized {
+                        AppLog.event(.auth, "Claude OAuth usage returned 401; clearing the cached access token and retrying once with the refresh_token")
+                        Task {
+                            await self?.oauthTokenCache.clear()
+                            self?.fetchOAuthUsage(retryOnUnauthorized: false, completion: completion)
+                        }
+                    } else {
+                        Task { await self?.oauthTokenCache.clear() }
+                        complete(.failure(UsageError.unauthorized))
+                    }
+                    return
+                case 429:
+                    complete(.failure(UsageError.rateLimited))
+                    return
+                default:
+                    complete(.failure(UsageError.httpError(statusCode: http.statusCode)))
+                    return
+                }
+            }
+            if let raw = String(data: data, encoding: .utf8) {
+                AppLog.trace(.api, "Claude OAuth usage response body: \(raw.prefix(500))")
+            }
+
+            let decoder = JSONDecoder()
+            do {
+                // 复用现有 UsageResponse 解码器（five_hour/seven_day/opus/sonnet 字段名一致）
+                let baseResponse = try decoder.decode(UsageResponse.self, from: data)
+                // 与 Cookie 路径一致：限额窗口全为 null 说明该账号未开放用量看板，
+                // 不是解码失败，也不是凭据失效。
+                if baseResponse.isUsageDashboardUnavailable {
+                    AppLog.event(.api, "Claude OAuth usage response carried no limit windows (member_dashboard_available=\(baseResponse.member_dashboard_available.map(String.init) ?? "nil")); treating this account as having no usage dashboard")
+                    complete(.failure(UsageError.usageDashboardUnavailable))
+                    return
+                }
+                var usageData = baseResponse.toUsageData()
+
+                // 尝试额外解码 extra_usage 字段
+                // Issue #64: 此前四层 try? 静默吞掉失败原因，导致无法判断是
+                // 「字段不存在」「字段名不同」还是「结构不匹配」，这里改为显式分支打日志诊断。
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    if let extraJson = json["extra_usage"] as? [String: Any] {
+                        // 诊断用：即使解码成功也打一行 keys，因为 ExtraUsageResponse 全字段可选，
+                        // 字段名对不上时不会抛错，只会静默产出全 nil 的“已禁用”结果。
+                        AppLog.trace(.api, "Claude OAuth usage extra_usage keys: \(Array(extraJson.keys).sorted())")
+                        if let extraData = try? JSONSerialization.data(withJSONObject: extraJson) {
+                            do {
+                                let extraResponse = try decoder.decode(ExtraUsageResponse.self, from: extraData)
+                                let extraUsageData = extraResponse.toExtraUsageData()
+                                AppLog.trace(.api, "Claude OAuth usage extra_usage decoded: enabled=\(extraUsageData?.enabled ?? false)")
+                                usageData = UsageData(
+                                    fiveHour: usageData.fiveHour,
+                                    sevenDay: usageData.sevenDay,
+                                    weeklyModels: usageData.weeklyModels,
+                                    extraUsage: extraUsageData
+                                )
+                            } catch {
+                                AppLog.warning(.api, "Claude OAuth usage extra_usage could not be decoded: \(error.localizedDescription); keys=\(Array(extraJson.keys))")
+                            }
+                        } else {
+                            AppLog.warning(.api, "Claude OAuth usage extra_usage could not be re-serialised to JSON; keys=\(Array(extraJson.keys))")
+                        }
+                    } else {
+                        AppLog.trace(.api, "Claude OAuth usage response has no extra_usage field; top-level keys: \(Array(json.keys))")
+                    }
+                }
+
+                complete(.success(usageData))
+            } catch {
+                AppLog.error(.api, "Claude OAuth usage response could not be decoded: \(error.localizedDescription)")
+                complete(.failure(UsageError.decodingError))
+            }
+        }.resume()
     }
 
     /// 取消所有正在进行的网络请求
@@ -421,7 +630,17 @@ class ClaudeAPIService {
     func cancelAllRequests() {
         currentTask?.cancel()
         currentTask = nil
-        Logger.api.debug("已取消所有网络请求")
+        AppLog.event(.api, "Cancelled all in-flight network requests")
+    }
+
+    // MARK: - Async 包装
+
+    /// `fetchUsage(completion:)` 的 async 包装，供结构化并发调用方使用。
+    /// 结果用 Result 表达而非 throws，与 completion 版本的错误语义保持一致。
+    func fetchUsageResult() async -> Result<UsageData, Error> {
+        await withCheckedContinuation { continuation in
+            fetchUsage { continuation.resume(returning: $0) }
+        }
     }
 
     // MARK: - Debug Mock Data
@@ -484,523 +703,6 @@ class ClaudeAPIService {
     #endif
 }
 
-// MARK: - 数据模型
-
-/// Organization 组织信息模型
-/// 对应 Claude API /api/organizations 返回的组织信息
-nonisolated struct Organization: Codable, Sendable, Identifiable, Equatable {
-    /// 组织数字 ID
-    let id: Int
-    /// 组织 UUID（用于 API 调用）
-    let uuid: String
-    /// 组织名称
-    let name: String
-    /// 创建时间
-    let created_at: String?
-    /// 更新时间
-    let updated_at: String?
-    /// 组织权限列表
-    let capabilities: [String]?
-
-    // MARK: - Equatable
-
-    static func == (lhs: Organization, rhs: Organization) -> Bool {
-        return lhs.uuid == rhs.uuid
-    }
-}
-
-/// API 响应数据模型
-/// 对应 Claude API 返回的 JSON 结构
-nonisolated struct UsageResponse: Codable, Sendable {
-    /// 5小时用量限制数据
-    let five_hour: LimitUsage
-    /// 7天用量限制数据
-    let seven_day: LimitUsage?
-    /// 7天 OAuth 应用用量（暂未使用）
-    let seven_day_oauth_apps: LimitUsage?
-    /// 7天 Opus 用量限制数据
-    let seven_day_opus: LimitUsage?
-    /// 7天 Sonnet 用量限制数据（新字段）
-    let seven_day_sonnet: LimitUsage?
-
-    /// 通用限制用量详情（适用于5小时、7天等各种限制）
-    struct LimitUsage: Codable, Sendable {
-        /// 当前使用率 (0-100，可以是浮点数)
-        let utilization: Double
-        /// 重置时间（ISO 8601 格式），nil 表示尚未开始使用
-        let resets_at: String?
-    }
-    
-    /// 将 API 响应转换为应用内部使用的 UsageData 模型
-    /// - Returns: 转换后的 UsageData 实例
-    /// - Note: 会自动处理时间四舍五入，确保显示准确
-    func toUsageData() -> UsageData {
-        // 解析5小时限制数据
-        let fiveHourData = parseLimitData(five_hour)
-
-        // 解析7天限制数据。所有 Claude 账号都有 7 天限制；
-        // 未开始使用时 API 可能返回 0 且无 resets_at，仍保留为 0% 占位。
-        let sevenDayData: UsageData.LimitData = {
-            guard let sevenDay = seven_day else {
-                return UsageData.LimitData(percentage: 0, resetsAt: nil)
-            }
-            let parsed = parseLimitData(sevenDay)
-            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
-        }()
-
-        // 解析 Opus 限制数据（仅当存在且有效时）
-        let opusData: UsageData.LimitData? = {
-            guard let opus = seven_day_opus else {
-                return nil
-            }
-            if opus.utilization == 0 && opus.resets_at == nil {
-                return nil
-            }
-            let parsed = parseLimitData(opus)
-            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
-        }()
-
-        // 解析 Sonnet 限制数据（仅当存在且有效时）
-        let sonnetData: UsageData.LimitData? = {
-            guard let sonnet = seven_day_sonnet else {
-                return nil
-            }
-            if sonnet.utilization == 0 && sonnet.resets_at == nil {
-                return nil
-            }
-            let parsed = parseLimitData(sonnet)
-            return UsageData.LimitData(percentage: parsed.percentage, resetsAt: parsed.resetsAt)
-        }()
-
-        return UsageData(
-            fiveHour: UsageData.LimitData(percentage: fiveHourData.percentage, resetsAt: fiveHourData.resetsAt),
-            sevenDay: sevenDayData,
-            opus: opusData,
-            sonnet: sonnetData,
-            extraUsage: nil  // Extra Usage 将在阶段5通过单独的 API 获取
-        )
-    }
-
-    /// 解析单个限制的数据（5小时或7天）
-    /// - Parameter limit: LimitUsage 结构
-    /// - Returns: 包含百分比和重置时间的元组
-    private func parseLimitData(_ limit: LimitUsage) -> (percentage: Double, resetsAt: Date?) {
-        let resetsAt: Date?
-        if let resetString = limit.resets_at {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-            if let date = formatter.date(from: resetString) {
-                // 对时间进行四舍五入到最接近的秒
-                // 例如：05:59:59.645 → 06:00:00
-                //       06:00:00.159 → 06:00:00
-                let interval = date.timeIntervalSinceReferenceDate
-                let roundedInterval = round(interval)
-                resetsAt = Date(timeIntervalSinceReferenceDate: roundedInterval)
-            } else {
-                resetsAt = nil
-            }
-        } else {
-            resetsAt = nil
-        }
-
-        return (percentage: Double(limit.utilization), resetsAt: resetsAt)
-    }
-}
-
-/// Extra Usage API 响应模型
-/// 用于解析 /api/organizations/{id}/overage_spend_limit 接口返回的数据
-nonisolated struct ExtraUsageResponse: Codable, Sendable {
-    /// 限制类型（如 "organization"）
-    let limit_type: String?
-    /// 是否启用
-    let is_enabled: Bool?
-    /// 每月额度上限（单位：美分）- 新字段名
-    let monthly_limit: Int?
-    /// 每月额度上限（单位：美分）- 旧字段名
-    let monthly_credit_limit: Int?
-    /// 货币单位（如 "EUR", "USD"）
-    let currency: String?
-    /// 已使用金额（单位：美分，API 可能返回浮点数如 21.0）
-    let used_credits: Double?
-    /// 信用额度耗尽
-    let out_of_credits: Bool?
-
-    // MARK: - Legacy fields (backwards compatibility)
-    let type: String?
-    let spend_limit_currency: String?
-    let spend_limit_amount_cents: Int?
-    let balance_cents: Int?
-
-    /// 转换为 ExtraUsageData
-    /// - Returns: 转换后的 ExtraUsageData，如果数据无效则返回 nil
-    func toExtraUsageData() -> ExtraUsageData? {
-        let resolvedCurrency = (currency ?? spend_limit_currency ?? "USD").uppercased()
-        // 优先使用新字段名 monthly_limit，回退到旧字段名，单位均为美分
-        let limitCents = monthly_limit ?? monthly_credit_limit ?? spend_limit_amount_cents
-        // used_credits 单位为美分（API 可能以浮点形式返回，如 21.0 表示 21 美分）
-        let usedCents = used_credits ?? balance_cents.map { Double($0) }
-
-        // 使用 is_enabled 字段判断，回退到限额检查
-        let enabled = is_enabled ?? (limitCents.map { $0 > 0 } ?? false)
-
-        guard enabled, let limitCents = limitCents, limitCents > 0 else {
-            return ExtraUsageData(
-                enabled: false,
-                used: nil,
-                limit: nil,
-                currency: resolvedCurrency
-            )
-        }
-
-        // 美分转美元：除以 100
-        let limit = Double(limitCents) / 100.0
-        let used = (usedCents ?? 0.0) / 100.0
-
-        return ExtraUsageData(
-            enabled: true,
-            used: used,
-            limit: limit,
-            currency: resolvedCurrency
-        )
-    }
-}
-
-/// 用量数据模型
-/// 应用内部使用的标准化用量数据结构
-struct UsageData: Sendable {
-    /// 5小时限制数据（可选）
-    let fiveHour: LimitData?
-    /// 7天限制数据（可选）
-    let sevenDay: LimitData?
-    /// Opus 每周限制数据（可选）
-    let opus: LimitData?
-    /// Sonnet 每周限制数据（可选）
-    let sonnet: LimitData?
-    /// Extra Usage 限额数据（可选）
-    let extraUsage: ExtraUsageData?
-
-    /// 单个限制的数据（5小时、7天、Opus、Sonnet）
-    struct LimitData: Sendable {
-        /// 当前使用百分比 (0-100)
-        let percentage: Double
-        /// 用量重置时间，nil 表示尚未开始使用
-        let resetsAt: Date?
-
-        /// 距离重置的剩余时间（秒）
-        /// - Returns: 剩余秒数，如果 resetsAt 为 nil 则返回 nil
-        var resetsIn: TimeInterval? {
-            guard let resetsAt = resetsAt else { return nil }
-            return resetsAt.timeIntervalSinceNow
-        }
-
-        /// 格式化的剩余时间字符串（用于5小时限制，显示X小时Y分）
-        /// - Returns: 本地化的剩余时间描述（如 "2小时30分"）
-        var formattedResetsInHours: String {
-            guard let resetsAt = resetsAt else {
-                return L.UsageData.notStartedReset
-            }
-
-            let resetsIn = resetsAt.timeIntervalSinceNow
-
-            guard resetsIn > 0 else {
-                return L.UsageData.resettingSoon
-            }
-
-            // 向上取整到分钟（使用 ceil 函数）
-            let totalMinutes = Int(ceil(resetsIn / 60))
-            let hours = totalMinutes / 60
-            let minutes = totalMinutes % 60
-
-            if hours > 0 {
-                return L.UsageData.resetsInHours(hours, minutes)
-            } else {
-                return L.UsageData.resetsInMinutes(minutes)
-            }
-        }
-
-        /// 格式化的剩余时间字符串（用于7天限制，显示X天Y小时）
-        /// - Returns: 本地化的剩余时间描述（如 "剩余约3天12小时"）
-        var formattedResetsInDays: String {
-            guard let resetsAt = resetsAt else {
-                return L.UsageData.notStartedReset
-            }
-
-            let resetsIn = resetsAt.timeIntervalSinceNow
-
-            guard resetsIn > 0 else {
-                return L.UsageData.resettingSoon
-            }
-
-            // 向上取整到小时
-            let totalHours = Int(ceil(resetsIn / 3600))
-            let days = totalHours / 24
-            let hours = totalHours % 24
-
-            if days > 0 {
-                return L.UsageData.resetsInDays(days, hours)
-            } else {
-                // 不足1天时，显示"约X小时"
-                return L.UsageData.resetsInHours(hours, 0)
-            }
-        }
-
-        /// 格式化的重置时间字符串（短格式，用于5小时限制）
-        /// - Returns: 本地化的重置时间描述（如 "今天 14:30" 或 "明天 09:00"）
-        var formattedResetTimeShort: String {
-            guard let resetsAt = resetsAt else {
-                return L.UsageData.unknown
-            }
-
-            var calendar = Calendar.current
-            calendar.locale = UserSettings.shared.appLocale
-            let timeString = TimeFormatHelper.formatTimeOnly(resetsAt)
-
-            if calendar.isDateInToday(resetsAt) {
-                return "\(L.UsageData.today) \(timeString)"
-            } else if calendar.isDateInTomorrow(resetsAt) {
-                return "\(L.UsageData.tomorrow) \(timeString)"
-            } else {
-                return TimeFormatHelper.formatDateTime(resetsAt, dateTemplate: "Md")
-            }
-        }
-
-        /// 格式化的重置时间字符串（长格式，用于7天限制）
-        /// - Returns: 本地化的重置日期描述（如 "11月29日 14时" 或 "Nov 29 2 PM"）
-        var formattedResetDateLong: String {
-            guard let resetsAt = resetsAt else {
-                return L.UsageData.unknown
-            }
-
-            return TimeFormatHelper.formatDateHour(resetsAt, dateTemplate: "MMMd")
-        }
-
-        // MARK: - 极简格式化方法（用于双模式两行显示）
-
-        /// 极简格式化的剩余时间（省略零值单位）
-        /// - 示例: "45m", "1h30m", "3d12h"
-        var formattedCompactRemaining: String {
-            guard let resetsAt = resetsAt else {
-                return "-"
-            }
-
-            let resetsIn = resetsAt.timeIntervalSinceNow
-            guard resetsIn > 0 else {
-                return L.UsageData.compactResettingSoon
-            }
-
-            let totalMinutes = Int(ceil(resetsIn / 60))
-
-            // 如果不足1小时，只显示分钟
-            if totalMinutes < 60 {
-                return L.UsageData.compactRemainingMinutes(totalMinutes)
-            }
-
-            let totalHours = totalMinutes / 60
-            let remainingMinutes = totalMinutes % 60
-
-            // 如果不足1天，显示小时+分钟
-            if totalHours < 24 {
-                return L.UsageData.compactRemainingHours(totalHours, remainingMinutes)
-            }
-
-            // 超过1天，显示天+小时
-            let days = totalHours / 24
-            let hours = totalHours % 24
-
-            return L.UsageData.compactRemainingDays(days, hours)
-        }
-
-        /// 格式化的重置时间（用于5小时限制）
-        /// - 示例: "Today 15:07" / "Today 3:07 PM", "Tomorrow 09:30" / "Tomorrow 9:30 AM"
-        var formattedCompactResetTime: String {
-            guard let resetsAt = resetsAt else {
-                return "-"
-            }
-
-            let calendar = Calendar.current
-
-            // 判断是今天还是明天
-            let prefix: String
-            if calendar.isDateInToday(resetsAt) {
-                prefix = L.UsageData.today
-            } else if calendar.isDateInTomorrow(resetsAt) {
-                prefix = L.UsageData.tomorrow
-            } else {
-                // 其他日期显示月日
-                let formatter = DateFormatter()
-                formatter.locale = UserSettings.shared.appLocale
-                formatter.timeZone = TimeZone.current
-                // 根据语言使用不同的日期格式
-                let langCode = UserSettings.shared.appLocale.identifier
-                if langCode.hasPrefix("zh") || langCode.hasPrefix("ja") {
-                    formatter.dateFormat = "M月d日"  // 中文/日语：12月25日
-                } else if langCode.hasPrefix("ko") {
-                    formatter.dateFormat = "M월d일"  // 韩语：12월25일
-                } else {
-                    formatter.dateFormat = "MMM d"   // 英文：Dec 25
-                }
-                prefix = formatter.string(from: resetsAt)
-            }
-
-            let timeString = TimeFormatHelper.formatTimeOnly(resetsAt)
-
-            return "\(prefix) \(timeString)"
-        }
-
-        /// 格式化的重置日期（用于7天限制，精确到小时）
-        /// - 示例: "Dec 16 15:00" / "Dec 16 3 PM" (英文), "12月16日 15时" (中文)
-        var formattedCompactResetDate: String {
-            guard let resetsAt = resetsAt else {
-                return "-"
-            }
-
-            return TimeFormatHelper.formatDateHour(resetsAt, dateTemplate: "MMMd")
-        }
-    }
-
-    /// 便捷访问：当前主要显示的数据（优先5小时，否则7天）
-    var primaryLimit: LimitData? {
-        return fiveHour ?? sevenDay
-    }
-
-    /// 是否同时有两种限制数据
-    var hasBothLimits: Bool {
-        return fiveHour != nil && sevenDay != nil
-    }
-
-    /// 是否只有7天限制数据
-    var hasOnlySevenDay: Bool {
-        return fiveHour == nil && sevenDay != nil
-    }
-
-    // MARK: - 向后兼容属性（保留用于旧代码）
-
-    /// 当前使用百分比 (0-100)
-    /// - Note: 向后兼容属性，返回主要限制的百分比
-    var percentage: Double {
-        return primaryLimit?.percentage ?? 0
-    }
-
-    /// 用量重置时间，nil 表示尚未开始使用
-    /// - Note: 向后兼容属性，返回主要限制的重置时间
-    var resetsAt: Date? {
-        return primaryLimit?.resetsAt
-    }
-
-    /// 距离重置的剩余时间（秒）
-    /// - Note: 向后兼容属性
-    var resetsIn: TimeInterval? {
-        return primaryLimit?.resetsIn
-    }
-
-    /// 格式化的剩余时间字符串
-    /// - Note: 向后兼容属性
-    var formattedResetsIn: String {
-        return primaryLimit?.formattedResetsInHours ?? L.UsageData.notStartedReset
-    }
-
-    /// 格式化的重置时间字符串
-    /// - Note: 向后兼容属性
-    var formattedResetTime: String {
-        return primaryLimit?.formattedResetTimeShort ?? L.UsageData.unknown
-    }
-
-    /// 根据使用百分比返回对应的状态颜色
-    /// - Note: 向后兼容属性
-    var statusColor: String {
-        let percentage = self.percentage
-        if percentage < 50 {
-            return "green"
-        } else if percentage < 70 {
-            return "yellow"
-        } else if percentage < 90 {
-            return "orange"
-        } else {
-            return "red"
-        }
-    }
-}
-
-/// Extra Usage 数据模型
-/// 额外付费用量数据结构（金额而非百分比）
-struct ExtraUsageData: Sendable {
-    /// 是否启用 Extra Usage
-    let enabled: Bool
-    /// 已使用金额
-    let used: Double?
-    /// 总限额
-    let limit: Double?
-    /// 货币代码（ISO 4217，如 USD、EUR、GBP）
-    let currency: String
-
-    /// 使用百分比（用于统一显示）
-    var percentage: Double? {
-        guard let used = used, let limit = limit, limit > 0 else {
-            return nil
-        }
-        return (used / limit) * 100.0
-    }
-
-    /// 货币符号（根据 ISO 4217 货币代码映射）
-    var currencySymbol: String {
-        switch currency.uppercased() {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "GBP": return "£"
-        case "JPY": return "¥"
-        case "CAD": return "CA$"
-        case "AUD": return "A$"
-        case "BRL": return "R$"
-        case "INR": return "₹"
-        default: return currency
-        }
-    }
-
-    // MARK: - Formatting Methods
-
-    /// 格式化的使用金额/总额度字符串（默认模式）
-    /// - Returns: 如 "$12.50 / $50.00"
-    var formattedUsageAmount: String {
-        guard enabled, let used = used, let limit = limit else {
-            return L.ExtraUsage.notEnabled
-        }
-        return L.ExtraUsage.usageAmount(used, limit, symbol: currencySymbol)
-    }
-
-    /// 格式化的剩余金额字符串（剩余模式）
-    /// - Returns: 如 "还可使用 $37"
-    var formattedRemainingAmount: String {
-        guard enabled, let used = used, let limit = limit else {
-            return L.ExtraUsage.notEnabled
-        }
-        let remaining = max(0, limit - used)
-        return L.ExtraUsage.remainingAmount(remaining, symbol: currencySymbol)
-    }
-
-    /// 极简格式化的使用金额（用于列表显示）
-    /// - Returns: 如 "$10.47/$25"
-    var formattedCompactAmount: String {
-        guard enabled, let used = used, let limit = limit else {
-            return "-"
-        }
-        let sym = currencySymbol
-        return String(format: "%@%.2f/%@%.0f", sym, used, sym, limit)
-    }
-}
-
-/// API 错误响应模型
-/// 对应 Claude API 返回的错误信息结构
-nonisolated struct ErrorResponse: Codable, Sendable {
-    let type: String
-    let error: ErrorDetail
-    
-    /// 错误详情
-    struct ErrorDetail: Codable, Sendable {
-        let type: String
-        let message: String
-    }
-}
 
 /// 用量查询相关错误
 enum UsageError: LocalizedError {
@@ -1011,6 +713,7 @@ enum UsageError: LocalizedError {
     case noCredentials
     case networkError
     case decodingError
+    case usageDashboardUnavailable // 账号套餐未开放用量看板（Free Tier / 未开启成员看板的 Team）
     case unauthorized              // 401 未授权
     case rateLimited               // 429 请求频率过高
     case httpError(statusCode: Int)  // 其他 HTTP 错误
@@ -1031,6 +734,8 @@ enum UsageError: LocalizedError {
             return L.Error.networkFailed
         case .decodingError:
             return L.Error.decodingFailed
+        case .usageDashboardUnavailable:
+            return L.Error.usageDashboardUnavailable
         case .unauthorized:
             return L.Error.unauthorized
         case .rateLimited:

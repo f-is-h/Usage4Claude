@@ -5,6 +5,119 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1] - 2026-09-04
+
+### Fixed
+- **Menu bar right-click menu lost every icon on macOS 27**: Starting in macOS 27, AppKit decides whether a menu item image is shown and hides it by default, which stripped the icons from the status item menu and made the new-version badge disappear with them. Icons are now assigned through `assignIcon(_:to:)`, which sets `preferredImageVisibility` to visible. That property is annotated `API_AVAILABLE(macos(27.0))` and so exists only in the macOS 27 SDK, while release builds are pinned to Xcode 26.6 on purpose, so it is set through KVC guarded by `responds(to:)` — `#available` gates runtime availability and cannot conjure a symbol the compiler never saw. Worth returning to the typed property once CI moves to an Xcode carrying that SDK. The popover's three-dot menu is a SwiftUI `Menu` with no equivalent API, so its icons stay hidden for now
+- **Release builds failed with nothing but an exit code**: `build.sh` writes `xcodebuild` output to `build.log` rather than stdout, so a compile failure surfaced in CI as bare "exit code 65" and the cause had to be inferred from a local reproduction — which is unreliable when the local SDK differs from the pinned one. The release workflow now prints that log when the build step fails
+- **A revoked Claude OAuth login offered "run diagnostics" instead of "sign in again"**: Refresh tokens are single-use, and RFC 6749 §5.2 reports a spent or revoked one as HTTP 400 `invalid_grant`, which Anthropic follows. Both services only recognised HTTP 401, so a dead Claude grant fell through to a generic `httpError` and `requiresAuthAction` returned false, sending users to a diagnostic that cannot revive a revoked grant. `OAuthGrantFailure` now decides from the response rather than the status code alone, and both services map a dead grant to `sessionExpired`; transient failures and unrelated 400s stay generic so a blip does not push anyone into re-authenticating
+- **Diagnostics tested the wrong auth path and blamed the credentials**: The runner assumed Claude always authenticates with a sessionKey cookie and Codex with a next-auth session-token, so for an OAuth account it sent the refresh_token as a cookie. claude.ai answered HTTP 403 `account_session_invalid` and chatgpt.com answered HTTP 200 with an empty session, every time, for accounts that were refreshing perfectly well — and the report then blamed expired credentials and told people to re-authenticate something that was never broken. The service layer dispatched on the credential prefix correctly; the diagnostic had copied that rule and copied it wrong. The decision now lives once in `ProviderAuthPath`, which both layers consult, and OAuth accounts are diagnosed by running the service's own fetch rather than a request built in the diagnostic — refresh_tokens are single-use and only the `OAuthTokenCache` path writes the rotated value back, so a diagnostic that exchanges tokens itself would discard it and kill the login it was asked to check. Multi-step paths also require every step to pass, where the verdict previously came from the first step alone (reported by @pkakr, #84)
+- **Expired credentials reported as "Data Parsing Error" and "Unknown error"**: Any body that failed to decode into the success shape was filed as a parse failure, so Claude's structured 403 error body was never parsed and a signed-out ChatGPT session (HTTP 200 carrying only `WARNING_BANNER`) decoded into a nil `accessToken` and was still treated as unparsable. That cascaded through `diagnoseCodex` into "Unknown error occurred, please share this report with developers" at Low confidence, which is how the report came to send users to file an issue. Both now resolve to an authentication failure with a "log in again" instruction, worded for the account's actual auth path, and the Codex verdict falls back to the SSR probe's result instead of Unknown. Classification moved into the pure, unit-tested `DiagnosticResponseClassifier` (reported by @pkakr, #84)
+- **Running a connection test signed the Codex account out permanently**: chatgpt.com issues a fresh anonymous `session-token` cookie when nobody is signed in, and three refresh paths persisted any token that merely differed from the stored one — writing that anonymous token over the user's real credential. The SSR path wrote before parsing the bootstrap that reports `authStatus=logged_out`, the session endpoint wrote before decoding the `accessToken`, and the hidden-WebView path never validated at all. The diagnostic's SSR probe runs the same path, so clicking "Test Connection" destroyed the login every time. Persisting a rotated token now requires the `accessToken` from the same session as proof that it was authenticated, enforced through `CodexSessionTokenRotation` rather than three independent orderings; the WebView path validates its candidate before writing it
+
+### Changed
+- **Logging rebuilt as one system**: The app ran two parallel loggers — `Logger` (OSLog) with 205 call sites, and a file logger with zero, which is the one the "Open Log Folder" button opened, so that folder was empty for everyone. Measured against the real unified log, only about 22% of those 205 calls produced anything a user could export: 64 sat at `.debug`, which never reaches disk, and 122 interpolated a string, which OSLog redacts to `<private>` by default. Both are replaced by `AppLog`, a single entry point writing to the unified log and to a file. Messages are redacted at the entry point and then written with `privacy: .public`, so an exported log is readable instead of a column of `<private>`. Levels collapse from six to four (`trace`/`event`/`warning`/`error`), each with a stated contract, and all 205 messages were rewritten in English (reported by @vyrti, #79)
+- **Log files have a hard disk ceiling**: The previous design opened a 5 MB file per day and pruned only `.old` archives, leaving the daily files to grow without bound. Logs now live in two fixed files of 256 KB each — a 512 KB ceiling, covered by a test that sustains 8,000 writes and asserts the cap holds. Repeated messages collapse into a count instead of one line per repeat, single messages are truncated at 512 characters, `trace` never touches disk in a release build, and debug builds write to their own files so they cannot corrupt a release instance's log
+
+### Added
+- **Diagnostics report how the previous session ended**: The app never calls `exit()` and a silent quit leaves no `.ips`, which left nothing to go on for reports of the app vanishing on its own. A clean-exit marker is now written on `applicationWillTerminate`; its absence on the next launch means the process was killed externally (crash, force quit, or the system reclaiming memory) rather than quitting. The diagnostic report carries that verdict, the recent log, and current log disk usage (reported by @vyrti, #79)
+
+### Security
+- **Response bodies in exported diagnostics are redacted**: The report embeds the first 500 characters of each response and is meant to be pasted into a public issue, but `redactText` only recognised session keys and Organization IDs. `SensitiveDataRedactor.redactBodyPreview` now also strips JSON token fields (`accessToken`, `refresh_token`, …) and bare JWTs, and is applied to every body preview in the report
+
+## [3.4.0] - 2026-09-04
+
+### Added
+- **Menu bar icon size setting**: Choose Compact / Standard / Prominent for menu bar icons; one setting drives the rings, Opus/Sonnet/Extra Usage shapes, the no-data placeholder, and the Claude/Codex brand logos. Shape-icon drawing parameters are now derived from the canvas instead of being absolutes tuned on an 18pt canvas
+- **Codex reset announcement badge (Beta)**: Show a badge next to the Codex ring when OpenAI has publicly announced a still-pending global usage reset, sourced from the third-party codex-reset.com. Deliberately surfaces announcements only, never a probability number. Two-stage probing keeps traffic low, fetch cadence lives in the testable `CodexAnnouncementFetchPolicy`, and every failure path is silent by design. Enabled by default, switchable off, and the settings card appears only once a Codex account exists
+
+### Changed
+- **Transient errors keep showing cached data**: A failed refresh no longer replaces the popover with a full-screen error when usable data is cached; it renders the normal view with a compact "showing last fetched data" banner instead. The full-screen error is reserved for having no cached data or for errors needing user action (thanks @KurtGood, #75)
+- **Sponsorship links carry attribution metadata**: Added GitHub Sponsors transaction metadata to all 14 sponsorship links across READMEs, website footers, and in-app entry points
+- **Documentation**: Overhauled the French README with proper accented orthography and the missing sections, moved localization credits inline, added the Cmd-U shortcut to the usage guides, and bumped the copyright year. Added `CLAUDE.md`, `scripts/check_l10n.py` for localization key verification (wired into CI), and archived four one-off planning documents (thanks @schaitl, #70)
+
+### Fixed
+- **Free Tier and Team accounts reported as credential errors**: Accounts without a usage dashboard answer with HTTP 200 and every limit window null, which aborted the whole decode and surfaced as "credentials are incorrect", sending users to re-authenticate credentials that were never the problem. `five_hour` is now optional and these plans get a dedicated "usage dashboard unavailable" error plus a matching diagnostic verdict (thanks @yairixStudio, #80; reported by @genu, #74 and @Yohan-Janolin, #83)
+- **Rotated OAuth tokens written to the wrong account**: Token write-backs targeted whichever account was selected when the async callback landed, so switching accounts mid-refresh put one account's new token into another's entry. Because refresh_tokens rotate and the old one is invalidated immediately, this signed both accounts out permanently. Write-backs now locate the account by the token held when the refresh started, and drop the write when that account is gone
+- **Codex OAuth callback refused by the browser**: The login view owned the OAuth coordinator, so tearing down the progress window stopped the callback listener before the browser could reach it. The coordinator is now app-owned and survives view recreation, with a manual paste fallback that still enforces PKCE and state validation (thanks @realjoenguyen, #77)
+- **"Go to Settings" button missing in most languages**: The error view matched localized message text, so the button only appeared in English and Chinese; error kind is now tracked explicitly
+- **Single-provider refresh discarding cached data**: `fetchClaudeOnly` no longer clears cached usage on failure, matching the combined refresh path
+- **Menu bar icon size jump when data arrived**: The no-data placeholder was 22pt while data-bearing icons were 18pt, so the icon visibly shrank the moment data loaded
+- **Settings tab stability**
+- **Ko-fi handle typo**: All 7 READMEs pointed at `ko-fi.com/1attle` instead of `ko-fi.com/1atte`
+
+### Internal
+- Reverted the redundant `ENABLE_INCOMING_NETWORK_CONNECTIONS` build setting introduced by #77: the target signs with the static entitlements file, which has carried `com.apple.security.network.server` since the browser-based OAuth flow shipped
+- Extracted `AccountTokenRotation` as a pure resolver with 10 tests, and removed the current-account token-write API entirely so the pitfall cannot be reintroduced
+- `ShapeIconRenderer` takes the canvas size as a parameter and holds no size state
+
+## [3.3.0] - 2026-07-14
+
+### Added
+- **German localization**: Full German UI translation, README with language switcher entry, and polished wording for reset-time strings
+- **Per-model weekly usage rows**: Show weekly usage for any number of models returned by the API (e.g. Opus, Sonnet, Fable), no longer limited to two fixed slots
+- **Claude OAuth manual paste fallback**: Paste the callback link to complete sign-in when the local server doesn't receive the browser redirect
+
+### Fixed
+- **Codex rate limit window mislabeling**: Classify the 5-hour/7-day window by its actual duration instead of JSON field position
+- **Missed usage warning notifications**: Notifications now show while the app is in the foreground, instead of being silently dropped
+- **Codex token expiry miscalculation**: Decode JWT payloads using the base64url alphabet, fixing expiry checks for tokens containing `-` or `_`
+- **Stuck OAuth retry after failed login**: Reset the callback flag on retry so a second sign-in attempt is no longer silently dropped
+- **Stale menu bar icon after appearance change**: Invalidate the icon cache when switching between light and dark mode
+- **Claude account intermittent auth errors**: Retry the usage fetch once after an unexpected 401 by refreshing the access token, matching existing Codex behavior
+
+## [3.2.2] - 2026-06-19
+
+### Fixed
+- **Sparkle update version comparison**: Build number now tracks the marketing version so the updater recognizes newer releases, preventing repeated update prompts for an already-installed version
+
+## [3.2.1] - 2026-06-19
+
+### Fixed
+- **Codex OAuth via system browser**: Sign in to Codex through the system browser, supporting Google, Microsoft SSO, enterprise SSO, and passkeys
+- **Claude OAuth via system browser**: Sign in to Claude through the system browser for improved compatibility and reliability
+
+## [3.2.0] - 2026-06-10
+
+### Added
+- **In-app updates via Sparkle**: The app now checks for and installs updates
+automatically using the Sparkle framework
+- **Codex session auto-renewal**: Automatically renews expired Codex sessions using a
+three-level fallback chain without requiring manual re-login
+- **Custom display scope**: Option to restrict custom display configuration to the menu
+bar only
+
+### Fixed
+- **Multi-account OAuth stability**: Prevent auto-SSO triggering and token corruption
+when managing multiple accounts
+- **Codex outer ring rendering**: Remove jagged dash segments from the Codex ring stroke
+for a clean continuous ring
+- **Multi-provider icon-only display**: Show a single representative icon when multiple
+providers are configured in icon-only mode
+
+## [3.1.0] - 2026-05-24
+
+### Added
+- **Remaining-mode ring sync**: Detail rings now fill from the available-quota direction when the view is in remaining display mode
+- **Conditional status page links**: Menu shows "Claude Status" or "OpenAI Status" only when the corresponding account type is configured, replacing the static usage link
+
+### Fixed
+- **Web login session persistence**: Browser login sessions now persist across app launches
+- **Google login in browser view**: Fixed Google sign-in failure in the embedded browser login view
+- **403 error classification**: Corrected 403 HTTP responses being misclassified as authentication errors
+
+## [3.0.1] - 2026-05-15
+
+### Added
+- **Silent Codex token refresh**: Automatically refresh Codex access tokens in the background via SSR bootstrap without requiring manual re-login
+- **Codex support in diagnostics**: The built-in diagnostic tool now tests Codex connectivity alongside Claude
+- **Codex 7-day reset time precision**: Display Codex 7-day window reset time with minute-level precision
+
+### Fixed
+- **Codex browser login reliability**: Harden cookie detection and session validation for
+more consistent sign-in
+- **Japanese hour unit**: Use correct kanji for the hour unit in reset time display
+
 ## [3.0.0] - 2026-05-03
 
 ### Added
@@ -462,6 +575,14 @@ Key, Organization ID)
 
 ---
 
+[3.4.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.4.1
+[3.4.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.4.0
+[3.3.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.3.0
+[3.2.2]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.2
+[3.2.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.1
+[3.2.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.0
+[3.1.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.1.0
+[3.0.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.1
 [3.0.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v3.0.0
 [2.6.1]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.1
 [2.6.0]: https://github.com/f-is-h/Usage4Claude/releases/tag/v2.6.0

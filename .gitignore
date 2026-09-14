@@ -3,11 +3,12 @@
 *.cer
 *.certSigningRequest
 
-# md file upload rules 
+# md file upload rules
 /*.md
 !/README.md
 !/CHANGELOG.md
 !/CONTRIBUTING.md
+!/CLAUDE.md
 
 # Xcode
 *.xcodeproj/*
@@ -90,4 +91,6 @@ ClaudeUsageMonitor
 *.bak
 *.backup
 
-.claude
+# Python cache (from running .github/scripts/*.py locally)
+__pycache__/
+*.pyc

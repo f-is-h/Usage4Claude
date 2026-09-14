@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [한국어](docs/README.ko.md) | [Français](docs/README.fr.md)
+[English](README.md) | [日本語](docs/README.ja.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [한국어](docs/README.ko.md) | [Français](docs/README.fr.md) | [Deutsch](docs/README.de.md)
 
 <div align="center">
 
@@ -28,7 +28,7 @@
 ### 🎯 Core Features
 
 - **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex monitoring
-- **🎯 Multi-Limit Support** - Claude supports up to 5 limits (5-hour/7-day/Extra/7-day Opus/7-day Sonnet), while Codex supports 5-hour, 7-day, and Extra Usage/credits
+- **🎯 Multi-Limit Support** - Claude supports 5-hour, 7-day, and Extra Usage limits plus weekly per-model usage for any number of models (e.g. Opus, Sonnet, Fable), while Codex supports 5-hour, 7-day, and Extra Usage/credits
 - **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
 - **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
 - **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
@@ -60,6 +60,7 @@ All platforms share the same usage quota, monitored in one place!
 - Supports Codex 5-hour, 7-day, and Extra Usage/credits information
 - Add a Codex account by logging in to ChatGPT with the built-in browser
 - Claude-only users need no extra setup; the existing experience stays unchanged until a Codex account is added
+- **🧪 Reset Announcement (Beta)**: shows a small badge next to the Codex ring only when OpenAI has publicly announced a still-pending global reset — most of the time there's nothing to show, by design. Data comes from [codex-reset.com](https://codex-reset.com), an independent third-party community project, not an official API; can be turned off in Settings
 
 ### 🎨 Personalization
 
@@ -74,15 +75,16 @@ All platforms share the same usage quota, monitored in one place!
   - 简体中文
   - 繁体中文
   - 한국어
-  - Français
-  - More languages coming soon...
+  - Français (contributed by [@mtreize](https://github.com/mtreize))
+  - Deutsch (contributed by [@schaitl](https://github.com/schaitl))
+  - More languages coming soon... (Localization PRs are welcome!)
 
 ### 🔧 Convenient Features
 
 - **⚙️ Visual Settings** - No code modification needed, GUI configuration for all options
 - **🆕 Smart Update Alerts** - Menu bar badge and rainbow animation notify new versions
 - **🚀 Launch at Login** - Optional automatic startup when system boots
-- **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R, ⌘,, ⌘Q)
+- **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R | ⌘, | ⌘Q)
 - **👋 Friendly Onboarding** - Detailed setup wizard on first launch
 - **… Menu Display** - Multiple menu access methods, detail view and right-click
 - **🔔 Usage Notifications** - Claude usage warning and reset notifications, configurable in settings
@@ -180,6 +182,8 @@ Codex current colors:
 4. Right-click the app and select "Open" on first launch (allow unsigned app)
 5. Allow Keychain access for authentication info (you may need to allow again after version updates; the prompt shows the relevant authentication token name)
 
+> **Updates after the first install are in-app.** Sparkle checks for new versions automatically (and on demand via Menu → Check for Updates), then downloads, verifies the EdDSA signature, and installs with one click — no need to re-download the DMG for future releases.
+
 ### Option 2: Build from Source
 
 #### Requirements
@@ -237,9 +241,10 @@ open Usage4Claude.xcodeproj
   - ⌘R - Manual refresh data
   - ⌘, - Open General Settings
   - ⌘⇧A - Open Authentication Settings
+  - ⌘U - Check for updates
   - ⌘Q - Quit app
-- **Update Alerts** - When new version available, menu bar icon shows badge and menu items display rainbow text
-- **Check Updates** - Menu → Check for Updates
+- **Update Alerts** - When a new version is available, the menu bar icon shows a badge and menu items display rainbow text
+- **Check Updates** - Menu → Check for Updates. New versions download, verify (EdDSA signature), and install in-app — no manual re-download needed (powered by [Sparkle](https://sparkle-project.org))
 
 ### Refresh Mode
 
@@ -300,7 +305,7 @@ A: Very lightweight:
 <details>
 <summary><b>Q: Which macOS versions are supported?</b></summary>
 
-A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon (M1/M2/M3) chips.
+A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon (M1/M2/M3/M4/M5) chips.
 
 </details>
 
@@ -537,12 +542,12 @@ Giving a star is the biggest encouragement!
 ### ☕ Buy Me a Coffee
 
 <!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=en">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
 </a>
 
 <!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
+<a href="https://ko-fi.com/1atte">
   <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
 </a>
 
@@ -563,7 +568,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 You are free to use, copy, modify, merge, publish, distribute, sublicense, 
 and/or sell copies of the Software.

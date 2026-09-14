@@ -1,0 +1,181 @@
+<?xml version="1.0" standalone="yes"?>
+<!--
+    Sparkle appcast feed for Usage4Claude.
+
+    Each release is recorded here as an <item> with the signed enclosure
+    that scripts/build.sh prints after sign_update. New items go at the
+    top of the <channel> so Sparkle finds the latest first.
+
+    Feed URL referenced by Info.plist's SUFeedURL:
+      https://raw.githubusercontent.com/f-is-h/Usage4Claude/main/appcast.xml
+
+    See docs/SPARKLE_SETUP.md for the per-release workflow.
+
+    Template for a new item (paste at the top, beneath <language>):
+
+        <item>
+            <title>vX.Y.Z</title>
+            <pubDate>Mon, 01 Jan 2026 00:00:00 +0000</pubDate>
+            <sparkle:version>BUILD</sparkle:version>
+            <sparkle:shortVersionString>X.Y.Z</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/vX.Y.Z</link>
+            <description sparkle:format="markdown"><![CDATA[
+## vX.Y.Z
+
+- Summary line (Markdown is rendered by Sparkle's release-notes view)
+            ]]></description>
+            <enclosure
+                url="https://github.com/f-is-h/Usage4Claude/releases/download/vX.Y.Z/Usage4Claude-vX.Y.Z.dmg"
+                sparkle:edSignature="..."
+                length="..."
+                type="application/octet-stream"/>
+        </item>
+-->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Usage4Claude</title>
+        <link>https://github.com/f-is-h/Usage4Claude</link>
+        <description>Updates to Usage4Claude — Claude.ai usage menu bar app for macOS.</description>
+        <language>en</language>
+        <!-- Items go here. Top item is the latest version. -->
+        <item>
+            <title>v3.4.1</title>
+            <pubDate>Fri, 04 Sep 2026 11:26:02 +0000</pubDate>
+            <sparkle:version>3.4.1</sparkle:version>
+            <sparkle:shortVersionString>3.4.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.4.1</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Fixed
+- **Icons missing from the menu bar menu on macOS 27**: macOS 27 began hiding menu icons by default, which emptied the right-click menu of its icons and took the new-version badge with them
+- **"Test Connection" signing you out of Codex**: Running the connection test could overwrite your saved Codex sign-in with an empty one and log the account out for good. If this has happened to you, signing in again from Settings fixes it
+- **Being told to run diagnostics when the only fix was signing in again**: If a Claude sign-in was revoked or had expired, the app suggested running a connection test, which cannot restore it. It now says to sign in again
+- **Connection test blaming your credentials when nothing was wrong**: For accounts signed in with OAuth, the test checked a kind of login those accounts do not use, so it always reported a failure and told people to re-authenticate accounts that were working perfectly well (reported by @pkakr, #84)
+- **"Open Log Folder" opening an empty folder**: The app was never writing the log file that button points at. It now keeps a small log there, capped so it cannot grow on your disk, and the diagnostic report includes a recent excerpt (reported by @vyrti, #79)
+
+### Added
+- **Diagnostics can now tell when the app was shut down from outside**: If Usage4Claude disappears without warning, the next launch reports whether it quit normally or was killed by something else, such as the system reclaiming memory. That was the missing piece for reports of it vanishing on its own (reported by @vyrti, #79)
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.4.1/Usage4Claude-v3.4.1.dmg"
+              sparkle:edSignature="SXi7doLH+hfrXF4AxPdjjXctQ6xCnnBxe0QXXBNvYrS4rm8s5ZKgP+oLgjw20dmXPlDEb5I1oJu4UMEMzLtBAA==" length="5752461"
+              type="application/octet-stream"/>
+        </item>
+        <item>
+            <title>v3.4.0</title>
+            <pubDate>Fri, 04 Sep 2026 01:21:31 +0000</pubDate>
+            <sparkle:version>3.4.0</sparkle:version>
+            <sparkle:shortVersionString>3.4.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.4.0</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Added
+- **Menu bar icon size**: Pick Compact, Standard or Prominent in Settings → General → Display. Menu bar height and eyesight vary, so the icons no longer come in one fixed size
+- **Codex reset announcement badge (Beta)**: A badge appears next to the Codex ring when OpenAI has publicly announced a pending global usage reset. It shows announcements only, never a prediction, and can be turned off in settings
+
+### Changed
+- **Brief network errors no longer blank the popover**: A rate limit or dropped connection now keeps your last usage on screen with a small notice on top, instead of replacing everything with an error page (thanks @KurtGood, #75)
+
+### Fixed
+- **Free Tier and Team accounts wrongly told to sign in again**: Plans without a usage dashboard were reported as a credential problem, sending people to re-enter credentials that were fine. They now get a clear message explaining the plan does not provide usage data (thanks @yairixStudio, #80; reported by @genu, #74 and @Yohan-Janolin, #83)
+- **Signing in to Codex failing with a connection error**: The browser could come back to a closed door if the sign-in window was recreated mid-flow. If it still gets stuck, you can now paste the callback link to finish (thanks @realjoenguyen, #77)
+- **Accounts signed out after switching during a refresh**: Switching accounts while usage was refreshing could write one account's renewed credentials into another's, signing both out for good. Renewed credentials now always go back to the account that requested them
+- **"Go to Settings" button missing outside English and Chinese**: The button now appears for sign-in errors in every language
+- **Menu bar icon resizing when data loaded**: The icon no longer changes size the moment usage data arrives
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.4.0/Usage4Claude-v3.4.0.dmg"
+              sparkle:edSignature="NTvuKQhkxb1Algng4vGAr6U8EHnGVBkBiOHbuir+/DN8JDWF3qnVJXml6kx0OvB8OvGFKKmpxW1MN77yNn/8Dw==" length="5760243"
+              type="application/octet-stream"/>
+        </item>
+        <item>
+            <title>v3.3.0</title>
+            <pubDate>Tue, 14 Jul 2026 08:22:49 +0000</pubDate>
+            <sparkle:version>3.3.0</sparkle:version>
+            <sparkle:shortVersionString>3.3.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.3.0</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Added
+- **German localization**: Full German UI translation, README with language switcher entry, and polished wording for reset-time strings
+- **Per-model weekly usage rows**: Show weekly usage for any number of models returned by the API (e.g. Opus, Sonnet, Fable), no longer limited to two fixed slots
+- **Claude OAuth manual paste fallback**: Paste the callback link to complete sign-in when the local server doesn't receive the browser redirect
+
+### Fixed
+- **Codex rate limit window mislabeling**: Classify the 5-hour/7-day window by its actual duration instead of JSON field position
+- **Missed usage warning notifications**: Notifications now show while the app is in the foreground, instead of being silently dropped
+- **Codex token expiry miscalculation**: Decode JWT payloads using the base64url alphabet, fixing expiry checks for tokens containing `-` or `_`
+- **Stuck OAuth retry after failed login**: Reset the callback flag on retry so a second sign-in attempt is no longer silently dropped
+- **Stale menu bar icon after appearance change**: Invalidate the icon cache when switching between light and dark mode
+- **Claude account intermittent auth errors**: Retry the usage fetch once after an unexpected 401 by refreshing the access token, matching existing Codex behavior
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.3.0/Usage4Claude-v3.3.0.dmg"
+              sparkle:edSignature="UE2mGKYvMpSjhz8N1NK4SylkMXPw2FwULyjLoPY3A5USjESCdZtbvO+HMrWwdJCd8PEmLDGKy2YS/iaDeJkJDg==" length="5683598"
+              type="application/octet-stream"/>
+        </item>
+        <item>
+            <title>v3.2.2</title>
+            <pubDate>Fri, 19 Jun 2026 14:59:17 +0000</pubDate>
+            <sparkle:version>3.2.2</sparkle:version>
+            <sparkle:shortVersionString>3.2.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.2</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Fixed
+- **Sparkle update version comparison**: Build number now tracks the marketing version so the updater recognizes newer releases, preventing repeated update prompts for an already-installed version
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.2.2/Usage4Claude-v3.2.2.dmg"
+              sparkle:edSignature="bNrrstRax1Iv4DzS08XR6KR7s8+Om5AYPF4pA6ta4bVr5olZyAJCqZEu4KHhkUODpjndEP76xXX7bGBSLPXlCQ==" length="5646748"
+              type="application/octet-stream"/>
+        </item>
+        <item>
+            <title>v3.2.1</title>
+            <pubDate>Fri, 19 Jun 2026 13:59:56 +0000</pubDate>
+            <sparkle:version>3.2.1</sparkle:version>
+            <sparkle:shortVersionString>3.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.1</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Fixed
+- **Codex OAuth via system browser**: Sign in to Codex through the system browser, supporting Google, Microsoft SSO, enterprise SSO, and passkeys
+- **Claude OAuth via system browser**: Sign in to Claude through the system browser for improved compatibility and reliability
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.2.1/Usage4Claude-v3.2.1.dmg"
+              sparkle:edSignature="F/SPbOzcn7XX51jk8IkfF+KSVtW3qeP78HUyv7mrPSns26EYuCODHewGQt7yqMKe+Ilz/zqrtVtkHkupiDLTAA==" length="5646742"
+              type="application/octet-stream"/>
+        </item>
+        <item>
+            <title>v3.2.0</title>
+            <pubDate>Wed, 10 Jun 2026 06:52:01 +0000</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>3.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/f-is-h/Usage4Claude/releases/tag/v3.2.0</link>
+            <description sparkle:format="markdown"><![CDATA[
+### Added
+- **In-app updates via Sparkle**: The app now checks for and installs updates
+automatically using the Sparkle framework
+- **Codex session auto-renewal**: Automatically renews expired Codex sessions using a
+three-level fallback chain without requiring manual re-login
+- **Custom display scope**: Option to restrict custom display configuration to the menu
+bar only
+
+### Fixed
+- **Multi-account OAuth stability**: Prevent auto-SSO triggering and token corruption
+when managing multiple accounts
+- **Codex outer ring rendering**: Remove jagged dash segments from the Codex ring stroke
+for a clean continuous ring
+- **Multi-provider icon-only display**: Show a single representative icon when multiple
+providers are configured in icon-only mode
+            ]]></description>
+            <enclosure
+              url="https://github.com/f-is-h/Usage4Claude/releases/download/v3.2.0/Usage4Claude-v3.2.0.dmg"
+              sparkle:edSignature="/s2ZQ1OeLRwirXpteQKh//3dadecxRT0u/nXEeYKnwyp9gRKbx0RB1c4PrsLBMK948FAtrSjplbK1Qo+NQo7Bw==" length="5515047"
+              type="application/octet-stream"/>
+        </item>
+    </channel>
+</rss>

@@ -19,7 +19,8 @@ enum L {
         static var authSettings: String { localized("menu.auth_settings") }
         static var checkUpdates: String { localized("menu.check_updates") }
         static var about: String { localized("menu.about") }
-        static var webUsage: String { localized("menu.web_usage") }
+        static var claudeStatus: String { localized("menu.claude_status") }
+        static var codexStatus: String { localized("menu.codex_status") }
         static var coffee: String { localized("menu.coffee") }
         static var githubSponsor: String { localized("menu.github_sponsor") }
         static var quit: String { localized("menu.quit") }
@@ -59,6 +60,7 @@ enum L {
         static var notStarted: String { localized("usage.not_started") }
         static var resetIn: String { localized("usage.reset_in") }
         static var remaining: String { localized("usage.remaining") }
+        static var available: String { localized("usage.available") }
         static var loading: String { localized("usage.loading") }
         static var notConfigured: String { localized("usage.not_configured") }
         static var goToSettings: String { localized("usage.go_to_settings") }
@@ -73,6 +75,7 @@ enum L {
         static var refreshCooldown: String { localized("usage.refresh_cooldown") }
         static var runDiagnostic: String { localized("usage.run_diagnostic") }
         static var codexTitle: String { localized("usage.codex_title") }
+        static var codexRelogin: String { localized("usage.codex_relogin") }
     }
     
     // MARK: - Settings Tabs
@@ -91,6 +94,7 @@ enum L {
         static var menubarIcon: String { localized("settings.general.menubar_icon") }
         static var menubarHint: String { localized("settings.general.menubar_hint") }
         static var menubarTheme: String { localized("settings.general.menubar_theme") }
+        static var menubarIconSize: String { localized("settings.general.menubar_icon_size") }
         static var displayContent: String { localized("settings.general.display_content") }
         static var monochromeNoIconHint: String { localized("settings.general.monochrome_no_icon_hint") }
         static var refreshSection: String { localized("settings.general.refresh_section") }
@@ -102,6 +106,21 @@ enum L {
         static var interfaceLanguage: String { localized("settings.general.interface_language") }
         static var languageHint: String { localized("settings.general.language_hint") }
         static var resetButton: String { localized("settings.general.reset_button") }
+        static var codexAnnouncementSection: String { localized("settings.general.codex_announcement_section") }
+        static var codexAnnouncementEnable: String { localized("settings.general.codex_announcement_enable") }
+        static var codexAnnouncementHint: String { localized("settings.general.codex_announcement_hint") }
+    }
+
+    // MARK: - Codex Reset Announcement (Beta)
+    enum CodexAnnouncement {
+        static var title: String { localized("codex_announcement.title") }
+        static var tooltipFooter: String { localized("codex_announcement.tooltip_footer") }
+        static func tooltipCountdown(_ duration: String) -> String {
+            String(format: localized("codex_announcement.tooltip_countdown"), duration)
+        }
+        static func tooltipCountdownDeadline(_ duration: String) -> String {
+            String(format: localized("codex_announcement.tooltip_countdown_deadline"), duration)
+        }
     }
     
     // MARK: - Settings Authentication
@@ -175,32 +194,11 @@ enum L {
         static var multiAccountHint: String { localized("welcome.multi_account_hint") }
     }
     
-    // MARK: - Update Checker
+    // MARK: - Update
     enum Update {
-        static var newVersionTitle: String { localized("update.new_version_title") }
-        static var latestVersion: String { localized("update.latest_version") }
-        static var currentVersion: String { localized("update.current_version") }
-        static var viewDetailsHint: String { localized("update.view_details_hint") }
-        static var viewReleasePage: String { localized("update.view_release_page") }
-        static var downloadButton: String { localized("update.download_button") }
-        static var remindLaterButton: String { localized("update.remind_later_button") }
-        static var viewDetailsButton: String { localized("update.view_details_button") }
-        static var upToDateTitle: String { localized("update.up_to_date_title") }
-        static func upToDateMessage(_ version: String) -> String {
-            String(format: localized("update.up_to_date_message"), version)
-        }
+        /// 通用“好”按钮，被诊断 / 设置等多处复用
         static var okButton: String { localized("update.ok_button") }
-        static var checkFailedTitle: String { localized("update.check_failed_title") }
-        static var confirmButton: String { localized("update.confirm_button") }
-        
-        enum Error {
-            static var invalidUrl: String { localized("update.error.invalid_url") }
-            static var network: String { localized("update.error.network") }
-            static var noData: String { localized("update.error.no_data") }
-            static var parseFailed: String { localized("update.error.parse_failed") }
-        }
-        
-        // 🆕 Update Notification
+        // 更新提示：菜单栏徽章 / 彩虹文字 / 弹窗横幅
         enum Notification {
             static var available: String { localized("update.notification.available") }
             static var badgeMenu: String { localized("update.notification.badge_menu") }
@@ -219,6 +217,12 @@ enum L {
     }
     
     // MARK: - Icon Style Mode
+    enum IconSize {
+        static var small: String { localized("menu_bar_icon_size.small") }
+        static var medium: String { localized("menu_bar_icon_size.medium") }
+        static var large: String { localized("menu_bar_icon_size.large") }
+    }
+
     enum IconStyle {
         static var colorTranslucent: String { localized("icon_style.color_translucent") }
         static var colorWithBackground: String { localized("icon_style.color_with_background") }
@@ -246,6 +250,7 @@ enum L {
         static var chineseTraditional: String { localized("language.chinese_traditional") }
         static var korean: String { localized("language.korean") }
         static var french: String { localized("language.french") }
+        static var german: String { localized("language.german") }
     }
     
     // MARK: - Window Titles
@@ -316,6 +321,9 @@ enum L {
         static func compactRemainingDays(_ days: Int, _ hours: Int) -> String {
             String(format: localized("usage_data.compact_remaining_days"), days, hours)
         }
+        static func compactRemainingDaysWithMinutes(_ days: Int, _ hours: Int, _ minutes: Int) -> String {
+            String(format: localized("usage_data.compact_remaining_days_with_minutes"), days, hours, minutes)
+        }
     }
     
     // MARK: - Error Messages
@@ -327,9 +335,11 @@ enum L {
         static var noCredentials: String { localized("error.no_credentials") }
         static var networkFailed: String { localized("error.network_failed") }
         static var decodingFailed: String { localized("error.decoding_failed") }
+        static var usageDashboardUnavailable: String { localized("error.usage_dashboard_unavailable") }
         static var noOrganizationsFound: String { localized("error.no_organizations_found") }
         static var unauthorized: String { localized("error.unauthorized") }
         static var rateLimited: String { localized("error.rate_limited") }
+        static var showingCachedData: String { localized("error.showing_cached_data") }
     }
 
     // MARK: - Diagnostics
@@ -414,6 +424,8 @@ enum L {
         static var selectLimitTypes: String { localized("select_limit_types") }
         static var circularIconConstraint: String { localized("circular_icon_constraint") }
         static var coloredThemeUnavailable: String { localized("colored_theme_unavailable") }
+        static var menuBarOnlyToggle: String { localized("custom_display.menu_bar_only_toggle") }
+        static var menuBarOnlyDescription: String { localized("custom_display.menu_bar_only_description") }
     }
 
     // MARK: - Launch at Login
@@ -497,6 +509,29 @@ enum L {
         }
         static var cloudflareBlocked: String { localized("weblogin.cloudflare_blocked") }
         static var privacyNotice: String { localized("weblogin.privacy_notice") }
+
+        // MARK: Claude OAuth 登录（系统浏览器）
+        static var claudeOAuthPortBusy: String { localized("weblogin.claude_oauth_port_busy") }
+        static var claudeOAuthManualHint: String { localized("weblogin.claude_oauth_manual_hint") }
+        static var claudeOAuthManualPrompt: String { localized("weblogin.claude_oauth_manual_prompt") }
+        static var claudeOAuthManualSubmit: String { localized("weblogin.claude_oauth_manual_submit") }
+        static var claudeOAuthManualInvalid: String { localized("weblogin.claude_oauth_manual_invalid") }
+
+        // MARK: Codex OAuth 登录（系统浏览器）
+        static var codexOAuthPreparing: String { localized("weblogin.codex_oauth_preparing") }
+        static var codexOAuthWaitingBrowser: String { localized("weblogin.codex_oauth_waiting_browser") }
+        static var codexOAuthWaitingHint: String { localized("weblogin.codex_oauth_waiting_hint") }
+        static var codexOAuthExchanging: String { localized("weblogin.codex_oauth_exchanging") }
+        static var codexOAuthFailed: String { localized("weblogin.codex_oauth_failed") }
+        static var codexOAuthTimeout: String { localized("weblogin.codex_oauth_timeout") }
+        static var codexOAuthPortBusy: String { localized("weblogin.codex_oauth_port_busy") }
+        static var codexOAuthReopenBrowser: String { localized("weblogin.codex_oauth_reopen_browser") }
+        static var codexOAuthRetry: String { localized("weblogin.codex_oauth_retry") }
+        // 回调粘贴提示沿用 Claude 回环回调的通用本地化文案
+        static var codexOAuthManualHint: String { claudeOAuthManualHint }
+        static var codexOAuthManualPrompt: String { claudeOAuthManualPrompt }
+        static var codexOAuthManualSubmit: String { claudeOAuthManualSubmit }
+        static var codexOAuthManualInvalid: String { claudeOAuthManualInvalid }
     }
 
     // MARK: - Settings Notification
@@ -517,6 +552,8 @@ enum L {
         static func resetBody(_ type: String) -> String {
             String(format: localized("notification.reset_body"), type)
         }
+        static var codexSessionExpiredTitle: String { localized("notification.codex_session_expired_title") }
+        static var codexSessionExpiredBody: String { localized("notification.codex_session_expired_body") }
     }
 
     // MARK: - Settings General (Time Format)

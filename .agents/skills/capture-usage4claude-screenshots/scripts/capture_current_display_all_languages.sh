@@ -8,8 +8,8 @@ case "$scenario" in
 esac
 
 downloads_dir="${DOWNLOADS_DIR:-$HOME/Downloads}"
-langs=(en ja zh-CN zh-TW ko fr)
-indices=(1 2 3 4 5 6)
+langs=(en ja zh-CN zh-TW ko fr de)
+indices=(1 2 3 4 5 6 7)
 
 for lang in "${langs[@]}"; do
   target="$downloads_dir/detail.${scenario}.${lang}@2x.png"
@@ -19,19 +19,59 @@ for lang in "${langs[@]}"; do
   fi
 done
 
+ensure_settings_window() {
+  osascript <<'OSA'
+tell application "System Events"
+  tell application process "Usage4Claude"
+    if (count of windows) > 0 and not (exists scroll area 1 of group 1 of window 1) then
+      click button 1 of window 1
+      delay 0.2
+    end if
+
+    if (count of windows) = 0 then
+      if exists pop over 1 of menu bar item 1 of menu bar 2 then
+        click menu bar item 1 of menu bar 2
+        delay 0.2
+      end if
+
+      repeat 5 times
+        click menu bar item 1 of menu bar 2
+        delay 0.3
+        if exists pop over 1 of menu bar item 1 of menu bar 2 then exit repeat
+      end repeat
+      if not (exists pop over 1 of menu bar item 1 of menu bar 2) then error "Usage4Claude popover did not open"
+
+      set moreMenu to menu button 1 of group 1 of pop over 1 of menu bar item 1 of menu bar 2
+      click moreMenu
+      delay 0.2
+      set actionsMenu to menu 1 of moreMenu
+      set opened to false
+      repeat with actionItem in menu items of actionsMenu
+        if (name of actionItem is not missing value) and ((count of menus of actionItem) = 0) then
+          click actionItem
+          set opened to true
+          exit repeat
+        end if
+      end repeat
+      if not opened then error "General Settings menu item was not found"
+
+      repeat 40 times
+        if (count of windows) > 0 and (exists scroll area 1 of group 1 of window 1) then exit repeat
+        delay 0.1
+      end repeat
+    end if
+
+    if not ((count of windows) > 0 and (exists scroll area 1 of group 1 of window 1)) then error "Usage4Claude General settings window was not found"
+  end tell
+end tell
+OSA
+}
+
 ensure_settings_and_language() {
   local idx="$1"
   osascript <<OSA
 tell application "System Events"
   tell application process "Usage4Claude"
-    if (count of windows) = 0 then
-      click menu item 3 of menu 1 of menu bar item 2 of menu bar 1
-      repeat 40 times
-        if (count of windows) > 0 then exit repeat
-        delay 0.1
-      end repeat
-    end if
-
     set s to scroll area 1 of group 1 of window 1
     click radio button ${idx} of radio group 6 of s
     delay 0.5
@@ -50,6 +90,12 @@ tell application "System Events"
 end tell
 OSA
 }
+
+ensure_settings_window
+if [[ "${APPLY_REFERENCE_DEBUG_VALUES:-0}" == "1" ]]; then
+  "$(dirname "$0")/apply_reference_debug_values.sh"
+fi
+"$(dirname "$0")/apply_scenario.sh" "$scenario"
 
 for i in "${!langs[@]}"; do
   lang="${langs[$i]}"

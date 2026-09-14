@@ -30,6 +30,11 @@ extension Notification.Name {
     /// 当用户切换账户时发送，触发数据刷新
     static let accountChanged = Notification.Name("accountChanged")
 
+    /// 进度显示口径（已用量 / 余量）已切换通知
+    /// 单独于 settingsChanged 是因为菜单栏图标要为它播一段切换动画：
+    /// 走 settingsChanged 会让图标立即重画成终态，动画就没得播了
+    static let remainingModeToggled = Notification.Name("remainingModeToggled")
+
     // MARK: - Window Related
 
     /// 打开设置窗口通知

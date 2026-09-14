@@ -37,6 +37,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
     private var progressObservation: NSKeyValueObservation?
     private var onAccountCreated: ((Account) -> Void)?
     private var navigationDelegate: NavigationDelegate?
+    private var uiDelegate: UIDelegate?
 
     private let apiService = CodexAPIService()
 
@@ -46,13 +47,13 @@ final class CodexWebLoginCoordinator: ObservableObject {
         "openai.com",
         "auth.openai.com",
         "auth0.openai.com",
-        "accounts.google.com",
+        "google.com",
+        "youtube.com",
         "appleid.apple.com",
         "login.microsoftonline.com",
         "github.com",
-        "accounts.google.co.jp",
-        "accounts.google.com.hk",
-        "www.google.com",
+        "google.co.jp",
+        "google.com.hk",
         "challenges.cloudflare.com"
     ]
 
@@ -68,6 +69,7 @@ final class CodexWebLoginCoordinator: ObservableObject {
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
+        // nonPersistent：完全空白，任何 OAuth provider 都无已有 session，确保多账号添加时不会 auto-SSO
         config.websiteDataStore = .nonPersistent()
         config.preferences.isElementFullscreenEnabled = false
 
@@ -78,6 +80,10 @@ final class CodexWebLoginCoordinator: ObservableObject {
         let delegate = NavigationDelegate(coordinator: self)
         webView.navigationDelegate = delegate
         self.navigationDelegate = delegate
+
+        let ui = UIDelegate(coordinator: self)
+        webView.uiDelegate = ui
+        self.uiDelegate = ui
 
         progressObservation = webView.observe(\.estimatedProgress) { [weak self] webView, _ in
             DispatchQueue.main.async {
@@ -104,13 +110,19 @@ final class CodexWebLoginCoordinator: ObservableObject {
         cookieTimer?.invalidate()
         cookieTimer = nil
         progressObservation = nil
+    }
 
-        let dataStore = webView.configuration.websiteDataStore
-        let allTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-        dataStore.fetchDataRecords(ofTypes: allTypes) { records in
-            dataStore.removeData(ofTypes: allTypes, for: records) {
-                Logger.settings.info("CodexWebLogin: 已清除所有 WebView 数据")
+    /// 将登录 WebView（nonPersistent）中 chatgpt.com / openai.com 的 cookie 复制到 default store
+    /// 用于在成功登录后同步 session，供 Level 2 静默刷新使用
+    private func transferCookiesToDefaultStore() {
+        let sourceStore = webView.configuration.websiteDataStore.httpCookieStore
+        let destStore = WKWebsiteDataStore.default().httpCookieStore
+        sourceStore.getAllCookies { cookies in
+            let relevant = cookies.filter { c in
+                c.domain.contains("chatgpt.com") || c.domain.contains("openai.com")
             }
+            for cookie in relevant { destStore.setCookie(cookie) { } }
+            AppLog.trace(.auth, "Codex web login copied \(relevant.count) cookie(s) into the default store")
         }
     }
 
@@ -128,37 +140,61 @@ final class CodexWebLoginCoordinator: ObservableObject {
         cookieStore.getAllCookies { [weak self] cookies in
             guard let self = self else { return }
 
-            let sessionCookie = cookies.first { cookie in
-                cookie.name == "__Secure-next-auth.session-token" && cookie.domain.contains("chatgpt.com")
-            }
+            let chatgptCookies = cookies.filter { $0.domain.contains("chatgpt.com") }
+            guard let sessionToken = Self.extractSessionToken(from: chatgptCookies) else { return }
 
-            if let cookie = sessionCookie {
-                let sessionToken = cookie.value
-                Logger.settings.info("CodexWebLogin: 检测到 session-token Cookie")
+            let cookieHeader = chatgptCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+            AppLog.event(.auth, "Codex web login detected the session-token cookie")
 
-                DispatchQueue.main.async {
-                    self.cookieTimer?.invalidate()
-                    self.cookieTimer = nil
-                    self.validateSessionToken(sessionToken)
-                }
+            DispatchQueue.main.async {
+                self.cookieTimer?.invalidate()
+                self.cookieTimer = nil
+                self.validateSessionToken(sessionToken, cookieHeader: cookieHeader)
             }
         }
     }
 
+    /// 从 chatgpt.com Cookie 列表中提取 session token 值
+    /// 支持标准名称、无 __Secure- 前缀版本，以及 next-auth 分片 Cookie（.0/.1/...）
+    static func extractSessionToken(from cookies: [HTTPCookie]) -> String? {
+        let baseNames = ["__Secure-next-auth.session-token", "next-auth.session-token"]
+
+        for baseName in baseNames {
+            if let cookie = cookies.first(where: { $0.name == baseName }) {
+                return cookie.value
+            }
+            let chunks = cookies
+                .filter { cookie in
+                    guard cookie.name.hasPrefix(baseName + ".") else { return false }
+                    let suffix = cookie.name.dropFirst(baseName.count + 1)
+                    return !suffix.isEmpty && suffix.allSatisfy(\.isNumber)
+                }
+                .sorted {
+                    let ia = Int($0.name.dropFirst(baseName.count + 1)) ?? 0
+                    let ib = Int($1.name.dropFirst(baseName.count + 1)) ?? 0
+                    return ia < ib
+                }
+            if !chunks.isEmpty {
+                return chunks.map(\.value).joined()
+            }
+        }
+        return nil
+    }
+
     // MARK: - Validation
 
-    private func validateSessionToken(_ sessionToken: String) {
+    private func validateSessionToken(_ sessionToken: String, cookieHeader: String) {
         loginState = .validating
 
-        apiService.validateSessionToken(sessionToken) { [weak self] result in
+        apiService.validateSessionToken(sessionToken, cookieHeader: cookieHeader) { [weak self] result in
             guard let self = self else { return }
 
             switch result {
-            case .success(let info):
+            case .success(let validation):
                 let account = Account(
                     sessionKey: sessionToken,
-                    organizationId: info.email,
-                    organizationName: info.displayName,
+                    organizationId: validation.email,
+                    organizationName: validation.displayName,
                     alias: nil,
                     provider: .codex
                 )
@@ -168,12 +204,13 @@ final class CodexWebLoginCoordinator: ObservableObject {
 
                 self.loginState = .success(accountName: storedAccount.displayName)
                 self.onAccountCreated?(storedAccount)
+                self.transferCookiesToDefaultStore()
 
-                Logger.settings.notice("CodexWebLogin: 账户创建成功 - \(storedAccount.displayName)")
+                AppLog.event(.auth, "Codex web login succeeded; created account: \(storedAccount.displayName)")
 
             case .failure(let error):
                 self.loginState = .failed(message: error.localizedDescription)
-                Logger.settings.error("CodexWebLogin: 验证失败 - \(error.localizedDescription)")
+                AppLog.error(.auth, "Codex web login validation failed: \(error.localizedDescription)")
 
                 // 验证失败后重新开始监听
                 self.startCookieMonitoring()
@@ -206,7 +243,14 @@ extension CodexWebLoginCoordinator {
             if case .validating = coordinator.loginState { return }
             if case .success = coordinator.loginState { return }
             coordinator.loginState = .waitingForLogin
-            coordinator.startCookieMonitoring()
+
+            // 仅在跳转到 chatgpt.com 的非认证页面后才开始轮询 Cookie
+            // 这表示用户已完成 OAuth 流程并被重定向回主页
+            // 避免在 auth/login 页面误拾取后台 WebView 写入的旧 session-token
+            if let host = webView.url?.host, host.hasSuffix("chatgpt.com"),
+               let path = webView.url?.path, !path.hasPrefix("/auth") {
+                coordinator.startCookieMonitoring()
+            }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -237,6 +281,32 @@ extension CodexWebLoginCoordinator {
                 NSWorkspace.shared.open(url)
                 decisionHandler(.cancel)
             }
+        }
+    }
+}
+
+// MARK: - WKUIDelegate
+
+extension CodexWebLoginCoordinator {
+
+    /// 处理页面通过 window.open() 触发的弹出窗口
+    /// Google OAuth 传统流程会用弹出窗口完成授权，缺少此代理会导致登录静默失败
+    final class UIDelegate: NSObject, WKUIDelegate {
+        private weak var coordinator: CodexWebLoginCoordinator?
+
+        init(coordinator: CodexWebLoginCoordinator) {
+            self.coordinator = coordinator
+            super.init()
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            webView.load(navigationAction.request)
+            return nil
         }
     }
 }

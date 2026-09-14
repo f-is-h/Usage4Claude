@@ -78,7 +78,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .frame(width: 500, height: 550)
+        .frame(width: 500, height: 550, alignment: .top)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
     }
 }

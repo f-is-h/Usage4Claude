@@ -12,6 +12,12 @@ import Foundation
 /// 提供统一的请求头构建逻辑，用于绕过 Cloudflare 防护
 /// 包含完整的浏览器模拟 Headers
 class ClaudeAPIHeaderBuilder {
+    // MARK: - Constants
+
+    /// 请求头里模拟的浏览器版本号（Chrome on macOS）。
+    /// 建议每隔半年左右手动升级一次，避免长期停留在过旧版本增加 Cloudflare 风控识别概率。
+    private static let simulatedChromeVersion = "131.0.0.0"
+
     // MARK: - Public Methods
 
     /// 构建 Claude API 请求的标准 HTTP Headers
@@ -28,15 +34,15 @@ class ClaudeAPIHeaderBuilder {
         return [
             // 基础 Headers
             "accept": "*/*",
-            "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+            "accept-language": acceptLanguageHeader(),
             "content-type": "application/json",
 
             // Anthropic 平台标识
             "anthropic-client-platform": "web_claude_ai",
             "anthropic-client-version": "1.0.0",
 
-            // 浏览器标识（Chrome 131 on macOS）
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            // 浏览器标识（Chrome on macOS）
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/\(simulatedChromeVersion) Safari/537.36",
 
             // 来源和引用信息
             "origin": "https://claude.ai",
@@ -50,6 +56,18 @@ class ClaudeAPIHeaderBuilder {
             // 认证 Cookie
             "Cookie": "sessionKey=\(sessionKey)"
         ]
+    }
+
+    /// 根据系统语言偏好动态生成 accept-language，而非固定写死 zh-CN
+    /// （固定值会让非中文用户的请求在 Cloudflare 风控中显得不像真实浏览器，关联 Issue #58）
+    private static func acceptLanguageHeader() -> String {
+        let languages = Locale.preferredLanguages.prefix(5)
+        guard !languages.isEmpty else { return "en-US,en;q=0.9" }
+        return languages.enumerated().map { index, language -> String in
+            guard index > 0 else { return language }
+            let q = max(0.1, 1.0 - Double(index) * 0.1)
+            return "\(language);q=\(String(format: "%.1f", q))"
+        }.joined(separator: ",")
     }
 
     /// 为 URLRequest 应用标准 Headers

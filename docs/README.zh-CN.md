@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 <div align="center">
 
@@ -28,7 +28,7 @@
 ### 🎯 核心功能
 
 - **📊 实时监控** - 在菜单栏实时显示 Claude 订阅（Free/Pro/Team/Max）的使用配额，并可选监控 Codex 用量
-- **🎯 多限制支持** - Claude 支持最多5种限制（5小时/7天/额外用量/7天Opus/7天Sonnet），Codex 支持 5小时、7天与额外用量/credits
+- **🎯 多限制支持** - Claude 支持 5小时、7天与额外用量限制，并支持任意数量模型的每周用量（如 Opus、Sonnet、Fable），Codex 支持 5小时、7天与额外用量/credits
 - **🎨 智能显示模式** - 自动检测并显示所有有数据的限制类型
 - **⚙️ 自定义显示** - 手动选择要显示的限制类型，支持任意组合
 - **🎨 智能色彩** - 根据使用率自动变色提醒，不同限制类型拥有各自的色彩方案
@@ -60,6 +60,7 @@
 - 支持 Codex 5小时、7天与额外用量/credits 信息
 - 通过内置浏览器登录 ChatGPT 添加 Codex 账户
 - Claude-only 用户无需额外配置；未添加 Codex 账户时界面保持原有体验
+- **🧪 重置预告（测试版）**：仅当 OpenAI 公开预告了一个尚未到达的全局重置时，才会在 Codex 圆环旁显示一个小徽章——大部分时间不会有任何显示，这是刻意的设计。数据来自第三方社区项目 [codex-reset.com](https://codex-reset.com)，非官方接口；可在设置中关闭
 
 ### 🎨 个性化
 
@@ -74,15 +75,16 @@
   - 简体中文
   - 繁体中文
   - 한국어
-  - Français
-  - 更多语言适配中…
+  - Français（由 [@mtreize](https://github.com/mtreize) 贡献）
+  - Deutsch（由 [@schaitl](https://github.com/schaitl) 贡献）
+  - 更多语言适配中…（欢迎提交本地化 PR！）
 
 ### 🔧 便捷功能
 
 - **⚙️ 可视化设置** - 无需修改代码，图形化配置所有选项
 - **🆕 智能更新提醒** - 菜单栏徽章和彩虹动画提示新版本
 - **🚀 开机启动选项** - 可选择系统启动时自动运行
-- **⌨️ 快捷键支持** - 常用操作支持键盘快捷键（⌘R、⌘,、⌘Q）
+- **⌨️ 快捷键支持** - 常用操作支持键盘快捷键（⌘R | ⌘, | ⌘Q）
 - **👋 友好引导** - 首次启动提供详细的配置向导
 - **… 菜单显示** - 多种菜单打开方式，详情页与右键
 - **🔔 用量通知** - 支持 Claude 用量警告和重置通知，可在设置中开关
@@ -239,6 +241,7 @@ open Usage4Claude.xcodeproj
   - ⌘R - 手动刷新数据
   - ⌘, - 打开通用设置
   - ⌘⇧A - 打开认证设置
+  - ⌘U - 检查更新
   - ⌘Q - 退出应用
 - **更新提醒** - 有新版本时菜单栏图标显示徽章，菜单项显示彩虹文字
 - **检查更新** - 菜单 → 检查更新
@@ -302,7 +305,7 @@ A: 非常轻量：
 <details>
 <summary><b>Q: 支持哪些 macOS 版本？</b></summary>
 
-A: 需要 macOS 13.0 (Ventura) 或更高版本。支持 Intel 和 Apple Silicon (M1/M2/M3) 芯片。
+A: 需要 macOS 13.0 (Ventura) 或更高版本。支持 Intel 和 Apple Silicon (M1/M2/M3/M4/M5) 芯片。
 
 </details>
 
@@ -484,15 +487,15 @@ A: 在设置 → 通用设置中可以开关 Claude 用量通知功能：
     - 更多语言本地化
 
 ### 长期愿景
-3. **更多显示方式**
+2. **更多显示方式**
    - 桌面小组件
    - 浏览器插件图标用量显示
 
-4. **数据分析**
+3. **数据分析**
    - 历史使用记录
    - 趋势图表展示
 
-5. **多平台支持**
+4. **多平台支持**
    - iOS / iPadOS 版本
    - Apple Watch 版本
    - Windows 版本
@@ -539,12 +542,12 @@ A: 在设置 → 通用设置中可以开关 Claude 用量通知功能：
 ### ☕ 请我喝杯咖啡
 
 <!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=zh-cn">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
 </a>
 
 <!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
+<a href="https://ko-fi.com/1atte">
   <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
 </a>
 
@@ -565,7 +568,7 @@ A: 在设置 → 通用设置中可以开关 Claude 用量通知功能：
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 您可以自由地使用、复制、修改、合并、发布、分发、再许可和/或销售本软件的副本。
 ```

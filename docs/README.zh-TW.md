@@ -1,6 +1,6 @@
 #  Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 <div align="center">
 
@@ -28,7 +28,7 @@
 ### 🎯 核心功能
 
 - **📊 即時監控** - 在選單列即時顯示 Claude 訂閱（Free/Pro/Team/Max）的使用配額，並可選監控 Codex 用量
-- **🎯 多限制支援** - Claude 支援最多5種限制（5小時/7天/額外用量/7天Opus/7天Sonnet），Codex 支援 5小時、7天與額外用量/credits
+- **🎯 多限制支援** - Claude 支援 5小時、7天與額外用量限制，並支援任意數量模型的每週用量（如 Opus、Sonnet、Fable），Codex 支援 5小時、7天與額外用量/credits
 - **🎨 智慧顯示模式** - 自動檢測並顯示所有有數據的限制類型
 - **⚙️ 自訂顯示** - 手動選擇要顯示的限制類型，支援任意組合
 - **🎨 智慧色彩** - 根據使用率自動變色提醒，不同限制類型擁有各自的色彩方案
@@ -60,6 +60,7 @@
 - 支援 Codex 5小時、7天與額外用量/credits 資訊
 - 透過內建瀏覽器登入 ChatGPT 新增 Codex 帳戶
 - Claude-only 使用者無需額外設定；未新增 Codex 帳戶時介面保持原有體驗
+- **🧪 重置預告（測試版）**：僅當 OpenAI 公開預告了一個尚未到達的全域重置時，才會在 Codex 圓環旁顯示一個小徽章——大部分時間不會有任何顯示，這是刻意的設計。資料來自第三方社群專案 [codex-reset.com](https://codex-reset.com)，非官方介面；可在設定中關閉
 
 ### 🎨 個人化
 
@@ -74,15 +75,16 @@
   - 简体中文
   - 繁體中文
   - 한국어
-  - Français
-  - 更多語言適配中……
+  - Français（由 [@mtreize](https://github.com/mtreize) 貢獻）
+  - Deutsch（由 [@schaitl](https://github.com/schaitl) 貢獻）
+  - 更多語言適配中……（歡迎提交本地化 PR！）
 
 ### 🔧 便捷功能
 
 - **⚙️ 視覺化設定** - 無需修改程式碼，圖形化設定所有選項
 - **🆕 智慧更新提醒** - 選單列徽章和彩虹動畫提示新版本
 - **🚀 開機啟動選項** - 可選擇系統啟動時自動執行
-- **⌨️ 鍵盤快速鍵支援** - 常用操作支援鍵盤快速鍵（⌘R、⌘,、⌘Q）
+- **⌨️ 鍵盤快速鍵支援** - 常用操作支援鍵盤快速鍵（⌘R | ⌘, | ⌘Q）
 - **👋 友善引導** - 首次啟動提供詳細的設定精靈
 - **… 選單顯示** - 多種選單存取方式，詳情檢視和右鍵
 - **🔔 用量通知** - 支援 Claude 用量警告和重置通知，可在設定中開關
@@ -237,6 +239,7 @@ open Usage4Claude.xcodeproj
   - ⌘R - 手動重新整理資料
   - ⌘, - 開啟一般設定
   - ⌘⇧A - 開啟認證設定
+  - ⌘U - 檢查更新
   - ⌘Q - 結束應用程式
 - **更新提醒** - 有新版本時選單列圖示顯示徽章，選單項目顯示彩虹文字
 - **檢查更新** - 選單 → 檢查更新
@@ -300,7 +303,7 @@ A: 非常輕量：
 <details>
 <summary><b>Q: 支援哪些 macOS 版本？</b></summary>
 
-A: 需要 macOS 13.0 (Ventura) 或更高版本。支援 Intel 和 Apple Silicon (M1/M2/M3) 晶片。
+A: 需要 macOS 13.0 (Ventura) 或更高版本。支援 Intel 和 Apple Silicon (M1/M2/M3/M4/M5) 晶片。
 
 </details>
 
@@ -537,12 +540,12 @@ A: 在設定 → 一般設定中可以開關 Claude 用量通知功能：
 ### ☕ 請我喝杯咖啡
 
 <!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=zh-tw">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
 </a>
 
 <!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
+<a href="https://ko-fi.com/1atte">
   <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
 </a>
 
@@ -563,7 +566,7 @@ A: 在設定 → 一般設定中可以開關 Claude 用量通知功能：
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 您可以自由地使用、複製、修改、合併、發布、分發、再授權和/或販售本軟體的副本。
 ```

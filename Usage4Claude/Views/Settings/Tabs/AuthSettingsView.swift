@@ -5,24 +5,27 @@
 //  Created by Claude Code on 2025-12-02.
 //  Copyright © 2025 f-is-h. All rights reserved.
 //
+//  账户详情卡片、添加账户流程、说明/诊断卡片分别拆到
+//  AuthSettingsView+AccountDetail.swift / +AddAccount.swift / +Help.swift，
+//  保持本文件体量可控。跨文件共享的 @State 因此不能标 private（extension 无法跨文件访问）。
 
 import SwiftUI
 
 /// 认证设置页面
 /// 使用卡片式布局，用于管理多账户
 struct AuthSettingsView: View {
-    @ObservedObject private var settings = UserSettings.shared
-    @State private var isAddingAccount = false
-    @State private var newSessionKey = ""
-    @State private var newAlias = ""
-    @State private var isValidating = false
-    @State private var validationError: String?
-    @State private var isShowingPassword = false
-    @State private var showDeleteConfirmation = false
-    @State private var accountToDelete: Account?
-    @State private var successMessage: String?
-    @State private var showDeleteCodexConfirmation = false
-    @State private var codexAccountToDelete: Account?
+    @ObservedObject var settings = UserSettings.shared
+    @State var isAddingAccount = false
+    @State var newSessionKey = ""
+    @State var newAlias = ""
+    @State var isValidating = false
+    @State var validationError: String?
+    @State var isShowingPassword = false
+    @State var showDeleteConfirmation = false
+    @State var accountToDelete: Account?
+    @State var successMessage: String?
+    @State var showDeleteCodexConfirmation = false
+    @State var codexAccountToDelete: Account?
 
     var body: some View {
         ScrollView {
@@ -97,7 +100,7 @@ struct AuthSettingsView: View {
 
     // MARK: - Account List View
 
-    private var accountListView: some View {
+    var accountListView: some View {
         let hasCodex = !settings.codexAccounts.isEmpty
         let hasBothProviders = !settings.accounts.isEmpty && hasCodex
 
@@ -149,7 +152,7 @@ struct AuthSettingsView: View {
         }
     }
 
-    private var addAccountActionsView: some View {
+    var addAccountActionsView: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L.Account.addAccount)
                 .font(.caption)
@@ -190,7 +193,7 @@ struct AuthSettingsView: View {
         .padding(.top, 8)
     }
 
-    private func addAccountActionButton(
+    func addAccountActionButton(
         provider: ProviderType,
         title: String,
         help: String,
@@ -210,7 +213,7 @@ struct AuthSettingsView: View {
     }
 
     @ViewBuilder
-    private func providerIcon(provider: ProviderType, size: CGFloat) -> some View {
+    func providerIcon(provider: ProviderType, size: CGFloat) -> some View {
         switch provider {
         case .claude:
             if let icon = ImageHelper.createAppIcon(size: size) {
@@ -233,7 +236,7 @@ struct AuthSettingsView: View {
         }
     }
 
-    private func providerSectionHeader(provider: ProviderType, label: String) -> some View {
+    func providerSectionHeader(provider: ProviderType, label: String) -> some View {
         HStack(spacing: 4) {
             if provider == .codex, let icon = ImageHelper.createCodexIcon(size: 12) {
                 Image(nsImage: icon)
@@ -255,7 +258,7 @@ struct AuthSettingsView: View {
 
     // MARK: - Account Row
 
-    private func accountRow(account: Account, provider: ProviderType) -> some View {
+    func accountRow(account: Account, provider: ProviderType) -> some View {
         let isSelected = provider == .codex
             ? account.id == settings.currentCodexAccountId
             : account.id == settings.currentAccountId
@@ -314,448 +317,4 @@ struct AuthSettingsView: View {
         }
         .buttonStyle(.plain)
     }
-
-    // MARK: - Current Account Detail View
-
-    private func currentAccountDetailView(account: Account) -> some View {
-        SettingCard(
-            icon: "person.circle.fill",
-            iconColor: .green,
-            title: L.Account.currentAccount,
-            hint: ""
-        ) {
-            VStack(alignment: .leading, spacing: 16) {
-                // 别名编辑
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "tag.fill")
-                            .foregroundColor(.orange)
-                            .font(.subheadline)
-                        Text(L.Account.alias)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    HStack {
-                        TextField(account.organizationName, text: Binding(
-                            get: { account.alias ?? "" },
-                            set: { newValue in
-                                settings.updateAccount(account, alias: newValue.isEmpty ? nil : newValue)
-                            }
-                        ))
-                        .textFieldStyle(.roundedBorder)
-
-                        if account.alias != nil && !account.alias!.isEmpty {
-                            Button(action: {
-                                settings.updateAccount(account, alias: nil)
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                            .help(L.Account.clearAlias)
-                        }
-                    }
-                }
-
-                // Session Key 显示
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "key.fill")
-                            .foregroundColor(.red)
-                            .font(.subheadline)
-                        Text(L.SettingsAuth.sessionKeyLabel)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    HStack {
-                        if isShowingPassword {
-                            Text(account.sessionKey)
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        } else {
-                            Text(String(repeating: "•", count: min(account.sessionKey.count, 30)))
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            isShowingPassword.toggle()
-                        }) {
-                            Image(systemName: isShowingPassword ? "eye.slash.fill" : "eye.fill")
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .help(isShowingPassword ? L.SettingsAuth.hidePassword : L.SettingsAuth.showPassword)
-                    }
-                }
-
-                // Organization ID 显示
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "building.2.fill")
-                            .foregroundColor(.purple)
-                            .font(.subheadline)
-                        Text(L.Account.organizationId)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    HStack {
-                        Text(account.organizationId)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-
-                        Spacer()
-
-                        Button(action: {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(account.organizationId, forType: .string)
-                        }) {
-                            Image(systemName: "doc.on.doc")
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .help(L.Account.copyOrgId)
-                    }
-                }
-
-                // 删除按钮
-                if settings.accounts.count > 0 {
-                    Divider()
-
-                    Button(action: {
-                        accountToDelete = account
-                        showDeleteConfirmation = true
-                    }) {
-                        HStack {
-                            Image(systemName: "trash.fill")
-                            Text(L.Account.deleteAccount)
-                        }
-                        .foregroundColor(.red)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    // MARK: - Current Codex Account Detail View
-
-    private func currentCodexAccountDetailView(account: Account) -> some View {
-        SettingCard(
-            icon: "person.circle.fill",
-            iconColor: Color(red: 13/255.0, green: 148/255.0, blue: 136/255.0),
-            title: L.Account.codexCurrentAccount,
-            hint: ""
-        ) {
-            VStack(alignment: .leading, spacing: 16) {
-                // 别名编辑
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "tag.fill")
-                            .foregroundColor(.orange)
-                            .font(.subheadline)
-                        Text(L.Account.alias)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    HStack {
-                        TextField(account.organizationName, text: Binding(
-                            get: { account.alias ?? "" },
-                            set: { newValue in
-                                settings.updateCodexAccount(account, alias: newValue.isEmpty ? nil : newValue)
-                            }
-                        ))
-                        .textFieldStyle(.roundedBorder)
-
-                        if account.alias != nil && !account.alias!.isEmpty {
-                            Button(action: {
-                                settings.updateCodexAccount(account, alias: nil)
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                            .help(L.Account.clearAlias)
-                        }
-                    }
-                }
-
-                // Session Token 显示
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "key.fill")
-                            .foregroundColor(.red)
-                            .font(.subheadline)
-                        Text(L.SettingsAuth.sessionKeyLabel)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    HStack {
-                        Text(String(repeating: "•", count: min(account.sessionKey.count, 30)))
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.secondary)
-
-                        Spacer()
-                    }
-                }
-
-                // 删除按钮
-                Divider()
-
-                Button(action: {
-                    codexAccountToDelete = account
-                    showDeleteCodexConfirmation = true
-                }) {
-                    HStack {
-                        Image(systemName: "trash.fill")
-                        Text(L.Account.deleteAccount)
-                    }
-                    .foregroundColor(.red)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-
-    // MARK: - Add Account View
-
-    private var addAccountView: some View {
-        SettingCard(
-            icon: "person.badge.plus",
-            iconColor: .blue,
-            title: L.Account.addNewAccount,
-            hint: ""
-        ) {
-            VStack(alignment: .leading, spacing: 16) {
-                // Session Key 输入
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "key.fill")
-                            .foregroundColor(.red)
-                            .font(.subheadline)
-                        Text(L.SettingsAuth.sessionKeyLabel)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    SecureField(L.SettingsAuth.sessionKeyPlaceholder, text: $newSessionKey)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-
-                    // 验证状态提示
-                    if !newSessionKey.isEmpty {
-                        if settings.isValidSessionKey(newSessionKey) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.caption2)
-                                    .foregroundColor(.green)
-                                Text(L.Welcome.validFormat)
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                            }
-                        } else {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption2)
-                                    .foregroundColor(.orange)
-                                Text(L.Welcome.invalidFormat)
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                    }
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "lightbulb.fill")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text(L.SettingsAuth.sessionKeyHint)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // 别名输入（可选）
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "tag.fill")
-                            .foregroundColor(.orange)
-                            .font(.subheadline)
-                        Text(L.Account.aliasOptional)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    TextField(L.Account.aliasPlaceholder, text: $newAlias)
-                        .textFieldStyle(.roundedBorder)
-                }
-
-                // 错误提示
-                if let error = validationError {
-                    HStack(spacing: 4) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
-                }
-
-                // 操作按钮
-                HStack {
-                    Button(action: {
-                        withAnimation {
-                            isAddingAccount = false
-                        }
-                    }) {
-                        Text(L.Account.cancel)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Spacer()
-
-                    Button(action: {
-                        validateAndAddAccount()
-                    }) {
-                        if isValidating {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                        } else {
-                            Text(L.Account.validateAndAdd)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!settings.isValidSessionKey(newSessionKey) || isValidating)
-                }
-            }
-        }
-    }
-
-    // MARK: - How To Card
-
-    private var howToCard: some View {
-        SettingCard(
-            icon: "book.fill",
-            iconColor: .blue,
-            title: L.SettingsAuth.howToTitle,
-            hint: ""
-        ) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(L.SettingsAuth.step1)
-                    .font(.subheadline)
-                Text(L.SettingsAuth.step2)
-                    .font(.subheadline)
-                Text(L.SettingsAuth.step3)
-                    .font(.subheadline)
-                Text(L.SettingsAuth.step4)
-                    .font(.subheadline)
-                Text(L.SettingsAuth.step5)
-                    .font(.subheadline)
-                Text(L.SettingsAuth.step6)
-                    .font(.subheadline)
-
-                Button(action: {
-                    if let url = URL(string: "https://claude.ai/settings/usage") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }) {
-                    HStack {
-                        Image(systemName: "safari")
-                        Text(L.SettingsAuth.openBrowser)
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
-            }
-        }
-    }
-
-    // MARK: - Diagnostics Card
-
-    private var diagnosticsCard: some View {
-        SettingCard(
-            icon: "stethoscope",
-            iconColor: .blue,
-            title: L.Diagnostic.sectionTitle,
-            hint: ""
-        ) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(L.Diagnostic.sectionDescription)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                // 诊断组件
-                DiagnosticsView()
-                    .padding(.top, 4)
-            }
-        }
-    }
-
-    // MARK: - Private Methods
-
-    /// 验证并添加账户
-    private func validateAndAddAccount() {
-        isValidating = true
-        validationError = nil
-
-        let apiService = ClaudeAPIService()
-        apiService.fetchOrganizations(sessionKey: newSessionKey) { result in
-            DispatchQueue.main.async {
-                isValidating = false
-
-                switch result {
-                case .success(let organizations):
-                    if !organizations.isEmpty {
-                        let useAlias = organizations.count == 1
-                        for (index, org) in organizations.enumerated() {
-                            let newAccount = Account(
-                                sessionKey: newSessionKey,
-                                organizationId: org.uuid,
-                                organizationName: org.name,
-                                alias: (useAlias && !newAlias.isEmpty) ? newAlias : nil
-                            )
-                            settings.addAccount(newAccount)
-                            // 切换到第一个新添加的账户
-                            if index == 0 {
-                                settings.switchToAccount(newAccount)
-                            }
-                        }
-                        // 多组织时显示提示
-                        if organizations.count > 1 {
-                            successMessage = String(format: L.Account.multiOrgAdded, organizations.count)
-                        }
-                        // 关闭添加界面
-                        withAnimation {
-                            isAddingAccount = false
-                        }
-                    } else {
-                        validationError = L.Error.noOrganizationsFound
-                    }
-                case .failure(let error):
-                    if let usageError = error as? UsageError {
-                        validationError = usageError.localizedDescription
-                    } else {
-                        validationError = error.localizedDescription
-                    }
-                }
-            }
-        }
-    }
 }
-
-/// 关于页面
-/// 显示应用信息、版本号和相关链接

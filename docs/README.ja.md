@@ -1,6 +1,6 @@
 # Usage4Claude
 
-[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md)
+[English](../README.md) | [日本語](README.ja.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 <div align="center">
 
@@ -28,7 +28,7 @@
 ### 🎯 コア機能
 
 - **📊 リアルタイム監視** - Claude サブスクリプション（Free/Pro/Team/Max）の使用クォータをメニューバーに表示し、Codex 使用量も任意で監視
-- **🎯 マルチ制限サポート** - Claude は最大5種類の制限（5時間/7日間/追加使用量/7日間Opus/7日間Sonnet）、Codex は5時間・7日間・追加使用量/creditsに対応
+- **🎯 マルチ制限サポート** - Claude は5時間・7日間・追加使用量に加え、モデルごとの週間使用量（Opus、Sonnet、Fable など、モデル数の制限なし）に対応、Codex は5時間・7日間・追加使用量/creditsに対応
 - **🎨 スマート表示モード** - データのある制限タイプを自動検出して表示
 - **⚙️ カスタム表示** - 表示する制限タイプを手動で選択、任意の組み合わせをサポート
 - **🎨 スマートカラー** - 使用率に応じた自動色変更、制限タイプごとに独自のカラースキーム
@@ -60,6 +60,7 @@
 - Codex の5時間、7日間、追加使用量/credits 情報に対応
 - 内蔵ブラウザで ChatGPT にログインして Codex アカウントを追加
 - Claude-only ユーザーは追加設定不要。Codex アカウントを追加するまで既存体験のまま利用できます
+- **🧪 リセット予告（ベータ）**：OpenAI が未確定のグローバルリセットを公に予告した場合のみ、Codex のリング横に小さなバッジが表示されます。ほとんどの場合は何も表示されないのが意図した挙動です。データはサードパーティのコミュニティプロジェクト [codex-reset.com](https://codex-reset.com) から取得（非公式）。設定でオフにできます
 
 ### 🎨 カスタマイズ
 
@@ -74,15 +75,16 @@
   - 简体中文
   - 繁体中文
   - 한국어
-  - Français
-  - さらに多くの言語に対応予定...
+  - Français（[@mtreize](https://github.com/mtreize) さんによる貢献）
+  - Deutsch（[@schaitl](https://github.com/schaitl) さんによる貢献）
+  - さらに多くの言語に対応予定...（ローカライズの PR を歓迎します！）
 
 ### 🔧 便利な機能
 
 - **⚙️ ビジュアル設定** - コード変更不要、すべてのオプションをGUIで設定
 - **🆕 スマート更新通知** - メニューバーバッジとレインボーアニメーションで新バージョンを通知
 - **🚀 ログイン時に起動** - システム起動時に自動起動するオプション
-- **⌨️ キーボードショートカット** - よく使う操作をショートカットでサポート（⌘R、⌘,、⌘Q）
+- **⌨️ キーボードショートカット** - よく使う操作をショートカットでサポート（⌘R | ⌘, | ⌘Q）
 - **👋 親切なガイド** - 初回起動時に詳細な設定ウィザード
 - **… メニュー表示** - 複数のメニューアクセス方法、詳細ビューと右クリック
 - **🔔 使用量通知** - Claude 使用量警告とリセット通知をサポート、設定でオン/オフ可能
@@ -237,6 +239,7 @@ open Usage4Claude.xcodeproj
   - ⌘R - データを手動でリフレッシュ
   - ⌘, - 一般設定を開く
   - ⌘⇧A - 認証設定を開く
+  - ⌘U - アップデートを確認
   - ⌘Q - アプリを終了
 - **更新通知** - 新バージョンがある場合、メニューバーアイコンにバッジが表示され、メニュー項目にレインボーテキストが表示されます
 - **更新を確認** - メニュー → 更新を確認
@@ -300,7 +303,7 @@ A: 非常に軽量です：
 <details>
 <summary><b>Q: サポートされている macOS バージョンは？</b></summary>
 
-A: macOS 13.0 (Ventura) 以降が必要です。Intel と Apple Silicon（M1/M2/M3）チップの両方をサポートしています。
+A: macOS 13.0 (Ventura) 以降が必要です。Intel と Apple Silicon（M1/M2/M3/M4/M5）チップの両方をサポートしています。
 
 </details>
 
@@ -537,12 +540,12 @@ A: 設定 → 一般で Claude 使用量通知機能のオン/オフを切り替
 ### ☕ コーヒーをおごる
 
 <!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time">
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=ja">
   <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
 </a>
 
 <!-- Ko-fi -->
-<a href="https://ko-fi.com/1attle">
+<a href="https://ko-fi.com/1atte">
   <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
 </a>
 
@@ -563,7 +566,7 @@ A: 設定 → 一般で Claude 使用量通知機能のオン/オフを切り替
 ```
 MIT License
 
-Copyright (c) 2025 f-is-h
+Copyright (c) 2025-2026 f-is-h
 
 ソフトウェアのコピーを自由に使用、コピー、変更、マージ、公開、配布、
 サブライセンス、および/または販売できます。

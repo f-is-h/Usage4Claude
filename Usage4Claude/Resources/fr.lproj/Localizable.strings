@@ -11,7 +11,8 @@
 "menu.auth_settings" = "Réglages d'authentification";
 "menu.check_updates" = "Vérifier les mises à jour";
 "menu.about" = "À propos";
-"menu.web_usage" = "Voir l'utilisation de Claude";
+"menu.claude_status" = "Statut Claude";
+"menu.codex_status" = "Statut OpenAI";
 "menu.coffee" = "Offrir un café";
 "menu.github_sponsor" = "Sponsor GitHub";
 "menu.quit" = "Quitter Usage4Claude";
@@ -23,6 +24,7 @@
 "usage.not_started" = "S'affichera après le début de l'utilisation";
 "usage.reset_in" = "Réinitialisation dans";
 "usage.remaining" = "Restant";
+"usage.available" = "Disponible";
 "usage.loading" = "Chargement…";
 "usage.not_configured" = "Authentification non configurée";
 "usage.go_to_settings" = "Aller aux réglages";
@@ -37,6 +39,7 @@
 "usage.refresh_cooldown" = "Veuillez patienter un instant";
 "usage.run_diagnostic" = "Lancer le diagnostic";
 "usage.codex_title" = "Utilisation de Codex";
+"usage.codex_relogin" = "Se reconnecter";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "Général";
@@ -51,6 +54,7 @@
 "settings.general.menubar_icon" = "Icône de la barre des menus";
 "settings.general.menubar_hint" = "Choisir ce qui s'affiche dans la barre des menus";
 "settings.general.menubar_theme" = "Thème de la barre des menus";
+"settings.general.menubar_icon_size" = "Taille des icônes";
 "settings.general.display_content" = "Contenu affiché";
 "settings.general.monochrome_no_icon_hint" = "L'affichage de l'icône n'est pas disponible avec le thème monochrome";
 "settings.general.refresh_section" = "Réglages d'actualisation";
@@ -68,6 +72,10 @@
 "icon_style.color_translucent_desc" = "Anneaux colorés sur fond transparent, adapté à la plupart des styles de barre des menus";
 "icon_style.color_with_background_desc" = "Anneaux colorés sur fond blanc translucide, idéal lorsque le mode translucide rend mal sur les fonds sombres";
 "icon_style.monochrome_desc" = "S'adapte automatiquement au style de la barre des menus, sobre et élégant";
+
+"menu_bar_icon_size.small" = "Compacte";
+"menu_bar_icon_size.medium" = "Standard";
+"menu_bar_icon_size.large" = "Grande";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "Comment obtenir les informations d'authentification";
@@ -99,7 +107,7 @@
 "settings.about.github" = "Visiter le dépôt GitHub";
 "settings.about.coffee" = "Offrir un café";
 "settings.about.github_sponsor" = "Sponsor GitHub";
-"settings.about.copyright" = "© 2025 Tous droits réservés";
+"settings.about.copyright" = "© 2025–2026";
 
 // MARK: - Welcome View
 "welcome.title" = "Bienvenue dans Usage4Claude";
@@ -107,24 +115,8 @@
 "welcome.setup_button" = "Configurer l'authentification";
 "welcome.later_button" = "Configurer plus tard";
 
-// MARK: - Update Checker
-"update.new_version_title" = "Nouvelle version disponible";
-"update.latest_version" = "Dernière version";
-"update.current_version" = "Version actuelle";
-"update.view_details_hint" = "Cliquez sur [Voir les détails] pour consulter le contenu complet de la mise à jour";
-"update.view_release_page" = "Voir le contenu complet de la mise à jour sur la page Release";
-"update.download_button" = "Télécharger la mise à jour";
-"update.remind_later_button" = "Rappeler plus tard";
-"update.view_details_button" = "Voir les détails";
-"update.up_to_date_title" = "À jour";
-"update.up_to_date_message" = "La version actuelle %@ est à jour.";
+// MARK: - Update
 "update.ok_button" = "OK";
-"update.check_failed_title" = "Échec de la vérification";
-"update.confirm_button" = "Confirmer";
-"update.error.invalid_url" = "URL invalide";
-"update.error.network" = "Erreur réseau. Veuillez vérifier votre connexion Internet.";
-"update.error.no_data" = "Impossible de récupérer les données";
-"update.error.parse_failed" = "Échec de l'analyse des informations de mise à jour.";
 
 // MARK: - Update Notification
 "update.notification.available" = "Nouvelle version disponible !";
@@ -154,6 +146,7 @@
 "language.chinese_traditional" = "中文（繁體）";
 "language.korean" = "한국어";
 "language.french" = "Français";
+"language.german" = "Deutsch";
 
 // MARK: - Window Titles
 "window.settings_title" = "Réglages Usage4Claude";
@@ -178,9 +171,11 @@
 "error.no_credentials" = "Veuillez d'abord configurer les informations d'authentification dans les réglages";
 "error.network_failed" = "Échec de la requête réseau. Veuillez vérifier votre connexion Internet.";
 "error.decoding_failed" = "Échec de l'analyse des données de réponse. Veuillez vérifier si vos identifiants sont corrects.";
+"error.usage_dashboard_unavailable" = "Votre offre ne fournit pas de données d'utilisation. Les comptes gratuits n'ont pas de tableau de bord d'utilisation ; pour Team/Enterprise, demandez à un administrateur d'activer le tableau de bord des membres.";
 "error.no_organizations_found" = "Aucune organisation trouvée";
 "error.unauthorized" = "Échec de l'authentification, veuillez vérifier vos identifiants";
 "error.rate_limited" = "Trop de requêtes, veuillez réessayer plus tard";
+"error.showing_cached_data" = "Affichage des dernières données récupérées";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Activé";
@@ -273,6 +268,8 @@
 "select_limit_types" = "Sélectionner les types de limites à afficher";
 "circular_icon_constraint" = "Au moins une limite circulaire doit être sélectionnée";
 "colored_theme_unavailable" = "Les thèmes colorés ne sont disponibles qu'avec 1 à 2 icônes circulaires sans autre type";
+"custom_display.menu_bar_only_toggle" = "Appliquer uniquement à la barre de menus";
+"custom_display.menu_bar_only_description" = "Lorsque cette option est activée, la fenêtre de détails ignore cette sélection et affiche toutes les limites disponibles.";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "Thème";
@@ -314,9 +311,7 @@
 "welcome.display_subtitle" = "Choisissez les types de limites à afficher";
 "welcome.preview" = "Aperçu";
 "welcome.back" = "Retour";
-"welcome.skip" = "Passer";
 "welcome.continue" = "Continuer";
-"welcome.finish" = "Terminer";
 "welcome.how_to_get_session_key" = "Comment obtenir la clé de session ?";
 "welcome.configuring" = "Configuration…";
 "welcome.fetch_org_id_failed" = "Impossible de récupérer l'identifiant d'organisation, veuillez réessayer dans les Réglages";
@@ -346,6 +341,7 @@
 "usage_data.compact_remaining_minutes" = "%dmin";
 "usage_data.compact_remaining_hours" = "%dh %dmin";
 "usage_data.compact_remaining_days" = "%dj %dh";
+"usage_data.compact_remaining_days_with_minutes" = "%dj %dh %dmin";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "Non activé";
@@ -408,6 +404,8 @@
 "notification.warning_body" = "%@ a atteint %d %% d'utilisation";
 "notification.reset_title" = "Réinitialisation de l'utilisation";
 "notification.reset_body" = "L'utilisation de %@ a été réinitialisée";
+"notification.codex_session_expired_title" = "Session Codex expirée";
+"notification.codex_session_expired_body" = "Veuillez vous reconnecter pour continuer à surveiller votre utilisation Codex.";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Se connecter à Claude";
@@ -439,3 +437,28 @@
 "graph_style.hint" = "Choisissez le mode de visualisation de l'utilisation";
 "graph_style.circular_description" = "Affiche l'utilisation sous forme d'anneau de pourcentage";
 "graph_style.linear_description" = "Affiche la chronologie d'utilisation avec prédiction de cadence";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "Préparation de la connexion…";
+"weblogin.codex_oauth_waiting_browser" = "Continuez dans votre navigateur";
+"weblogin.codex_oauth_waiting_hint" = "Terminez la connexion ChatGPT dans votre navigateur (Google, Microsoft, SSO d'entreprise et passkeys pris en charge). Vous reviendrez ici automatiquement.";
+"weblogin.codex_oauth_exchanging" = "Finalisation de la connexion…";
+"weblogin.codex_oauth_failed" = "Échec de la connexion. Veuillez réessayer.";
+"weblogin.codex_oauth_timeout" = "Délai de connexion dépassé. Veuillez réessayer.";
+"weblogin.codex_oauth_port_busy" = "Le port local 1455/1457 est occupé ; le rappel de connexion ne peut pas être reçu. Fermez l'application concernée et réessayez.";
+"weblogin.codex_oauth_reopen_browser" = "Rouvrir le navigateur";
+"weblogin.codex_oauth_retry" = "Réessayer";
+"weblogin.claude_oauth_port_busy" = "Impossible de démarrer le serveur de rappel de connexion local. Veuillez réessayer dans un instant.";
+"weblogin.claude_oauth_manual_hint" = "Pas de retour automatique ?";
+"weblogin.claude_oauth_manual_prompt" = "Collez le lien depuis la barre d'adresse de votre navigateur (commence par http://localhost)";
+"weblogin.claude_oauth_manual_submit" = "Se connecter avec ce lien";
+"weblogin.claude_oauth_manual_invalid" = "Aucun code d'autorisation trouvé. Copiez le lien complet depuis la barre d'adresse et réessayez.";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "Reset annoncé";
+"codex_announcement.tooltip_countdown" = "Reset prévu : %@";
+"codex_announcement.tooltip_countdown_deadline" = "Reset au plus tard : %@";
+"codex_announcement.tooltip_footer" = "Beta · données tierces de codex-reset.com · cliquer pour ouvrir";
+"settings.general.codex_announcement_section" = "Annonce de réinitialisation Codex (Beta)";
+"settings.general.codex_announcement_enable" = "Afficher le badge d'annonce de réinitialisation";
+"settings.general.codex_announcement_hint" = "Affiche un petit badge à côté de l'anneau Codex uniquement lorsque Tibo Sottiaux d'OpenAI a publiquement annoncé une réinitialisation globale encore à venir — la plupart du temps, il n'y a rien à afficher. Les données proviennent de codex-reset.com, un projet communautaire indépendant (Beta : la source peut changer ou disparaître). Désactiver cette option arrête toute requête vers ce site.";

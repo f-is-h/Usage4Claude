@@ -5,6 +5,12 @@
 //  Created by f-is-h on 2026-04-24.
 //  Copyright © 2025 f-is-h. All rights reserved.
 //
+//  Pure-data types + parsing for the Codex /backend-api/wham/usage response.
+//  Lives here (not Helpers/) so it can be cherry-picked into a SwiftPM test
+//  target — every symbol here must stay free of `L.*`/`Logger`/UI dependency.
+//  The `L.*`-dependent display formatting lives in
+//  `CodexUsageData+Formatting.swift`.
+//
 
 import Foundation
 
@@ -113,6 +119,21 @@ nonisolated struct CodexUsageResponse: Codable, Sendable {
         let reached: Bool?
     }
 
+    /// 5小时窗口的标准时长（秒）
+    private static let fiveHourWindowSeconds = 18_000
+    /// 7天窗口的标准时长（秒）
+    private static let sevenDayWindowSeconds = 604_800
+
+    /// 判断窗口是否属于"5小时档"——按 limit_window_seconds 实际时长判断，
+    /// 而非 JSON 字段名（primary_window/secondary_window）。
+    /// 背景：Codex 曾临时取消5小时限制，此时唯一窗口仍出现在 primary_window 位置，
+    /// 但其 limit_window_seconds 是 604800（7天），若按字段位置硬映射会显示成"5小时限制"。
+    /// 缺失 limit_window_seconds 时保守判定为非5小时，避免旧数据被误分类。
+    private static func isFiveHourWindow(_ window: Window) -> Bool {
+        guard let seconds = window.limit_window_seconds else { return false }
+        return abs(seconds - fiveHourWindowSeconds) < abs(seconds - sevenDayWindowSeconds)
+    }
+
     /// 将 API 响应转换为内部 CodexUsageData
     func toCodexUsageData() -> CodexUsageData {
         let now = Date()
@@ -127,19 +148,17 @@ nonisolated struct CodexUsageResponse: Codable, Sendable {
             return nil
         }
 
-        let primary: CodexUsageData.LimitData? = {
-            guard let w = rate_limit?.primary_window else { return nil }
-            let resetsAt = resolvedResetDate(for: w)
-            return .init(percentage: w.used_percent, resetsAt: resetsAt)
-        }()
-
-        let secondary: CodexUsageData.LimitData? = {
-            guard let w = rate_limit?.secondary_window else { return nil }
+        func buildLimitData(_ window: Window?) -> CodexUsageData.LimitData? {
+            guard let w = window else { return nil }
             // 如果 used_percent 为 0 且无重置信息，视为无效数据
             if w.used_percent == 0 && w.reset_at == nil && w.reset_after_seconds == nil { return nil }
-            let resetsAt = resolvedResetDate(for: w)
-            return .init(percentage: w.used_percent, resetsAt: resetsAt)
-        }()
+            return .init(percentage: w.used_percent, resetsAt: resolvedResetDate(for: w))
+        }
+
+        // 按实际时长分类，而不是按 JSON 字段位置——见 isFiveHourWindow 注释
+        let windows = [rate_limit?.primary_window, rate_limit?.secondary_window].compactMap { $0 }
+        let primary = buildLimitData(windows.first { Self.isFiveHourWindow($0) })
+        let secondary = buildLimitData(windows.first { !Self.isFiveHourWindow($0) })
 
         let extraUsage = credits.map {
             CodexExtraUsageData(
@@ -209,47 +228,9 @@ nonisolated struct CodexExtraUsageData: Sendable {
         return nil
     }
 
-    @MainActor var formattedCompactAmount: String {
-        if unlimited {
-            return L.ExtraUsage.unlimited
-        }
-        if overageLimitReached || spendControlReached {
-            return L.ExtraUsage.limitReached
-        }
-        guard enabled, let balanceValue else {
-            return L.ExtraUsage.notEnabled
-        }
-        return L.ExtraUsage.creditsBalance(balanceValue)
-    }
-
-    @MainActor var formattedRemainingAmount: String {
-        guard let balanceValue else {
-            return formattedCompactAmount
-        }
-        return L.ExtraUsage.creditsRemaining(balanceValue)
-    }
-
-    @MainActor var formattedDetailCompactAmount: String {
-        if unlimited {
-            return L.ExtraUsage.unlimited
-        }
-        if overageLimitReached || spendControlReached {
-            return L.ExtraUsage.limitReached
-        }
-        guard enabled, let balanceValue else {
-            return L.ExtraUsage.notEnabled
-        }
-        return L.DetailRow.creditsBalance(balanceValue)
-    }
-
-    @MainActor var formattedDetailRemainingAmount: String {
-        guard let balanceValue else {
-            return formattedDetailCompactAmount
-        }
-        return L.DetailRow.creditsRemaining(balanceValue)
-    }
-
-    private var balanceValue: Double? {
+    /// 供 `CodexUsageData+Formatting.swift` 的 `L.*` 格式化属性复用，
+    /// 因此不能是 `private`（跨文件 extension 访问不到）
+    var balanceValue: Double? {
         guard let balance else { return nil }
         return NSDecimalNumber(decimal: balance).doubleValue
     }
@@ -273,6 +254,18 @@ extension CodexUsageData.LimitData {
 
 /// Codex /api/auth/session 响应模型
 /// 用于获取 Bearer accessToken
+/// 一次成功的 session-token 校验结果
+///
+/// 带出 `accessToken` 是刻意的：服务端只会为**已登录**会话返回它，所以它就是
+/// 「这个 session-token 确实处于已登录状态」的证明。写回轮换后的 session-token
+/// 必须凭它放行，详见 `CodexSessionTokenRotation`。
+nonisolated struct CodexSessionValidation: Sendable {
+    let email: String
+    let displayName: String
+    /// 已登录的证明
+    let accessToken: String
+}
+
 nonisolated struct CodexSessionResponse: Codable, Sendable {
     let accessToken: String?
     let user: User?

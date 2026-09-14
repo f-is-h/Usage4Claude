@@ -11,7 +11,8 @@
 "menu.auth_settings" = "Authentication Settings";
 "menu.check_updates" = "Check for Updates";
 "menu.about" = "About";
-"menu.web_usage" = "View Claude Usage";
+"menu.claude_status" = "Claude Status";
+"menu.codex_status" = "OpenAI Status";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Quit Usage4Claude";
@@ -23,6 +24,7 @@
 "usage.not_started" = "Display after usage starts";
 "usage.reset_in" = "Resets in";
 "usage.remaining" = "Remaining";
+"usage.available" = "Available";
 "usage.loading" = "Loading...";
 "usage.not_configured" = "Authentication not configured";
 "usage.go_to_settings" = "Go to Settings";
@@ -37,6 +39,7 @@
 "usage.refresh_cooldown" = "Please wait a moment";
 "usage.run_diagnostic" = "Run Diagnostic";
 "usage.codex_title" = "Codex Usage";
+"usage.codex_relogin" = "Sign In Again";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "General";
@@ -51,6 +54,7 @@
 "settings.general.menubar_icon" = "Menu Bar Icon";
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
 "settings.general.menubar_theme" = "Menu Bar Theme";
+"settings.general.menubar_icon_size" = "Icon Size";
 "settings.general.display_content" = "Display Content";
 "settings.general.monochrome_no_icon_hint" = "Icon display is not supported in Monochrome theme";
 "settings.general.refresh_section" = "Refresh Settings";
@@ -68,6 +72,10 @@
 "icon_style.color_translucent_desc" = "Colored rings with transparent background, suitable for most menu bar styles";
 "icon_style.color_with_background_desc" = "Colored rings with translucent white background, ideal when Color Translucent performs poorly on dark wallpapers";
 "icon_style.monochrome_desc" = "Automatically adapts to system menu bar style, clean and elegant";
+
+"menu_bar_icon_size.small" = "Compact";
+"menu_bar_icon_size.medium" = "Standard";
+"menu_bar_icon_size.large" = "Prominent";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "How to Get Claude Authentication Info";
@@ -99,7 +107,7 @@
 "settings.about.github" = "Visit GitHub Repository";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025–2026";
 
 // MARK: - Welcome View
 "welcome.title" = "Welcome to Usage4Claude";
@@ -107,24 +115,8 @@
 "welcome.setup_button" = "Configure Authentication";
 "welcome.later_button" = "Set Up Later";
 
-// MARK: - Update Checker
-"update.new_version_title" = "New Version Available";
-"update.latest_version" = "Latest version";
-"update.current_version" = "Current version";
-"update.view_details_hint" = "Click [View Details] to see complete update content";
-"update.view_release_page" = "View complete update content on Release page";
-"update.download_button" = "Download Update";
-"update.remind_later_button" = "Remind Later";
-"update.view_details_button" = "View Details";
-"update.up_to_date_title" = "Up to Date";
-"update.up_to_date_message" = "Current version %@ is up to date.";
+// MARK: - Update
 "update.ok_button" = "OK";
-"update.check_failed_title" = "Update Check Failed";
-"update.confirm_button" = "Confirm";
-"update.error.invalid_url" = "Invalid URL";
-"update.error.network" = "Network error. Please check your internet connection.";
-"update.error.no_data" = "Unable to fetch data";
-"update.error.parse_failed" = "Failed to parse update information.";
 
 // MARK: - Update Notification
 "update.notification.available" = "New Version Available!";
@@ -154,6 +146,7 @@
 "language.chinese_traditional" = "中文（繁體）";
 "language.korean" = "한국어";
 "language.french" = "Français";
+"language.german" = "Deutsch";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude Settings";
@@ -178,9 +171,11 @@
 "error.no_credentials" = "Please configure authentication information in settings first";
 "error.network_failed" = "Network request failed. Please check your internet connection.";
 "error.decoding_failed" = "Failed to parse response data. Please check if your credentials are correct.";
+"error.usage_dashboard_unavailable" = "Your plan does not provide usage data. Free accounts have no usage dashboard; on Team/Enterprise, ask an admin to enable the member usage dashboard.";
 "error.no_organizations_found" = "No organizations found";
 "error.unauthorized" = "Authentication failed, please check your credentials";
 "error.rate_limited" = "Too many requests, please try again later";
+"error.showing_cached_data" = "Showing last fetched data";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "Enabled";
@@ -193,7 +188,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "Connection Diagnostics";
-"diagnostic.section_description" = "Test your connection to Claude API and diagnose issues. All sensitive information is automatically redacted in reports.";
+"diagnostic.section_description" = "Test your API connections and diagnose issues. All sensitive information is automatically redacted in reports.";
 "diagnostic.test_button" = "Test Connection";
 "diagnostic.view_details_button" = "View Details";
 "diagnostic.export_button" = "Export Report";
@@ -273,6 +268,8 @@
 "select_limit_types" = "Select Limit Types to Display";
 "circular_icon_constraint" = "At least one circular limit must be selected";
 "colored_theme_unavailable" = "Colored themes are only available when showing 1-2 circular icons without other types";
+"custom_display.menu_bar_only_toggle" = "Apply only to menu bar";
+"custom_display.menu_bar_only_description" = "When on, the popover ignores this selection and shows all available limits.";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "Theme";
@@ -314,9 +311,7 @@
 "welcome.display_subtitle" = "Choose which limit types to display";
 "welcome.preview" = "Preview";
 "welcome.back" = "Back";
-"welcome.skip" = "Skip";
 "welcome.continue" = "Continue";
-"welcome.finish" = "Finish";
 "welcome.how_to_get_session_key" = "How to get Session Key?";
 "welcome.configuring" = "Configuring...";
 "welcome.fetch_org_id_failed" = "Unable to fetch Organization ID, please retry in Settings later";
@@ -346,6 +341,7 @@
 "usage_data.compact_remaining_minutes" = "%dm left";
 "usage_data.compact_remaining_hours" = "%dh %dm left";
 "usage_data.compact_remaining_days" = "%dd %dh left";
+"usage_data.compact_remaining_days_with_minutes" = "%dd %dh %dm left";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "Not Enabled";
@@ -408,6 +404,8 @@
 "notification.warning_body" = "%@ has reached %d%% usage";
 "notification.reset_title" = "Usage Reset";
 "notification.reset_body" = "%@ usage has been reset";
+"notification.codex_session_expired_title" = "Codex Session Expired";
+"notification.codex_session_expired_body" = "Please sign in again to continue monitoring your Codex usage.";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Sign in to Claude";
@@ -439,3 +437,28 @@
 "graph_style.hint" = "Choose how usage is visualized";
 "graph_style.circular_description" = "Shows usage as a percentage ring";
 "graph_style.linear_description" = "Shows usage timeline with pace prediction";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "Preparing sign-in…";
+"weblogin.codex_oauth_waiting_browser" = "Continue in your browser";
+"weblogin.codex_oauth_waiting_hint" = "Complete the ChatGPT sign-in in your browser (Google, Microsoft, enterprise SSO and passkeys all work). You'll return here automatically.";
+"weblogin.codex_oauth_exchanging" = "Completing sign-in…";
+"weblogin.codex_oauth_failed" = "Sign-in failed. Please try again.";
+"weblogin.codex_oauth_timeout" = "Sign-in timed out. Please try again.";
+"weblogin.codex_oauth_port_busy" = "Local port 1455/1457 is in use, so the sign-in callback can't be received. Close the app using it and try again.";
+"weblogin.codex_oauth_reopen_browser" = "Reopen browser";
+"weblogin.codex_oauth_retry" = "Try again";
+"weblogin.claude_oauth_port_busy" = "Unable to start the local sign-in callback server. Please try again in a moment.";
+"weblogin.claude_oauth_manual_hint" = "Didn't come back automatically?";
+"weblogin.claude_oauth_manual_prompt" = "Paste the link from your browser's address bar (starts with http://localhost)";
+"weblogin.claude_oauth_manual_submit" = "Sign in with this link";
+"weblogin.claude_oauth_manual_invalid" = "No authorization code found. Copy the full link from your browser's address bar and try again.";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "Reset expected";
+"codex_announcement.tooltip_countdown" = "Reset expected: %@";
+"codex_announcement.tooltip_countdown_deadline" = "Reset due within: %@";
+"codex_announcement.tooltip_footer" = "Beta · third-party data from codex-reset.com · click to open";
+"settings.general.codex_announcement_section" = "Codex Reset Announcement (Beta)";
+"settings.general.codex_announcement_enable" = "Show reset announcement badge";
+"settings.general.codex_announcement_hint" = "Shows a small badge next to the Codex ring only when OpenAI's Tibo Sottiaux has publicly announced a still-pending global reset — most of the time there's nothing to show. Data comes from codex-reset.com, an independent community project (Beta: the source may change or go offline). Turning this off stops all requests to that site.";

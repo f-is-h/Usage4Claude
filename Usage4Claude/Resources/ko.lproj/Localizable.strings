@@ -11,7 +11,8 @@
 "menu.auth_settings" = "인증 정보";
 "menu.check_updates" = "업데이트 확인";
 "menu.about" = "정보";
-"menu.web_usage" = "Claude 사용량 웹페이지";
+"menu.claude_status" = "Claude 상태 페이지";
+"menu.codex_status" = "OpenAI 상태 페이지";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claude 종료";
@@ -23,6 +24,7 @@
 "usage.not_started" = "사용 후 표시됩니다";
 "usage.reset_in" = "재설정까지 남은 시간";
 "usage.remaining" = "남은 시간";
+"usage.available" = "사용 가능";
 "usage.loading" = "로딩 중...";
 "usage.not_configured" = "인증 정보 미설정";
 "usage.go_to_settings" = "인증 정보 설정하기";
@@ -37,6 +39,7 @@
 "usage.refresh_cooldown" = "잠시 후 다시 시도하세요";
 "usage.run_diagnostic" = "진단 실행";
 "usage.codex_title" = "Codex 사용 현황";
+"usage.codex_relogin" = "다시 로그인";
 
 // MARK: - Settings - Tabs
 "settings.tab.general" = "일반";
@@ -51,6 +54,7 @@
 "settings.general.menubar_icon" = "메뉴바 아이콘";
 "settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
 "settings.general.menubar_theme" = "메뉴바 테마";
+"settings.general.menubar_icon_size" = "아이콘 크기";
 "settings.general.display_content" = "표시 내용";
 "settings.general.monochrome_no_icon_hint" = "단색 테마에서는 아이콘 표시를 지원하지 않습니다";
 "settings.general.refresh_section" = "새로고침 설정";
@@ -68,6 +72,10 @@
 "icon_style.color_translucent_desc" = "컬러 링, 투명 배경, 대부분의 메뉴바 스타일에 적합";
 "icon_style.color_with_background_desc" = "컬러 링과 반투명 흰색 배경, 어두운 배경에서 컬러 반투명이 잘 보이지 않을 때 적합";
 "icon_style.monochrome_desc" = "시스템 메뉴바 스타일에 자동 적응, 간결하고 우아함";
+
+"menu_bar_icon_size.small" = "작게";
+"menu_bar_icon_size.medium" = "표준";
+"menu_bar_icon_size.large" = "크게";
 
 // MARK: - Settings - Authentication
 "settings.auth.how_to_title" = "Claude 인증 정보 얻는 방법";
@@ -99,7 +107,7 @@
 "settings.about.github" = "GitHub 저장소 방문";
 "settings.about.coffee" = "Buy Me A Coffee";
 "settings.about.github_sponsor" = "GitHub Sponsor";
-"settings.about.copyright" = "© 2025 All Rights Reserved";
+"settings.about.copyright" = "© 2025–2026";
 
 // MARK: - Welcome View
 "welcome.title" = "Usage4Claude에 오신 것을 환영합니다";
@@ -107,24 +115,8 @@
 "welcome.setup_button" = "인증 정보 설정하기";
 "welcome.later_button" = "나중에 설정";
 
-// MARK: - Update Checker
-"update.new_version_title" = "새 버전 발견";
-"update.latest_version" = "최신 버전";
-"update.current_version" = "현재 버전";
-"update.view_details_hint" = "[세부 정보 보기]를 클릭하여 전체 업데이트 내용 확인";
-"update.view_release_page" = "전체 업데이트 내용은 Release 페이지에서 확인하세요";
-"update.download_button" = "업데이트 다운로드";
-"update.remind_later_button" = "나중에 알림";
-"update.view_details_button" = "세부 정보 보기";
-"update.up_to_date_title" = "최신 버전입니다";
-"update.up_to_date_message" = "현재 버전 %@는 최신 버전입니다.";
+// MARK: - Update
 "update.ok_button" = "확인";
-"update.check_failed_title" = "업데이트 확인 실패";
-"update.confirm_button" = "확인";
-"update.error.invalid_url" = "유효하지 않은 URL";
-"update.error.network" = "네트워크 오류, 네트워크 연결을 확인하세요";
-"update.error.no_data" = "데이터를 가져올 수 없습니다";
-"update.error.parse_failed" = "업데이트 정보 파싱 실패";
 
 // MARK: - Update Notification
 "update.notification.available" = "새 버전이 있습니다!";
@@ -154,6 +146,7 @@
 "language.chinese_traditional" = "中文（繁体）";
 "language.korean" = "한국어";
 "language.french" = "Français";
+"language.german" = "Deutsch";
 
 // MARK: - Window Titles
 "window.settings_title" = "Usage4Claude 설정";
@@ -178,9 +171,11 @@
 "error.no_credentials" = "설정에서 먼저 인증 정보를 설정하세요";
 "error.network_failed" = "네트워크 요청 실패, 네트워크 연결을 확인하세요";
 "error.decoding_failed" = "응답 데이터 파싱 실패, 인증 정보가 올바른지 확인하세요";
+"error.usage_dashboard_unavailable" = "현재 요금제에서는 사용량 데이터를 제공하지 않습니다. 무료 플랜에는 사용량 대시보드가 없으며, Team/Enterprise는 관리자에게 멤버 사용량 대시보드 활성화를 요청하세요.";
 "error.no_organizations_found" = "조직을 찾을 수 없습니다";
 "error.unauthorized" = "인증 실패, 자격 증명을 확인하세요";
 "error.rate_limited" = "요청이 너무 빈번합니다. 잠시 후 다시 시도하세요";
+"error.showing_cached_data" = "마지막으로 가져온 데이터를 표시 중";
 
 // MARK: - Launch at Login
 "launch.status.enabled" = "활성화됨";
@@ -193,7 +188,7 @@
 
 // MARK: - Diagnostics
 "diagnostic.section_title" = "연결 진단";
-"diagnostic.section_description" = "Claude API와의 연결을 테스트하고 문제를 진단합니다. 보고서의 모든 민감한 정보는 자동으로 마스킹 처리됩니다.";
+"diagnostic.section_description" = "API와의 연결을 테스트하고 문제를 진단합니다. 보고서의 모든 민감한 정보는 자동으로 마스킹 처리됩니다.";
 "diagnostic.test_button" = "연결 테스트";
 "diagnostic.view_details_button" = "세부 정보 보기";
 "diagnostic.export_button" = "보고서 내보내기";
@@ -273,6 +268,8 @@
 "select_limit_types" = "표시할 제한 유형 선택";
 "circular_icon_constraint" = "최소한 하나의 원형 제한을 선택해야 합니다";
 "colored_theme_unavailable" = "컬러 테마는 1-2개의 원형 아이콘과 다른 유형이 없을 때만 사용할 수 있습니다";
+"custom_display.menu_bar_only_toggle" = "메뉴 막대에만 적용";
+"custom_display.menu_bar_only_description" = "켜져 있으면 세부 정보 창은 위 선택을 무시하고 스마트 모드로 사용 가능한 모든 제한 유형을 표시합니다.";
 
 // MARK: - Theme Selection (v2.0.0)
 "theme_selection" = "테마";
@@ -344,6 +341,7 @@
 "usage_data.compact_remaining_minutes" = "%d분 남음";
 "usage_data.compact_remaining_hours" = "%d시간 %d분 남음";
 "usage_data.compact_remaining_days" = "%d일 %d시간 남음";
+"usage_data.compact_remaining_days_with_minutes" = "%d일 %d시간 %d분 남음";
 
 // MARK: - Extra Usage
 "extra_usage.not_enabled" = "활성화되지 않음";
@@ -406,6 +404,8 @@
 "notification.warning_body" = "%@이(가) %d%% 사용량에 도달했습니다";
 "notification.reset_title" = "사용량 재설정";
 "notification.reset_body" = "%@ 사용량이 재설정되었습니다";
+"notification.codex_session_expired_title" = "Codex 세션 만료";
+"notification.codex_session_expired_body" = "Codex 사용량을 계속 확인하려면 다시 로그인해 주세요.";
 
 // MARK: - Web Login (v2.2.0)
 "weblogin.window_title" = "Claude 로그인";
@@ -437,3 +437,28 @@
 "graph_style.hint" = "사용량 표시 방식 선택";
 "graph_style.circular_description" = "사용량을 퍼센트 링으로 표시";
 "graph_style.linear_description" = "사용량을 타임라인과 속도 예측으로 표시";
+
+/* Codex OAuth Login (system browser) */
+"weblogin.codex_oauth_preparing" = "로그인 준비 중…";
+"weblogin.codex_oauth_waiting_browser" = "브라우저에서 로그인을 계속하세요";
+"weblogin.codex_oauth_waiting_hint" = "브라우저에서 ChatGPT 로그인을 완료하세요(Google, Microsoft, 기업 SSO, 패스키 모두 지원). 완료되면 자동으로 돌아옵니다.";
+"weblogin.codex_oauth_exchanging" = "로그인 완료 중…";
+"weblogin.codex_oauth_failed" = "로그인에 실패했습니다. 다시 시도하세요.";
+"weblogin.codex_oauth_timeout" = "로그인 시간이 초과되었습니다. 다시 시도하세요.";
+"weblogin.codex_oauth_port_busy" = "로컬 포트 1455/1457이 사용 중이어서 로그인 콜백을 받을 수 없습니다. 해당 앱을 종료한 후 다시 시도하세요.";
+"weblogin.codex_oauth_reopen_browser" = "브라우저 다시 열기";
+"weblogin.codex_oauth_retry" = "다시 시도";
+"weblogin.claude_oauth_port_busy" = "로컬 로그인 콜백 서버를 시작할 수 없습니다. 잠시 후 다시 시도하세요.";
+"weblogin.claude_oauth_manual_hint" = "자동으로 돌아오지 않나요?";
+"weblogin.claude_oauth_manual_prompt" = "브라우저 주소창의 링크를 여기에 붙여넣으세요 (http://localhost 로 시작)";
+"weblogin.claude_oauth_manual_submit" = "이 링크로 로그인";
+"weblogin.claude_oauth_manual_invalid" = "인증 코드를 찾을 수 없습니다. 브라우저 주소창의 전체 링크를 복사한 후 다시 시도하세요.";
+
+// MARK: - Codex Reset Announcement (Beta)
+"codex_announcement.title" = "리셋 예고";
+"codex_announcement.tooltip_countdown" = "리셋 예정: %@";
+"codex_announcement.tooltip_countdown_deadline" = "늦어도 리셋: %@";
+"codex_announcement.tooltip_footer" = "Beta · 제3자 codex-reset.com 데이터 · 클릭하여 열기";
+"settings.general.codex_announcement_section" = "Codex 리셋 예고 (Beta)";
+"settings.general.codex_announcement_enable" = "리셋 예고 배지 표시";
+"settings.general.codex_announcement_hint" = "OpenAI의 Tibo Sottiaux가 아직 지나지 않은 전역 리셋을 공개적으로 예고했을 때만 Codex 링 옆에 작은 배지가 표시됩니다. 대부분의 시간에는 아무것도 표시되지 않습니다. 데이터는 독립 커뮤니티 프로젝트인 codex-reset.com에서 제공됩니다(Beta: 데이터 출처가 변경되거나 중단될 수 있음). 끄면 해당 사이트로 어떤 요청도 보내지 않습니다.";

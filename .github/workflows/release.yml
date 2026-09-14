@@ -7,6 +7,7 @@ on:
       - test-release
     paths:
       - 'CHANGELOG.md'
+      - 'docs/RELEASE_NOTES.md'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -28,6 +29,7 @@ env:
   XCODE_PROJECT: Usage4Claude.xcodeproj
   BUILD_CONFIG: Release
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  SPARKLE_TOOLS_VERSION: "2.9.2"
 
 jobs:
   # ============================================
@@ -51,12 +53,11 @@ jobs:
       
       - name: Check commit message for release trigger
         id: check
+        env:
+          # 用 env 传 COMMIT_MSG，避免直接插值到 shell 导致的命令/heredoc 注入
+          # （commit message 中若含独立一行 EOF，原 heredoc 写法会被提前截断）
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          # Use heredoc to handle multi-line commit messages
-          read -r -d '' COMMIT_MSG << 'EOF' || true
-          ${{ github.event.head_commit.message }}
-          EOF
-          
           BRANCH="${{ github.ref_name }}"
           IS_DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
           
@@ -107,6 +108,19 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ Detected version: $VERSION"
       
+      - name: Verify docs/RELEASE_NOTES.md has this version section
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # docs/RELEASE_NOTES.md 是 Sparkle 弹窗 + GitHub Release 正文的共同来源。
+          # 漏写当前版本段落会让两处正文为空，这里在最前面 fail-fast。
+          if ! grep -q "^## \[$VERSION\]" docs/RELEASE_NOTES.md; then
+            echo "❌ docs/RELEASE_NOTES.md is missing the '## [$VERSION]' section"
+            echo "   Add a user-facing section for v$VERSION before releasing."
+            exit 1
+          fi
+          echo "✅ docs/RELEASE_NOTES.md has the v$VERSION section"
+
       - name: Check if version already released
         if: steps.check.outputs.should_release == 'true' && steps.check.outputs.is_test == 'false'
         run: |
@@ -153,17 +167,20 @@ jobs:
     name: Build Application
     needs: validate
     if: needs.validate.outputs.should_release == 'true'
-    runs-on: macos-latest
+    # 钉死 runner + Xcode 版本，避免 GitHub 更新镜像后构建产物漂移、出问题无法复现旧版本构建。
+    # 升级时作为显式提交（同时更新本行注释里的日期）。
+    # 当前对齐本机开发环境 Xcode 26.6（2026-07-13 核实 macos-26 镜像已收录该版本）。
+    runs-on: macos-26
     timeout-minutes: 15
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: "26.6"
       
       - name: Verify version consistency
         run: |
@@ -179,20 +196,28 @@ jobs:
         run: |
           echo "Installing create-dmg..."
           brew install create-dmg
+
+          echo "Downloading Sparkle CLI tools..."
+          curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${{ env.SPARKLE_TOOLS_VERSION }}/Sparkle-${{ env.SPARKLE_TOOLS_VERSION }}.tar.xz" \
+            -o /tmp/sparkle.tar.xz
+          mkdir -p /tmp/sparkle-tools
+          tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle-tools
+          echo "✅ Sparkle CLI tools installed"
       
       - name: Import code signing certificate
         env:
           CODESIGN_CERT: ${{ secrets.CODESIGN_CERTIFICATE }}
           CODESIGN_PWD: ${{ secrets.CODESIGN_PASSWORD }}
+          SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
           # Create temporary keychain
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-          
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          
+
           # Import certificate
           echo "$CODESIGN_CERT" | base64 --decode > certificate.p12
           security import certificate.p12 \
@@ -200,7 +225,7 @@ jobs:
             -P "$CODESIGN_PWD" \
             -T /usr/bin/codesign \
             -T /usr/bin/security
-          
+
           # Set keychain for codesign
           security list-keychains -d user -s "$KEYCHAIN_PATH"
           security set-key-partition-list \
@@ -208,16 +233,43 @@ jobs:
             -s \
             -k "$KEYCHAIN_PASSWORD" \
             "$KEYCHAIN_PATH"
-          
+
           # Cleanup certificate file
           rm -f certificate.p12
-          
-          echo "✅ Certificate imported successfully"
+
+          # Import Sparkle EdDSA private key into the same temporary keychain
+          # sign_update will find it via the keychain search path set above
+          # -A: allow any application to access without prompting (required in CI)
+          # Note: add-generic-password takes the keychain as a positional arg, not -k
+          security add-generic-password \
+            -a "ed25519" \
+            -s "https://sparkle-project.org" \
+            -w "$SPARKLE_KEY" \
+            -A \
+            "$KEYCHAIN_PATH"
+
+          echo "✅ Certificate and Sparkle EdDSA key imported"
       
       - name: Build application
         run: |
           echo "Building Usage4Claude..."
           ./scripts/build.sh --config ${{ env.BUILD_CONFIG }}
+
+      # build.sh 把 xcodebuild 的输出写进 build.log 而不是 stdout，构建失败时
+      # CI 日志里只剩一句 "exit code 65"，看不到编译错误。把它打出来，
+      # 否则只能靠本地复现——而本地 SDK 与 CI 钉死的 Xcode 未必一致。
+      - name: Show build log on failure
+        if: failure()
+        run: |
+          LOG=$(find build -name build.log -maxdepth 2 2>/dev/null | head -1)
+          if [[ -n "$LOG" ]]; then
+            echo "===== $LOG (last 200 lines) ====="
+            tail -200 "$LOG"
+            echo "===== compile errors ====="
+            grep -E "error:" "$LOG" | head -40 || echo "(no lines matched 'error:')"
+          else
+            echo "No build.log found under build/"
+          fi
       
       - name: Generate SHA256 checksum
         run: |
@@ -238,6 +290,30 @@ jobs:
           echo "✅ Checksum generated"
           cat "$DMG_FILE.sha256"
       
+      - name: Sign DMG with Sparkle
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          BUILD_DIR="build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-$VERSION"
+          DMG_FILE="${{ env.PROJECT_NAME }}-v$VERSION.dmg"
+          DMG_PATH="$BUILD_DIR/$DMG_FILE"
+          SIGN_UPDATE="/tmp/sparkle-tools/bin/sign_update"
+          DMG_URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/$DMG_FILE"
+
+          echo "Signing DMG with Sparkle EdDSA key..."
+          SIGN_OUTPUT=$("$SIGN_UPDATE" "$DMG_PATH")
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Sparkle signing failed: $SIGN_OUTPUT"
+            exit 1
+          fi
+
+          # Save the enclosure element as a file for the release job to consume
+          printf '          <enclosure\n              url="%s"\n              %s\n              type="application/octet-stream"/>\n' \
+            "$DMG_URL" "$SIGN_OUTPUT" > "$BUILD_DIR/sparkle_enclosure.txt"
+
+          echo "✅ Sparkle signature generated"
+          cat "$BUILD_DIR/sparkle_enclosure.txt"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -245,6 +321,7 @@ jobs:
           path: |
             build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-${{ needs.validate.outputs.version }}/${{ env.PROJECT_NAME }}-v${{ needs.validate.outputs.version }}.dmg
             build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-${{ needs.validate.outputs.version }}/${{ env.PROJECT_NAME }}-v${{ needs.validate.outputs.version }}.dmg.sha256
+            build/${{ env.PROJECT_NAME }}-${{ env.BUILD_CONFIG }}-${{ needs.validate.outputs.version }}/sparkle_enclosure.txt
           retention-days: 7
       
       - name: Cleanup keychain
@@ -285,7 +362,8 @@ jobs:
           .github/scripts/generate_release_notes.sh \
             .github/RELEASE_TEMPLATE.md \
             "$VERSION" \
-            release_notes.md
+            release_notes.md \
+            docs/RELEASE_NOTES.md
 
           echo "✅ Release notes generated"
 
@@ -315,32 +393,126 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.validate.outputs.version }}
           IS_DRY_RUN: ${{ needs.validate.outputs.is_dry_run }}
+          IS_TEST: ${{ needs.validate.outputs.is_test }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
+          # 标题取 commit message 第一行，去掉 [release]/[RELEASE] 前缀后 trim。
+          # 用 env 传 COMMIT_MSG，避免直接插值导致的命令注入。
+          RAW_TITLE=$(printf '%s\n' "$COMMIT_MSG" | head -n1)
+          PARSED_TITLE=$(printf '%s' "$RAW_TITLE" \
+            | sed -E 's/^\[[Rr][Ee][Ll][Ee][Aa][Ss][Ee]\][[:space:]]*//' \
+            | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+          # 解析为空（如 workflow_dispatch 手动触发无 commit）时退回 vVERSION
+          if [[ -z "$PARSED_TITLE" ]]; then
+            PARSED_TITLE="v$VERSION"
+          fi
+
           if [[ "$IS_DRY_RUN" == "true" ]]; then
+            # Dry run 仍走 draft，避免测试产生正式发布
             TAG="test-v$VERSION"
-            TITLE="test-v$VERSION - ⚠️ DRY RUN TEST ⚠️"
+            TITLE="test: $PARSED_TITLE - ⚠️ DRY RUN ⚠️"
+            DRAFT_ARGS=(--draft)
+          elif [[ "$IS_TEST" == "true" ]]; then
+            # test-release 分支同样保持 draft，避免误触发正式发布
+            TAG="v$VERSION"
+            TITLE="$PARSED_TITLE"
+            DRAFT_ARGS=(--draft)
           else
             TAG="v$VERSION"
-            TITLE="v$VERSION - ❗️❗️❗️请在这里输入你的简短描述❗️❗️❗️"
+            TITLE="$PARSED_TITLE"
+            DRAFT_ARGS=()
           fi
           
-          echo "Creating draft release: $TAG"
+          echo "Creating release: $TAG (title: $TITLE)"
           
           gh release create "$TAG" \
-            --draft \
+            "${DRAFT_ARGS[@]}" \
             --title "$TITLE" \
             --notes-file release_notes.md \
             ./artifacts/${{ env.PROJECT_NAME }}-v$VERSION.dmg \
             ./artifacts/${{ env.PROJECT_NAME }}-v$VERSION.dmg.sha256
           
-          echo "✅ Draft release created: $TAG"
-          echo ""
-          echo "📝 Next steps:"
-          echo "1. Go to https://github.com/${{ github.repository }}/releases"
-          echo "2. Edit the draft release"
-          echo "3. Add your release description"
-          echo "4. Click 'Publish release'"
+          if [[ "$IS_DRY_RUN" == "true" ]]; then
+            echo "✅ Draft (dry run) release created: $TAG"
+          else
+            echo "✅ Release published: $TAG"
+            echo "📝 如需补充/精修 Release Notes，可到 GitHub 编辑该 release"
+            echo "   （不影响 Sparkle 更新说明，后者取自 CHANGELOG）"
+          fi
       
+      - name: Update appcast.xml
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          IS_DRY_RUN: ${{ needs.validate.outputs.is_dry_run }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          IS_DRY_RUN="${{ needs.validate.outputs.is_dry_run }}"
+          DMG_FILE="${{ env.PROJECT_NAME }}-v$VERSION.dmg"
+          DMG_URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/$DMG_FILE"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+
+          # CURRENT_PROJECT_VERSION is interpolated from MARKETING_VERSION at
+          # build time, so the build number always equals the version string.
+          BUILD_NUMBER="$VERSION"
+
+          # RSS 的 pubDate 必须是 RFC 822 格式，星期与月份缩写只能是英文。
+          # %a/%b 会跟随 locale 翻译（zh_CN 下会输出「五, 04  9月 2026」），
+          # 目前 runner 是 C.UTF-8 所以正常，但那是镜像的默认值而非本仓库的约定，
+          # 故显式锁定 LC_ALL=C，避免镜像变更导致 appcast 写出 Sparkle 无法解析的日期。
+          PUB_DATE=$(LC_ALL=C date -u "+%a, %d %b %Y %H:%M:%S +0000")
+
+          python3 .github/scripts/update_appcast.py \
+            appcast.xml \
+            "$VERSION" \
+            "$BUILD_NUMBER" \
+            "$PUB_DATE" \
+            "$DMG_URL" \
+            "$RELEASE_URL" \
+            docs/RELEASE_NOTES.md \
+            ./artifacts/sparkle_enclosure.txt
+
+          echo ""
+          echo "📄 appcast.xml after update:"
+          cat appcast.xml
+
+          if [[ "$IS_DRY_RUN" == "true" ]]; then
+            echo ""
+            echo "🧪 Dry run: changes shown above, not pushing to main"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add appcast.xml
+            git commit -m "chore: update appcast.xml for v$VERSION"
+
+            # 发布运行期间（约 15 分钟）main 上若有其他手动 push，这里的 push 会因
+            # non-fast-forward 失败；此时 Release 已发出但 appcast 未更新，Sparkle
+            # 用户收不到更新。失败时 rebase 到最新 main 后重试，最多重试 2 次。
+            PUSH_SUCCEEDED=false
+            for attempt in 1 2 3; do
+              if [[ "$attempt" -gt 1 ]]; then
+                echo "⚠️  推送 main 失败，拉取最新 main 并 rebase 后重试（第 $attempt 次）..."
+                git fetch origin main
+                if ! git rebase origin/main; then
+                  git rebase --abort
+                  echo "❌ rebase 到最新 main 时发生冲突，需要人工介入更新 appcast.xml"
+                  exit 1
+                fi
+              fi
+
+              if git push origin main; then
+                PUSH_SUCCEEDED=true
+                break
+              fi
+            done
+
+            if [[ "$PUSH_SUCCEEDED" != "true" ]]; then
+              echo "❌ appcast.xml 推送失败，已重试 3 次仍与 main 冲突"
+              exit 1
+            fi
+
+            echo "✅ appcast.xml pushed to main"
+          fi
+
       - name: Cleanup on failure
         if: failure()
         run: |

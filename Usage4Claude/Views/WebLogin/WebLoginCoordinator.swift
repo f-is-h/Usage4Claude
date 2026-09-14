@@ -37,17 +37,18 @@ final class WebLoginCoordinator: ObservableObject {
     private var progressObservation: NSKeyValueObservation?
     private var onAccountCreated: ((Account) -> Void)?
     private var navigationDelegate: NavigationDelegate?
+    private var uiDelegate: UIDelegate?
 
     /// 允许导航的域名列表
     private let allowedDomains: Set<String> = [
         "claude.ai",
-        "accounts.google.com",
+        "google.com",
+        "youtube.com",
         "appleid.apple.com",
         "login.microsoftonline.com",
         "github.com",
-        "accounts.google.co.jp",
-        "accounts.google.com.hk",
-        "www.google.com",
+        "google.co.jp",
+        "google.com.hk",
         "challenges.cloudflare.com"
     ]
 
@@ -64,8 +65,7 @@ final class WebLoginCoordinator: ObservableObject {
 
     private func setupWebView() {
         let config = WKWebViewConfiguration()
-
-        // 非持久化 DataStore — 每次登录全新 session
+        // nonPersistent：完全空白，任何 OAuth provider 都无已有 session，确保多账号添加时不会 auto-SSO
         config.websiteDataStore = .nonPersistent()
         config.preferences.isElementFullscreenEnabled = false
 
@@ -76,6 +76,10 @@ final class WebLoginCoordinator: ObservableObject {
         let delegate = NavigationDelegate(coordinator: self)
         webView.navigationDelegate = delegate
         self.navigationDelegate = delegate
+
+        let ui = UIDelegate(coordinator: self)
+        webView.uiDelegate = ui
+        self.uiDelegate = ui
 
         // 监听加载进度
         progressObservation = webView.observe(\.estimatedProgress) { [weak self] webView, _ in
@@ -101,18 +105,21 @@ final class WebLoginCoordinator: ObservableObject {
         self.onAccountCreated = callback
     }
 
-    /// 清理所有 WebView 数据
     func cleanup() {
         cookieTimer?.invalidate()
         cookieTimer = nil
         progressObservation = nil
+    }
 
-        let dataStore = webView.configuration.websiteDataStore
-        let allTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-        dataStore.fetchDataRecords(ofTypes: allTypes) { records in
-            dataStore.removeData(ofTypes: allTypes, for: records) {
-                Logger.settings.info("WebLogin: 已清除所有 WebView 数据")
-            }
+    /// 将登录 WebView（nonPersistent）中指定域的 cookie 复制到 default store
+    /// 用于在成功登录后同步 session，供 Level 2 静默刷新使用
+    private func transferCookiesToDefaultStore(domains: [String]) {
+        let sourceStore = webView.configuration.websiteDataStore.httpCookieStore
+        let destStore = WKWebsiteDataStore.default().httpCookieStore
+        sourceStore.getAllCookies { cookies in
+            let relevant = cookies.filter { c in domains.contains { c.domain.contains($0) } }
+            for cookie in relevant { destStore.setCookie(cookie) { } }
+            AppLog.trace(.auth, "Claude web login copied \(relevant.count) cookie(s) into the default store")
         }
     }
 
@@ -132,19 +139,19 @@ final class WebLoginCoordinator: ObservableObject {
         cookieStore.getAllCookies { [weak self] cookies in
             guard let self = self else { return }
 
-            let sessionCookie = cookies.first { cookie in
-                cookie.name == "sessionKey" && cookie.domain.contains("claude.ai")
-            }
+            let claudeCookies = cookies.filter { $0.domain.contains("claude.ai") }
+            guard let sessionCookie = claudeCookies.first(where: { $0.name == "sessionKey" }) else { return }
 
-            if let cookie = sessionCookie {
-                let sessionKey = cookie.value
-                Logger.settings.info("WebLogin: 检测到 sessionKey Cookie")
+            let sessionKey = sessionCookie.value
+            // 将 WebView 的完整 cookie（含 cf_clearance/__cf_bm）拼成 header，
+            // 避免验证请求因缺少 Cloudflare 通行证而被拦截
+            let cookieHeader = claudeCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+            AppLog.event(.auth, "Claude web login detected the sessionKey cookie")
 
-                DispatchQueue.main.async {
-                    self.cookieTimer?.invalidate()
-                    self.cookieTimer = nil
-                    self.validateSessionKey(sessionKey)
-                }
+            DispatchQueue.main.async {
+                self.cookieTimer?.invalidate()
+                self.cookieTimer = nil
+                self.validateSessionKey(sessionKey, cookieHeader: cookieHeader)
             }
         }
     }
@@ -152,11 +159,11 @@ final class WebLoginCoordinator: ObservableObject {
     // MARK: - Validation
 
     /// 验证 sessionKey 并获取组织信息
-    private func validateSessionKey(_ sessionKey: String) {
+    private func validateSessionKey(_ sessionKey: String, cookieHeader: String) {
         loginState = .validating
 
-        let apiService = ClaudeAPIService()
-        apiService.fetchOrganizations(sessionKey: sessionKey) { [weak self] result in
+        let apiService = ClaudeAPIService.shared
+        apiService.fetchOrganizations(sessionKey: sessionKey, cookieHeader: cookieHeader) { [weak self] result in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
@@ -176,8 +183,9 @@ final class WebLoginCoordinator: ObservableObject {
 
                         self.loginState = .success(accountName: account.displayName)
                         self.onAccountCreated?(account)
+                        self.transferCookiesToDefaultStore(domains: ["claude.ai"])
 
-                        Logger.settings.notice("WebLogin: 账户创建成功 - \(account.displayName)")
+                        AppLog.event(.auth, "Claude web login succeeded; created account: \(account.displayName)")
                     } else {
                         self.loginState = .failed(message: L.Error.noOrganizationsFound)
                     }
@@ -190,7 +198,7 @@ final class WebLoginCoordinator: ObservableObject {
                         message = error.localizedDescription
                     }
                     self.loginState = .failed(message: message)
-                    Logger.settings.error("WebLogin: 验证失败 - \(message)")
+                    AppLog.error(.auth, "Claude web login validation failed: \(message)")
 
                     // 验证失败后重新开始监听
                     self.startCookieMonitoring()
@@ -261,6 +269,32 @@ extension WebLoginCoordinator {
                 NSWorkspace.shared.open(url)
                 decisionHandler(.cancel)
             }
+        }
+    }
+}
+
+// MARK: - WKUIDelegate
+
+extension WebLoginCoordinator {
+
+    /// 处理页面通过 window.open() 触发的弹出窗口
+    /// Google OAuth 传统流程会用弹出窗口完成授权，缺少此代理会导致登录静默失败
+    final class UIDelegate: NSObject, WKUIDelegate {
+        private weak var coordinator: WebLoginCoordinator?
+
+        init(coordinator: WebLoginCoordinator) {
+            self.coordinator = coordinator
+            super.init()
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            webView.load(navigationAction.request)
+            return nil
         }
     }
 }

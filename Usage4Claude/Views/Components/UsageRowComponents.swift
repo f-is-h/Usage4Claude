@@ -8,6 +8,103 @@
 
 import SwiftUI
 
+// MARK: - Detail Usage Ring Helpers
+
+struct UsageRingTrimRange: Equatable {
+    let from: CGFloat
+    let to: CGFloat
+}
+
+/// Popover 大圆环的 trim 换算。口径本身定义在 `UsageDisplayMode`，菜单栏图标读的是同一份，
+/// 这里只把它翻译成 SwiftUI `Circle().trim(from:to:)` 要的 CGFloat。
+enum UsageRingDisplay {
+    static func displayedPercentage(usedPercentage: Double, showRemainingMode: Bool) -> Double {
+        UsageDisplayMode.displayedPercentage(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
+    }
+
+    static func displayedTrimRange(usedPercentage: Double, showRemainingMode: Bool) -> UsageRingTrimRange {
+        let range = UsageDisplayMode.fillRange(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
+        return UsageRingTrimRange(from: CGFloat(range.from), to: CGFloat(range.to))
+    }
+}
+
+/// 大圆环中心百分比与语义标签。
+struct DetailUsageRingCenterText: View {
+    let usedPercentage: Double
+    let showRemainingMode: Bool
+
+    private var displayPercentage: Double {
+        UsageRingDisplay.displayedPercentage(
+            usedPercentage: usedPercentage,
+            showRemainingMode: showRemainingMode
+        )
+    }
+
+    private var modeLabel: String {
+        showRemainingMode ? L.Usage.available : L.Usage.used
+    }
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("\(Int(displayPercentage))%")
+                .font(.system(size: 28, weight: .bold))
+            Text(modeLabel)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .id(showRemainingMode ? "remaining" : "used")
+        .transition(.scale(scale: 0.92).combined(with: .opacity))
+    }
+}
+
+/// 剩余/已用模式切换时的一次性外侧扫光。
+struct DetailUsageRingSweep: View {
+    let trigger: Int
+    let diameter: CGFloat
+    let lineWidth: CGFloat
+    let color: Color
+
+    @State private var rotation: Double = -90
+    @State private var opacity: Double = 0
+
+    var body: some View {
+        Circle()
+            .trim(from: 0, to: 0.18)
+            .stroke(
+                AngularGradient(
+                    gradient: Gradient(colors: [
+                        color.opacity(0.0),
+                        color.opacity(0.35),
+                        Color.white.opacity(0.95),
+                        color.opacity(0.85),
+                        color.opacity(0.0)
+                    ]),
+                    center: .center
+                ),
+                style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+            )
+            .frame(width: diameter, height: diameter)
+            .rotationEffect(.degrees(rotation))
+            .opacity(opacity)
+            .scaleEffect(opacity > 0 ? 1.03 : 0.98)
+            .allowsHitTesting(false)
+            .onChange(of: trigger) { newValue in
+                guard newValue > 0 else { return }
+                runSweep()
+            }
+    }
+
+    private func runSweep() {
+        rotation = -90
+        opacity = 1
+
+        withAnimation(.easeOut(duration: 0.45)) {
+            rotation = 270
+            opacity = 0
+        }
+    }
+}
+
 // MARK: - Mini Progress Icon Component
 
 /// 迷你进度图标（带百分比数字和进度弧，与菜单栏图标风格一致）
@@ -93,6 +190,10 @@ struct UnifiedLimitRow: View {
     var data: UsageData? = nil
     var codexData: CodexUsageData? = nil
     let showRemainingMode: Bool
+    /// 溢出模型行覆盖：提供时，行的百分比/标签/重置时间直接取自这个模型条目，
+    /// `type` 仅用于决定外观（圆角方/斜切方形状与配色的槽位）。用于 popover 展示
+    /// 超出前两个槽位的第三个及以后的模型（如同时出现 Fable / Opus / Sonnet）。
+    var weeklyModelOverride: UsageData.WeeklyModelLimit? = nil
 
     var body: some View {
         HStack(spacing: 8) {
@@ -109,16 +210,20 @@ struct UnifiedLimitRow: View {
             Spacer(minLength: 8)
 
             // 右侧：重置时间或剩余额度
-            Text(displayValue)
-                .font(.system(size: 12))
-                .fontWeight(.medium)
-                .lineLimit(1)
-                .minimumScaleFactor(0.9)
-                .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
-                .transition(.asymmetric(
-                    insertion: .move(edge: .top).combined(with: .opacity),
-                    removal: .move(edge: .bottom).combined(with: .opacity)
-                ))
+            // TimelineView 让这行文字自己按分钟粒度刷新，不再依赖外层每秒 objectWillChange
+            // 触发整个 popover 重建（displayValue 精度只到分钟，60s 间隔足够）
+            TimelineView(.periodic(from: .now, by: 60)) { _ in
+                Text(displayValue)
+                    .font(.system(size: 12))
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .id(showRemainingMode ? "remaining" : "reset")  // 强制识别为不同视图
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+            }
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 12)
@@ -129,15 +234,20 @@ struct UnifiedLimitRow: View {
     // MARK: - Computed Properties
 
     private var limitName: String {
+        if let override = weeklyModelOverride {
+            return override.modelName ?? L.DetailRow.opusWeekly
+        }
         switch type {
         case .fiveHour, .codexPrimary:
             return L.DetailRow.fiveHour
         case .sevenDay, .codexSecondary:
             return L.DetailRow.sevenDay
         case .opusWeekly:
-            return L.DetailRow.opusWeekly
+            // Claude 5 时代：此槽位可能承载来自 limits 数组的具体模型每周限制（如 Fable）。
+            // 有真实模型名则优先展示，否则回退到默认的 “Opus Weekly” 文案。
+            return data?.opusModelName ?? L.DetailRow.opusWeekly
         case .sonnetWeekly:
-            return L.DetailRow.sonnetWeekly
+            return data?.sonnetModelName ?? L.DetailRow.sonnetWeekly
         case .extraUsage, .codexExtraUsage:
             return L.DetailRow.extraUsage
         }
@@ -165,6 +275,9 @@ struct UnifiedLimitRow: View {
     }
 
     private var percentageValue: Double? {
+        if let override = weeklyModelOverride {
+            return override.limit.percentage
+        }
         switch type {
         case .fiveHour:       return data?.fiveHour?.percentage
         case .sevenDay:       return data?.sevenDay?.percentage
@@ -178,6 +291,11 @@ struct UnifiedLimitRow: View {
     }
 
     private var displayValue: String {
+        if let override = weeklyModelOverride {
+            return showRemainingMode
+                ? override.limit.formattedCompactRemaining
+                : override.limit.formattedCompactResetDate
+        }
         switch type {
         case .fiveHour:
             guard let fiveHour = data?.fiveHour else { return "-" }
@@ -205,7 +323,7 @@ struct UnifiedLimitRow: View {
 
         case .codexSecondary:
             guard let limitData = codexData?.secondary?.asUsageLimitData() else { return "-" }
-            return showRemainingMode ? limitData.formattedCompactRemaining : limitData.formattedCompactResetDate
+            return showRemainingMode ? limitData.formattedCompactRemainingWithMinutes : limitData.formattedCompactResetDateWithMinutes
 
         case .codexExtraUsage:
             guard let extra = codexData?.extraUsage else { return "-" }
