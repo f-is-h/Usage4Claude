@@ -47,7 +47,19 @@ class CodexAPIService {
     /// access_token 缓存 + 单飞合并（actor，见 Services/OAuthTokenCache.swift；审计报告 4.2）。
     /// cookie session 路径与 OAuth refresh 路径共用：缓存键为账户凭据
     /// （session-token 或 "rt." 前缀的 OAuth refresh_token），互不串扰。
-    private let tokenCache = OAuthTokenCache()
+    // Login, background refresh, and diagnostics must see the same credentials,
+    // even when they use separate service instances.
+    private static let sharedTokenCache = OAuthTokenCache()
+    private var tokenCache: OAuthTokenCache { Self.sharedTokenCache }
+
+    static func cacheLoginTokens(_ tokens: CodexOAuthTokens) async {
+        let cached = OAuthTokenCache.Tokens(
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiresAt: jwtExpiry(from: tokens.accessToken) ?? Date().addingTimeInterval(30 * 60)
+        )
+        await sharedTokenCache.store(cached)
+    }
 
     /// 线程安全地记录进行中的任务，供 cancelAllRequests 统一取消
     private func trackTask(_ task: URLSessionDataTask) {
@@ -56,15 +68,15 @@ class CodexAPIService {
         tasksLock.unlock()
     }
 
-    /// 账户切换时清除缓存，确保下次立即重新拉取
+    /// 凭据被拒绝时清除缓存，确保下次立即重新拉取
     /// - Note: 异步生效。401 路径的清缓存在 fetchWhamUsage 内部完成（保证先于错误传播），
     ///   账户切换场景则依赖缓存按凭据键控——旧账户的缓存不会误配新账户的凭据。
     func clearAccessTokenCache() {
         Task { await tokenCache.clear() }
     }
 
-    /// 由独立计时器调用：仅在缓存即将过期时主动续期，不触发用量拉取。
-    /// fetchAccessToken 内部先查缓存（20 分钟余量），缓存仍新鲜时不会发起网络请求。
+    /// 由独立计时器调用，不触发用量拉取。
+    /// Cookie 账户提前 20 分钟续期；OAuth 账户用完已签发 token 的有效期再续期。
     func proactivelyRefreshIfNeeded() {
         guard settings.hasValidCodexCredentials else { return }
         fetchAccessToken(sessionToken: settings.codexSessionToken) { result in
@@ -147,7 +159,10 @@ class CodexAPIService {
             do {
                 let accessToken = try await tokenCache.accessToken(
                     refreshToken: sessionToken,
-                    margin: Self.tokenRefreshMargin
+                    // OAuth sessions can be shorter than the cookie renewal
+                    // window. Use their issued token until expiry; a usage 401
+                    // still clears the cache and triggers reauthentication.
+                    margin: Self.isOAuthRefreshToken(sessionToken) ? 0 : Self.tokenRefreshMargin
                 ) { [weak self] credential in
                     guard let self else { throw UsageError.networkError }
                     if Self.isOAuthRefreshToken(credential) {
