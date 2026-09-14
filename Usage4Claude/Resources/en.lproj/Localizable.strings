@@ -436,7 +436,7 @@
 "graph_style.title" = "Graph Style";
 "graph_style.hint" = "Choose how usage is visualized";
 "graph_style.circular_description" = "Shows usage as a percentage ring";
-"graph_style.linear_description" = "Shows usage timeline with pace prediction";
+"graph_style.linear_description" = "Plots each limit against an even usage pace";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "Preparing sign-in…";

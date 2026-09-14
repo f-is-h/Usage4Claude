@@ -427,6 +427,16 @@
 "account.add_codex_account" = "Codex Account hinzufügen";
 "account.codex_current_account" = "Aktueller Codex Account";
 
+// MARK: - Graph Type
+"graph_type.circular" = "Kreis";
+"graph_type.linear" = "Linear";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "Diagrammstil";
+"graph_style.hint" = "Darstellung der Nutzung auswählen";
+"graph_style.circular_description" = "Zeigt die Nutzung als Prozentring";
+"graph_style.linear_description" = "Zeigt jedes Limit im Vergleich zu gleichmäßigem Verbrauch";
+
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "Anmeldung wird vorbereitet…";
 "weblogin.codex_oauth_waiting_browser" = "Im Browser fortsetzen";
@@ -451,13 +461,3 @@
 "settings.general.codex_announcement_section" = "Codex-Reset-Ankündigung (Beta)";
 "settings.general.codex_announcement_enable" = "Reset-Ankündigungs-Badge anzeigen";
 "settings.general.codex_announcement_hint" = "Zeigt ein kleines Badge neben dem Codex-Ring, aber nur wenn Tibo Sottiaux von OpenAI öffentlich einen noch bevorstehenden globalen Reset angekündigt hat — meistens gibt es nichts anzuzeigen. Die Daten stammen von codex-reset.com, einem unabhängigen Community-Projekt (Beta: die Quelle kann sich ändern oder wegfallen). Wird diese Option deaktiviert, werden keine Anfragen mehr an diese Website gesendet.";
-
-// MARK: - Graph Type
-"graph_type.circular" = "Kreis";
-"graph_type.linear" = "Linear";
-
-// MARK: - Graph Style Settings
-"graph_style.title" = "Diagrammstil";
-"graph_style.hint" = "Darstellung der Nutzung auswählen";
-"graph_style.circular_description" = "Zeigt die Nutzung als Prozentring";
-"graph_style.linear_description" = "Zeigt den Nutzungsverlauf mit Tempo-Prognose";

@@ -957,6 +957,7 @@ class UserSettings: ObservableObject {
         } else {
             self.graphDisplayType = .circular
         }
+
         // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
         self.customDisplayMenuBarOnly = defaults.bool(forKey: "customDisplayMenuBarOnly")
 

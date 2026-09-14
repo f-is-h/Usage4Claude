@@ -2,44 +2,50 @@
 //  LinearUsageGraphView.swift
 //  Usage4Claude
 //
-//  Created by Claude on 2026-01-11.
+//  Created by Claude Code on 2026-01-11.
 //  Copyright © 2026 f-is-h. All rights reserved.
 //
 
 import SwiftUI
 
-/// Linear graph view showing usage pace with ideal pace reference line
-/// X-axis: Normalized time (0 = session start, 1 = reset time)
-/// Y-axis: Usage percentage (0-100%)
-/// Provider-agnostic: Claude and Codex each build their points via the matching initializer below.
+/// 线性用量图（圆环的替代显示）
+/// 以匀速消耗对角线为参照，显示每个限制在当前窗口内是超前还是落后于匀速节奏：
+/// X 轴为窗口已过去的比例（0 = 窗口开始，1 = 重置），Y 轴为已用百分比。
+/// 与 Provider 无关：Claude 与 Codex 各自通过下方对应的初始化方法构建数据点。
 struct LinearUsageGraphView: View {
-    /// A single plotted limit
+    /// 图上的一个限制数据点
     struct Point {
+        /// 决定标记形状与时间窗口长度
         let type: LimitType
+        /// 已用百分比
         let percentage: Double
         let resetsAt: Date?
         let color: Color
     }
 
-    /// Points to plot; nil means there is no usage data yet
+    /// 要绘制的数据点；nil 表示尚无用量数据
     let points: [Point]?
     let isRefreshing: Bool
+    /// 余量模式下标签显示剩余百分比；点的位置始终按已用量，保证与匀速对角线可比
+    let showRemainingMode: Bool
+    let graphHeight: CGFloat
 
     // MARK: - Constants
 
     private let graphWidth: CGFloat = 262
-    private let graphHeight: CGFloat = 100
     private let padding: CGFloat = 4
     private let gridLineWidth: CGFloat = 0.5
     private let paceLineWidth: CGFloat = 1.5
-    private let dotRadius: CGFloat = 5
+    /// 标记绘制框边长；`IconShapePaths` 会为笔画内缩，实际形状约 10pt
+    private let markerBoxSize: CGFloat = 16
+    /// 标记的视觉半径，用于标签避让
+    private let markerRadius: CGFloat = 5
 
     // MARK: - Body
 
     var body: some View {
         ZStack {
             if let points = points, !isRefreshing {
-                // Graph content
                 Canvas { context, size in
                     let drawArea = CGRect(
                         x: padding,
@@ -48,18 +54,12 @@ struct LinearUsageGraphView: View {
                         height: size.height - padding * 2
                     )
 
-                    // 1. Draw background grid
                     drawGrid(context: context, in: drawArea)
-
-                    // 2. Draw ideal pace line (dashed diagonal)
                     drawIdealPaceLine(context: context, in: drawArea)
-
-                    // 3. Draw limit points
-                    drawLimitPoints(context: context, in: drawArea, points: points)
+                    drawPoints(context: context, in: drawArea, points: points)
                 }
                 .frame(width: graphWidth, height: graphHeight)
             } else {
-                // Loading or no data state
                 RoundedRectangle(cornerRadius: 4)
                     .stroke(Color.gray.opacity(0.2), lineWidth: 2)
                     .frame(width: graphWidth - padding * 2, height: graphHeight - padding * 2)
@@ -79,7 +79,7 @@ struct LinearUsageGraphView: View {
 
     // MARK: - Drawing Methods
 
-    /// Draw subtle horizontal grid lines at 25%, 50%, 75%, 100%
+    /// 绘制背景网格：25% / 50% / 75% / 100% 横线、四等分竖线与外框
     private func drawGrid(context: GraphicsContext, in rect: CGRect) {
         let gridColor = Color.gray.opacity(0.15)
 
@@ -93,7 +93,6 @@ struct LinearUsageGraphView: View {
             context.stroke(path, with: .color(gridColor), lineWidth: gridLineWidth)
         }
 
-        // Draw vertical grid lines at 25%, 50%, 75%
         for fraction in stride(from: 0.25, through: 0.75, by: 0.25) {
             let x = rect.minX + CGFloat(fraction) * rect.width
 
@@ -104,16 +103,14 @@ struct LinearUsageGraphView: View {
             context.stroke(path, with: .color(gridColor), lineWidth: gridLineWidth)
         }
 
-        // Draw border
         var borderPath = Path()
         borderPath.addRect(rect)
         context.stroke(borderPath, with: .color(Color.gray.opacity(0.3)), lineWidth: gridLineWidth)
     }
 
-    /// Draw dashed diagonal line representing ideal pace (0,0) to (1,100)
+    /// 绘制匀速消耗参照线：从（窗口开始, 0%）到（重置, 100%）的虚线对角线
     private func drawIdealPaceLine(context: GraphicsContext, in rect: CGRect) {
         var path = Path()
-        // Start from bottom-left (time=0, usage=0) to top-right (time=1, usage=100)
         path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
 
@@ -126,178 +123,180 @@ struct LinearUsageGraphView: View {
         context.stroke(path, with: .color(Color.gray.opacity(0.5)), style: dashStyle)
     }
 
-    /// Draw colored dots for each point with percentage labels
-    private func drawLimitPoints(context: GraphicsContext, in rect: CGRect, points: [Point]) {
-        for point in points {
-            let position = calculatePosition(for: point, in: rect)
-
-            // Draw dot
-            let dotRect = CGRect(
-                x: position.x - dotRadius,
-                y: position.y - dotRadius,
-                width: dotRadius * 2,
-                height: dotRadius * 2
-            )
-
-            context.fill(Circle().path(in: dotRect), with: .color(point.color))
-
-            // Draw white border for visibility
-            context.stroke(
-                Circle().path(in: dotRect),
-                with: .color(.white.opacity(0.8)),
-                lineWidth: 1
-            )
-
-            // Draw percentage label next to dot
-            drawPercentageLabel(
-                context: context,
-                at: position,
+    /// 绘制数据点标记与百分比标签
+    /// - Note: 标记沿用限制行图标的形状（圆 / 圆角方 / 斜切方），颜色相近时仍能区分；
+    ///   先画全部标记再画标签，避免标签被后画的标记压住
+    private func drawPoints(context: GraphicsContext, in rect: CGRect, points: [Point]) {
+        let positions = points.map { point in
+            UsagePaceGraphMath.position(
+                elapsedRatio: UsagePaceGraphMath.elapsedRatio(
+                    resetsAt: point.resetsAt,
+                    windowSeconds: Self.windowSeconds(for: point.type)
+                ),
                 percentage: point.percentage,
                 in: rect
             )
         }
+
+        for (point, position) in zip(points, positions) {
+            let box = CGRect(
+                x: position.x - markerBoxSize / 2,
+                y: position.y - markerBoxSize / 2,
+                width: markerBoxSize,
+                height: markerBoxSize
+            )
+            let marker = IconShapePaths.pathForLimitType(point.type, in: box)
+            context.fill(marker, with: .color(point.color))
+            context.stroke(marker, with: .color(.white.opacity(0.8)), lineWidth: 1)
+        }
+
+        let labels = points.map { context.resolve(labelText(for: $0)) }
+        let frames = UsagePaceGraphMath.labelFrames(
+            dots: positions,
+            sizes: labels.map { $0.measure(in: rect.size) },
+            markerRadius: markerRadius,
+            in: rect
+        )
+        for (label, frame) in zip(labels, frames) {
+            context.draw(label, in: frame)
+        }
     }
 
-    /// Draw percentage label near a data point
-    private func drawPercentageLabel(
-        context: GraphicsContext,
-        at point: CGPoint,
-        percentage: Double,
-        in rect: CGRect
-    ) {
-        let label = Text("\(Int(percentage))%")
+    private func labelText(for point: Point) -> Text {
+        let displayed = UsageRingDisplay.displayedPercentage(
+            usedPercentage: point.percentage,
+            showRemainingMode: showRemainingMode
+        )
+        return Text("\(Int(displayed))%")
             .font(.system(size: 9, weight: .semibold))
             .foregroundColor(.primary)
-
-        // Position: top-right of dot by default
-        var labelX = point.x + dotRadius + 4
-        var labelY = point.y - dotRadius - 2
-
-        // Boundary check: if too close to right edge, flip to left
-        let labelWidth: CGFloat = 28  // Approximate width of "100%"
-        if labelX + labelWidth > rect.maxX {
-            labelX = point.x - dotRadius - labelWidth - 2
-        }
-
-        // If too close to top, move below dot
-        if labelY < rect.minY + 8 {
-            labelY = point.y + dotRadius + 10
-        }
-
-        context.draw(label, at: CGPoint(x: labelX, y: labelY))
     }
 
-    // MARK: - Calculation Methods
+    // MARK: - Helper Methods
 
-    /// Calculate the position of a point on the graph
-    /// X = elapsed time / total window (0 = just started, 1 = about to reset)
-    /// Y = usage percentage
-    private func calculatePosition(for point: Point, in rect: CGRect) -> CGPoint {
-        // Calculate X position based on elapsed time
-        let xNormalized = calculateElapsedTimeRatio(for: point.type, resetsAt: point.resetsAt)
-
-        // Convert to canvas coordinates
-        // X: 0 (left) = session start, 1 (right) = reset
-        let x = rect.minX + xNormalized * rect.width
-        // Y: 0 (bottom) = 0%, 1 (top) = 100%
-        let y = rect.maxY - (CGFloat(point.percentage) / 100.0 * rect.height)
-
-        return CGPoint(x: x, y: y)
-    }
-
-    /// Calculate the elapsed time ratio (0 = just started, 1 = about to reset)
-    private func calculateElapsedTimeRatio(for limitType: LimitType, resetsAt: Date?) -> CGFloat {
-        guard let resetsAt = resetsAt else {
-            // If no reset time, assume just started
-            return 0
-        }
-
-        // Codex windows are already classified by actual duration (see CodexUsageResponse.toCodexUsageData),
-        // so codexPrimary is always the 5-hour window and codexSecondary the 7-day one
-        let totalWindow: TimeInterval
-        switch limitType {
+    /// 限制类型对应的窗口时长
+    /// - Note: Codex 窗口在解析时已按实际时长归类（见 `CodexUsageResponse.toCodexUsageData`），
+    ///   codexPrimary 必为5小时窗口，codexSecondary 必为7天窗口
+    private static func windowSeconds(for type: LimitType) -> TimeInterval {
+        switch type {
         case .fiveHour, .codexPrimary:
-            totalWindow = 5 * 3600  // 5 hours in seconds
+            return UsagePaceGraphMath.fiveHourWindow
         case .sevenDay, .opusWeekly, .sonnetWeekly, .extraUsage,
              .codexSecondary, .codexExtraUsage:
-            totalWindow = 7 * 24 * 3600  // 7 days in seconds
+            return UsagePaceGraphMath.sevenDayWindow
         }
+    }
 
-        let remainingTime = resetsAt.timeIntervalSinceNow
-        let elapsedTime = totalWindow - remainingTime
-
-        // Clamp to 0-1 range
-        let ratio = elapsedTime / totalWindow
-        return CGFloat(max(0, min(1, ratio)))
+    fileprivate static func weeklyModelColor(_ type: LimitType, _ percentage: Double) -> Color {
+        type == .sonnetWeekly
+            ? Color(UsageColorScheme.sonnetWeeklyColor(percentage))
+            : Color(UsageColorScheme.opusWeeklyColor(percentage))
     }
 }
 
 // MARK: - Provider Initializers
 
 extension LinearUsageGraphView {
-    /// Claude limits
-    init(usageData: UsageData?, activeDisplayTypes: [LimitType], isRefreshing: Bool) {
+    /// Claude 限制
+    /// - Note: 额外用量是消费上限，没有重置窗口，不放在节奏图上；
+    ///   与圆环一致，自定义模式下缺失的 5h / 7d 以 0% 占位；
+    ///   与限制行一致，智能模式下第三个及以后的模型按圆角方 / 斜切方轮换补齐
+    init(
+        usageData: UsageData?,
+        activeDisplayTypes: [LimitType],
+        isRefreshing: Bool,
+        showRemainingMode: Bool,
+        graphHeight: CGFloat = 100
+    ) {
         self.isRefreshing = isRefreshing
+        self.showRemainingMode = showRemainingMode
+        self.graphHeight = graphHeight
         guard let data = usageData else {
             self.points = nil
             return
         }
-        self.points = activeDisplayTypes.compactMap { type in
+
+        let settings = UserSettings.shared
+        let placeholder = settings.shouldShowCustomPlaceholderInPopover
+            ? UsageData.LimitData(percentage: 0, resetsAt: nil)
+            : nil
+
+        var points: [Point] = activeDisplayTypes.compactMap { type in
             switch type {
             case .fiveHour:
-                return data.fiveHour.map {
+                return (data.fiveHour ?? placeholder).map {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: UsageColorScheme.fiveHourColorSwiftUI($0.percentage))
                 }
             case .sevenDay:
-                return data.sevenDay.map {
+                return (data.sevenDay ?? placeholder).map {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: UsageColorScheme.sevenDayColorSwiftUI($0.percentage))
                 }
             case .opusWeekly:
                 return data.opus.map {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: Color(UsageColorScheme.opusWeeklyColor($0.percentage)))
+                          color: Self.weeklyModelColor(type, $0.percentage))
                 }
             case .sonnetWeekly:
                 return data.sonnet.map {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: Color(UsageColorScheme.sonnetWeeklyColor($0.percentage)))
+                          color: Self.weeklyModelColor(type, $0.percentage))
                 }
-            case .extraUsage:
-                // ExtraUsage has no reset window, so it sits at the start of the timeline
-                guard let percentage = data.extraUsage?.percentage else { return nil }
-                return Point(type: type, percentage: percentage, resetsAt: nil,
-                             color: Color(UsageColorScheme.extraUsageColor(percentage)))
-            case .codexPrimary, .codexSecondary, .codexExtraUsage:
+            case .extraUsage, .codexPrimary, .codexSecondary, .codexExtraUsage:
                 return nil
             }
         }
+
+        if settings.displayMode == .smart {
+            for (offset, model) in data.weeklyModels.enumerated().dropFirst(2) {
+                let type: LimitType = offset % 2 == 0 ? .opusWeekly : .sonnetWeekly
+                points.append(Point(
+                    type: type,
+                    percentage: model.limit.percentage,
+                    resetsAt: model.limit.resetsAt,
+                    color: Self.weeklyModelColor(type, model.limit.percentage)
+                ))
+            }
+        }
+
+        self.points = points
     }
 
-    /// Codex limits
-    init(codexUsageData: CodexUsageData?, activeDisplayTypes: [LimitType], isRefreshing: Bool) {
+    /// Codex 限制
+    /// - Note: Codex credits 是余额而非窗口百分比，不放在节奏图上
+    init(
+        codexUsageData: CodexUsageData?,
+        activeDisplayTypes: [LimitType],
+        isRefreshing: Bool,
+        showRemainingMode: Bool,
+        graphHeight: CGFloat = 100
+    ) {
         self.isRefreshing = isRefreshing
+        self.showRemainingMode = showRemainingMode
+        self.graphHeight = graphHeight
         guard let data = codexUsageData else {
             self.points = nil
             return
         }
+
+        let placeholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
+            ? CodexUsageData.LimitData(percentage: 0, resetsAt: nil)
+            : nil
+
         self.points = activeDisplayTypes.compactMap { type in
             switch type {
             case .codexPrimary:
-                return data.primary.map {
+                return (data.primary ?? placeholder).map {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: UsageColorScheme.codexPrimaryColorSwiftUI($0.percentage))
                 }
             case .codexSecondary:
-                return data.secondary.map {
+                return (data.secondary ?? placeholder).map {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: UsageColorScheme.codexSecondaryColorSwiftUI($0.percentage))
                 }
-            case .codexExtraUsage:
-                // Codex credits are a balance, not a percentage of a window
-                return nil
-            case .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly:
+            case .codexExtraUsage, .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly:
                 return nil
             }
         }
@@ -309,7 +308,6 @@ extension LinearUsageGraphView {
 struct LinearUsageGraphView_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 20) {
-            // Normal state with data
             LinearUsageGraphView(
                 usageData: UsageData(
                     fiveHour: UsageData.LimitData(
@@ -325,10 +323,10 @@ struct LinearUsageGraphView_Previews: PreviewProvider {
                     extraUsage: nil
                 ),
                 activeDisplayTypes: [.fiveHour, .sevenDay],
-                isRefreshing: false
+                isRefreshing: false,
+                showRemainingMode: false
             )
 
-            // Codex
             LinearUsageGraphView(
                 codexUsageData: CodexUsageData(
                     primary: .init(percentage: 30, resetsAt: Date().addingTimeInterval(3600 * 3)),
@@ -336,14 +334,15 @@ struct LinearUsageGraphView_Previews: PreviewProvider {
                     extraUsage: nil
                 ),
                 activeDisplayTypes: [.codexPrimary, .codexSecondary],
-                isRefreshing: false
+                isRefreshing: false,
+                showRemainingMode: true
             )
 
-            // Loading state
             LinearUsageGraphView(
                 usageData: nil,
                 activeDisplayTypes: [.fiveHour],
-                isRefreshing: true
+                isRefreshing: true,
+                showRemainingMode: false
             )
         }
         .padding()

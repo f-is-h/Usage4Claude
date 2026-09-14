@@ -149,11 +149,17 @@ struct CodexColumnView: View {
                     .frame(height: 114)
                     .contentShape(Circle())
                 case .linear:
+                    // 图表几乎占满列宽，右上角正是接近重置、高用量的点所在位置。
+                    // 有重置预告角标时把图表压低并贴底，给下方 overlay 的角标让出顶部约 18pt，
+                    // 总高仍是 114，不影响 contentHeight
                     LinearUsageGraphView(
                         codexUsageData: codexUsageData,
                         activeDisplayTypes: activeCodexTypes,
-                        isRefreshing: isCodexRefreshing
+                        isRefreshing: isCodexRefreshing,
+                        showRemainingMode: showRemainingMode,
+                        graphHeight: codexResetAnnouncement == nil ? 100 : 96
                     )
+                    .frame(height: 114, alignment: codexResetAnnouncement == nil ? .center : .bottom)
                     .contentShape(Rectangle())
                 }
             }

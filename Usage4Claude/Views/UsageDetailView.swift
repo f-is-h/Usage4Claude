@@ -350,7 +350,8 @@ struct UsageDetailView: View {
                         LinearUsageGraphView(
                             usageData: data,
                             activeDisplayTypes: activeDisplayTypes,
-                            isRefreshing: isClaudeRefreshing
+                            isRefreshing: isClaudeRefreshing,
+                            showRemainingMode: showRemainingMode
                         )
                         .contentShape(Rectangle())
                     }

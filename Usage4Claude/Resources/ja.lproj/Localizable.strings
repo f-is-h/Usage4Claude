@@ -436,7 +436,7 @@
 "graph_style.title" = "グラフスタイル";
 "graph_style.hint" = "使用量の表示方法を選択";
 "graph_style.circular_description" = "使用量をパーセントリングで表示";
-"graph_style.linear_description" = "使用量をタイムラインとペース予測で表示";
+"graph_style.linear_description" = "各リミットを均等な使用ペースと比較して表示";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "サインインを準備しています…";

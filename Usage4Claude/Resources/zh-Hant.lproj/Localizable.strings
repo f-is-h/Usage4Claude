@@ -436,7 +436,7 @@
 "graph_style.title" = "圖表樣式";
 "graph_style.hint" = "選擇使用量的顯示方式";
 "graph_style.circular_description" = "以百分比圓環顯示使用量";
-"graph_style.linear_description" = "以時間線和速度預測顯示使用量";
+"graph_style.linear_description" = "將各項限額與勻速使用節奏對比顯示";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "正在準備登入…";

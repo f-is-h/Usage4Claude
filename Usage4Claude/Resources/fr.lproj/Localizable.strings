@@ -436,7 +436,7 @@
 "graph_style.title" = "Style du graphique";
 "graph_style.hint" = "Choisissez le mode de visualisation de l'utilisation";
 "graph_style.circular_description" = "Affiche l'utilisation sous forme d'anneau de pourcentage";
-"graph_style.linear_description" = "Affiche la chronologie d'utilisation avec prédiction de cadence";
+"graph_style.linear_description" = "Compare chaque limite à un rythme d’utilisation régulier";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "Préparation de la connexion…";

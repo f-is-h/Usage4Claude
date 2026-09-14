@@ -45,7 +45,8 @@ let package = Package(
                 "Models/CodexSessionTokenRotation.swift",
                 "Models/ProviderAuthPath.swift",
                 "Helpers/OAuthGrantFailure.swift",
-                "Helpers/UsageDisplayMode.swift"
+                "Helpers/UsageDisplayMode.swift",
+                "Helpers/UsagePaceGraphMath.swift"
             ]
         ),
         .testTarget(
