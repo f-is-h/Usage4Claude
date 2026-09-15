@@ -5,23 +5,26 @@
 //  Fetches Codex reset announcements from codex-reset.com (Beta feature; the
 //  data source is an independent third-party community project with no SLA).
 //
-//  Two-stage probing to keep this cheap on both ends:
-//    1. GET /api/forecast (~1.5KB). If `official_signal` / `teased_window` /
-//       `signal_percent` / `commitment` are all absent-or-null (the only
-//       "quiet" state ever observed during development), there is no
-//       announcement — stop here, never fetch stage 2.
-//    2. GET /api/timeline (~46KB), only reached when stage 1 looks non-quiet.
-//       Parsed for the nearest still-pending `preview` event.
+//  One request: GET /api/forecast (~6KB), parsed for `latest_alert`. See
+//  CodexResetAnnouncement.swift for why this replaced 3.4.x's two-stage
+//  forecast + timeline probe.
+//
+//  Nothing fetched is kept on the machine. The site answers
+//  `cache-control: public, max-age=60`, and a default URLSession would write
+//  every response body into the app's Cache.db (`reloadIgnoringLocalCacheData`
+//  only skips reading the cache, not storing into it). The session here is
+//  ephemeral with no URL cache and no cookie storage, so only the parsed struct
+//  survives, in memory. 3.4.x did use the default session, so init also purges
+//  the responses it left behind.
 //
 //  Cadence/backoff decisions live in CodexAnnouncementFetchPolicy.swift (pure,
 //  unit-tested); this class only owns the mutable state and network I/O.
 //
-//  Failure-silence contract (see project plan doc): every failure path ends
-//  in `completion(nil)`. This must never surface as a UI error, a system
-//  notification, a menu bar change, or a RefreshState mutation — callers
-//  should treat "nil" identically whether it means "no announcement",
-//  "network failed", "parse failed", or "feature disabled". Only Logger sees
-//  failures, for diagnostics.
+//  Failure-silence contract: every failure path ends in `completion(nil)`.
+//  This must never surface as a UI error, a system notification, a menu bar
+//  change, or a RefreshState mutation — callers should treat "nil" identically
+//  whether it means "no announcement", "network failed", "parse failed", or
+//  "feature disabled". Only AppLog sees failures, for diagnostics.
 //
 //  Concurrency: the project builds with SWIFT_DEFAULT_ACTOR_ISOLATION =
 //  MainActor, so this type (and every mutation of its cache/backoff state) is
@@ -42,8 +45,13 @@ final class CodexResetAnnouncementService {
     // MARK: - Properties
 
     private let forecastURL = URL(string: "https://codex-reset.com/api/forecast")!
-    private let timelineURL = URL(string: "https://codex-reset.com/api/timeline")!
     private let session: URLSession
+
+    /// 3.4.x 经默认 URLSession 写进 URLCache.shared 的两个端点
+    nonisolated private static let legacyCachedURLs = [
+        URL(string: "https://codex-reset.com/api/forecast")!,
+        URL(string: "https://codex-reset.com/api/timeline")!,
+    ]
 
     private var cachedAnnouncement: CodexResetAnnouncement?
     private var cachedAt: Date?
@@ -54,12 +62,23 @@ final class CodexResetAnnouncementService {
     // MARK: - Initialization
 
     init() {
-        let configuration = URLSessionConfiguration.default
+        let configuration = URLSessionConfiguration.ephemeral
         // 非关键路径的可选信息：超时收紧到 10s（其他服务是 30s），快速失败优于让用户等待
         configuration.timeoutIntervalForRequest = 10
         configuration.timeoutIntervalForResource = 10
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        // 请求到的原文不在本机留存：ephemeral 本身不落盘，再去掉它的内存缓存和 cookie 存储。
+        // 需要保留的只有解析后的那一个结构体
+        configuration.urlCache = nil
+        configuration.httpCookieStorage = nil
         self.session = URLSession(configuration: configuration)
+
+        // 清掉 3.4.x 留下的响应原文；没装过 3.4.x 时是空操作。
+        // 放到后台做：这是一次 SQLite 写，不值得占用启动时的主线程
+        Task.detached(priority: .utility) {
+            for url in Self.legacyCachedURLs {
+                URLCache.shared.removeCachedResponse(for: URLRequest(url: url))
+            }
+        }
     }
 
     // MARK: - Public
@@ -108,16 +127,18 @@ final class CodexResetAnnouncementService {
 
     private func performFetch() async -> CodexResetAnnouncement? {
         do {
-            let forecastData = try await fetchJSON(from: forecastURL)
+            let data = try await fetchJSON(from: forecastURL)
+            let forecast = try JSONDecoder().decode(CodexForecastResponse.self, from: data)
 
-            if CodexForecastQuietState.isQuiet(jsonData: forecastData) {
-                recordSuccess(announcement: nil)
-                return nil
+            if forecast.hasUnrecognizedSignal {
+                // 仍按「无预告」处理（失败静默契约），但必须留下痕迹：
+                // 3.4.x 读错数据源漏掉 2026-09-12 的预告时，日志里什么都没有
+                let kind = forecast.latestAlert?.kind ?? "nil"
+                let state = forecast.latestAlert?.state ?? "nil"
+                AppLog.warning(.api, "Codex reset announcement (Beta): forecast reports an official signal but latest_alert is missing or unrecognized (kind=\(kind), state=\(state)); the source schema may have changed")
             }
 
-            let timelineData = try await fetchJSON(from: timelineURL)
-            let timeline = try JSONDecoder().decode(CodexTimelineResponse.self, from: timelineData)
-            let announcement = timeline.activeAnnouncement(now: Date())
+            let announcement = forecast.activeAnnouncement(now: Date())
             recordSuccess(announcement: announcement)
             return announcement
         } catch {
@@ -128,9 +149,8 @@ final class CodexResetAnnouncementService {
         }
     }
 
-    /// 校验 HTTP 状态码后返回响应体。没有这层校验的话，源站返回 404/5xx 的错误页面时，
-    /// isQuiet 会因解析不出 JSON 而判定为「非安静」，进而白白发出第二个 46KB 的
-    /// timeline 请求——结果同样是失败，只是多打扰了源站一次。
+    /// 校验 HTTP 状态码后返回响应体，让源站的 404/5xx 错误页直接走失败路径（计入退避），
+    /// 而不是交给 JSONDecoder 报一个误导性的解码错误
     private func fetchJSON(from url: URL) async throws -> Data {
         let (data, response) = try await session.data(for: makeRequest(url: url))
         if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {

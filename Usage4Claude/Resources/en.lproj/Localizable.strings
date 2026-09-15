@@ -448,6 +448,8 @@
 "codex_announcement.title" = "Reset expected";
 "codex_announcement.tooltip_countdown" = "Reset expected: %@";
 "codex_announcement.tooltip_countdown_deadline" = "Reset due within: %@";
+"codex_announcement.tooltip_no_time" = "Reset announced, no time given";
+"codex_announcement.tooltip_overdue" = "Past the announced time, not yet confirmed";
 "codex_announcement.tooltip_footer" = "Beta · third-party data from codex-reset.com · click to open";
 "settings.general.codex_announcement_section" = "Codex Reset Announcement (Beta)";
 "settings.general.codex_announcement_enable" = "Show reset announcement badge";

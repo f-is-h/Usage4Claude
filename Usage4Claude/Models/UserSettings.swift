@@ -721,6 +721,10 @@ class UserSettings: ObservableObject {
         case deadline = "deadline"
         /// 只有起止窗口、无明确目标点（对应 target_kind 缺失）
         case range = "range"
+        /// 承诺了重置但没给时间（站点 83% 档，window 为 null）
+        case noTime = "no_time"
+        /// 已过声明时间、站点尚未确认（重置晚到）
+        case overdue = "overdue"
         /// 已过期的预告，用于验证徽章是否正确自动隐藏
         case expired = "expired"
 
@@ -730,6 +734,8 @@ class UserSettings: ObservableObject {
             case .center: return "预告：约 X 后（center）"
             case .deadline: return "预告：X 内（deadline）"
             case .range: return "预告：仅窗口（range）"
+            case .noTime: return "预告：未给时间"
+            case .overdue: return "预告：已过声明时间、未确认"
             case .expired: return "预告：已过期（验证自动隐藏）"
             }
         }
@@ -742,38 +748,44 @@ class UserSettings: ObservableObject {
             case .center:
                 let target = now.addingTimeInterval(3600 * 2.2)
                 return CodexResetAnnouncement(
-                    label: "around 2 PM PT (debug)",
                     summary: "[调试注入] Reset will land around 2pm PT.",
-                    windowEnd: target.addingTimeInterval(3600),
-                    target: target,
-                    kind: .center
+                    window: .init(label: "around 2 PM PT (debug)", end: target.addingTimeInterval(3600), target: target, kind: .center),
+                    postedAt: now.addingTimeInterval(-600)
                 )
             case .deadline:
                 let end = now.addingTimeInterval(1800)
                 return CodexResetAnnouncement(
-                    label: "within 30 minutes (debug)",
                     summary: "[调试注入] Full reset within 30 minutes.",
-                    windowEnd: end,
-                    target: end,
-                    kind: .deadline
+                    window: .init(label: "within 30 minutes (debug)", end: end, target: end, kind: .deadline),
+                    postedAt: now.addingTimeInterval(-600)
                 )
             case .range:
                 let end = now.addingTimeInterval(3600 * 5)
                 return CodexResetAnnouncement(
-                    label: "later today (debug)",
                     summary: "[调试注入] Another reset coming later today.",
-                    windowEnd: end,
-                    target: end,
-                    kind: .range
+                    window: .init(label: "later today (debug)", end: end, target: end, kind: .range),
+                    postedAt: now.addingTimeInterval(-600)
+                )
+            case .noTime:
+                return CodexResetAnnouncement(
+                    summary: "[调试注入] And of course, a reset is also coming.",
+                    window: nil,
+                    postedAt: now.addingTimeInterval(-600)
+                )
+            case .overdue:
+                let end = now.addingTimeInterval(-1800)
+                return CodexResetAnnouncement(
+                    summary: "[调试注入] Lands around 6pm PST today.",
+                    window: .init(label: "within an hour (debug, overdue)", end: end, target: end, kind: .deadline),
+                    postedAt: now.addingTimeInterval(-3600 * 3)
                 )
             case .expired:
+                // 发帖超过 maxAge 且窗口已结束，两个条件都过期才会隐藏
                 let end = now.addingTimeInterval(-60)
                 return CodexResetAnnouncement(
-                    label: "within an hour (debug, expired)",
                     summary: "[调试注入] 已过期，验证徽章是否正确隐藏。",
-                    windowEnd: end,
-                    target: end,
-                    kind: .deadline
+                    window: .init(label: "within an hour (debug, expired)", end: end, target: end, kind: .deadline),
+                    postedAt: now.addingTimeInterval(-CodexResetAnnouncement.maxAge - 3600)
                 )
             }
         }

@@ -448,6 +448,8 @@
 "codex_announcement.title" = "리셋 예고";
 "codex_announcement.tooltip_countdown" = "리셋 예정: %@";
 "codex_announcement.tooltip_countdown_deadline" = "늦어도 리셋: %@";
+"codex_announcement.tooltip_no_time" = "리셋 예고됨 (시간 미정)";
+"codex_announcement.tooltip_overdue" = "예고 시간이 지났지만 아직 확인되지 않음";
 "codex_announcement.tooltip_footer" = "Beta · 제3자 codex-reset.com 데이터 · 클릭하여 열기";
 "settings.general.codex_announcement_section" = "Codex 리셋 예고 (Beta)";
 "settings.general.codex_announcement_enable" = "리셋 예고 배지 표시";

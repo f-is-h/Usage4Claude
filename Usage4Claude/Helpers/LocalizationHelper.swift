@@ -121,6 +121,8 @@ enum L {
         static func tooltipCountdownDeadline(_ duration: String) -> String {
             String(format: localized("codex_announcement.tooltip_countdown_deadline"), duration)
         }
+        static var tooltipNoTime: String { localized("codex_announcement.tooltip_no_time") }
+        static var tooltipOverdue: String { localized("codex_announcement.tooltip_overdue") }
     }
     
     // MARK: - Settings Authentication

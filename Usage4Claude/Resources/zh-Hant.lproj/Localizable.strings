@@ -448,6 +448,8 @@
 "codex_announcement.title" = "重置預告";
 "codex_announcement.tooltip_countdown" = "預計重置：%@";
 "codex_announcement.tooltip_countdown_deadline" = "最遲重置：%@";
+"codex_announcement.tooltip_no_time" = "已公布重置，未提供時間";
+"codex_announcement.tooltip_overdue" = "已過預告時間，尚未確認";
 "codex_announcement.tooltip_footer" = "Beta · 第三方資料，來自 codex-reset.com · 點擊開啟";
 "settings.general.codex_announcement_section" = "Codex 重置預告（Beta）";
 "settings.general.codex_announcement_enable" = "顯示重置預告徽章";

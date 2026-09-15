@@ -448,6 +448,8 @@
 "codex_announcement.title" = "重置预告";
 "codex_announcement.tooltip_countdown" = "预计重置：%@";
 "codex_announcement.tooltip_countdown_deadline" = "最迟重置：%@";
+"codex_announcement.tooltip_no_time" = "已官宣重置，未给出时间";
+"codex_announcement.tooltip_overdue" = "已过预告时间，尚未确认";
 "codex_announcement.tooltip_footer" = "Beta · 第三方数据，来自 codex-reset.com · 点击打开";
 "settings.general.codex_announcement_section" = "Codex 重置预告（Beta）";
 "settings.general.codex_announcement_enable" = "显示重置预告徽章";

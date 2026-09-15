@@ -448,6 +448,8 @@
 "codex_announcement.title" = "Reset annoncé";
 "codex_announcement.tooltip_countdown" = "Reset prévu : %@";
 "codex_announcement.tooltip_countdown_deadline" = "Reset au plus tard : %@";
+"codex_announcement.tooltip_no_time" = "Reset annoncé, sans heure précise";
+"codex_announcement.tooltip_overdue" = "Heure annoncée dépassée, pas encore confirmé";
 "codex_announcement.tooltip_footer" = "Beta · données tierces de codex-reset.com · cliquer pour ouvrir";
 "settings.general.codex_announcement_section" = "Annonce de réinitialisation Codex (Beta)";
 "settings.general.codex_announcement_enable" = "Afficher le badge d'annonce de réinitialisation";

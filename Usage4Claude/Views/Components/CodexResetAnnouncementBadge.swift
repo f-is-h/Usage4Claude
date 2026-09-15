@@ -5,8 +5,8 @@
 //  Corner-badge pill anchored to the Codex ring's own top-right corner
 //  (positioned by the caller via .overlay(alignment: .topTrailing)), only
 //  while a real official reset announcement (Beta, from codex-reset.com) is
-//  pending. Absent 95%+ of the time by design — see project plan doc for why
-//  this intentionally does not show a probability number. Countdown/label
+//  pending. Absent 95%+ of the time by design — see CodexResetAnnouncement.swift
+//  for why this intentionally does not show a probability number. Countdown/label
 //  detail lives entirely in the hover tooltip; there's no room to show it
 //  persistently at this size.
 //
@@ -26,7 +26,7 @@ struct CodexResetAnnouncementBadge: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
-            // 跨过窗口结束点后自然消失，不依赖下一次抓取周期
+            // 跨过过期点后自然消失，不依赖下一次抓取周期
             if announcement.isActive(at: context.date) {
                 content
             }
@@ -54,13 +54,12 @@ struct CodexResetAnnouncementBadge: View {
     }
 
     /// 系统 tooltip 内容。按「结论 → 依据 → 出处」三段排版：
-    /// 第一行倒计时（用户最关心），第二行预告原文引述，第三行数据来源。
-    /// label 与 summary 常常高度重复（label 往往是 summary 的摘要），只取更完整的一条，
-    /// 避免出现两行说同一件事。
+    /// 第一行说时间（用户最关心），第二行预告原文引述，第三行数据来源。
+    /// 窗口 label 与摘要常常高度重复，只取更完整的摘要；摘要为空时才退回 label。
     private var tooltip: String {
-        var lines = [countdownLine]
+        var lines = [timingLine(at: Date())]
 
-        let quote = announcement.summary.isEmpty ? announcement.label : announcement.summary
+        let quote = announcement.summary.isEmpty ? (announcement.window?.label ?? "") : announcement.summary
         if !quote.isEmpty {
             lines.append("\u{201C}\(quote)\u{201D}")
         }
@@ -69,22 +68,32 @@ struct CodexResetAnnouncementBadge: View {
         return lines.joined(separator: "\n")
     }
 
-    /// 区分预告窗口的性质——这个差别对用户有实际意义：
-    /// `.deadline`（"within an hour" 型）表示不会晚于该时刻，确定性更高；
-    /// `.center`（"around 2 PM" 型）和 `.range`（只给了窗口）则是估计值。
-    private var countdownLine: String {
-        switch announcement.kind {
+    /// 四种情况对用户的意义不同：
+    /// - 没给时间（站点 83% 档）：只能说已官宣，不编造倒计时
+    /// - 已过声明时间、站点未确认：重置晚到很常见，不显示归零的倒计时
+    /// - `.deadline`（"within an hour" 型）表示不会晚于该时刻，措辞用「最迟」
+    /// - `.center` / `.range` 是估计值，措辞用「预计」
+    private func timingLine(at now: Date) -> String {
+        guard let window = announcement.window else {
+            return L.CodexAnnouncement.tooltipNoTime
+        }
+        if announcement.isOverdue(at: now) {
+            return L.CodexAnnouncement.tooltipOverdue
+        }
+
+        let duration = countdownDuration(to: window.target)
+        switch window.kind {
         case .deadline:
-            return L.CodexAnnouncement.tooltipCountdownDeadline(countdownDuration)
+            return L.CodexAnnouncement.tooltipCountdownDeadline(duration)
         case .center, .range:
-            return L.CodexAnnouncement.tooltipCountdown(countdownDuration)
+            return L.CodexAnnouncement.tooltipCountdown(duration)
         }
     }
 
     /// 复用 UsageData.LimitData 已有的极简时长格式化。注意它的输出自带
     /// 「还剩 / left / 残り」等语义，所以上面的模板必须是「标签：时长」形式，
     /// 不能写成「预计 %@ 后重置」——那样会拼出「预计 还剩 2小时 后重置」的病句。
-    private var countdownDuration: String {
-        UsageData.LimitData(percentage: 0, resetsAt: announcement.target).formattedCompactRemaining
+    private func countdownDuration(to target: Date) -> String {
+        UsageData.LimitData(percentage: 0, resetsAt: target).formattedCompactRemaining
     }
 }
