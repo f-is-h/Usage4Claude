@@ -43,13 +43,12 @@ class ClaudeAPIService {
     // MARK: - Initialization
 
     init() {
-        // 配置 URLSession
-        let configuration = URLSessionConfiguration.default
+        // 配置 URLSession（响应不写进 Cache.db，见 NetworkCachePolicy.swift）
+        let configuration = URLSessionConfiguration.uncached
         configuration.timeoutIntervalForRequest = 30  // 请求超时：30秒
         configuration.timeoutIntervalForResource = 60 // 资源超时：60秒
         configuration.httpCookieAcceptPolicy = .always
         configuration.httpShouldSetCookies = true
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData  // 不使用缓存
 
         self.session = URLSession(configuration: configuration)
     }
@@ -530,7 +529,6 @@ class ClaudeAPIService {
         var request = URLRequest(url: url)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(ClaudeOAuthConfig.betaHeader, forHTTPHeaderField: "anthropic-beta")
-        request.cachePolicy = .reloadIgnoringLocalCacheData
 
         session.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {

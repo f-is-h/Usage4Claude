@@ -54,7 +54,7 @@ final class ClaudeDiagnosticRunner: DiagnosticRunner {
         ClaudeAPIHeaderBuilder.applyHeaders(to: &request, organizationId: orgId, sessionKey: sessionKey)
 
         let startTime = Date()
-        let session = URLSession(configuration: .default)
+        let session = URLSession(configuration: .uncached)
 
         do {
             let (data, response) = try await session.data(for: request)
@@ -448,7 +448,7 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
         CodexAPIHeaderBuilder.applySessionHeaders(to: &request, sessionToken: sessionToken)
 
         let startTime = Date()
-        let session = URLSession(configuration: .default)
+        let session = URLSession(configuration: .uncached)
 
         do {
             let (data, response) = try await session.data(for: request)
@@ -546,7 +546,7 @@ final class CodexDiagnosticRunner: DiagnosticRunner {
         CodexAPIHeaderBuilder.applyUsageHeaders(to: &request, accessToken: accessToken)
 
         let startTime = Date()
-        let session = URLSession(configuration: .default)
+        let session = URLSession(configuration: .uncached)
 
         do {
             let (data, response) = try await session.data(for: request)

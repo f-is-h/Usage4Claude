@@ -52,9 +52,8 @@ final class CodexTokenRefreshCoordinator: NSObject {
         self.completion = completion
         self.refreshingFromToken = sessionToken
 
-        let config = URLSessionConfiguration.default
+        let config = URLSessionConfiguration.uncached
         config.timeoutIntervalForRequest = 30
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
         urlSession = URLSession(configuration: config)
 
         guard let url = URL(string: "https://chatgpt.com") else {

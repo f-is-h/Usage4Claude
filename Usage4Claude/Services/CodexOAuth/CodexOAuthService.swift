@@ -84,9 +84,9 @@ enum CodexOAuthService {
     // MARK: - Private
 
     private static let session: URLSession = {
-        let config = URLSessionConfiguration.default
+        // 不写 Cache.db：没有 no-store 的 POST 响应同样会落盘，这里的响应带着 refresh_token
+        let config = URLSessionConfiguration.uncached
         config.timeoutIntervalForRequest = 30
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
         return URLSession(configuration: config)
     }()
 

@@ -14,8 +14,8 @@
 //  every response body into the app's Cache.db (`reloadIgnoringLocalCacheData`
 //  only skips reading the cache, not storing into it). The session here is
 //  ephemeral with no URL cache and no cookie storage, so only the parsed struct
-//  survives, in memory. 3.4.x did use the default session, so init also purges
-//  the responses it left behind.
+//  survives, in memory. What 3.4.x's default session left behind is purged at
+//  launch by NetworkCachePolicy.
 //
 //  Cadence/backoff decisions live in CodexAnnouncementFetchPolicy.swift (pure,
 //  unit-tested); this class only owns the mutable state and network I/O.
@@ -47,12 +47,6 @@ final class CodexResetAnnouncementService {
     private let forecastURL = URL(string: "https://codex-reset.com/api/forecast")!
     private let session: URLSession
 
-    /// 3.4.x 经默认 URLSession 写进 URLCache.shared 的两个端点
-    nonisolated private static let legacyCachedURLs = [
-        URL(string: "https://codex-reset.com/api/forecast")!,
-        URL(string: "https://codex-reset.com/api/timeline")!,
-    ]
-
     private var cachedAnnouncement: CodexResetAnnouncement?
     private var cachedAt: Date?
     private var lastAttemptAt: Date?
@@ -71,14 +65,6 @@ final class CodexResetAnnouncementService {
         configuration.urlCache = nil
         configuration.httpCookieStorage = nil
         self.session = URLSession(configuration: configuration)
-
-        // 清掉 3.4.x 留下的响应原文；没装过 3.4.x 时是空操作。
-        // 放到后台做：这是一次 SQLite 写，不值得占用启动时的主线程
-        Task.detached(priority: .utility) {
-            for url in Self.legacyCachedURLs {
-                URLCache.shared.removeCachedResponse(for: URLRequest(url: url))
-            }
-        }
     }
 
     // MARK: - Public

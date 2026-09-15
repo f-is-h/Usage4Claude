@@ -60,6 +60,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     override init() {
         super.init()
+        // 先于 Sparkle 创建：共享 URLCache 的兜底要在任何组件用到它之前生效
+        NetworkCachePolicy.applyAtLaunch()
         AppDelegate.shared = self
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,

@@ -80,12 +80,13 @@ class CodexAPIService {
     // MARK: - Initialization
 
     init() {
-        let configuration = URLSessionConfiguration.default
+        // 响应不写进 Cache.db（见 NetworkCachePolicy.swift）。/api/auth/session 未登录时实测
+        // 不带任何缓存头，登录态响应里有 accessToken，不能指望服务端给 no-store
+        let configuration = URLSessionConfiguration.uncached
         configuration.timeoutIntervalForRequest = 30
         configuration.timeoutIntervalForResource = 60
         configuration.httpCookieAcceptPolicy = .always
         configuration.httpShouldSetCookies = true
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         self.session = URLSession(configuration: configuration)
     }
 
