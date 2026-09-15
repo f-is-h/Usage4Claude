@@ -186,7 +186,6 @@ nonisolated struct CodexExtraUsageData: Sendable {
     let balance: Decimal?
     let approxLocalMessages: [Int]?
     let approxCloudMessages: [Int]?
-    let visualPercentage: Double?
 
     init(
         hasCredits: Bool,
@@ -195,8 +194,7 @@ nonisolated struct CodexExtraUsageData: Sendable {
         spendControlReached: Bool,
         balance: Decimal?,
         approxLocalMessages: [Int]?,
-        approxCloudMessages: [Int]?,
-        visualPercentage: Double? = nil
+        approxCloudMessages: [Int]?
     ) {
         self.hasCredits = hasCredits
         self.unlimited = unlimited
@@ -205,7 +203,6 @@ nonisolated struct CodexExtraUsageData: Sendable {
         self.balance = balance
         self.approxLocalMessages = approxLocalMessages
         self.approxCloudMessages = approxCloudMessages
-        self.visualPercentage = visualPercentage
     }
 
     var enabled: Bool {
@@ -215,17 +212,27 @@ nonisolated struct CodexExtraUsageData: Sendable {
         return (balanceValue ?? 0) > 0
     }
 
+    /// 点数已耗尽。三个判据全部来自 API 的明确信号，不含任何推断。
+    var isExhausted: Bool {
+        if unlimited { return false }
+        if overageLimitReached || spendControlReached { return true }
+        guard let balanceValue else { return false }
+        return balanceValue <= 0
+    }
+
+    /// 「有余额 / 已耗尽」的二值信号，不是真实比例，**不要用于显示**。
+    ///
+    /// Codex credits 是预付钱包，服务端不返回任何限额字段，「已用百分之多少」必须先生造一个
+    /// 分母才算得出来——拿启动时刻、历史最高余额还是消耗速率当基准，都是我们编的。所以显示层
+    /// 不再碰它：菜单栏和详情行直接画余额点数（见 `menuBarBalanceText`）。
+    ///
+    /// 留下 0/100 是喂给 `NotificationManager` 的：100 让「点数用尽」在用户设的任意阈值下
+    /// 都能触发提醒，充值后回到 0 才会走 `NotificationDecisionEngine` 的重置分支清掉已通知
+    /// 记录——否则下次耗尽会被永久抑制。用户设的 75/90 等中间档对 Codex 不起作用，因为那些
+    /// 百分比从来就不存在。
     var percentage: Double? {
-        if let visualPercentage {
-            return visualPercentage
-        }
-        if overageLimitReached || spendControlReached {
-            return 100
-        }
-        if hasCredits || unlimited || (balanceValue ?? 0) > 0 {
-            return 0
-        }
-        return nil
+        if isExhausted { return 100 }
+        return enabled ? 0 : nil
     }
 
     /// 供 `CodexUsageData+Formatting.swift` 的 `L.*` 格式化属性复用，
@@ -233,6 +240,33 @@ nonisolated struct CodexExtraUsageData: Sendable {
     var balanceValue: Double? {
         guard let balance else { return nil }
         return NSDecimalNumber(decimal: balance).doubleValue
+    }
+
+    /// 图标里显示的余额文本，`nil` 表示没有余额可显示（调用方据此不画这一格）。
+    var menuBarBalanceText: String? {
+        Self.menuBarBalanceText(balanceValue)
+    }
+
+    /// 把点数余额压进图标能容纳的宽度。
+    ///
+    /// 菜单栏六边形里放得下 4 个字符左右（`ShapeIconRenderer.drawHexagonBadge` 会按可用
+    /// 宽度解出字号，字数越多字号越小）。Codex 点数是四五位数的量级，原样显示会小到看不清，
+    /// 所以大数必须缩写。
+    ///
+    /// 断点选在 1000 不是为了凑宽度：余额只有在快见底时才需要精确到个位（80 和 79 是两个
+    /// 不同的决定），高位时用户只需要知道数量级。精度需求和缩写断点恰好对齐。
+    static func menuBarBalanceText(_ balance: Double?) -> String? {
+        guard let balance else { return nil }
+        if balance <= 0 { return "0" }
+        // 不足 1 点向下取整会显示成 0，与真耗尽撞脸，单独标记
+        if balance < 1 { return "<1" }
+        if balance < 1000 { return String(Int(balance)) }
+        if balance < 10_000 {
+            // 一位小数的 "2.5k"：小数点很窄，视觉宽度约等于 3 个字符
+            let tenths = (balance / 100).rounded(.down) / 10
+            return String(format: "%.1fk", tenths)
+        }
+        return String(Int((balance / 1000).rounded(.down))) + "k"
     }
 
     static func parseBalance(_ value: String?) -> Decimal? {

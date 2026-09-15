@@ -482,11 +482,10 @@ class CodexAPIService {
     private func createMockData() -> CodexUsageData {
         let primaryResetAt = Date().addingTimeInterval(3600 * 2.5)
         let secondaryResetAt = Date().addingTimeInterval(3600 * 24 * 3.2)
-        let extraPercentage = Double(settings.debugCodexExtraUsagePercentage)
-        let debugCreditLimit = Decimal(1000)
-        let remainingRatio = max(0, (100 - extraPercentage) / 100.0)
-        let balance = debugCreditLimit * Decimal(remainingRatio)
-        let balanceValue = balance.doubleValue
+        // 真实 API 不返回额度上限，调试滑块直接给的就是余额点数（分段映射见 debugCodexCredits）
+        let credits = UserSettings.debugCodexCredits(forLevel: settings.debugCodexExtraCreditsLevel)
+        let balance = Decimal(credits)
+        let balanceValue = Double(credits)
 
         return CodexUsageData(
             primary: .init(percentage: Double(settings.debugCodexPrimaryPercentage), resetsAt: primaryResetAt),
@@ -494,12 +493,12 @@ class CodexAPIService {
             extraUsage: CodexExtraUsageData(
                 hasCredits: true,
                 unlimited: false,
-                overageLimitReached: extraPercentage >= 100,
+                // 耗尽交给余额归零来触发，和真实数据走同一条判定路径
+                overageLimitReached: false,
                 spendControlReached: false,
                 balance: balance,
                 approxLocalMessages: [Int(balanceValue / 14), Int(balanceValue / 2)],
-                approxCloudMessages: [Int(balanceValue / 34), Int(balanceValue / 25)],
-                visualPercentage: extraPercentage
+                approxCloudMessages: [Int(balanceValue / 34), Int(balanceValue / 25)]
             )
         )
     }

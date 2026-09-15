@@ -189,9 +189,10 @@ final class CodexUsageResponseTests: XCTestCase {
     }
 }
 
-/// `CodexExtraUsageData.parseBalance` / `.enabled` / `.percentage` — non-`@MainActor`
-/// pure logic (the `L.*`-dependent `formatted*` properties live in
-/// `CodexUsageData+Formatting.swift` and are out of scope for this SwiftPM target).
+/// `CodexExtraUsageData.parseBalance` / `.enabled` / `.isExhausted` / `.percentage` /
+/// `.menuBarBalanceText` — non-`@MainActor` pure logic (the `L.*`-dependent `formatted*`
+/// properties live in `CodexUsageData+Formatting.swift` and are out of scope for this
+/// SwiftPM target).
 final class CodexExtraUsageDataTests: XCTestCase {
 
     private func makeData(
@@ -199,8 +200,7 @@ final class CodexExtraUsageDataTests: XCTestCase {
         unlimited: Bool = false,
         overageLimitReached: Bool = false,
         spendControlReached: Bool = false,
-        balance: Decimal? = nil,
-        visualPercentage: Double? = nil
+        balance: Decimal? = nil
     ) -> CodexExtraUsageData {
         CodexExtraUsageData(
             hasCredits: hasCredits,
@@ -209,8 +209,7 @@ final class CodexExtraUsageDataTests: XCTestCase {
             spendControlReached: spendControlReached,
             balance: balance,
             approxLocalMessages: nil,
-            approxCloudMessages: nil,
-            visualPercentage: visualPercentage
+            approxCloudMessages: nil
         )
     }
 
@@ -247,15 +246,45 @@ final class CodexExtraUsageDataTests: XCTestCase {
         XCTAssertFalse(makeData().enabled)
     }
 
-    func testPercentageIs100WhenOverageLimitReached() {
+    // MARK: - isExhausted
+
+    func testExhaustedWhenOverageLimitReached() {
+        XCTAssertTrue(makeData(overageLimitReached: true).isExhausted)
+    }
+
+    func testExhaustedWhenSpendControlReached() {
+        XCTAssertTrue(makeData(spendControlReached: true).isExhausted)
+    }
+
+    func testExhaustedWhenBalanceIsZero() {
+        XCTAssertTrue(makeData(hasCredits: true, balance: 0).isExhausted)
+    }
+
+    func testNotExhaustedWithPositiveBalance() {
+        XCTAssertFalse(makeData(hasCredits: true, balance: 1).isExhausted)
+    }
+
+    func testUnlimitedIsNeverExhausted() {
+        // 无限额度即使带着 overage 标志也不该算耗尽
+        XCTAssertFalse(makeData(unlimited: true, overageLimitReached: true).isExhausted)
+    }
+
+    func testNotExhaustedWhenBalanceUnknown() {
+        // 余额字段缺失不等于用光了，保守判定为未耗尽
+        XCTAssertFalse(makeData(hasCredits: true).isExhausted)
+    }
+
+    // MARK: - percentage
+
+    func testPercentageIs100WhenExhausted() {
         XCTAssertEqual(makeData(overageLimitReached: true).percentage, 100)
-    }
-
-    func testPercentageIs100WhenSpendControlReached() {
         XCTAssertEqual(makeData(spendControlReached: true).percentage, 100)
+        XCTAssertEqual(makeData(hasCredits: true, balance: 0).percentage, 100)
     }
 
-    func testPercentageIsZeroWhenHasCreditsOrUnlimitedOrPositiveBalance() {
+    /// 还有余额时必须回到 0 而不是 nil：`NotificationDecisionEngine.evaluate` 对 nil 直接
+    /// 早退，不会清掉已通知记录，那样「耗尽→提醒→充值→再耗尽」第二次就不提醒了
+    func testPercentageIsZeroWhileCreditsRemain() {
         XCTAssertEqual(makeData(hasCredits: true).percentage, 0)
         XCTAssertEqual(makeData(unlimited: true).percentage, 0)
         XCTAssertEqual(makeData(balance: 1).percentage, 0)
@@ -265,7 +294,51 @@ final class CodexExtraUsageDataTests: XCTestCase {
         XCTAssertNil(makeData().percentage)
     }
 
-    func testVisualPercentageOverridesEverything() {
-        XCTAssertEqual(makeData(overageLimitReached: true, visualPercentage: 42).percentage, 42)
+    // MARK: - menuBarBalanceText
+
+    func testBalanceTextNilWhenBalanceUnknown() {
+        XCTAssertNil(CodexExtraUsageData.menuBarBalanceText(nil))
+    }
+
+    func testBalanceTextUnderOneThousandIsExact() {
+        // 余额低时精度才有意义，这一段不缩写
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(0), "0")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(80), "80")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(250), "250")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(999.9), "999")
+    }
+
+    func testBalanceTextBelowOneIsNotRoundedToZero() {
+        // 向下取整会显示成 0，与真耗尽撞脸
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(0.07), "<1")
+    }
+
+    func testBalanceTextNegativeIsZero() {
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(-5), "0")
+    }
+
+    func testBalanceTextThousandsUseOneDecimal() {
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(1000), "1.0k")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(2500), "2.5k")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(2599), "2.5k")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(9999), "9.9k")
+    }
+
+    func testBalanceTextTenThousandsDropDecimal() {
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(10_000), "10k")
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(25_000), "25k")
+    }
+
+    /// 图标里只放得下约 3 个字符，缩写后不能超
+    func testBalanceTextStaysWithinIconWidth() {
+        for balance in [0.5, 1, 99, 250, 999, 1000, 2500, 9999, 10_000, 25_000, 120_000] {
+            let text = CodexExtraUsageData.menuBarBalanceText(balance) ?? ""
+            XCTAssertLessThanOrEqual(text.count, 4, "\(balance) 渲染成了过宽的 \"\(text)\"")
+        }
+    }
+
+    func testBalanceTextIsLocaleInvariant() {
+        // String(format:) 不带 locale，小数点恒为 "."，德/法环境下不会变成 "2,5k"
+        XCTAssertEqual(CodexExtraUsageData.menuBarBalanceText(2500), "2.5k")
     }
 }

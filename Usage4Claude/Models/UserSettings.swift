@@ -649,12 +649,32 @@ class UserSettings: ObservableObject {
         }
     }
 
-    /// 调试用的 Codex Extra Usage 百分比（0-100）
-    @Published var debugCodexExtraUsagePercentage: Double {
+    /// 调试用的 Codex Extra Usage 档位（0-100）。不是百分比——Codex credits 没有限额，
+    /// 这个值经 `debugCodexCredits(forLevel:)` 映射成模拟余额点数。
+    /// UserDefaults key 沿用旧名，避免换键后大家的调试档位被重置
+    @Published var debugCodexExtraCreditsLevel: Double {
         didSet {
-            defaults.set(debugCodexExtraUsagePercentage, forKey: "debugCodexExtraUsagePercentage")
+            defaults.set(debugCodexExtraCreditsLevel, forKey: "debugCodexExtraUsagePercentage")
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
+    }
+
+    /// 调试档位 → 模拟余额点数。
+    ///
+    /// 分段线性，三个分界刻意落在四种显示形态的边界上——个位数、三位精确值、
+    /// 带小数的 k 缩写、整数 k 缩写各占滑块四分之一，拖一遍就能把菜单栏徽章的
+    /// 每种排版都验过去。线性铺到 25000 的话，前 100 点会挤在滑块最左边 0.4% 里
+    static func debugCodexCredits(forLevel level: Double) -> Int {
+        let t = min(100, max(0, level))
+        let credits: Double
+        switch t {
+        case ..<25:  credits = t / 25 * 100                     // 0 → 100
+        case ..<50:  credits = 100 + (t - 25) / 25 * 900        // 100 → 1000
+        case ..<75:  credits = 1000 + (t - 50) / 25 * 9000      // 1000 → 10000
+        default:     credits = 10000 + (t - 75) / 25 * 15000    // 10000 → 25000
+        }
+        // 真实接口给的点数是整数，模拟数据也取整，省得 Decimal(Double) 带出浮点噪声
+        return Int(credits.rounded())
     }
 
     /// 调试用的 Extra Usage 是否启用
@@ -988,7 +1008,7 @@ class UserSettings: ObservableObject {
         self.debugSonnetPercentage = defaults.object(forKey: "debugSonnetPercentage") as? Double ?? 88.0
         self.debugCodexPrimaryPercentage = defaults.object(forKey: "debugCodexPrimaryPercentage") as? Double ?? 42.0
         self.debugCodexSecondaryPercentage = defaults.object(forKey: "debugCodexSecondaryPercentage") as? Double ?? 58.0
-        self.debugCodexExtraUsagePercentage = defaults.object(forKey: "debugCodexExtraUsagePercentage") as? Double ?? 35.0
+        self.debugCodexExtraCreditsLevel = defaults.object(forKey: "debugCodexExtraUsagePercentage") as? Double ?? 35.0
         self.debugExtraUsageEnabled = defaults.object(forKey: "debugExtraUsageEnabled") as? Bool ?? true
         self.debugExtraUsageUsed = defaults.object(forKey: "debugExtraUsageUsed") as? Double ?? 3050.0
         self.debugExtraUsageLimit = defaults.object(forKey: "debugExtraUsageLimit") as? Int ?? 5000

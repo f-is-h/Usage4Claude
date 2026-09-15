@@ -169,19 +169,20 @@ struct GeneralSettingsDebugSection: View {
                                 .tint(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
                         }
 
-                        // Codex Extra Usage
+                        // Codex Extra Usage：没有限额可言，滑块调的是余额点数本身
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text("Codex Extra Usage 百分比：")
+                                Text("Codex Extra Usage 点数：")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text("\(Int(settings.debugCodexExtraUsagePercentage))%")
+                                Text("\(UserSettings.debugCodexCredits(forLevel: settings.debugCodexExtraCreditsLevel)) 点")
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
                             }
-                            Slider(value: $settings.debugCodexExtraUsagePercentage, in: 0...100, step: 1)
+                            // 步长 0.5：最低一段每格 2 点，个位数余额也调得出来
+                            Slider(value: $settings.debugCodexExtraCreditsLevel, in: 0...100, step: 0.5)
                                 .tint(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
                         }
                     }

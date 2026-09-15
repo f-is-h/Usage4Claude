@@ -244,15 +244,12 @@ class MenuBarIconRenderer {
                 let percentage = codex.secondary?.percentage ?? (showPlaceholder ? 0 : nil)
                 return percentage.flatMap { createCodexIcon(type: type, percentage: $0, isMonochrome: isMonochrome, button: button) }
             case .codexExtraUsage:
-                let percentage: Double?
-                if let extra = codex.extraUsage, extra.enabled {
-                    percentage = extra.percentage
-                } else if showPlaceholder {
-                    percentage = 0
-                } else {
-                    percentage = nil
+                // 额外用量不走 createCodexIcon：它没有百分比可画，只有余额点数
+                guard let extra = codex.extraUsage, extra.enabled, let text = Self.codexExtraUsageBadgeText(extra) else {
+                    guard showPlaceholder else { return nil }
+                    return createCodexExtraUsageIcon(text: "-", isExhausted: false, isMonochrome: isMonochrome, button: button)
                 }
-                return percentage.flatMap { createCodexIcon(type: type, percentage: $0, isMonochrome: isMonochrome, button: button) }
+                return createCodexExtraUsageIcon(text: text, isExhausted: extra.isExhausted, isMonochrome: isMonochrome, button: button)
             default:
                 return nil
             }
@@ -661,13 +658,34 @@ class MenuBarIconRenderer {
             let color = UsageColorScheme.codexSecondaryColorAdaptive(percentage, for: button)
             return createCircleImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
 
-        case .codexExtraUsage:
-            let color = UsageColorScheme.codexExtraUsageColorAdaptive(percentage, for: button)
-            return ShapeIconRenderer.createHexagonIcon(state: displayState(usedPercentage: percentage), canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground, colorOverride: color)
-
         default:
             return nil
         }
+    }
+
+    /// Codex 额外用量徽章（六边形 + 余额点数）。
+    ///
+    /// 和另外两个 Codex 指标不同，它不画进度弧——credits 是没有限额的预付钱包，画不出
+    /// 诚实的比例，详见 `CodexExtraUsageData.percentage` 的注释。
+    func createCodexExtraUsageIcon(
+        text: String,
+        isExhausted: Bool,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage? {
+        ShapeIconRenderer.createHexagonBadgeIcon(
+            text: text,
+            canvasSize: metricIconSize,
+            isMonochrome: isMonochrome,
+            color: UsageColorScheme.codexExtraUsageBadgeColorAdaptive(isExhausted: isExhausted, for: button),
+            removeBackground: settings.iconStyleMode == .colorTranslucent
+        )
+    }
+
+    /// 徽章里显示的文本：无限额度用 ∞，其余显示余额点数（大数缩写成 2.5k）
+    static func codexExtraUsageBadgeText(_ extra: CodexExtraUsageData) -> String? {
+        if extra.unlimited { return "∞" }
+        return extra.menuBarBalanceText
     }
 
     /// 创建轻量分隔线图标（用于"不显示图标"模式）

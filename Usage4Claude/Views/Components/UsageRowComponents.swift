@@ -112,21 +112,67 @@ struct MiniProgressIcon: View {
     let type: LimitType
     let color: Color
     let percentage: Double
+    /// 非 nil 时改画这段文本而不是百分比。Codex 额外用量用它显示余额点数——
+    /// 那是个没有限额的预付钱包，算不出诚实的百分比
+    var textOverride: String? = nil
+    /// 余额徽章样式（Codex 额外用量）：边框画得极细，把内部空间让给可能有 4 位的点数。
+    /// 这一格画的是余额不是进度，不需要进度图标那样的线宽
+    var badge: Bool = false
     let size: CGFloat = 22
+
+    /// 与 `ShapeIconRenderer.hexBadgeKernRatio` 保持一致
+    private static let badgeKernRatio: CGFloat = -0.05
+
+    private var displayText: String {
+        textOverride ?? "\(Int(percentage))"
+    }
 
     var body: some View {
         Canvas { context, canvasSize in
-            let lineWidth: CGFloat = 2.2
+            // 徽章边框细到一根 Retina 像素，和菜单栏图标同一套做法
+            let lineWidth: CGFloat = badge ? 0.5 : 2.2
             let rect = CGRect(origin: .zero, size: canvasSize)
             let fullPath = IconShapePaths.pathForLimitType(type, in: rect)
 
             // 1. 形状边框（彩色）
             context.stroke(fullPath, with: .color(color), lineWidth: lineWidth)
 
-            // 2. 百分比数字（居中）
-            let fontSize = percentage >= 100 ? canvasSize.width * 0.28 : canvasSize.width * 0.38
-            let text = Text("\(Int(percentage))")
+            // 2. 数字（居中）——进度版按字符数分两档，徽章版统一从大档起步
+            let baseFontSize = (badge || displayText.count < 3) ? canvasSize.width * 0.38 : canvasSize.width * 0.28
+            // 六边形在 IconShapePaths 里被 inset 3pt，实际直径比画布窄不少，
+            // 可用宽度必须按形状本身算，否则 "2.5k" 会直接压出边框
+            let shapeWidth: CGFloat
+            switch type {
+            case .extraUsage, .codexExtraUsage:
+                shapeWidth = min(canvasSize.width, canvasSize.height) - 6
+            default:
+                shapeWidth = canvasSize.width
+            }
+            // 徽章版的字距为负，收紧后同样宽度能放更大的字
+            let kerning = badge ? baseFontSize * Self.badgeKernRatio : 0
+            let measured = context
+                .resolve(Text(displayText).font(.system(size: baseFontSize, weight: .bold)).kerning(kerning))
+                .measure(in: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude))
+
+            let fontSize: CGFloat
+            if badge {
+                // 与 ShapeIconRenderer.drawHexagonBadge 同一个几何解：六边形在文字高度带上
+                // 收窄 0.577·capHeight，描边每侧再吃掉 0.577 个线宽
+                let capRatio = NSFont.systemFont(ofSize: baseFontSize, weight: .bold).capHeight / baseFontSize
+                // SwiftUI 的 kerning 不像 AppKit 的 .kern 那样在末字符后也加一份，
+                // 测出来就是视觉宽度，不用像 ShapeIconRenderer 那边补偿尾随字距
+                let unitWidth = measured.width / baseFontSize
+                fontSize = min(baseFontSize, (shapeWidth - 1.155 * lineWidth) / (unitWidth + 0.577 * capRatio))
+            } else {
+                let usableWidth = (shapeWidth - lineWidth * 2) * 0.95
+                fontSize = measured.width > usableWidth
+                    ? max(baseFontSize * 0.5, baseFontSize * usableWidth / measured.width)
+                    : baseFontSize
+            }
+
+            let text = Text(displayText)
                 .font(.system(size: fontSize, weight: .bold))
+                .kerning(badge ? fontSize * Self.badgeKernRatio : 0)
                 .foregroundColor(color)
             context.draw(text, at: CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2))
         }
@@ -198,7 +244,13 @@ struct UnifiedLimitRow: View {
     var body: some View {
         HStack(spacing: 8) {
             // 图标（含百分比数字和进度弧）
-            MiniProgressIcon(type: type, color: iconColor, percentage: percentageValue ?? 0)
+            MiniProgressIcon(
+                type: type,
+                color: iconColor,
+                percentage: percentageValue ?? 0,
+                textOverride: iconTextOverride,
+                badge: iconTextOverride != nil
+            )
 
             // 限制类型名称
             Text(limitName)
@@ -270,8 +322,18 @@ struct UnifiedLimitRow: View {
         case .codexSecondary:
             return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
         case .codexExtraUsage:
-            return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)    // #F59E0B
+            // 只有「充足」和「已耗尽」两色，没有中间档——见 codexExtraUsageBadgeColor
+            return UsageColorScheme.codexExtraUsageBadgeColorSwiftUI(
+                isExhausted: codexData?.extraUsage?.isExhausted ?? false
+            )
         }
+    }
+
+    /// Codex 额外用量的图标里画余额点数，不画百分比
+    private var iconTextOverride: String? {
+        guard type == .codexExtraUsage, weeklyModelOverride == nil else { return nil }
+        guard let extra = codexData?.extraUsage, extra.enabled else { return "-" }
+        return MenuBarIconRenderer.codexExtraUsageBadgeText(extra) ?? "-"
     }
 
     private var percentageValue: Double? {

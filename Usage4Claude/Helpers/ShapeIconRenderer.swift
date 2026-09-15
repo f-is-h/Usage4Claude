@@ -42,6 +42,12 @@ class ShapeIconRenderer {
     private static let hexProgressWidthRatio: CGFloat = 2.5 / 16.0
     private static let hexFontRatio: CGFloat = 7.2 / 16.0
     private static let hexFontRatioAtFull: CGFloat = 5.0 / 16.0
+    /// 余额徽章的边框：细到 Retina 上的一根物理像素（最小画布下正好 0.5pt = @2x 的 1px），
+    /// 把内部空间尽量让给数字。非 Retina 屏上会淡，但那类设备已经基本绝迹
+    private static let hexBadgeBorderWidthRatio: CGFloat = 0.5 / 16.0
+    /// 余额徽章的字距：负值收紧，4 位点数才塞得进六边形。实测再负到 -0.08，
+    /// "9.9k" 的数字和小数点就开始粘连了
+    private static let hexBadgeKernRatio: CGFloat = -0.05
 
     /// 绘制区尺寸相对画布内缩后的结果，供入口方法统一使用
     private static func drawingRect(in size: NSSize) -> NSRect {
@@ -597,5 +603,89 @@ class ShapeIconRenderer {
         image.unlockFocus()
         image.isTemplate = isMonochrome
         return image
+    }
+
+    /// 六边形徽章：整圈描边 + 居中文本，不画进度弧。
+    ///
+    /// 用于 Codex 额外用量——那是个没有限额的预付钱包，画不出诚实的进度，所以这里的六边形
+    /// 只承担「这一格是额外用量」的标识，信息全在中间的余额点数上。
+    static func createHexagonBadgeIcon(text: String, canvasSize: CGFloat, isMonochrome: Bool, color: NSColor, removeBackground: Bool = false) -> NSImage {
+        let size = NSSize(width: canvasSize, height: canvasSize)
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        let center = NSPoint(x: size.width / 2, y: size.height / 2)
+        let diameter = size.width * hexagonDiameterRatio
+        drawHexagonBadge(center: center, size: diameter, text: text, isMonochrome: isMonochrome, color: color, removeBackground: removeBackground)
+
+        image.unlockFocus()
+        image.isTemplate = isMonochrome
+        return image
+    }
+
+    /// - Parameters:
+    ///   - center: 中心点
+    ///   - size: 六边形直径
+    ///   - text: 居中显示的文本（余额点数，可能是 "2.5k" 这样的缩写）
+    ///   - color: 描边色；单色模式下忽略，改用 `controlTextColor`
+    private static func drawHexagonBadge(center: NSPoint, size: CGFloat, text: String, isMonochrome: Bool, color: NSColor, removeBackground: Bool) {
+        let radius = size / 2
+
+        let hexagonPath = NSBezierPath()
+        for i in 0..<6 {
+            let angle = CGFloat(i) * CGFloat.pi / 3.0  // 保持平顶方向
+            let point = NSPoint(x: center.x + radius * cos(angle), y: center.y + radius * sin(angle))
+            if i == 0 {
+                hexagonPath.move(to: point)
+            } else {
+                hexagonPath.line(to: point)
+            }
+        }
+        hexagonPath.close()
+
+        if !removeBackground && !isMonochrome {
+            NSColor.white.withAlphaComponent(0.5).setFill()
+            hexagonPath.fill()
+        }
+
+        // 极细边：这一格画的是余额不是进度，不需要进度弧那样的视觉重量；边越细，
+        // 留给数字的横向空间越多——点数可能有 4 位。实心填充试过，单色模式下只能靠
+        // 镂空显字（template 只有前景色和透明两种值），一整块纯色在菜单栏里太重
+        let strokeWidth = size * hexBadgeBorderWidthRatio
+        (isMonochrome ? NSColor.controlTextColor : color).setStroke()
+        hexagonPath.lineWidth = strokeWidth
+        hexagonPath.lineJoinStyle = .round
+        hexagonPath.stroke()
+
+        // 字号直接解出来，不按字符数硬分档也不迭代收缩。可用宽度不是六边形的直径：
+        // 平顶六边形在文字所在的高度带上会收窄，y = ±capHeight/2 处只剩
+        // size - 0.577·capHeight；描边沿 30° 斜边内收，每侧再吃掉 0.577 个线宽。
+        // 令 f·unitWidth 等于这个随 f 变化的可用宽度，解一元一次方程即可。
+        // （描边粗时 size - 2·lineWidth 恰好能糊弄过去，细到 0.5pt 就补偿不足、文字会压线）
+        let baseFontSize = size * hexFontRatio
+        let capRatio = NSFont.systemFont(ofSize: baseFontSize, weight: .bold).capHeight / baseFontSize
+        // 测量宽度里含尾随字距，视觉宽度要把它加回来
+        let unitWidth = text.size(withAttributes: badgeTextAttributes(fontSize: baseFontSize)).width / baseFontSize - hexBadgeKernRatio
+        let fontSize = min(baseFontSize, (size - 1.155 * strokeWidth) / (unitWidth + 0.577 * capRatio))
+
+        let attributes = badgeTextAttributes(fontSize: fontSize)
+        let textSize = text.size(withAttributes: attributes)
+        let kern = fontSize * hexBadgeKernRatio
+        let textRect = NSRect(
+            // 尾随字距让测量宽度比视觉宽度窄一个 kern，居中要补回一半
+            x: center.x - textSize.width / 2 + kern / 2,
+            y: center.y - textSize.height / 2,
+            width: textSize.width - kern,
+            height: textSize.height
+        )
+        text.draw(in: textRect, withAttributes: attributes)
+    }
+
+    private static func badgeTextAttributes(fontSize: CGFloat) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
+            .kern: fontSize * hexBadgeKernRatio,
+            .foregroundColor: NSColor.black
+        ]
     }
 }

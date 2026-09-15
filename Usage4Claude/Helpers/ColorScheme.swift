@@ -285,39 +285,25 @@ enum UsageColorScheme {
         }
     }
 
-    // MARK: - Codex Extra Usage 配色（金色 credits → 深金色 → 最深琥珀，六边形）
+    // MARK: - Codex Extra Usage 配色（金色 credits，六边形）
 
-    /// 根据 Codex Extra Usage 使用百分比返回 NSColor
-    /// - Note: Codex credits 的真实 API 只有余额/触顶状态；调试模式会使用百分比驱动视觉预览。
-    static func codexExtraUsageColor(_ percentage: Double) -> NSColor {
-        if percentage < 70 {
-            return NSColor(red: 245/255.0, green: 158/255.0, blue: 11/255.0, alpha: 1.0)  // #F59E0B
-        } else if percentage < 90 {
-            return NSColor(red: 217/255.0, green: 119/255.0, blue: 6/255.0, alpha: 1.0)   // #D97706
-        } else {
-            return NSColor(red: 120/255.0, green: 53/255.0, blue: 15/255.0, alpha: 1.0)   // #78350F 最深琥珀
-        }
+    /// Codex 点数徽章配色：只有「充足」和「已耗尽」两种。
+    ///
+    /// 刻意不做 70%/90% 那样的渐变档位——点数没有限额，任何「余额低到该警惕了」的分界线
+    /// 都是我们拍的，$10 算低还是 $5 算低毫无依据。耗尽则不同，它是 API 明确返回的事实
+    /// （`overage_limit_reached` / `spend_control.reached` / 余额归零），标红只是照实画。
+    static func codexExtraUsageBadgeColor(isExhausted: Bool) -> NSColor {
+        isExhausted ? .systemRed : NSColor(red: 245/255.0, green: 158/255.0, blue: 11/255.0, alpha: 1.0)  // #F59E0B
     }
 
-    /// 根据 Codex Extra Usage 使用百分比返回 SwiftUI Color
-    static func codexExtraUsageColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
-        if percentage < 70 {
-            return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0).opacity(opacity)
-        } else if percentage < 90 {
-            return Color(red: 217/255.0, green: 119/255.0, blue: 6/255.0).opacity(opacity)
-        } else {
-            return Color(red: 120/255.0, green: 53/255.0, blue: 15/255.0).opacity(opacity)
-        }
+    static func codexExtraUsageBadgeColorAdaptive(isExhausted: Bool, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = codexExtraUsageBadgeColor(isExhausted: isExhausted)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
     }
 
-    /// 根据 Codex Extra Usage 使用百分比返回自适应 NSColor
-    static func codexExtraUsageColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = codexExtraUsageColor(percentage)
-        if isDarkMode(for: statusButton) {
-            return baseColor.adjustedForDarkMode()
-        } else {
-            return baseColor
-        }
+    /// 详情面板用的 SwiftUI 版本，与菜单栏徽章同色
+    static func codexExtraUsageBadgeColorSwiftUI(isExhausted: Bool) -> Color {
+        isExhausted ? .red : Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
     }
 
     // MARK: - 备选配色方案（注释保留，方便切换测试）

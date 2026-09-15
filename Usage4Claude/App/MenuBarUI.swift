@@ -777,9 +777,10 @@ class MenuBarUI {
                 }
 
                 if let extraUsage = codex.extraUsage {
-                    key += "_cxe\(extraUsage.enabled ? 1 : 0)"
-                    if let percentage = extraUsage.percentage {
-                        key += "_\(Int(percentage))"
+                    // 额外用量画的是余额点数而非百分比，进 key 的也必须是那段文本
+                    key += "_cxe\(extraUsage.enabled ? 1 : 0)_\(extraUsage.isExhausted ? 1 : 0)"
+                    if let text = MenuBarIconRenderer.codexExtraUsageBadgeText(extraUsage) {
+                        key += "_\(text)"
                     }
                 } else {
                     key += "_cxenil"
@@ -815,7 +816,10 @@ class MenuBarUI {
         if let codex = codexUsageData {
             if let p = codex.primary { key += "_cxp\(Int(p.percentage))" }
             if let s = codex.secondary { key += "_cxs\(Int(s.percentage))" }
-            if let e = codex.extraUsage?.percentage { key += "_cxe\(Int(e))" }
+            // enabled 要一起进 key：这一格在未启用时根本不画，只看余额文本会漏掉这个变化
+            if let extra = codex.extraUsage, extra.enabled, let text = MenuBarIconRenderer.codexExtraUsageBadgeText(extra) {
+                key += "_cxe\(text)_\(extra.isExhausted ? 1 : 0)"
+            }
         }
 
         if hasUpdate {
