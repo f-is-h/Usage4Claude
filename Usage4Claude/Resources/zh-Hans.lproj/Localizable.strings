@@ -399,7 +399,14 @@
 "notification.section" = "通知";
 "notification.hint" = "用量达到阈值或重置时发送通知";
 "notification.enable" = "启用用量通知";
-"notification.description" = "当任意限制达到 90%%，或用量重置时，发送系统通知。";
+"notification.description" = "Claude 与 Codex 共用这些阈值，每周限制包含所有模型的周限制。";
+"notification.threshold_weekly" = "每周限制";
+"notification.threshold_single" = "%d%% 时提醒";
+"notification.threshold_two" = "第一次 %d%% · 第二次 %d%%";
+"notification.threshold_first" = "第一次提醒";
+"notification.threshold_second" = "第二次提醒";
+"notification.threshold_reminder" = "提醒";
+"notification.model_weekly_limit" = "%@ 7天限制";
 "notification.warning_title" = "用量警告";
 "notification.warning_body" = "%@ 已达到 %d%% 用量";
 "notification.reset_title" = "用量已重置";

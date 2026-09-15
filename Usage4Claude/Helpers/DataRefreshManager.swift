@@ -204,9 +204,7 @@ class DataRefreshManager: ObservableObject {
                     self.errorRequiresAuthAction = false
                     monitoringUtilizations[.claude] = data.percentage
 
-                    if self.settings.notificationsEnabled {
-                        NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
-                    }
+                    NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
 
                     let newResetsAt = data.resetsAt
                     let hasResetChanged = hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt)
@@ -549,9 +547,7 @@ class DataRefreshManager: ObservableObject {
                 self.usageData = data
                 self.errorMessage = nil
                 self.errorRequiresAuthAction = false
-                if self.settings.notificationsEnabled {
-                    NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
-                }
+                NotificationManager.shared.checkAndNotify(usageData: data, previousData: previousData)
                 self.settings.updateSmartMonitoringMode(providerUtilizations: [.claude: data.percentage])
                 let newResetsAt = data.resetsAt
                 if hasResetTimeChanged(from: self.lastResetsAt, to: newResetsAt) {
@@ -609,9 +605,7 @@ class DataRefreshManager: ObservableObject {
         if let utilization = monitoringUtilization(for: data) {
             settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
         }
-        if settings.notificationsEnabled {
-            NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
-        }
+        NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
         let newCodexResetsAt = data.primary?.resetsAt
         if hasResetTimeChanged(from: lastCodexResetsAt, to: newCodexResetsAt) {
             cancelCodexResetVerification()

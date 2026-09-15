@@ -399,7 +399,14 @@
 "notification.section" = "Notifications";
 "notification.hint" = "Get notified when usage reaches threshold or resets";
 "notification.enable" = "Enable Usage Notifications";
-"notification.description" = "Receive a notification when any limit reaches 90%%, or when usage resets.";
+"notification.description" = "Thresholds are shared by Claude and Codex, and Weekly Limits include every per-model weekly limit.";
+"notification.threshold_weekly" = "Weekly Limits";
+"notification.threshold_single" = "Notify at %d%%";
+"notification.threshold_two" = "First at %d%% · Second at %d%%";
+"notification.threshold_first" = "First reminder";
+"notification.threshold_second" = "Second reminder";
+"notification.threshold_reminder" = "Reminder";
+"notification.model_weekly_limit" = "7D %@ Limit";
 "notification.warning_title" = "Usage Warning";
 "notification.warning_body" = "%@ has reached %d%% usage";
 "notification.reset_title" = "Usage Reset";

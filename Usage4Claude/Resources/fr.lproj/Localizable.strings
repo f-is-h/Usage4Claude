@@ -399,7 +399,14 @@
 "notification.section" = "Notifications";
 "notification.hint" = "Être notifié lorsque l'utilisation atteint un seuil ou est réinitialisée";
 "notification.enable" = "Activer les notifications d'utilisation";
-"notification.description" = "Recevoir une notification lorsqu'une limite atteint 90 %%, ou lorsque l'utilisation est réinitialisée.";
+"notification.description" = "Les seuils sont communs à Claude et Codex, et les limites hebdomadaires incluent toutes les limites hebdomadaires par modèle.";
+"notification.threshold_weekly" = "Limites hebdomadaires";
+"notification.threshold_single" = "Notifier à %d %%";
+"notification.threshold_two" = "Premier à %d %% · Second à %d %%";
+"notification.threshold_first" = "Premier rappel";
+"notification.threshold_second" = "Second rappel";
+"notification.threshold_reminder" = "Rappel";
+"notification.model_weekly_limit" = "Limite %@ 7 j";
 "notification.warning_title" = "Avertissement d'utilisation";
 "notification.warning_body" = "%@ a atteint %d %% d'utilisation";
 "notification.reset_title" = "Réinitialisation de l'utilisation";

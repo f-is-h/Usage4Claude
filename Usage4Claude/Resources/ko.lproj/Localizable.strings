@@ -399,7 +399,14 @@
 "notification.section" = "알림";
 "notification.hint" = "사용량이 임계값에 도달하거나 재설정될 때 알림";
 "notification.enable" = "사용량 알림 활성화";
-"notification.description" = "제한이 90%%에 도달하거나 사용량이 재설정될 때 시스템 알림을 보냅니다.";
+"notification.description" = "임계값은 Claude와 Codex에 공통으로 적용되며, 주간 제한에는 모델별 주간 제한이 모두 포함됩니다.";
+"notification.threshold_weekly" = "주간 제한";
+"notification.threshold_single" = "%d%%에서 알림";
+"notification.threshold_two" = "1차 %d%% · 2차 %d%%";
+"notification.threshold_first" = "1차 알림";
+"notification.threshold_second" = "2차 알림";
+"notification.threshold_reminder" = "알림";
+"notification.model_weekly_limit" = "%@ 7일 제한";
 "notification.warning_title" = "사용량 경고";
 "notification.warning_body" = "%@이(가) %d%% 사용량에 도달했습니다";
 "notification.reset_title" = "사용량 재설정";

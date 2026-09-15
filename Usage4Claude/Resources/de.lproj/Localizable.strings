@@ -398,7 +398,14 @@
 "notification.section" = "Benachrichtigungen";
 "notification.hint" = "Benachrichtigen, wenn die Nutzung einen Schwellenwert erreicht oder zurückgesetzt wird";
 "notification.enable" = "Nutzungsbenachrichtigungen aktivieren";
-"notification.description" = "Eine Benachrichtigung wird gesendet, wenn ein Limit 90% erreicht oder die Nutzung zurückgesetzt wird";
+"notification.description" = "Die Schwellenwerte gelten für Claude und Codex, und die wöchentlichen Limits umfassen alle modellspezifischen Wochenlimits.";
+"notification.threshold_weekly" = "Wöchentliche Limits";
+"notification.threshold_single" = "Benachrichtigung bei %d%%";
+"notification.threshold_two" = "Erste bei %d%% · Zweite bei %d%%";
+"notification.threshold_first" = "Erste Erinnerung";
+"notification.threshold_second" = "Zweite Erinnerung";
+"notification.threshold_reminder" = "Erinnerung";
+"notification.model_weekly_limit" = "%@ 7-Tage-Limit";
 "notification.warning_title" = "Nutzungswarnung";
 "notification.warning_body" = "%@ hat %d%% Nutzung erreicht";
 "notification.reset_title" = "Nutzung zurückgesetzt";

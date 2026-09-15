@@ -549,6 +549,17 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 各类用量提醒的阈值（5 小时 / 周限额 / 额外用量），Claude 与 Codex 共用
+    @Published var notificationThresholds: NotificationThresholdConfig {
+        didSet {
+            guard notificationThresholds != oldValue else { return }
+            if let data = try? JSONEncoder().encode(notificationThresholds) {
+                defaults.set(data, forKey: "notificationThresholds")
+            }
+            NotificationManager.shared.applyThresholdChange(notificationThresholds)
+        }
+    }
+
     /// 是否显示 Codex 重置预告（Beta，第三方数据源 codex-reset.com）。默认开启；
     /// 状态驱动——只有登录 Codex 后此开关才在设置页可见，关闭后不再发起任何第三方请求。
     @Published var showCodexResetAnnouncement: Bool {
@@ -951,6 +962,14 @@ class UserSettings: ObservableObject {
         // 加载通知设置，默认开启
         self.notificationsEnabled = defaults.object(forKey: "notificationsEnabled") as? Bool ?? true
 
+        // 加载提醒阈值，缺失或解码失败时用默认值（见 NotificationThresholdConfig.default）
+        if let data = defaults.data(forKey: "notificationThresholds"),
+           let saved = try? JSONDecoder().decode(NotificationThresholdConfig.self, from: data) {
+            self.notificationThresholds = saved.sanitized
+        } else {
+            self.notificationThresholds = .default
+        }
+
         // 加载 Codex 重置预告开关（Beta），默认开启
         self.showCodexResetAnnouncement = defaults.object(forKey: "showCodexResetAnnouncement") as? Bool ?? true
 
@@ -1066,6 +1085,7 @@ class UserSettings: ObservableObject {
         customDisplayTypes = Self.defaultCustomDisplayTypes
         customDisplayMenuBarOnly = false
         notificationsEnabled = true
+        notificationThresholds = .default
         showCodexResetAnnouncement = true
 
         // 重置智能模式状态

@@ -542,11 +542,24 @@ enum L {
         static var hint: String { localized("notification.hint") }
         static var enable: String { localized("notification.enable") }
         static var description: String { localized("notification.description") }
+        static var weeklyLimits: String { localized("notification.threshold_weekly") }
+        static var firstReminder: String { localized("notification.threshold_first") }
+        static var secondReminder: String { localized("notification.threshold_second") }
+        static var reminder: String { localized("notification.threshold_reminder") }
+        static func thresholdSingle(_ percentage: Int) -> String {
+            String(format: localized("notification.threshold_single"), percentage)
+        }
+        static func thresholdTwo(_ first: Int, _ second: Int) -> String {
+            String(format: localized("notification.threshold_two"), first, second)
+        }
     }
 
     // MARK: - Usage Notification
     enum UsageNotification {
         static var warningTitle: String { localized("notification.warning_title") }
+        static func modelWeeklyLimit(_ model: String) -> String {
+            String(format: localized("notification.model_weekly_limit"), model)
+        }
         static func warningBody(_ type: String, _ percentage: Int) -> String {
             String(format: localized("notification.warning_body"), type, percentage)
         }

@@ -399,7 +399,14 @@
 "notification.section" = "通知";
 "notification.hint" = "使用量がしきい値に達した時やリセット時に通知";
 "notification.enable" = "使用量通知を有効にする";
-"notification.description" = "いずれかの制限が90%%に達した時、または使用量がリセットされた時にシステム通知を送信します。";
+"notification.description" = "しきい値は Claude と Codex で共通です。週間制限にはモデル別の週間制限もすべて含まれます。";
+"notification.threshold_weekly" = "週間制限";
+"notification.threshold_single" = "%d%%で通知";
+"notification.threshold_two" = "1回目 %d%% · 2回目 %d%%";
+"notification.threshold_first" = "1回目の通知";
+"notification.threshold_second" = "2回目の通知";
+"notification.threshold_reminder" = "通知";
+"notification.model_weekly_limit" = "%@ 7日制限";
 "notification.warning_title" = "使用量警告";
 "notification.warning_body" = "%@が%d%%の使用量に達しました";
 "notification.reset_title" = "使用量リセット";
