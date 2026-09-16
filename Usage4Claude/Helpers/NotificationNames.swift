@@ -18,6 +18,13 @@ extension Notification.Name {
     /// 当用户修改任何设置项时发送
     static let settingsChanged = Notification.Name("settingsChanged")
 
+    /// 菜单栏实际明暗变化（壁纸换了、图标位置移动等）
+    ///
+    /// 与 `AppleInterfaceThemeChangedNotification` 是两回事：菜单栏的明暗由壁纸决定，
+    /// 系统 Dark/Light 没变时它照样会翻转。彩色图标的数字与背景色都依赖它，
+    /// 收到后必须清图标缓存再重绘（缓存键不含外观）。
+    static let menuBarAppearanceChanged = Notification.Name("menuBarAppearanceChanged")
+
     /// 刷新间隔已更改通知
     /// 当用户修改刷新间隔或刷新模式时发送
     static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")

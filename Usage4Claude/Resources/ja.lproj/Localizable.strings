@@ -69,8 +69,8 @@
 "icon_style.color_translucent" = "カラー透明";
 "icon_style.color_with_background" = "カラー背景付き";
 "icon_style.monochrome" = "モノクローム";
-"icon_style.color_translucent_desc" = "カラーリング、背景透明、ほとんどのメニューバースタイルに適しています";
-"icon_style.color_with_background_desc" = "カラーリングと半透明の白い背景、ダークな壁紙でカラー透明のパフォーマンスが悪い場合に最適";
+"icon_style.color_translucent_desc" = "カラーリング、背景なし。数字はメニューバーの明暗に自動で合わせます";
+"icon_style.color_with_background_desc" = "リングの背後に薄い背景を追加。壁紙が複雑で数字が見分けにくいときに";
 "icon_style.monochrome_desc" = "システムメニューバースタイルに自動適応、シンプルでエレガント";
 
 "menu_bar_icon_size.small" = "コンパクト";

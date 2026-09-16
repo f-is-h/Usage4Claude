@@ -69,8 +69,8 @@
 "icon_style.color_translucent" = "Couleur translucide";
 "icon_style.color_with_background" = "Couleur avec fond";
 "icon_style.monochrome" = "Monochrome";
-"icon_style.color_translucent_desc" = "Anneaux colorés sur fond transparent, adapté à la plupart des styles de barre des menus";
-"icon_style.color_with_background_desc" = "Anneaux colorés sur fond blanc translucide, idéal lorsque le mode translucide rend mal sur les fonds sombres";
+"icon_style.color_translucent_desc" = "Anneaux colorés sans fond ; les chiffres suivent automatiquement la clarté de la barre des menus";
+"icon_style.color_with_background_desc" = "Ajoute un fond léger derrière les anneaux, utile quand un fond d'écran chargé rend les chiffres difficiles à lire";
 "icon_style.monochrome_desc" = "S'adapte automatiquement au style de la barre des menus, sobre et élégant";
 
 "menu_bar_icon_size.small" = "Compacte";

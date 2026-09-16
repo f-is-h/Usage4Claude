@@ -241,6 +241,17 @@ class MenuBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        // 菜单栏实际明暗变化（换壁纸等）：彩色图标的数字与背景色都依赖它，
+        // 缓存键不含外观，必须先清缓存再重绘
+        NotificationCenter.default.publisher(for: .menuBarAppearanceChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                self.ui.clearIconCache()
+                self.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
         // 口径切换：不直接重画，交给动画逐帧过渡到新口径。
         // 缓存不清 —— 键里已含口径，两个口径的图各自留着，切回去时直接命中
         NotificationCenter.default.publisher(for: .remainingModeToggled)

@@ -69,8 +69,8 @@
 "icon_style.color_translucent" = "컬러 반투명";
 "icon_style.color_with_background" = "컬러 배경";
 "icon_style.monochrome" = "단색 테마";
-"icon_style.color_translucent_desc" = "컬러 링, 투명 배경, 대부분의 메뉴바 스타일에 적합";
-"icon_style.color_with_background_desc" = "컬러 링과 반투명 흰색 배경, 어두운 배경에서 컬러 반투명이 잘 보이지 않을 때 적합";
+"icon_style.color_translucent_desc" = "컬러 링, 배경 없음. 숫자가 메뉴 막대의 명암에 자동으로 맞춰집니다";
+"icon_style.color_with_background_desc" = "링 뒤에 얇은 배경을 추가합니다. 배경화면이 복잡해 숫자를 알아보기 어려울 때 적합";
 "icon_style.monochrome_desc" = "시스템 메뉴바 스타일에 자동 적응, 간결하고 우아함";
 
 "menu_bar_icon_size.small" = "작게";

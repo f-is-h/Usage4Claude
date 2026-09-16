@@ -69,8 +69,8 @@
 "icon_style.color_translucent" = "彩色通透";
 "icon_style.color_with_background" = "彩色背景";
 "icon_style.monochrome" = "單色主題";
-"icon_style.color_translucent_desc" = "彩色圓環，背景透明，適合大部分選單列樣式";
-"icon_style.color_with_background_desc" = "彩色圓環帶半透明白色背景，適合彩色通透主題在深色壁紙表現不佳時";
+"icon_style.color_translucent_desc" = "彩色圓環，無背景，數字自動跟隨選單列的明暗";
+"icon_style.color_with_background_desc" = "在圓環後加一層薄背景，適合桌布花俏、數字不易辨認時";
 "icon_style.monochrome_desc" = "自動適應系統選單列樣式，簡潔優雅";
 
 "menu_bar_icon_size.small" = "緊湊";

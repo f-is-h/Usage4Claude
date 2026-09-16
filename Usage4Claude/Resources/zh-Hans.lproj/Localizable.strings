@@ -69,8 +69,8 @@
 "icon_style.color_translucent" = "彩色通透";
 "icon_style.color_with_background" = "彩色背景";
 "icon_style.monochrome" = "单色主题";
-"icon_style.color_translucent_desc" = "彩色圆环，背景透明，适合大部分菜单栏样式";
-"icon_style.color_with_background_desc" = "彩色圆环带半透明白色背景，适合彩色通透主题在深色壁纸表现不佳时";
+"icon_style.color_translucent_desc" = "彩色圆环，无背景，数字自动跟随菜单栏的明暗";
+"icon_style.color_with_background_desc" = "在圆环后加一层薄背景，适合壁纸花哨、数字不易辨认时";
 "icon_style.monochrome_desc" = "自动适应系统菜单栏样式，简洁优雅";
 
 "menu_bar_icon_size.small" = "紧凑";

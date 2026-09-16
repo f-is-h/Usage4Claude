@@ -99,7 +99,7 @@ class ShapeIconRenderer {
         // 1. 绘制背景填充（彩色背景模式）
         if !removeBackground && !isMonochrome {
             let backgroundFillPath = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
-            NSColor.white.withAlphaComponent(0.5).setFill()
+            UsageColorScheme.menuBarIconBackgroundColor(for: button).setFill()
             backgroundFillPath.fill()
         }
 
@@ -208,7 +208,7 @@ class ShapeIconRenderer {
         let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: displayedPercentage)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: percentageFontSize, weight: displayedPercentage >= 100 ? .bold : .semibold),
-            .foregroundColor: NSColor.black
+            .foregroundColor: isMonochrome ? NSColor.black : UsageColorScheme.menuBarIconTextColor(for: button)
         ]
         let textSize = percentageText.size(withAttributes: attributes)
         let textRect = NSRect(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2, width: textSize.width, height: textSize.height)
@@ -284,7 +284,7 @@ class ShapeIconRenderer {
         // 1. 绘制背景填充（彩色背景模式）
         if !removeBackground && !isMonochrome {
             let backgroundFillPath = createChamferedRectPath(rect)
-            NSColor.white.withAlphaComponent(0.5).setFill()
+            UsageColorScheme.menuBarIconBackgroundColor(for: button).setFill()
             backgroundFillPath.fill()
         }
 
@@ -399,7 +399,7 @@ class ShapeIconRenderer {
         let percentageFontSize = scaledFontSize(forWidth: rect.width, percentage: displayedPercentage)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: percentageFontSize, weight: displayedPercentage >= 100 ? .bold : .semibold),
-            .foregroundColor: NSColor.black
+            .foregroundColor: isMonochrome ? NSColor.black : UsageColorScheme.menuBarIconTextColor(for: button)
         ]
         let textSize = percentageText.size(withAttributes: attributes)
         let textRect = NSRect(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2, width: textSize.width, height: textSize.height)
@@ -441,7 +441,7 @@ class ShapeIconRenderer {
 
         // 1. 绘制背景填充（彩色背景模式）
         if !removeBackground && !isMonochrome {
-            NSColor.white.withAlphaComponent(0.5).setFill()
+            UsageColorScheme.menuBarIconBackgroundColor(for: button).setFill()
             hexagonPath.fill()
         }
 
@@ -532,7 +532,7 @@ class ShapeIconRenderer {
         let percentageFontSize = size * (displayedPercentage >= 100 ? hexFontRatioAtFull : hexFontRatio)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: percentageFontSize, weight: displayedPercentage >= 100 ? .bold : .semibold),
-            .foregroundColor: NSColor.black
+            .foregroundColor: isMonochrome ? NSColor.black : UsageColorScheme.menuBarIconTextColor(for: button)
         ]
         let textSize = percentageText.size(withAttributes: attributes)
         let textRect = NSRect(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2, width: textSize.width, height: textSize.height)
@@ -609,14 +609,14 @@ class ShapeIconRenderer {
     ///
     /// 用于 Codex 额外用量——那是个没有限额的预付钱包，画不出诚实的进度，所以这里的六边形
     /// 只承担「这一格是额外用量」的标识，信息全在中间的余额点数上。
-    static func createHexagonBadgeIcon(text: String, canvasSize: CGFloat, isMonochrome: Bool, color: NSColor, removeBackground: Bool = false) -> NSImage {
+    static func createHexagonBadgeIcon(text: String, canvasSize: CGFloat, isMonochrome: Bool, color: NSColor, button: NSStatusBarButton?, removeBackground: Bool = false) -> NSImage {
         let size = NSSize(width: canvasSize, height: canvasSize)
         let image = NSImage(size: size)
         image.lockFocus()
 
         let center = NSPoint(x: size.width / 2, y: size.height / 2)
         let diameter = size.width * hexagonDiameterRatio
-        drawHexagonBadge(center: center, size: diameter, text: text, isMonochrome: isMonochrome, color: color, removeBackground: removeBackground)
+        drawHexagonBadge(center: center, size: diameter, text: text, isMonochrome: isMonochrome, color: color, button: button, removeBackground: removeBackground)
 
         image.unlockFocus()
         image.isTemplate = isMonochrome
@@ -628,7 +628,8 @@ class ShapeIconRenderer {
     ///   - size: 六边形直径
     ///   - text: 居中显示的文本（余额点数，可能是 "2.5k" 这样的缩写）
     ///   - color: 描边色；单色模式下忽略，改用 `controlTextColor`
-    private static func drawHexagonBadge(center: NSPoint, size: CGFloat, text: String, isMonochrome: Bool, color: NSColor, removeBackground: Bool) {
+    ///   - button: 状态栏按钮，用于判断菜单栏当前的明暗以决定文字与背景色
+    private static func drawHexagonBadge(center: NSPoint, size: CGFloat, text: String, isMonochrome: Bool, color: NSColor, button: NSStatusBarButton?, removeBackground: Bool) {
         let radius = size / 2
 
         let hexagonPath = NSBezierPath()
@@ -644,7 +645,7 @@ class ShapeIconRenderer {
         hexagonPath.close()
 
         if !removeBackground && !isMonochrome {
-            NSColor.white.withAlphaComponent(0.5).setFill()
+            UsageColorScheme.menuBarIconBackgroundColor(for: button).setFill()
             hexagonPath.fill()
         }
 
@@ -665,10 +666,10 @@ class ShapeIconRenderer {
         let baseFontSize = size * hexFontRatio
         let capRatio = NSFont.systemFont(ofSize: baseFontSize, weight: .bold).capHeight / baseFontSize
         // 测量宽度里含尾随字距，视觉宽度要把它加回来
-        let unitWidth = text.size(withAttributes: badgeTextAttributes(fontSize: baseFontSize)).width / baseFontSize - hexBadgeKernRatio
+        let unitWidth = text.size(withAttributes: badgeTextAttributes(fontSize: baseFontSize, isMonochrome: isMonochrome, button: button)).width / baseFontSize - hexBadgeKernRatio
         let fontSize = min(baseFontSize, (size - 1.155 * strokeWidth) / (unitWidth + 0.577 * capRatio))
 
-        let attributes = badgeTextAttributes(fontSize: fontSize)
+        let attributes = badgeTextAttributes(fontSize: fontSize, isMonochrome: isMonochrome, button: button)
         let textSize = text.size(withAttributes: attributes)
         let kern = fontSize * hexBadgeKernRatio
         let textRect = NSRect(
@@ -681,11 +682,11 @@ class ShapeIconRenderer {
         text.draw(in: textRect, withAttributes: attributes)
     }
 
-    private static func badgeTextAttributes(fontSize: CGFloat) -> [NSAttributedString.Key: Any] {
+    private static func badgeTextAttributes(fontSize: CGFloat, isMonochrome: Bool, button: NSStatusBarButton?) -> [NSAttributedString.Key: Any] {
         [
             .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
             .kern: fontSize * hexBadgeKernRatio,
-            .foregroundColor: NSColor.black
+            .foregroundColor: isMonochrome ? NSColor.black : UsageColorScheme.menuBarIconTextColor(for: button)
         ]
     }
 }

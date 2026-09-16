@@ -13,7 +13,7 @@ import Combine
 /// 菜单栏 UI 管理器
 /// 负责管理菜单栏图标、弹出窗口、菜单创建以及图标绘制
 /// 包含完整的 UI 层逻辑，实现从 MenuBarManager 中抽取的所有 UI 相关职责
-class MenuBarUI {
+class MenuBarUI: NSObject {
 
     // MARK: - UI Components
 
@@ -74,9 +74,11 @@ class MenuBarUI {
 
     // MARK: - Initialization
 
-    init() {
+    override init() {
+        super.init()
         setupStatusItem()
         setupPopover()
+        setupAppearanceObserver()
     }
 
     // MARK: - Status Item Setup
@@ -90,6 +92,52 @@ class MenuBarUI {
             // 初始图标
             button.image = createSimpleCircleIcon()
         }
+    }
+
+    // MARK: - Menu Bar Appearance Observation
+
+    /// 菜单栏明暗变化的 KVO keyPath
+    private static let appearanceKeyPath = "button.effectiveAppearance"
+
+    /// 去抖：切壁纸时 effectiveAppearance 会连跳几次（实测 status item 创建瞬间同一秒内
+    /// 抖动 6 次，切换壁纸时也会经过一个 DarkAqua 中间态），逐次重绘会看到图标闪烁
+    private var appearanceDebounce: DispatchWorkItem?
+    private var isObservingAppearance = false
+
+    /// 监听菜单栏的实际明暗
+    ///
+    /// 菜单栏半透明，明暗跟着壁纸走，与系统 Dark/Light 设置无关——浅色模式配深色壁纸时
+    /// 菜单栏是深的。`button.effectiveAppearance` 是唯一能拿到这个真实明暗的公开途径，
+    /// 且没有对应的系统通知，只能 KVO。
+    private func setupAppearanceObserver() {
+        statusItem.addObserver(self, forKeyPath: Self.appearanceKeyPath, options: [.new], context: nil)
+        isObservingAppearance = true
+    }
+
+    private func removeAppearanceObserver() {
+        guard isObservingAppearance else { return }
+        statusItem.removeObserver(self, forKeyPath: Self.appearanceKeyPath)
+        isObservingAppearance = false
+        appearanceDebounce?.cancel()
+        appearanceDebounce = nil
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+                               change: [NSKeyValueChangeKey: Any]?,
+                               context: UnsafeMutableRawPointer?) {
+        guard keyPath == Self.appearanceKeyPath else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+            return
+        }
+        appearanceDebounce?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            let name = self?.statusItem.button?.effectiveAppearance.name.rawValue ?? "unknown"
+            AppLog.trace(.menuBar, "Menu bar appearance settled: \(name)")
+            NotificationCenter.default.post(name: .menuBarAppearanceChanged, object: nil)
+        }
+        appearanceDebounce = work
+        // KVO 回调已在主线程，这里只为合并抖动
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
     }
 
     /// 配置状态项点击处理
@@ -854,6 +902,7 @@ class MenuBarUI {
 
     /// 清理所有资源
     func cleanup() {
+        removeAppearanceObserver()
         removePopoverCloseObserver()
         removeAppResignActiveObserver()
         stopRemainingModeTransition()

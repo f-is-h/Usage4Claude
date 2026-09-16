@@ -69,8 +69,8 @@
 "icon_style.color_translucent" = "Color Translucent";
 "icon_style.color_with_background" = "Color with Background";
 "icon_style.monochrome" = "Monochrome";
-"icon_style.color_translucent_desc" = "Colored rings with transparent background, suitable for most menu bar styles";
-"icon_style.color_with_background_desc" = "Colored rings with translucent white background, ideal when Color Translucent performs poorly on dark wallpapers";
+"icon_style.color_translucent_desc" = "Colored rings with no background; the numbers follow the menu bar's light or dark appearance automatically";
+"icon_style.color_with_background_desc" = "Adds a thin backdrop behind each ring, for busy wallpapers where the numbers are hard to pick out";
 "icon_style.monochrome_desc" = "Automatically adapts to system menu bar style, clean and elegant";
 
 "menu_bar_icon_size.small" = "Compact";

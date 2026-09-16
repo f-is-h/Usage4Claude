@@ -337,7 +337,7 @@ class MenuBarIconRenderer {
         if !removeBackground {
             let backgroundCircle = NSBezierPath()
             backgroundCircle.appendArc(withCenter: center, radius: radius, startAngle: 0, endAngle: 360, clockwise: false)
-            NSColor.white.withAlphaComponent(0.5).setFill()
+            UsageColorScheme.menuBarIconBackgroundColor(for: button).setFill()
             backgroundCircle.fill()
         }
 
@@ -403,7 +403,11 @@ class MenuBarIconRenderer {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
 
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.black, .paragraphStyle: paragraphStyle]
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: UsageColorScheme.menuBarIconTextColor(for: button),
+            .paragraphStyle: paragraphStyle
+        ]
         let textSize = text.size(withAttributes: attrs)
         let textOrigin = NSPoint(x: center.x - textSize.width / 2, y: center.y - textSize.height / 2)
         text.draw(at: textOrigin, withAttributes: attrs)
@@ -678,6 +682,7 @@ class MenuBarIconRenderer {
             canvasSize: metricIconSize,
             isMonochrome: isMonochrome,
             color: UsageColorScheme.codexExtraUsageBadgeColorAdaptive(isExhausted: isExhausted, for: button),
+            button: button,
             removeBackground: settings.iconStyleMode == .colorTranslucent
         )
     }

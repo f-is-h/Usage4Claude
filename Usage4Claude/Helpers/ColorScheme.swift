@@ -36,6 +36,30 @@ enum UsageColorScheme {
         return isDarkMode(for: nil)
     }
 
+    // MARK: - 菜单栏图标配色
+
+    /// 菜单栏彩色图标的数字颜色
+    ///
+    /// 菜单栏的明暗由壁纸决定，独立于系统 Dark/Light 设置——浅色模式配深色壁纸时菜单栏是深的，
+    /// 深色模式配浅色壁纸时则相反。`isDarkMode(for:)` 读的 `button.effectiveAppearance`
+    /// 正好反映这个真实明暗，所以这里不看系统外观。
+    /// - Parameter statusButton: 状态栏按钮；传 nil 时只能退化为系统外观
+    /// - Note: 单色（template）模式不要用这个方法——那里的黑色是交给系统上色的 alpha 遮罩
+    static func menuBarIconTextColor(for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        return isDarkMode(for: statusButton) ? .white : .black
+    }
+
+    /// 菜单栏彩色图标的背景填充色（「彩色带背景」样式）
+    ///
+    /// 深色菜单栏下换成深色底：白底在深色壁纸上是块刺眼的亮斑，会盖过周围图标的颜色。
+    static func menuBarIconBackgroundColor(for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        // 这层底只负责隔开花哨的壁纸，不负责给数字撑对比度——后者已由
+        // menuBarIconTextColor 的明暗自适应接管。所以深浅两侧同强度，
+        // 薄薄一层就够：压得过重反而成了菜单栏上一块突兀的色斑。
+        return (isDarkMode(for: statusButton) ? NSColor.black : NSColor.white)
+            .withAlphaComponent(0.30)
+    }
+
     // MARK: - 5小时限制配色（绿→橙→红）
 
     /// 根据5小时限制使用百分比返回 NSColor

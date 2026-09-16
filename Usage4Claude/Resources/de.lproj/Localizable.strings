@@ -68,8 +68,8 @@
 "icon_style.color_translucent" = "Farbig transparent";
 "icon_style.color_with_background" = "Farbig mit Hintergrund";
 "icon_style.monochrome" = "Einfarbig";
-"icon_style.color_translucent_desc" = "Farbige Ringe mit transparentem Hintergrund, passend für die meisten Menüleisten-Stile";
-"icon_style.color_with_background_desc" = "Farbige Ringe mit transparent-weißem Hintergrund, ideal wenn „Farbig transparent“ auf dunklen Hintergründen schlecht wirkt";
+"icon_style.color_translucent_desc" = "Farbige Ringe ohne Hintergrund; die Zahlen passen sich automatisch an die helle oder dunkle Menüleiste an";
+"icon_style.color_with_background_desc" = "Legt eine dünne Fläche hinter die Ringe – für unruhige Hintergrundbilder, auf denen die Zahlen schwer zu erkennen sind";
 "icon_style.monochrome_desc" = "Passt sich automatisch dem Stil der System-Menüleiste an, schlicht und elegant";
 
 "menu_bar_icon_size.small" = "Kompakt";
