@@ -679,6 +679,15 @@ class DataRefreshManager: ObservableObject {
                     AppLog.event(.auth, "Codex refresh tier 1 succeeded; retrying usage with the new accessToken")
                     self.retryCodexWithAccessToken(freshAccessToken)
                 case .failure(let error):
+                    if let backoffError = self.tier1BackoffError(for: error) {
+                        // chatgpt.com 在限流或出 5xx：WebView 访问同一个站点只会多打请求，
+                        // 失败后还会被标记为需要重新登录，而凭据其实没问题
+                        AppLog.warning(.auth, "Codex refresh tier 1 failed (\(error.localizedDescription)); backing off instead of escalating to tier 2")
+                        self.recordFetchFailure(backoffError, for: .codex)
+                        self.codexErrorMessage = backoffError.localizedDescription
+                        self.clearCodexUsageState(clearError: false)
+                        return
+                    }
                     AppLog.warning(.auth, "Codex refresh tier 1 failed (\(error.localizedDescription)); falling back to tier 2")
                     self.attemptLevel2WebViewRefresh()
                 }
@@ -856,6 +865,22 @@ class DataRefreshManager: ObservableObject {
             return .serverError
         case UsageError.networkError:
             return .network
+        default:
+            return nil
+        }
+    }
+
+    /// 判断 Codex 第 1 级刷新（SSR）的失败是否应改为退避、不再升级到第 2 级 WebView
+    /// - Returns: 用于退避和横幅的错误；nil 表示照旧升级
+    /// - Note: 只认 429 和 5xx，比 backoffFailure 窄。403（Cloudflare）正是 WebView 要解决的问题，
+    ///   必须照旧升级；协调器在「刷新已在进行中」时也返回 networkError，不能当作网络故障
+    private func tier1BackoffError(for error: Error) -> UsageError? {
+        switch error {
+        case UsageError.httpError(let statusCode) where statusCode == 429:
+            // 协调器不解析 Retry-After；换成 rateLimited 让横幅显示本地化的限流文案
+            return .rateLimited(retryAfter: nil)
+        case UsageError.httpError(let statusCode) where statusCode >= 500:
+            return .httpError(statusCode: statusCode)
         default:
             return nil
         }
