@@ -188,7 +188,7 @@ class ClaudeAPIService {
         currentTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
                 AppLog.error(.api, "Usage request failed with a network error: \(error.localizedDescription)")
-                complete(.failure(UsageError.networkError))
+                complete(.failure(UsageError.fromTransportError(error)))
                 return
             }
 
@@ -228,7 +228,7 @@ class ClaudeAPIService {
                     return
                 case 429:
                     // 请求频率过高
-                    complete(.failure(UsageError.rateLimited))
+                    complete(.failure(UsageError.fromRateLimitResponse(httpResponse)))
                     return
                 default:
                     // 其他 HTTP 错误
@@ -533,7 +533,7 @@ class ClaudeAPIService {
         session.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
                 AppLog.error(.api, "Claude OAuth usage request failed with a network error: \(error.localizedDescription)")
-                complete(.failure(UsageError.networkError))
+                complete(.failure(UsageError.fromTransportError(error)))
                 return
             }
             guard let data = data else {
@@ -561,7 +561,7 @@ class ClaudeAPIService {
                     }
                     return
                 case 429:
-                    complete(.failure(UsageError.rateLimited))
+                    complete(.failure(UsageError.fromRateLimitResponse(http)))
                     return
                 default:
                     complete(.failure(UsageError.httpError(statusCode: http.statusCode)))
@@ -710,10 +710,11 @@ enum UsageError: LocalizedError {
     case cloudflareBlocked
     case noCredentials
     case networkError
+    case requestCancelled          // 被新一轮请求主动取消，不是真实网络故障（不触发失败退避）
     case decodingError
     case usageDashboardUnavailable // 账号套餐未开放用量看板（Free Tier / 未开启成员看板的 Team）
     case unauthorized              // 401 未授权
-    case rateLimited               // 429 请求频率过高
+    case rateLimited(retryAfter: TimeInterval?)  // 429 请求频率过高；retryAfter 为解析后的有效 Retry-After
     case httpError(statusCode: Int)  // 其他 HTTP 错误
 
     var errorDescription: String? {
@@ -728,7 +729,7 @@ enum UsageError: LocalizedError {
             return L.Error.cloudflareBlocked
         case .noCredentials:
             return L.Error.noCredentials
-        case .networkError:
+        case .networkError, .requestCancelled:
             return L.Error.networkFailed
         case .decodingError:
             return L.Error.decodingFailed
@@ -741,6 +742,25 @@ enum UsageError: LocalizedError {
         case .httpError(let statusCode):
             return "HTTP 错误: \(statusCode)"
         }
+    }
+}
+
+extension UsageError {
+    /// 由 429 响应构造限流错误，并解析 `Retry-After` 供 UsageFetchBackoffPolicy 使用
+    /// - Note: Anthropic 用量接口持续限流时常返回 `Retry-After: 0` 或干脆不返回，
+    ///   此时 retryAfter 为 nil，由指数退避兜底
+    static func fromRateLimitResponse(_ response: HTTPURLResponse) -> UsageError {
+        let header = response.value(forHTTPHeaderField: "Retry-After")
+        let retryAfter = UsageFetchBackoffPolicy.retryAfterInterval(from: header, now: Date())
+        AppLog.warning(.api, "HTTP 429 from \(response.url?.host ?? "unknown host"); Retry-After: \(header ?? "absent")")
+        return .rateLimited(retryAfter: retryAfter)
+    }
+
+    /// 把 URLSession 传输层错误映射为 UsageError
+    /// - Note: 发起新请求时会主动取消上一轮未完成的请求，其回调收到的 URLError.cancelled
+    ///   不能当作网络故障，否则会误触发失败退避
+    static func fromTransportError(_ error: Error) -> UsageError {
+        (error as? URLError)?.code == .cancelled ? .requestCancelled : .networkError
     }
 }
 

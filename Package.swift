@@ -40,6 +40,7 @@ let package = Package(
                 "Models/CodexUsageData.swift",
                 "Models/CodexResetAnnouncement.swift",
                 "Helpers/CodexAnnouncementFetchPolicy.swift",
+                "Helpers/UsageFetchBackoffPolicy.swift",
                 "Models/Account.swift",
                 "Models/AccountTokenRotation.swift",
                 "Models/CodexSessionTokenRotation.swift",

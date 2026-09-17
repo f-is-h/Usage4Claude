@@ -285,7 +285,8 @@ class MenuBarManager: ObservableObject {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 if self.settings.debugModeEnabled {
-                    self.dataManager.fetchUsage()
+                    // mock 数据不产生真实请求，不受失败退避约束
+                    self.dataManager.fetchUsage(bypassBackoff: true)
                 }
 
                 // 模拟更新开关变化时，直接驱动 Sparkle 徽章状态机（无需真实 appcast）
