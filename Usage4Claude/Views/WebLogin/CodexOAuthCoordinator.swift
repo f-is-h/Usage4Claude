@@ -182,11 +182,11 @@ final class CodexOAuthCoordinator: ObservableObject {
 
         loginState = .exchanging
         CodexOAuthService.exchangeCode(code: code, codeVerifier: verifier, redirectURI: redirectURI) { [weak self] result in
-            Task { @MainActor in self?.handleTokens(result) }
+            Task { @MainActor in await self?.handleTokens(result) }
         }
     }
 
-    private func handleTokens(_ result: Result<CodexOAuthTokens, Error>) {
+    private func handleTokens(_ result: Result<CodexOAuthTokens, Error>) async {
         guard !finished else { return }
 
         switch result {
@@ -200,6 +200,11 @@ final class CodexOAuthCoordinator: ObservableObject {
                 fail(L.WebLogin.codexOAuthFailed)
                 return
             }
+            let loginStateID = pkce?.state
+            // Account notifications trigger usage fetching, so seed the shared
+            // cache before publishing the account and reporting login success.
+            await CodexAPIService.cacheLoginTokens(tokens)
+            guard !finished, pkce?.state == loginStateID else { return }
             let email = CodexOAuthService.email(fromIDToken: tokens.idToken) ?? ""
             let displayName = email.isEmpty ? "Codex" : email
             // organizationId 用 email 作为去重稳定标识（email 缺失时退回 account_id）

@@ -40,6 +40,65 @@ final class OAuthTokenCacheTests: XCTestCase {
         XCTAssertEqual(token, "access-for-rt-1")
     }
 
+    func testLoginTokenAvoidsImmediateRefreshEvenWithShortLifetime() async throws {
+        let cache = OAuthTokenCache()
+        await cache.store(makeTokens(access: "login-access", refresh: "rt.login", expiresIn: 60))
+
+        let token = try await cache.accessToken(refreshToken: "rt.login", margin: 0) { _ in
+            XCTFail("A fresh login must use its issued access token, even if refresh is rejected")
+            throw URLError(.userAuthenticationRequired)
+        }
+        XCTAssertEqual(token, "login-access")
+        let foreign = await cache.validCachedToken(refreshToken: "rt.other")
+        XCTAssertNil(foreign)
+    }
+
+    func testExpiredLoginTokenRefreshes() async throws {
+        let cache = OAuthTokenCache()
+        await cache.store(makeTokens(access: "expired", refresh: "rt.login", expiresIn: -1))
+        let token = try await cache.accessToken(refreshToken: "rt.login", margin: 0) { rt in
+            self.makeTokens(access: "renewed", refresh: rt)
+        }
+        XCTAssertEqual(token, "renewed")
+    }
+
+    func testTimingReportsActualExpiryEvenAfterExpiration() async throws {
+        let cache = OAuthTokenCache()
+        let payload = Data(#"{"exp":1700000000}"#.utf8).base64EncodedString()
+        await cache.store(makeTokens(access: "header.\(payload).signature", refresh: "rt.login"))
+        let timing = await cache.tokenTiming(refreshToken: "rt.login")
+        XCTAssertEqual(timing?.expiresAt, Date(timeIntervalSince1970: 1700000000))
+        XCTAssertEqual(timing?.isEstimated, false)
+        let foreign = await cache.tokenTiming(refreshToken: "rt.other")
+        XCTAssertNil(foreign)
+        await cache.clear()
+        let cleared = await cache.tokenTiming(refreshToken: "rt.login")
+        XCTAssertNil(cleared)
+    }
+
+    func testTimingLabelsFallbackAsEstimated() async {
+        let cache = OAuthTokenCache()
+        let tokens = makeTokens(access: "opaque-token", refresh: "rt.login")
+        await cache.store(tokens)
+        let timing = await cache.tokenTiming(refreshToken: "rt.login")
+        XCTAssertEqual(timing?.expiresAt, tokens.expiresAt)
+        XCTAssertEqual(timing?.isEstimated, true)
+    }
+
+    func testOlderRefreshCannotOverwriteNewLogin() async throws {
+        let cache = OAuthTokenCache()
+        _ = try await cache.accessToken(refreshToken: "rt.old") { rt in
+            // Seed a new login while an older refresh is suspended.
+            await cache.store(self.makeTokens(access: "new-login", refresh: "rt.new"))
+            return self.makeTokens(access: "old-refresh", refresh: rt)
+        }
+        let token = try await cache.accessToken(refreshToken: "rt.new") { _ in
+            XCTFail("The completed older refresh must not evict the new login")
+            throw URLError(.userAuthenticationRequired)
+        }
+        XCTAssertEqual(token, "new-login")
+    }
+
     func testSecondCallUsesCacheWithoutRefreshing() async throws {
         let cache = OAuthTokenCache()
         let counter = CallCounter()
