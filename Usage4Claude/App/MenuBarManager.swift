@@ -308,9 +308,8 @@ class MenuBarManager: ObservableObject {
         NotificationCenter.default.publisher(for: .refreshIntervalChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                // 重启数据刷新定时器
-                self?.dataManager.stopRefreshing()
-                self?.dataManager.startRefreshing()
+                // 只重排定时器，不立即请求（原因见 handleRefreshIntervalChanged）
+                self?.dataManager.handleRefreshIntervalChanged()
             }
             .store(in: &cancellables)
         

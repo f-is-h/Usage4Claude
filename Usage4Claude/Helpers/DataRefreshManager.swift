@@ -286,6 +286,12 @@ class DataRefreshManager: ObservableObject {
         .max()
     }
 
+    /// 只刷新 Codex 的路径（圆环点击、token 续期后重试）用本次结果单独推进智能模式
+    private func updateSmartMonitoringMode(codex data: CodexUsageData) {
+        guard let utilization = monitoringUtilization(for: data) else { return }
+        settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
+    }
+
     /// 开始数据刷新
     /// 立即获取一次数据并启动定时器
     func startRefreshing() {
@@ -302,11 +308,12 @@ class DataRefreshManager: ObservableObject {
         #endif
     }
 
-    /// 停止数据刷新
-    func stopRefreshing() {
-        timerManager.invalidate(TimerID.mainRefresh)
-        timerManager.invalidate(TimerID.codexTokenRefresh)
-        endRefreshActivity()
+    /// 刷新间隔变化时调用（智能模式切档、用户修改刷新模式或间隔）
+    /// 只按新间隔重排主定时器，不立即请求
+    /// - Note: 切档发生在一次请求刚返回时，数据是新的。此前这里走 stop/start，会立刻补发一次请求，
+    ///   与刚完成的请求相隔不到 1 秒；日志里 Claude OAuth 用量接口对这种连发的第二个请求返回了 429
+    func handleRefreshIntervalChanged() {
+        restartTimer()
     }
 
     /// 启动 Popover 刷新定时器
@@ -607,6 +614,7 @@ class DataRefreshManager: ObservableObject {
                 switch result {
                 case .success(let data):
                     self.processCodexSuccess(data)
+                    self.updateSmartMonitoringMode(codex: data)
                 case .failure(let error):
                     if retryOnUnauthorized, case UsageError.unauthorized = error {
                         // 401 说明缓存的 accessToken 已失效，立即清除避免下次继续用坏 token
@@ -623,14 +631,14 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
+    /// 应用一次成功的 Codex 用量结果（数据、通知、重置验证）
+    /// - Note: 这里不推进智能模式。fetchUsage 要把 Claude 与 Codex 合并成一轮更新，在这里再更新一次
+    ///   会让同一轮计数两次、降档速度翻倍；只刷新 Codex 的路径自行调用 updateSmartMonitoringMode(codex:)
     private func processCodexSuccess(_ data: CodexUsageData) {
         recordFetchSuccess(for: .codex)
         let previousCodexData = codexUsageData
         codexUsageData = data
         codexErrorMessage = nil
-        if let utilization = monitoringUtilization(for: data) {
-            settings.updateSmartMonitoringMode(providerUtilizations: [.codex: utilization])
-        }
         NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
         let newCodexResetsAt = data.primary?.resetsAt
         if hasResetTimeChanged(from: lastCodexResetsAt, to: newCodexResetsAt) {
@@ -709,6 +717,7 @@ class DataRefreshManager: ObservableObject {
                 switch usageResult {
                 case .success(let data):
                     self.processCodexSuccess(data)
+                    self.updateSmartMonitoringMode(codex: data)
                 case .failure(let error) where self.backoffFailure(for: error) != nil:
                     // 新 token 仍被限流或网络失败，说明问题不在凭据：进入退避，而不是升级到 WebView 刷新再多打请求
                     AppLog.warning(.auth, "Codex usage failed with a freshly issued accessToken for a non-auth reason (\(error.localizedDescription)); backing off instead of escalating to tier 2")
