@@ -297,9 +297,9 @@ class MenuBarManager: ObservableObject {
         NotificationCenter.default.publisher(for: .refreshIntervalChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                // 重启数据刷新定时器
-                self?.dataManager.stopRefreshing()
-                self?.dataManager.startRefreshing()
+                // 只按新间隔重建定时器；stop/startRefreshing 会立即再拉一次，
+                // 与刚完成的拉取叠加成突发请求而触发 429
+                self?.dataManager.rescheduleRefreshTimer()
             }
             .store(in: &cancellables)
         

@@ -325,6 +325,13 @@ class DataRefreshManager: ObservableObject {
         timerManager.invalidate(TimerID.popoverRefresh)
     }
 
+    /// 刷新间隔变化（智能模式切换或用户修改设置）时只重建定时器，不立即拉取。
+    /// 智能模式切换发生在一次拉取刚完成时，此时再立即请求会在几百毫秒内重复打
+    /// /api/oauth/usage，被 Anthropic 以 429 限流。
+    func rescheduleRefreshTimer() {
+        restartTimer()
+    }
+
     /// 重启刷新定时器
     /// 根据用户设置的刷新频率重新创建定时器
     private func restartTimer() {
