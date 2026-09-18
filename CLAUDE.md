@@ -36,5 +36,7 @@ A macOS menu bar app that monitors Claude / Codex subscription usage. Swift + Sw
 
 - SwiftUI Canvas's clockwise semantics are the opposite of NSBezierPath's (y-axis points down) — see `docs/SWIFTUI_CANVAS_PATH_DRAWING_GUIDE.md`
 - DEBUG builds store credentials in UserDefaults (key prefix `DEBUG_`), separate from Release's Keychain
+- Exception: Codex OAuth access_tokens always go to the Keychain (`CodexAccessTokenStore`), in DEBUG too; they are
+  reused until expiry so login, launch and diagnostics never spend a refresh_token (#87, #88)
 - OAuth refresh_tokens rotate on every renewal — any new token-fetching code path must reuse `OAuthTokenCache`'s single-flight mechanism
 - New root-level `.md` files are gitignored by default via `/*.md` — add a `!/filename.md` allowlist entry to track them

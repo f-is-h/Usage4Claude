@@ -420,7 +420,9 @@ class CodexAPIService {
                     // 保证调用方收到 unauthorized 后立即发起的重试不会再命中这枚坏 token
                     Task { [weak self] in
                         if let effectiveCredential = await self?.tokenCache.credential(forAccessToken: accessToken) {
-                            CodexAccessTokenStore.shared.delete(credential: effectiveCredential)
+                            // await 是必须的：这里在 URLSession 回调派生的非主线程 Task 里，
+                            // 而 CodexAccessTokenStore 默认隔离在主线程
+                            await CodexAccessTokenStore.shared.delete(credential: effectiveCredential)
                         }
                         await self?.tokenCache.clear()
                         completion(.failure(UsageError.unauthorized))

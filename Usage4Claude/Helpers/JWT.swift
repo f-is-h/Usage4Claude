@@ -10,7 +10,9 @@ import Foundation
 /// 从 JWT 中解析 payload 的 `exp` 字段
 /// - Note: JWT payload 使用 base64url 编码（字母表含 `-`/`_`，无 padding），
 ///   必须先转换为标准 base64 字母表再解码，否则含 `-`/`_` 的 payload 会解码失败。
-func jwtExpiry(from token: String) -> Date? {
+/// - Note: 纯函数，标注 nonisolated 以便 URLSession 回调、actor 内部等非主线程路径直接调用
+///   （工程默认 actor 隔离是 MainActor，不标注会在这些调用点报 Swift 6 错误）
+nonisolated func jwtExpiry(from token: String) -> Date? {
     let parts = token.split(separator: ".", omittingEmptySubsequences: false)
     guard parts.count == 3 else { return nil }
     var base64 = String(parts[1])

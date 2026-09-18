@@ -132,14 +132,9 @@ private struct ProviderResultCard: View {
             // 步骤摘要
             if !result.steps.isEmpty {
                 ForEach(result.steps, id: \.name) { step in
+                    // step.notes 只进导出报告：那些文案是写给开发者看的英文，
+                    // 直接铺在界面上会绕过 7 语言本地化
                     StepSummaryRow(step: step)
-                    if let notes = step.notes {
-                        Text(notes)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .textSelection(.enabled)
-                    }
                 }
             }
 

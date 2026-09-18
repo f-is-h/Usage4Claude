@@ -201,9 +201,7 @@ class DataRefreshManager: ObservableObject {
                     if case UsageError.unauthorized = error {
                         self.attemptTokenRefreshAndRetry()
                     } else {
-                        self.recordFetchFailure(error, for: .codex)
-                        self.codexErrorMessage = error.localizedDescription
-                        self.clearCodexUsageState(clearError: false)
+                        self.presentCodexFailure(error)
                     }
 
                 case .none:
@@ -621,14 +619,31 @@ class DataRefreshManager: ObservableObject {
                         self.codexApiService.clearAccessTokenCache()
                         self.attemptTokenRefreshAndRetry()
                     } else {
-                        self.recordFetchFailure(error, for: .codex)
-                        self.codexErrorMessage = error.localizedDescription
-                        self.clearCodexUsageState(clearError: false)
                         AppLog.error(.refresh, "Codex refresh failed: \(error.localizedDescription)")
+                        self.presentCodexFailure(error)
                     }
                 }
             }
         }
+    }
+
+    /// 展示一次不再重试的 Codex 拉取失败
+    ///
+    /// OAuth 账户的凭据失效类错误只能靠重新登录解决，标记重登（附一次性通知），
+    /// 而不是只显示一行错误文案。cookie 账户的凭据失效由三级刷新链负责，这里维持原样。
+    private func presentCodexFailure(_ error: Error) {
+        recordFetchFailure(error, for: .codex)
+        if CodexAPIService.isOAuthRefreshToken(settings.codexSessionToken) {
+            switch error {
+            case UsageError.unauthorized, UsageError.sessionExpired:
+                markCodexNeedsRelogin()
+                return
+            default:
+                break
+            }
+        }
+        codexErrorMessage = error.localizedDescription
+        clearCodexUsageState(clearError: false)
     }
 
     /// 应用一次成功的 Codex 用量结果（数据、通知、重置验证）
@@ -655,11 +670,13 @@ class DataRefreshManager: ObservableObject {
             markCodexNeedsRelogin()
             return
         }
-        // OAuth 账户：refresh_token 已在 fetchUsage 内尝试续期，401 表示 refresh_token 失效。
-        // 旧的 chatgpt.com 三级刷新链针对 session-token，对 OAuth 凭据无意义且必然失败，直接要求重新登录。
+        // OAuth 账户：401 只说明这枚 access_token 被拒（持久化的 token 可能已被服务端吊销），
+        // 不代表 refresh_token 也失效了。服务层已清掉被拒的 token，重拉一次就会用 refresh_token
+        // 续期；重试仍失败才由 presentCodexFailure 标记重登。
+        // 旧的 chatgpt.com 三级刷新链针对 session-token，对 OAuth 凭据无意义，不走。
         if CodexAPIService.isOAuthRefreshToken(UserSettings.shared.codexSessionToken) {
-            AppLog.error(.auth, "Codex OAuth refresh_token is no longer valid; the user must sign in again")
-            markCodexNeedsRelogin()
+            AppLog.event(.auth, "Codex OAuth accessToken was rejected; renewing it with the refresh_token and retrying once")
+            fetchCodexOnly(retryOnUnauthorized: false)
             return
         }
         let prefix = UserSettings.shared.codexSessionToken.prefix(16)
@@ -747,7 +764,8 @@ class DataRefreshManager: ObservableObject {
         codexSessionExpiredNotified = false
     }
 
-    /// 级别 3：标记需要重登，发送系统通知（仅一次）
+    /// 标记需要重登，发送系统通知（仅一次）
+    /// cookie 账户在三级刷新链全部失败后到达这里；OAuth 账户在续期失败、access_token 也已不可用时到达
     private func markCodexNeedsRelogin() {
         codexNeedsRelogin = true
         if !codexSessionExpiredNotified {
@@ -758,7 +776,7 @@ class DataRefreshManager: ObservableObject {
         }
         codexErrorMessage = UsageError.sessionExpired.localizedDescription
         clearCodexUsageState(clearError: false)
-        AppLog.error(.auth, "All three Codex refresh tiers failed; the user must sign in again")
+        AppLog.error(.auth, "Codex credentials can no longer be renewed; the user must sign in again")
     }
 
     /// 账户切换后只清理并刷新对应 Provider，避免跨账号 previousData 误判重置。
