@@ -778,7 +778,8 @@ class DataRefreshManager: ObservableObject {
         case .codex:
             resetCodexReloginState()
             codexBackoff = .initial
-            codexApiService.clearAccessTokenCache()
+            // The cache is keyed by credential; clearing here would discard
+            // the access token just seeded by Browser Login.
             clearCodexUsageState()
             if shouldFetchCodexUsage {
                 fetchCodexOnly()

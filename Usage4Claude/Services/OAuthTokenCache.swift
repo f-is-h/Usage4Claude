@@ -27,6 +27,16 @@ actor OAuthTokenCache {
 
     private var refreshTask: Task<Tokens, Error>?
     private var refreshTaskToken: String?
+    private var cacheRevision = 0
+
+    /// Seed the cache with credentials issued by an interactive login.
+    /// Older in-flight refreshes must not overwrite this new login.
+    func store(_ tokens: Tokens) {
+        cacheRevision += 1
+        cachedAccessToken = tokens.accessToken
+        cachedExpiry = tokens.expiresAt
+        cachedForRefreshToken = tokens.refreshToken
+    }
 
     /// 获取有效的 access_token：命中缓存直接返回；否则发起刷新，
     /// 同一 refresh_token 的并发调用自动复用同一次网络请求的结果。
@@ -51,6 +61,7 @@ actor OAuthTokenCache {
             return try await task.value.accessToken
         }
 
+        let revision = cacheRevision
         let task = Task<Tokens, Error> {
             try await refresh(refreshToken)
         }
@@ -66,9 +77,11 @@ actor OAuthTokenCache {
         }
 
         let tokens = try await task.value
-        cachedAccessToken = tokens.accessToken
-        cachedExpiry = tokens.expiresAt
-        cachedForRefreshToken = tokens.refreshToken
+        if revision == cacheRevision {
+            cachedAccessToken = tokens.accessToken
+            cachedExpiry = tokens.expiresAt
+            cachedForRefreshToken = tokens.refreshToken
+        }
         return tokens.accessToken
     }
 
@@ -83,8 +96,22 @@ actor OAuthTokenCache {
         return cached
     }
 
+    /// Credential-free timing metadata, including expired tokens for diagnostics.
+    func tokenTiming(refreshToken: String) -> (expiresAt: Date, isEstimated: Bool)? {
+        guard cachedForRefreshToken == refreshToken,
+              let token = cachedAccessToken, !token.isEmpty,
+              let expiry = cachedExpiry else { return nil }
+        let issuedExpiry = jwtExpiry(from: token)
+        return (issuedExpiry ?? expiry, issuedExpiry == nil)
+    }
+
+    func credential(forAccessToken accessToken: String) -> String? {
+        cachedAccessToken == accessToken ? cachedForRefreshToken : nil
+    }
+
     /// 清除缓存（账户切换或收到 401 时调用，强制下次重新走网络刷新）
     func clear() {
+        cacheRevision += 1
         cachedAccessToken = nil
         cachedExpiry = nil
         cachedForRefreshToken = nil

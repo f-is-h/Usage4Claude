@@ -8,6 +8,7 @@
 
 import Foundation
 import Security
+import CryptoKit
 
 /// 凭据存储后端协议：Debug 用 UserDefaults（便于开发测试、不触发系统弹窗），
 /// Release 用 Keychain（安全存储）。两种实现各自独立，`KeychainManager` 只在
@@ -49,13 +50,17 @@ private struct KeychainCredentialStorage: CredentialStorage {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data
+            kSecAttrAccount as String: key
         ]
 
-        // 先尝试删除已存在的项，再添加新项
-        SecItemDelete(query as CFDictionary)
-        let status = SecItemAdd(query as CFDictionary, nil)
+        let attributes = [kSecValueData as String: data]
+        var status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if status == errSecItemNotFound {
+            var item = query
+            item[kSecValueData as String] = data
+            item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            status = SecItemAdd(item as CFDictionary, nil)
+        }
 
         if status == errSecSuccess {
             return true
@@ -102,6 +107,53 @@ private struct KeychainCredentialStorage: CredentialStorage {
             AppLog.error(.keychain, "Keychain delete failed for \(key), OSStatus \(status)")
             return false
         }
+    }
+}
+
+/// Access tokens always use Keychain, including Debug builds. The key binds
+/// each token to its login credential without exposing that credential in metadata.
+final class CodexAccessTokenStore {
+    static let shared = CodexAccessTokenStore(storage: KeychainCredentialStorage(
+        service: (Bundle.main.bundleIdentifier ?? "xyz.fi5h.Usage4Claude") + ".codex-access-tokens"
+    ))
+
+    private struct Entry: Codable {
+        let accessToken: String
+        let expiresAt: Date
+    }
+
+    private let storage: CredentialStorage
+
+    init(storage: CredentialStorage) { self.storage = storage }
+
+    private func key(for credential: String) -> String {
+        SHA256.hash(data: Data(credential.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    @discardableResult
+    func save(_ tokens: OAuthTokenCache.Tokens) -> Bool {
+        guard !tokens.accessToken.isEmpty, !tokens.refreshToken.isEmpty,
+              tokens.expiresAt > Date(),
+              let data = try? JSONEncoder().encode(Entry(accessToken: tokens.accessToken, expiresAt: tokens.expiresAt)),
+              let value = String(data: data, encoding: .utf8) else { return false }
+        return storage.save(key: key(for: tokens.refreshToken), value: value)
+    }
+
+    func load(credential: String) -> OAuthTokenCache.Tokens? {
+        let key = key(for: credential)
+        guard let value = storage.load(key: key) else { return nil }
+        guard let data = value.data(using: .utf8),
+              let entry = try? JSONDecoder().decode(Entry.self, from: data),
+              !entry.accessToken.isEmpty, entry.expiresAt > Date(),
+              jwtExpiry(from: entry.accessToken).map({ $0 > Date() }) ?? true else {
+            _ = storage.delete(key: key)
+            return nil
+        }
+        return OAuthTokenCache.Tokens(accessToken: entry.accessToken, refreshToken: credential, expiresAt: entry.expiresAt)
+    }
+
+    func delete(credential: String) {
+        _ = storage.delete(key: key(for: credential))
     }
 }
 
@@ -198,7 +250,10 @@ class KeychainManager {
 
     @discardableResult
     func deleteCodexAccounts() -> Bool {
-        storage.delete(key: "accounts_codex")
+        for account in loadCodexAccounts() ?? [] {
+            CodexAccessTokenStore.shared.delete(credential: account.sessionKey)
+        }
+        return storage.delete(key: "accounts_codex")
     }
 
     // MARK: - 账户列表的 JSON 编解码封装

@@ -47,7 +47,37 @@ class CodexAPIService {
     /// access_token 缓存 + 单飞合并（actor，见 Services/OAuthTokenCache.swift；审计报告 4.2）。
     /// cookie session 路径与 OAuth refresh 路径共用：缓存键为账户凭据
     /// （session-token 或 "rt." 前缀的 OAuth refresh_token），互不串扰。
-    private let tokenCache = OAuthTokenCache()
+    // Login, background refresh, and diagnostics must see the same credentials,
+    // even when they use separate service instances.
+    private static let sharedTokenCache = OAuthTokenCache()
+    private var tokenCache: OAuthTokenCache { Self.sharedTokenCache }
+
+    static func cacheLoginTokens(_ tokens: CodexOAuthTokens) async {
+        let cached = OAuthTokenCache.Tokens(
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiresAt: jwtExpiry(from: tokens.accessToken) ?? Date().addingTimeInterval(30 * 60)
+        )
+        if !CodexAccessTokenStore.shared.save(cached) {
+            AppLog.warning(.keychain, "Codex access token could not be saved; this login will only survive in memory")
+        }
+        await sharedTokenCache.store(cached)
+        let timing = await oauthTokenTimingDescription(refreshToken: tokens.refreshToken)
+        AppLog.event(.auth, "Codex OAuth login access token cached; \(timing)")
+    }
+
+    static func oauthTokenTimingDescription(refreshToken: String) async -> String {
+        guard let timing = await sharedTokenCache.tokenTiming(refreshToken: refreshToken) else {
+            return "Access token expiry unavailable: no token cached for this account"
+        }
+        let timestamp = ISO8601DateFormatter().string(from: timing.expiresAt)
+        if timing.isEstimated {
+            return "Access token expiry unknown (no readable exp claim); app cache deadline: \(timestamp) (estimated)"
+        }
+        let seconds = Int(timing.expiresAt.timeIntervalSinceNow)
+        let remaining = seconds > 0 ? "\(seconds) seconds remaining" : "expired"
+        return "Access token expires at \(timestamp) (\(remaining)); server may revoke earlier"
+    }
 
     /// 线程安全地记录进行中的任务，供 cancelAllRequests 统一取消
     private func trackTask(_ task: URLSessionDataTask) {
@@ -56,15 +86,15 @@ class CodexAPIService {
         tasksLock.unlock()
     }
 
-    /// 账户切换时清除缓存，确保下次立即重新拉取
+    /// 凭据被拒绝时清除缓存，确保下次立即重新拉取
     /// - Note: 异步生效。401 路径的清缓存在 fetchWhamUsage 内部完成（保证先于错误传播），
     ///   账户切换场景则依赖缓存按凭据键控——旧账户的缓存不会误配新账户的凭据。
     func clearAccessTokenCache() {
         Task { await tokenCache.clear() }
     }
 
-    /// 由独立计时器调用：仅在缓存即将过期时主动续期，不触发用量拉取。
-    /// fetchAccessToken 内部先查缓存（20 分钟余量），缓存仍新鲜时不会发起网络请求。
+    /// 由独立计时器调用，不触发用量拉取。
+    /// Cookie 账户提前 20 分钟续期；OAuth 账户用完已签发 token 的有效期再续期。
     func proactivelyRefreshIfNeeded() {
         guard settings.hasValidCodexCredentials else { return }
         fetchAccessToken(sessionToken: settings.codexSessionToken) { result in
@@ -121,7 +151,7 @@ class CodexAPIService {
                 completion(.failure(error))
 
             case .success(let accessToken):
-                self.fetchWhamUsage(accessToken: accessToken) { usageResult in
+                self.fetchWhamUsage(accessToken: accessToken, credential: sessionToken) { usageResult in
                     DispatchQueue.main.async { completion(usageResult) }
                 }
             }
@@ -148,10 +178,17 @@ class CodexAPIService {
             do {
                 let accessToken = try await tokenCache.accessToken(
                     refreshToken: sessionToken,
-                    margin: Self.tokenRefreshMargin
+                    // OAuth sessions can be shorter than the cookie renewal
+                    // window. Use their issued token until expiry; a usage 401
+                    // still clears the cache and triggers reauthentication.
+                    margin: Self.isOAuthRefreshToken(sessionToken) ? 0 : Self.tokenRefreshMargin
                 ) { [weak self] credential in
                     guard let self else { throw UsageError.networkError }
                     if Self.isOAuthRefreshToken(credential) {
+                        if let saved = CodexAccessTokenStore.shared.load(credential: credential) {
+                            AppLog.event(.auth, "Codex access token restored from Keychain; no OAuth refresh needed")
+                            return saved
+                        }
                         return try await self.refreshOAuthTokens(refreshToken: credential)
                     }
                     return try await self.fetchSessionTokens(sessionToken: credential)
@@ -282,14 +319,34 @@ class CodexAPIService {
     /// 只会在 OAuthTokenCache 判定「确实需要发起新刷新」时被调用一次（并发调用共享同一次结果）。
     /// refresh_token 轮换时静默写回账户存储，并作为返回的 refreshToken（缓存键跟随新值）。
     private func refreshOAuthTokens(refreshToken: String) async throws -> OAuthTokenCache.Tokens {
-        let tokens = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CodexOAuthTokens, Error>) in
-            CodexOAuthService.refresh(refreshToken: refreshToken) { result in
-                continuation.resume(with: result)
+        AppLog.event(.auth, "Codex OAuth refresh attempt started (network request, not a cache hit)")
+        let tokens: CodexOAuthTokens
+        do {
+            tokens = try await withCheckedThrowingContinuation { continuation in
+                CodexOAuthService.refresh(refreshToken: refreshToken) { result in
+                    continuation.resume(with: result)
+                }
             }
+        } catch {
+            AppLog.warning(.auth, "Codex OAuth refresh attempt failed: \(error.localizedDescription)")
+            throw error
         }
 
+        let expiry = jwtExpiry(from: tokens.accessToken)
+        let expiryDescription = expiry.map { ISO8601DateFormatter().string(from: $0) } ?? "unknown (no readable exp claim)"
+        AppLog.event(.auth, "Codex OAuth refresh succeeded; new access token expiry: \(expiryDescription)")
+
         let newRefresh = tokens.refreshToken.isEmpty ? refreshToken : tokens.refreshToken
+        let cached = OAuthTokenCache.Tokens(
+            accessToken: tokens.accessToken,
+            refreshToken: newRefresh,
+            expiresAt: expiry ?? Date().addingTimeInterval(30 * 60)
+        )
+        if !CodexAccessTokenStore.shared.save(cached) {
+            AppLog.warning(.keychain, "Renewed Codex access token could not be saved to Keychain")
+        }
         if newRefresh != refreshToken {
+            CodexAccessTokenStore.shared.delete(credential: refreshToken)
             AppLog.event(.auth, "Codex OAuth refresh_token rotated; writing the new token back to the account")
             await MainActor.run {
                 // 用 refreshToken（发起本次刷新时的旧值）反查账号，理由同 Claude 侧
@@ -297,11 +354,7 @@ class CodexAPIService {
             }
         }
 
-        return OAuthTokenCache.Tokens(
-            accessToken: tokens.accessToken,
-            refreshToken: newRefresh,
-            expiresAt: jwtExpiry(from: tokens.accessToken) ?? Date().addingTimeInterval(30 * 60)
-        )
+        return cached
     }
 
     /// 跳过 session 步骤，直接用已获取的 accessToken 查询用量（用于刷新后重试）
@@ -324,7 +377,7 @@ class CodexAPIService {
     // MARK: - Private: Step 2 — accessToken → usage
 
     /// 第二步：用 Bearer accessToken 查询用量
-    private func fetchWhamUsage(accessToken: String, completion: @escaping (Result<CodexUsageData, Error>) -> Void) {
+    private func fetchWhamUsage(accessToken: String, credential: String? = nil, completion: @escaping (Result<CodexUsageData, Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/backend-api/wham/usage") else {
             completion(.failure(UsageError.invalidURL))
             return
@@ -360,9 +413,15 @@ class CodexAPIService {
                 switch httpResponse.statusCode {
                 case 200...299: break
                 case 401:
+                    if let credential {
+                        CodexAccessTokenStore.shared.delete(credential: credential)
+                    }
                     // 缓存的 accessToken 已失效。await 清缓存后再传播错误，
                     // 保证调用方收到 unauthorized 后立即发起的重试不会再命中这枚坏 token
                     Task { [weak self] in
+                        if let effectiveCredential = await self?.tokenCache.credential(forAccessToken: accessToken) {
+                            CodexAccessTokenStore.shared.delete(credential: effectiveCredential)
+                        }
                         await self?.tokenCache.clear()
                         completion(.failure(UsageError.unauthorized))
                     }

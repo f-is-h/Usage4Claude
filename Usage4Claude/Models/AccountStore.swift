@@ -330,6 +330,9 @@ final class AccountStore: ObservableObject {
         }
 
         if let index = existingIndex {
+            if codexAccounts[index].sessionKey != account.sessionKey {
+                CodexAccessTokenStore.shared.delete(credential: codexAccounts[index].sessionKey)
+            }
             codexAccounts[index].sessionKey = account.sessionKey
             codexAccounts[index].organizationId = account.organizationId
             codexAccounts[index].organizationName = account.organizationName
@@ -355,6 +358,7 @@ final class AccountStore: ObservableObject {
     }
 
     func removeCodexAccount(_ account: Account) {
+        CodexAccessTokenStore.shared.delete(credential: account.sessionKey)
         guard let index = codexAccounts.firstIndex(where: { $0.id == account.id }) else { return }
         let wasCurrent = (currentCodexAccountId == account.id)
         codexAccounts.remove(at: index)

@@ -103,7 +103,16 @@ enum CodexOAuthService {
             }
             if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
                 let bodyText = String(data: data, encoding: .utf8) ?? ""
-                AppLog.error(.auth, "Codex OAuth token request returned HTTP \(http.statusCode): \(bodyText.prefix(200))")
+                // Never log the response body: only recognized OAuth error codes.
+                let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+                let error = json?["error"] as? [String: Any]
+                let code = error?["code"] as? String ?? json?["error"] as? String ?? ""
+                let knownCodes: Set<String> = [
+                    "refresh_token_invalidated", "refresh_token_expired", "refresh_token_reused",
+                    "invalid_grant", "invalid_request", "invalid_client", "access_denied"
+                ]
+                let safeCode = knownCodes.contains(code) ? code : "unrecognized_error"
+                AppLog.error(.auth, "Codex OAuth token request returned HTTP \(http.statusCode); code=\(safeCode)")
                 // 授权失效必须报成 sessionExpired，界面才会引导「重新登录」。
                 // 只看 401 会漏掉 Anthropic 的 400 + invalid_grant，那时界面提示的是
                 // 「运行诊断」——诊断修不了一个已经死掉的授权。
