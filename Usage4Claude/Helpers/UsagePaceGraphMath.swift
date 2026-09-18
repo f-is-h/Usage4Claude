@@ -104,6 +104,7 @@ enum UsagePaceGraphMath {
     /// - Note: 默认放在点右侧并垂直居中，靠近右边缘时翻到左侧。
     ///   7天 / Opus / Sonnet 共用同一个重置时间，会落在同一列上，
     ///   因此自上而下逐个放置，与已放置的标签重叠时向下让位，触底后改为向上让位。
+    ///   若让位后标签离点超过一个标签高度（已看不出属于哪个点），改放到点的另一侧。
     static func labelFrames(
         dots: [CGPoint],
         sizes: [CGSize],
@@ -120,38 +121,64 @@ enum UsagePaceGraphMath {
         for index in order {
             let dot = dots[index]
             let size = sizes[index]
-            let minY = bounds.minY
-            let maxY = bounds.maxY - size.height
+            let rightX = dot.x + markerRadius + gap
+            let leftX = dot.x - markerRadius - gap - size.width
 
-            var x = dot.x + markerRadius + gap
-            if x + size.width > bounds.maxX {
-                x = dot.x - markerRadius - gap - size.width
-            }
-            x = max(bounds.minX, x)
+            let preferredX = rightX + size.width > bounds.maxX ? max(bounds.minX, leftX) : rightX
+            var frame = stackedFrame(x: preferredX, dot: dot, size: size, avoiding: placed, in: bounds)
 
-            var frame = CGRect(
-                x: x,
-                y: min(maxY, max(minY, dot.y - size.height / 2)),
-                width: size.width,
-                height: size.height
-            )
-
-            // 方向一旦改为向上就不再回头，保证循环必然结束
-            var movingUp = false
-            while let hit = placed.first(where: { $0.intersects(frame) }) {
-                if !movingUp && hit.maxY + 1 <= maxY {
-                    frame.origin.y = hit.maxY + 1
-                    continue
+            // 首选侧让位太远时，另一侧（需完整落在边界内）若更贴近数据点则改用另一侧
+            let otherX = preferredX == rightX ? leftX : rightX
+            if displacement(of: frame, from: dot, avoiding: placed) > size.height,
+               otherX >= bounds.minX, otherX + size.width <= bounds.maxX {
+                let other = stackedFrame(x: otherX, dot: dot, size: size, avoiding: placed, in: bounds)
+                if displacement(of: other, from: dot, avoiding: placed)
+                    < displacement(of: frame, from: dot, avoiding: placed) {
+                    frame = other
                 }
-                movingUp = true
-                let above = hit.minY - size.height - 1
-                guard above >= minY else { break }  // 上下都放不下时接受重叠
-                frame.origin.y = above
             }
 
             frames[index] = frame
             placed.append(frame)
         }
         return frames
+    }
+
+    /// 在给定 x 上垂直居中放置标签，与已放置的标签重叠时向下让位，触底后改为向上让位
+    private static func stackedFrame(
+        x: CGFloat,
+        dot: CGPoint,
+        size: CGSize,
+        avoiding placed: [CGRect],
+        in bounds: CGRect
+    ) -> CGRect {
+        let minY = bounds.minY
+        let maxY = bounds.maxY - size.height
+
+        var frame = CGRect(
+            x: x,
+            y: min(maxY, max(minY, dot.y - size.height / 2)),
+            width: size.width,
+            height: size.height
+        )
+
+        // 方向一旦改为向上就不再回头，保证循环必然结束
+        var movingUp = false
+        while let hit = placed.first(where: { $0.intersects(frame) }) {
+            if !movingUp && hit.maxY + 1 <= maxY {
+                frame.origin.y = hit.maxY + 1
+                continue
+            }
+            movingUp = true
+            let above = hit.minY - size.height - 1
+            guard above >= minY else { break }  // 上下都放不下时接受重叠
+            frame.origin.y = above
+        }
+        return frame
+    }
+
+    /// 标签中心与数据点的垂直距离；仍与已放置标签重叠的位置视为无穷远
+    private static func displacement(of frame: CGRect, from dot: CGPoint, avoiding placed: [CGRect]) -> CGFloat {
+        placed.contains(where: { $0.intersects(frame) }) ? .infinity : abs(frame.midY - dot.y)
     }
 }

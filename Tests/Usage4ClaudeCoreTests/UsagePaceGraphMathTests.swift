@@ -167,6 +167,14 @@ final class UsagePaceGraphMathTests: XCTestCase {
         assertNoOverlapAndInside(frames([CGPoint(x: 100, y: 50), CGPoint(x: 100, y: 52), CGPoint(x: 100, y: 54)]))
     }
 
+    func testLabelFlipsSidesInsteadOfDriftingFarFromItsDot() {
+        // 5小时点在 7天/Sonnet 标签列的左下方、贴近底边：向上让位会越过两个标签，改放到左侧
+        let result = frames([CGPoint(x: 100, y: 82), CGPoint(x: 100, y: 86), CGPoint(x: 90, y: 96)])
+        assertNoOverlapAndInside(result)
+        XCTAssertEqual(result[1].minX, 108, "同列标签仍在右侧堆叠")
+        XCTAssertEqual(result[2], CGRect(x: 62, y: 90, width: 20, height: 10))
+    }
+
     func testStackedLabelsAtBottomMoveUp() {
         let result = frames([CGPoint(x: 100, y: 98), CGPoint(x: 100, y: 99)])
         assertNoOverlapAndInside(result)
