@@ -41,6 +41,65 @@ final class UsagePaceGraphMathTests: XCTestCase {
         XCTAssertEqual(ratio, 0)
     }
 
+    // MARK: - 仅工作日时间轴
+
+    /// 固定为周六日休息、UTC 的日历，结果不随运行机器的地区与时区变化
+    private var workweekCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US")
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }
+
+    /// 2026-09-14 是周一
+    private func utc(_ day: Int, _ hour: Int = 0, _ minute: Int = 0) -> Date {
+        workweekCalendar.date(from: DateComponents(year: 2026, month: 9, day: day, hour: hour, minute: minute))!
+    }
+
+    func testWeekdayRatioIgnoresTheWeekendInTheWindow() {
+        // 周一 0 点开始、下周一重置：周三中午恰好用掉 5 个工作日中的一半
+        let ratio = UsagePaceGraphMath.weekdayElapsedRatio(
+            resetsAt: utc(21), windowSeconds: sevenDay, calendar: workweekCalendar, now: utc(16, 12))
+        XCTAssertEqual(ratio, 0.5, accuracy: 1e-9)
+    }
+
+    func testWeekdayRatioReachesOneWhenOnlyTheWeekendRemains() {
+        let ratio = UsagePaceGraphMath.weekdayElapsedRatio(
+            resetsAt: utc(21), windowSeconds: sevenDay, calendar: workweekCalendar, now: utc(19, 15))
+        XCTAssertEqual(ratio, 1, accuracy: 1e-9)
+    }
+
+    func testWeekdayRatioHoldsStillAcrossAMidWindowWeekend() {
+        // 周四中午开始：工作日共 120 小时，到周五结束已过 36 小时，整个周末停在 0.3
+        let resetsAt = utc(24, 12)
+        let saturday = UsagePaceGraphMath.weekdayElapsedRatio(
+            resetsAt: resetsAt, windowSeconds: sevenDay, calendar: workweekCalendar, now: utc(19, 10))
+        let sunday = UsagePaceGraphMath.weekdayElapsedRatio(
+            resetsAt: resetsAt, windowSeconds: sevenDay, calendar: workweekCalendar, now: utc(20, 20))
+        XCTAssertEqual(saturday, 0.3, accuracy: 1e-9)
+        XCTAssertEqual(sunday, 0.3, accuracy: 1e-9)
+    }
+
+    func testWindowEntirelyOnTheWeekendFallsBackToWallClock() {
+        let ratio = UsagePaceGraphMath.weekdayElapsedRatio(
+            resetsAt: utc(19, 15), windowSeconds: fiveHour, calendar: workweekCalendar, now: utc(19, 12, 30))
+        XCTAssertEqual(ratio, 0.5, accuracy: 1e-9)
+    }
+
+    func testWeekdayRatioTreatsNilResetAsNotStarted() {
+        XCTAssertEqual(UsagePaceGraphMath.weekdayElapsedRatio(
+            resetsAt: nil, windowSeconds: sevenDay, calendar: workweekCalendar, now: utc(16)), 0)
+    }
+
+    func testWeekdaySecondsHandlesADaylightSavingDay() {
+        // 2026-11-01（周日）美东结束夏令时，当天 25 小时；逐日切分不能把这一小时算到周一头上
+        var calendar = workweekCalendar
+        calendar.timeZone = TimeZone(identifier: "America/New_York")!
+        let friday = calendar.date(from: DateComponents(year: 2026, month: 10, day: 30))!
+        let tuesday = calendar.date(from: DateComponents(year: 2026, month: 11, day: 3))!
+        XCTAssertEqual(UsagePaceGraphMath.weekdaySeconds(from: friday, to: tuesday, calendar: calendar), 2 * 86_400)
+    }
+
     // MARK: - 坐标换算
 
     private let plotRect = CGRect(x: 10, y: 20, width: 200, height: 100)

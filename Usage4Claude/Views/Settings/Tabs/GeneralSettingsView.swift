@@ -73,6 +73,30 @@ struct GeneralSettingsView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .padding(.leading, 20)
+
+                        // 仅工作日（只对线性图有意义）
+                        if settings.graphDisplayType == .linear {
+                            HStack {
+                                Toggle("", isOn: $settings.linearGraphWeekdaysOnly)
+                                    .toggleStyle(.switch)
+                                    .controlSize(.mini)
+                                    .focusable(false)
+                                    .labelsHidden()
+                                Text(L.GraphStyle.weekdaysOnly)
+                                Spacer()
+                            }
+
+                            HStack(alignment: .top, spacing: 4) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                                Text(L.GraphStyle.weekdaysOnlyDescription)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.leading, 20)
+                        }
                     }
                 }
 

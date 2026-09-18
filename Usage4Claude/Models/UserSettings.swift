@@ -546,6 +546,14 @@ class UserSettings: ObservableObject {
         }
     }
 
+    /// 线性图的周限制时间轴是否只计工作日（周末不计入匀速节奏）
+    @Published var linearGraphWeekdaysOnly: Bool {
+        didSet {
+            defaults.set(linearGraphWeekdaysOnly, forKey: "linearGraphWeekdaysOnly")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 自定义显示是否仅应用于菜单栏（开启时 Popover 走智能显示）
     @Published var customDisplayMenuBarOnly: Bool {
         didSet {
@@ -958,6 +966,9 @@ class UserSettings: ObservableObject {
             self.graphDisplayType = .circular
         }
 
+        // 线性图仅工作日，默认关闭（按自然时间计算）
+        self.linearGraphWeekdaysOnly = defaults.bool(forKey: "linearGraphWeekdaysOnly")
+
         // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
         self.customDisplayMenuBarOnly = defaults.bool(forKey: "customDisplayMenuBarOnly")
 
@@ -1088,6 +1099,7 @@ class UserSettings: ObservableObject {
         customDisplayMenuBarOnly = false
         notificationsEnabled = true
         graphDisplayType = .circular
+        linearGraphWeekdaysOnly = false
         showCodexResetAnnouncement = true
 
         // 重置智能模式状态

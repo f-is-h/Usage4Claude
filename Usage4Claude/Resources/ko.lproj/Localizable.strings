@@ -437,6 +437,8 @@
 "graph_style.hint" = "사용량 표시 방식 선택";
 "graph_style.circular_description" = "사용량을 퍼센트 링으로 표시";
 "graph_style.linear_description" = "각 한도를 균등한 사용 속도와 비교해 표시";
+"graph_style.weekdays_only" = "평일만";
+"graph_style.weekdays_only_description" = "주간 한도의 사용 속도를 평일 시간만으로 계산합니다(토요일·일요일 제외)";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "로그인 준비 중…";

@@ -437,6 +437,8 @@
 "graph_style.hint" = "选择使用量的显示方式";
 "graph_style.circular_description" = "以百分比圆环显示使用量";
 "graph_style.linear_description" = "将各项限额与匀速使用节奏对比显示";
+"graph_style.weekdays_only" = "仅工作日";
+"graph_style.weekdays_only_description" = "每周限额只按工作日时间计算节奏，跳过周六和周日";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "正在准备登录…";

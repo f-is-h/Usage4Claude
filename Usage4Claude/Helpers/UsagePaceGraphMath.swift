@@ -34,6 +34,50 @@ enum UsagePaceGraphMath {
         return min(1, max(0, elapsed / windowSeconds))
     }
 
+    /// 窗口已过去的比例，只计工作日时间（周末不计入时间轴）
+    ///
+    /// 只在工作日使用订阅的用户，周末不会消耗额度；把周末算进窗口会让匀速对角线
+    /// 在周五显得「落后」、周一又突然「超前」。这里把窗口内的周末剔除，
+    /// 周末期间比例停在周五结束时的位置不动。
+    /// - Parameters:
+    ///   - resetsAt: 重置时间，nil 表示窗口尚未开始（尚未使用）
+    ///   - windowSeconds: 窗口总时长（秒）
+    ///   - calendar: 判定周末用的日历（周末定义随地区而异，时区决定每天从何时开始）
+    ///   - now: 当前时间，便于测试注入
+    /// - Returns: 钳制到 0...1 的比例；窗口完全落在周末时退回按自然时间计算
+    static func weekdayElapsedRatio(
+        resetsAt: Date?,
+        windowSeconds: TimeInterval,
+        calendar: Calendar = .current,
+        now: Date = Date()
+    ) -> Double {
+        guard let resetsAt = resetsAt, windowSeconds > 0 else { return 0 }
+        let windowStart = resetsAt.addingTimeInterval(-windowSeconds)
+        let total = weekdaySeconds(from: windowStart, to: resetsAt, calendar: calendar)
+        guard total > 0 else {
+            return elapsedRatio(resetsAt: resetsAt, windowSeconds: windowSeconds, now: now)
+        }
+        let clampedNow = min(resetsAt, max(windowStart, now))
+        let elapsed = weekdaySeconds(from: windowStart, to: clampedNow, calendar: calendar)
+        return min(1, max(0, elapsed / total))
+    }
+
+    /// 区间内落在非周末日的秒数
+    /// - Note: 按自然日逐日切分，夏令时切换日的 23 / 25 小时也能正确累计
+    static func weekdaySeconds(from start: Date, to end: Date, calendar: Calendar) -> TimeInterval {
+        guard end > start else { return 0 }
+        var total: TimeInterval = 0
+        var dayStart = calendar.startOfDay(for: start)
+        while dayStart < end {
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: dayStart) else { break }
+            if !calendar.isDateInWeekend(dayStart) {
+                total += min(end, nextDay).timeIntervalSince(max(start, dayStart))
+            }
+            dayStart = nextDay
+        }
+        return total
+    }
+
     /// 百分比钳制到 0...100，防止超额数据把点画出图表边框
     static func clampedPercentage(_ percentage: Double) -> Double {
         min(100, max(0, percentage))

@@ -28,6 +28,8 @@ struct LinearUsageGraphView: View {
     let isRefreshing: Bool
     /// 余量模式下标签显示剩余百分比；点的位置始终按已用量，保证与匀速对角线可比
     let showRemainingMode: Bool
+    /// 周限制的时间轴只计工作日；5小时窗口始终按自然时间
+    let weekdaysOnly: Bool
     let graphHeight: CGFloat
 
     // MARK: - Constants
@@ -129,10 +131,7 @@ struct LinearUsageGraphView: View {
     private func drawPoints(context: GraphicsContext, in rect: CGRect, points: [Point]) {
         let positions = points.map { point in
             UsagePaceGraphMath.position(
-                elapsedRatio: UsagePaceGraphMath.elapsedRatio(
-                    resetsAt: point.resetsAt,
-                    windowSeconds: Self.windowSeconds(for: point.type)
-                ),
+                elapsedRatio: elapsedRatio(for: point),
                 percentage: point.percentage,
                 in: rect
             )
@@ -174,6 +173,15 @@ struct LinearUsageGraphView: View {
 
     // MARK: - Helper Methods
 
+    private func elapsedRatio(for point: Point) -> Double {
+        let windowSeconds = Self.windowSeconds(for: point.type)
+        // 5小时窗口短于一天，剔除周末只会让周五晚上跨到周六的窗口停住不动，没有意义
+        if weekdaysOnly && windowSeconds > UsagePaceGraphMath.fiveHourWindow {
+            return UsagePaceGraphMath.weekdayElapsedRatio(resetsAt: point.resetsAt, windowSeconds: windowSeconds)
+        }
+        return UsagePaceGraphMath.elapsedRatio(resetsAt: point.resetsAt, windowSeconds: windowSeconds)
+    }
+
     /// 限制类型对应的窗口时长
     /// - Note: Codex 窗口在解析时已按实际时长归类（见 `CodexUsageResponse.toCodexUsageData`），
     ///   codexPrimary 必为5小时窗口，codexSecondary 必为7天窗口
@@ -210,6 +218,7 @@ extension LinearUsageGraphView {
     ) {
         self.isRefreshing = isRefreshing
         self.showRemainingMode = showRemainingMode
+        self.weekdaysOnly = UserSettings.shared.linearGraphWeekdaysOnly
         self.graphHeight = graphHeight
         guard let data = usageData else {
             self.points = nil
@@ -274,6 +283,7 @@ extension LinearUsageGraphView {
     ) {
         self.isRefreshing = isRefreshing
         self.showRemainingMode = showRemainingMode
+        self.weekdaysOnly = UserSettings.shared.linearGraphWeekdaysOnly
         self.graphHeight = graphHeight
         guard let data = codexUsageData else {
             self.points = nil

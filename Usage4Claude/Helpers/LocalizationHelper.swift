@@ -575,6 +575,8 @@ enum L {
         static var hint: String { localized("graph_style.hint") }
         static var circularDescription: String { localized("graph_style.circular_description") }
         static var linearDescription: String { localized("graph_style.linear_description") }
+        static var weekdaysOnly: String { localized("graph_style.weekdays_only") }
+        static var weekdaysOnlyDescription: String { localized("graph_style.weekdays_only_description") }
     }
 
     // MARK: - Helper Methods
