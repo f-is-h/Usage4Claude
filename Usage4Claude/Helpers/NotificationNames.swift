@@ -48,6 +48,10 @@ extension Notification.Name {
     /// 发送此通知以打开设置窗口
     static let openSettings = Notification.Name("openSettings")
 
+    /// 主界面里弹出的说明小弹窗（标题旁小叹号、Codex 重置预告）已收起
+    /// MenuBarUI 据此判断用户是否点了主界面之外：是的话主界面一并关闭
+    static let detailPopoverDismissed = Notification.Name("detailPopoverDismissed")
+
     /// 打开设置窗口并导航到指定标签页通知
     /// userInfo 包含 "tab" 键，值为标签页索引（Int）
     /// - Example: NotificationCenter.default.post(name: .openSettingsWithTab, object: nil, userInfo: ["tab": 1])

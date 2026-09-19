@@ -15,7 +15,7 @@ struct UsageDetailView: View {
     @Binding var codexUsageData: CodexUsageData?
     @Binding var errorMessage: String?
     /// 当前错误是否为认证类错误：认证错误全屏提示引导去设置；
-    /// 瞬时错误（限流/网络）在有缓存数据时保留数据展示，只显示顶部横幅
+    /// 瞬时错误（限流/网络）在有缓存数据时保留数据展示，只在标题旁显示小叹号
     @Binding var errorRequiresAuthAction: Bool
     @Binding var codexErrorMessage: String?
     /// Codex 三级刷新均失败，需要用户手动重新登录
@@ -76,6 +76,8 @@ struct UsageDetailView: View {
     @State private var animationTypeHintName = ""
     @State private var animationTypeHintProvider: ProviderType?
     @State private var animationTypeHintDismissWorkItem: DispatchWorkItem?
+    // 标题旁小叹号的说明当前为哪个 Provider 弹出；nil 表示未显示
+    @State private var staleDataDetailProvider: ProviderType?
     // 显示更新通知
     @State private var showUpdateNotification = false
     // 显示模式切换（false: 已用量填充, true: 余量填充）
@@ -188,24 +190,27 @@ struct UsageDetailView: View {
         isMultiProviderActive ? 580 : 290
     }
 
-    /// 瞬时错误横幅高度（两行 caption 文本 + 内边距）+ VStack 行距
-    private var staleBannerHeight: CGFloat {
-        showsStaleDataBanner ? 53 : 0
-    }
-
     private var contentHeight: CGFloat {
         if isMultiProviderActive {
-            return multiProviderHeight + staleBannerHeight
+            return multiProviderHeight
         }
         if isCodexOnlyActive {
             return codexOnlyHeight
         }
-        return dynamicHeight + staleBannerHeight
+        return dynamicHeight
     }
 
-    /// 是否显示"数据已过期"横幅：有缓存数据的瞬时错误不清空界面，只提示
-    private var showsStaleDataBanner: Bool {
-        errorMessage != nil && usageData != nil && !errorRequiresAuthAction
+    /// 标题旁小叹号要说明的错误；nil 表示不显示
+    /// 有缓存数据时的瞬时错误（限流/网络）不清空界面，只提示；认证类错误和无数据时走全屏错误页
+    private func staleDataWarning(for provider: ProviderType) -> String? {
+        switch provider {
+        case .claude:
+            guard usageData != nil, !errorRequiresAuthAction else { return nil }
+            return errorMessage
+        case .codex:
+            guard codexUsageData != nil, !codexNeedsRelogin else { return nil }
+            return codexErrorMessage
+        }
     }
 
     @ViewBuilder
@@ -256,11 +261,6 @@ struct UsageDetailView: View {
         } else if let data = usageData {
             // 使用数据
             VStack(spacing: 15) {
-                // 瞬时错误横幅：保留缓存数据展示，仅在顶部轻量提示
-                if showsStaleDataBanner, let error = errorMessage {
-                    staleDataBanner(error)
-                }
-
                 // 圆形进度条
                 ZStack {
                     let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
@@ -438,32 +438,47 @@ struct UsageDetailView: View {
         }
     }
 
-    /// 瞬时错误（如 429 限流）横幅：错误文案单行截断，完整内容见悬停提示
-    @ViewBuilder
-    private func staleDataBanner(_ error: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 14))
-                .foregroundColor(.orange)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(error)
-                    .font(.caption)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Text(L.Error.showingCachedData)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+    /// 瞬时错误（如 429 限流）提示：标题旁的小叹号，点击后弹出说明
+    /// - Note: 此前是内容区顶部的横幅，出现和消失都会改变弹窗高度（双栏时另一侧也跟着撑开）；
+    ///   放进固定高度的标题行，弹窗尺寸不再跳动。说明用系统 popover 而不是 tooltip（.help）：
+    ///   tooltip 只能悬停触发，且实测在这个弹窗里不出现
+    private func staleDataIndicator(_ error: String, provider: ProviderType) -> some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .font(.system(size: 12))
+            .foregroundColor(.orange)
+            .contentShape(Rectangle())
+            .onTapGesture { toggleStaleDataDetail(for: provider) }
+            .accessibilityLabel(error)
+            .popover(
+                isPresented: Binding(
+                    get: { staleDataDetailProvider == provider },
+                    set: { isPresented in
+                        if !isPresented, staleDataDetailProvider == provider {
+                            staleDataDetailProvider = nil
+                        }
+                    }
+                ),
+                arrowEdge: .bottom
+            ) {
+                staleDataDetail(error, provider: provider)
             }
-            Spacer(minLength: 0)
+    }
+
+    /// 小叹号弹出的说明：错误原因 + 界面上的数据是几点拿到的
+    private func staleDataDetail(_ error: String, provider: ProviderType) -> some View {
+        let lines = [
+            error,
+            [L.Error.showingCachedData, lastFetchedTimeText(for: provider)].compactMap { $0 }.joined(separator: " ")
+        ]
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(lines[0])
+            Text(lines[1])
+                .foregroundColor(.secondary)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.orange.opacity(0.12))
-        )
-        .padding(.horizontal, 14)
-        .help(error)
+        .font(.system(size: DetailPopoverText.fontSize))
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(width: DetailPopoverText.width(fitting: lines, maxWidth: 260), alignment: .leading)
+        .padding(12)
     }
 
     // MARK: - Header Buttons
@@ -605,6 +620,10 @@ struct UsageDetailView: View {
 
             Text(provider == .claude ? L.Usage.title : L.Usage.codexTitle)
                 .font(.headline)
+
+            if let error = staleDataWarning(for: provider) {
+                staleDataIndicator(error, provider: provider)
+            }
 
             Spacer()
 
@@ -858,6 +877,12 @@ struct UsageDetailView: View {
         .onChange(of: refreshState.isRefreshing) { newValue in
             if newValue { startRotationAnimation() } else { stopRotationAnimation() }
         }
+        .onChange(of: staleDataDetailProvider) { provider in
+            // 说明小弹窗收起：交给 MenuBarUI 判断是否点在了主界面之外
+            if provider == nil {
+                NotificationCenter.default.post(name: .detailPopoverDismissed, object: nil)
+            }
+        }
         .onChange(of: refreshState.notificationMessage) { message in
             // 监听通知消息变化
             if message != nil {
@@ -881,6 +906,7 @@ struct UsageDetailView: View {
             stopRotationAnimation()
             animationTypeHintDismissWorkItem?.cancel()
             animationTypeHintProvider = nil
+            staleDataDetailProvider = nil
         }
         #if DEBUG
         .background(
@@ -906,6 +932,19 @@ struct UsageDetailView: View {
         }
         animationTypeHintDismissWorkItem = dismissWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: dismissWorkItem)
+    }
+
+    /// 界面上这份数据是什么时候拿到的：当天只显示时分，跨天带上日期
+    private func lastFetchedTimeText(for provider: ProviderType) -> String? {
+        guard let date = refreshState.lastSuccessAt[provider] else { return nil }
+        return Calendar.current.isDateInToday(date)
+            ? TimeFormatHelper.formatTimeOnly(date)
+            : TimeFormatHelper.formatDateTime(date, dateTemplate: "MMMd")
+    }
+
+    /// 点小叹号：弹出或收起说明；点弹窗外任意处由系统自动收起
+    private func toggleStaleDataDetail(for provider: ProviderType) {
+        staleDataDetailProvider = staleDataDetailProvider == provider ? nil : provider
     }
 
     private func toggleRemainingMode() {

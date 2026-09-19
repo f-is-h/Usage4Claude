@@ -24,7 +24,9 @@ class RefreshState: ObservableObject {
     @Published var notificationMessage: String?
     /// 通知类型
     @Published var notificationType: NotificationType = .loading
-    
+    /// 各 Provider 最近一次成功获取数据的时间，出错时告诉用户界面上的数据来自什么时候
+    @Published var lastSuccessAt: [ProviderType: Date] = [:]
+
     /// 通知类型
     enum NotificationType {
         case loading          // 彩虹加载动画

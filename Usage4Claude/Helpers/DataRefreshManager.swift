@@ -38,7 +38,7 @@ class DataRefreshManager: ObservableObject {
     /// 错误消息
     @Published var errorMessage: String?
     /// 当前 errorMessage 是否为需要用户处理的认证类错误（未授权/会话过期/未配置）。
-    /// 视图层据此决定：认证错误全屏提示引导去设置，瞬时错误（限流/网络）保留缓存数据只显示横幅
+    /// 视图层据此决定：认证错误全屏提示引导去设置，瞬时错误（限流/网络）保留缓存数据，只在标题旁显示小叹号
     @Published var errorRequiresAuthAction = false
     /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
     @Published var codexErrorMessage: String?
@@ -158,12 +158,12 @@ class DataRefreshManager: ObservableObject {
         let fetchClaude = claudeEnabled && (bypassBackoff || isBackoffElapsed(for: .claude, now: now))
         let fetchCodex = codexEnabled && (bypassBackoff || isBackoffElapsed(for: .codex, now: now))
 
-        // 两个 Provider 都在退避期内：整次自动刷新跳过，保留缓存数据和错误横幅
+        // 两个 Provider 都在退避期内：整次自动刷新跳过，保留缓存数据和错误提示
         guard fetchClaude || fetchCodex else { return }
 
         isLoading = true
         markRequestIssued(at: now)
-        // 只清除本次实际发起请求的 Provider 的错误；因退避被跳过的一方继续显示原来的错误横幅
+        // 只清除本次实际发起请求的 Provider 的错误；因退避被跳过的一方继续显示原来的错误提示
         if fetchClaude {
             errorMessage = nil
             errorRequiresAuthAction = false
@@ -208,7 +208,7 @@ class DataRefreshManager: ObservableObject {
                     self.clearCodexUsageState()
                 }
             } else if !codexEnabled {
-                // 仅在未配置 Codex 时清理；因退避跳过时要保留错误横幅
+                // 仅在未配置 Codex 时清理；因退避跳过时要保留错误提示
                 self.clearCodexUsageState()
             }
 
@@ -251,6 +251,7 @@ class DataRefreshManager: ObservableObject {
 
     private func clearClaudeUsageState() {
         usageData = nil
+        refreshState.lastSuccessAt[.claude] = nil
         lastResetsAt = nil
         cancelResetVerification()
     }
@@ -267,6 +268,7 @@ class DataRefreshManager: ObservableObject {
 
     private func clearCodexUsageState(clearError: Bool = true) {
         codexUsageData = nil
+        refreshState.lastSuccessAt[.codex] = nil
         if clearError {
             codexErrorMessage = nil
         }
@@ -596,7 +598,7 @@ class DataRefreshManager: ObservableObject {
                 }
                 self.lastResetsAt = newResetsAt
             case .failure(let error):
-                // 保留缓存数据（与 fetchUsage 的失败路径一致），瞬时错误下 UI 只显示横幅
+                // 保留缓存数据（与 fetchUsage 的失败路径一致），瞬时错误下 UI 只显示小叹号
                 self.errorMessage = error.localizedDescription
                 self.errorRequiresAuthAction = self.requiresAuthAction(error)
                 self.recordFetchFailure(error, for: .claude)
@@ -901,13 +903,13 @@ class DataRefreshManager: ObservableObject {
     }
 
     /// 判断 Codex 第 1 级刷新（SSR）的失败是否应改为退避、不再升级到第 2 级 WebView
-    /// - Returns: 用于退避和横幅的错误；nil 表示照旧升级
+    /// - Returns: 用于退避和错误提示的错误；nil 表示照旧升级
     /// - Note: 只认 429 和 5xx，比 backoffFailure 窄。403（Cloudflare）正是 WebView 要解决的问题，
     ///   必须照旧升级；协调器在「刷新已在进行中」时也返回 networkError，不能当作网络故障
     private func tier1BackoffError(for error: Error) -> UsageError? {
         switch error {
         case UsageError.httpError(let statusCode) where statusCode == 429:
-            // 协调器不解析 Retry-After；换成 rateLimited 让横幅显示本地化的限流文案
+            // 协调器不解析 Retry-After；换成 rateLimited 让错误提示显示本地化的限流文案
             return .rateLimited(retryAfter: nil)
         case UsageError.httpError(let statusCode) where statusCode >= 500:
             return .httpError(statusCode: statusCode)
@@ -930,7 +932,9 @@ class DataRefreshManager: ObservableObject {
         AppLog.warning(.refresh, "\(provider.displayName) automatic refreshes backing off for \(delay)s after \(next.consecutiveFailures) consecutive failure(s)")
     }
 
+    /// 记录一次拉取成功：更新最后成功时间，并清除失败退避
     private func recordFetchSuccess(for provider: ProviderType) {
+        refreshState.lastSuccessAt[provider] = Date()
         let state = backoffState(for: provider)
         guard state != .initial else { return }
         AppLog.event(.refresh, "\(provider.displayName) fetch succeeded after \(state.consecutiveFailures) failure(s); backoff cleared")

@@ -207,6 +207,21 @@ struct AnimationTypeHintView: View {
     }
 }
 
+// MARK: - Detail Popover Text Layout
+
+/// 点击小图标弹出的说明（标题旁小叹号、Codex 重置预告角标）共用的文字排版
+/// - Note: popover 按内容的理想尺寸撑开，而 Text 的理想宽度是整行不换行。
+///   按实测文字宽度定宽：短文案不留白，超过上限才换行
+enum DetailPopoverText {
+    static let fontSize: CGFloat = 12
+
+    static func width(fitting lines: [String], maxWidth: CGFloat) -> CGFloat {
+        let font = NSFont.systemFont(ofSize: fontSize)
+        let widest = lines.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+        return min(ceil(widest) + 2, maxWidth)
+    }
+}
+
 // MARK: - Provider Divider
 
 /// 双 Provider 主窗口中央的柔和竖线，视觉与设置页标签分隔线一致

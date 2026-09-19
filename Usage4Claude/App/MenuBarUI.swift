@@ -25,6 +25,10 @@ class MenuBarUI: NSObject {
     private var popoverCloseObserver: Any?
     /// 应用失焦观察者 - 用于在应用失去焦点时关闭 popover
     private var appResignActiveObserver: NSObjectProtocol?
+    /// 说明小弹窗收起观察者 - 小弹窗开着时点主界面之外，由它负责关闭主界面
+    private var detailPopoverDismissedObserver: NSObjectProtocol?
+    /// 主弹窗关闭观察者 - 主弹窗真正关闭后才移除上面几个监听器
+    private var popoverDidCloseObserver: NSObjectProtocol?
 
     // MARK: - Icon Cache
 
@@ -201,6 +205,8 @@ class MenuBarUI: NSObject {
         // 设置监听器
         setupPopoverCloseObserver()
         setupAppResignActiveObserver()
+        setupDetailPopoverDismissedObserver()
+        setupPopoverDidCloseObserver()
     }
 
     /// 配置 popover 窗口属性
@@ -238,14 +244,74 @@ class MenuBarUI: NSObject {
     }
 
     /// 关闭弹出窗口
+    /// - Note: 监听器在主弹窗真正关闭后（didCloseNotification）才移除。performClose 不保证一定关得掉：
+    ///   实测说明小弹窗开着时点主界面之外，主界面会留在屏幕上。若在这里无条件移除，之后再点外面也关不掉了
     func closePopover() {
-        // 确保 popover 关闭
         if popover.isShown {
             popover.performClose(nil)
+        } else {
+            removePopoverObservers()
         }
-        // 移除事件监听器
+    }
+
+    /// 移除打开主弹窗时设置的全部监听器
+    private func removePopoverObservers() {
         removePopoverCloseObserver()
         removeAppResignActiveObserver()
+        removeDetailPopoverDismissedObserver()
+        removePopoverDidCloseObserver()
+    }
+
+    /// 主弹窗真正关闭后移除监听器（不论是哪条路径关闭的）
+    private func setupPopoverDidCloseObserver() {
+        removePopoverDidCloseObserver()
+        popoverDidCloseObserver = NotificationCenter.default.addObserver(
+            forName: NSPopover.didCloseNotification,
+            object: popover,
+            queue: .main
+        ) { [weak self] _ in
+            self?.removePopoverObservers()
+        }
+    }
+
+    private func removePopoverDidCloseObserver() {
+        if let observer = popoverDidCloseObserver {
+            NotificationCenter.default.removeObserver(observer)
+            popoverDidCloseObserver = nil
+        }
+    }
+
+    /// 说明小弹窗（小叹号、重置预告）开着时点主界面之外，只有小弹窗被收起，主界面自己的外部点击监听
+    /// 不起作用。小弹窗收起时若鼠标在主界面之外，就把主界面一并关闭
+    private func setupDetailPopoverDismissedObserver() {
+        removeDetailPopoverDismissedObserver()
+        detailPopoverDismissedObserver = NotificationCenter.default.addObserver(
+            forName: .detailPopoverDismissed,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self, self.popover.isShown,
+                  let frame = self.popover.contentViewController?.view.window?.frame,
+                  !frame.contains(NSEvent.mouseLocation) else { return }
+
+            #if DEBUG
+            if UserSettings.shared.debugKeepDetailWindowOpen {
+                return
+            }
+            #endif
+
+            // 等小弹窗的收起动画走完再关主界面，它还挂在主界面上时关闭可能不生效
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                self?.closePopover()
+            }
+        }
+    }
+
+    private func removeDetailPopoverDismissedObserver() {
+        if let observer = detailPopoverDismissedObserver {
+            NotificationCenter.default.removeObserver(observer)
+            detailPopoverDismissedObserver = nil
+        }
     }
 
     /// 设置弹出窗口外部点击监听
@@ -903,8 +969,7 @@ class MenuBarUI: NSObject {
     /// 清理所有资源
     func cleanup() {
         removeAppearanceObserver()
-        removePopoverCloseObserver()
-        removeAppResignActiveObserver()
+        removePopoverObservers()
         stopRemainingModeTransition()
 
         if popover.isShown {
