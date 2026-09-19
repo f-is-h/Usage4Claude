@@ -42,6 +42,8 @@ class DataRefreshManager: ObservableObject {
     @Published var errorRequiresAuthAction = false
     /// Codex 错误消息（独立于 Claude，避免双 Provider 时被静默隐藏）
     @Published var codexErrorMessage: String?
+    /// 当前 codexErrorMessage 是否为认证类错误，语义与 errorRequiresAuthAction 相同
+    @Published var codexErrorRequiresAuthAction = false
     /// Codex 官方重置预告（Beta，第三方数据源）。完全旁路 refreshState/isLoading/codexErrorMessage——
     /// 失败静默契约：无论「没有预告」「网络失败」「解析失败」「功能已关闭」，UI 表现都必须是 nil，
     /// 逐像素一致，绝不打扰用户（见项目计划文档）。
@@ -170,6 +172,7 @@ class DataRefreshManager: ObservableObject {
         }
         if fetchCodex {
             codexErrorMessage = nil
+            codexErrorRequiresAuthAction = false
         }
 
         // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
@@ -271,6 +274,7 @@ class DataRefreshManager: ObservableObject {
         refreshState.lastSuccessAt[.codex] = nil
         if clearError {
             codexErrorMessage = nil
+            codexErrorRequiresAuthAction = false
         }
         lastCodexResetsAt = nil
         cancelCodexResetVerification()
@@ -614,6 +618,7 @@ class DataRefreshManager: ObservableObject {
         }
         isLoading = true
         codexErrorMessage = nil
+        codexErrorRequiresAuthAction = false
         markRequestIssued()
 
         codexApiService.fetchUsage { [weak self] result in
@@ -656,7 +661,12 @@ class DataRefreshManager: ObservableObject {
             }
         }
         codexErrorMessage = error.localizedDescription
-        clearCodexUsageState(clearError: false)
+        codexErrorRequiresAuthAction = requiresAuthAction(error)
+        // 与 Claude 一致：瞬时错误（限流/网络/5xx）保留缓存数据，界面只在标题旁显示小叹号；
+        // 认证类错误说明旧数据已不可信，清掉数据改为全屏引导
+        if codexErrorRequiresAuthAction {
+            clearCodexUsageState(clearError: false)
+        }
     }
 
     /// 应用一次成功的 Codex 用量结果（数据、通知、重置验证）
@@ -667,6 +677,7 @@ class DataRefreshManager: ObservableObject {
         let previousCodexData = codexUsageData
         codexUsageData = data
         codexErrorMessage = nil
+        codexErrorRequiresAuthAction = false
         NotificationManager.shared.checkAndNotify(codexUsageData: data, previousData: previousCodexData)
         let newCodexResetsAt = data.primary?.resetsAt
         if hasResetTimeChanged(from: lastCodexResetsAt, to: newCodexResetsAt) {
@@ -713,9 +724,7 @@ class DataRefreshManager: ObservableObject {
                         // chatgpt.com 在限流或出 5xx：WebView 访问同一个站点只会多打请求，
                         // 失败后还会被标记为需要重新登录，而凭据其实没问题
                         AppLog.warning(.auth, "Codex refresh tier 1 failed (\(error.localizedDescription)); backing off instead of escalating to tier 2")
-                        self.recordFetchFailure(backoffError, for: .codex)
-                        self.codexErrorMessage = backoffError.localizedDescription
-                        self.clearCodexUsageState(clearError: false)
+                        self.presentCodexFailure(backoffError)
                         return
                     }
                     AppLog.warning(.auth, "Codex refresh tier 1 failed (\(error.localizedDescription)); falling back to tier 2")
@@ -760,9 +769,7 @@ class DataRefreshManager: ObservableObject {
                 case .failure(let error) where self.backoffFailure(for: error) != nil:
                     // 新 token 仍被限流或网络失败，说明问题不在凭据：进入退避，而不是升级到 WebView 刷新再多打请求
                     AppLog.warning(.auth, "Codex usage failed with a freshly issued accessToken for a non-auth reason (\(error.localizedDescription)); backing off instead of escalating to tier 2")
-                    self.recordFetchFailure(error, for: .codex)
-                    self.codexErrorMessage = error.localizedDescription
-                    self.clearCodexUsageState(clearError: false)
+                    self.presentCodexFailure(error)
                 case .failure(let error):
                     AppLog.warning(.auth, "Codex usage still failed with a freshly issued accessToken: \(error.localizedDescription); falling back to tier 2")
                     self.attemptLevel2WebViewRefresh()
@@ -788,6 +795,7 @@ class DataRefreshManager: ObservableObject {
             }
         }
         codexErrorMessage = UsageError.sessionExpired.localizedDescription
+        codexErrorRequiresAuthAction = true
         clearCodexUsageState(clearError: false)
         AppLog.error(.auth, "Codex credentials can no longer be renewed; the user must sign in again")
     }

@@ -18,6 +18,8 @@ struct UsageDetailView: View {
     /// 瞬时错误（限流/网络）在有缓存数据时保留数据展示，只在标题旁显示小叹号
     @Binding var errorRequiresAuthAction: Bool
     @Binding var codexErrorMessage: String?
+    /// 当前 Codex 错误是否为认证类错误，语义同 errorRequiresAuthAction
+    @Binding var codexErrorRequiresAuthAction: Bool
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Binding var codexNeedsRelogin: Bool
     /// Codex 官方重置预告（Beta，第三方数据源 codex-reset.com）；nil 表示无预告或功能已关闭
@@ -208,7 +210,7 @@ struct UsageDetailView: View {
             guard usageData != nil, !errorRequiresAuthAction else { return nil }
             return errorMessage
         case .codex:
-            guard codexUsageData != nil, !codexNeedsRelogin else { return nil }
+            guard codexUsageData != nil, !codexErrorRequiresAuthAction, !codexNeedsRelogin else { return nil }
             return codexErrorMessage
         }
     }
@@ -699,17 +701,20 @@ struct UsageDetailView: View {
                     .buttonStyle(.plain)
                 } else {
                     HStack(spacing: 12) {
-                        Button(action: {
-                            onMenuAction?(.authSettings)
-                        }) {
-                            Label(L.Usage.goToSettings, systemImage: "key.fill")
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
+                        // 与 Claude 一致：只有认证类错误才引导去设置，网络/限流错误去改凭据无济于事
+                        if codexErrorRequiresAuthAction {
+                            Button(action: {
+                                onMenuAction?(.authSettings)
+                            }) {
+                                Label(L.Usage.goToSettings, systemImage: "key.fill")
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
 
                         Button(action: {
                             onMenuAction?(.authSettings)
@@ -974,6 +979,7 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var errorMsg: String? = nil
     @State static var errorRequiresAuth = false
     @State static var codexErrorMsg: String? = nil
+    @State static var codexErrorRequiresAuth = false
     @State static var codexData: CodexUsageData? = nil
     @State static var codexNeedsRelogin = false
     @State static var codexResetAnnouncement: CodexResetAnnouncement? = nil
@@ -988,6 +994,7 @@ struct UsageDetailView_Previews: PreviewProvider {
             errorMessage: $errorMsg,
             errorRequiresAuthAction: $errorRequiresAuth,
             codexErrorMessage: $codexErrorMsg,
+            codexErrorRequiresAuthAction: $codexErrorRequiresAuth,
             codexNeedsRelogin: $codexNeedsRelogin,
             codexResetAnnouncement: $codexResetAnnouncement,
             refreshState: refreshState,

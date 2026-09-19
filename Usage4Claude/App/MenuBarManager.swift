@@ -70,6 +70,8 @@ class MenuBarManager: ObservableObject {
     @Published var errorRequiresAuthAction = false
     /// Codex 错误消息（独立于 Claude）
     @Published var codexErrorMessage: String?
+    /// 当前 Codex 错误是否为认证类错误（从 dataManager 同步）
+    @Published var codexErrorRequiresAuthAction = false
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Published var codexNeedsRelogin = false
     /// Codex 官方重置预告（Beta，从 dataManager 同步）
@@ -128,6 +130,9 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexErrorMessage
             .assign(to: &$codexErrorMessage)
+
+        dataManager.$codexErrorRequiresAuthAction
+            .assign(to: &$codexErrorRequiresAuthAction)
 
         dataManager.$codexNeedsRelogin
             .assign(to: &$codexNeedsRelogin)
@@ -383,6 +388,10 @@ class MenuBarManager: ObservableObject {
             codexErrorMessage: Binding(
                 get: { self.codexErrorMessage },
                 set: { self.codexErrorMessage = $0 }
+            ),
+            codexErrorRequiresAuthAction: Binding(
+                get: { self.codexErrorRequiresAuthAction },
+                set: { _ in }
             ),
             codexNeedsRelogin: Binding(
                 get: { self.codexNeedsRelogin },
