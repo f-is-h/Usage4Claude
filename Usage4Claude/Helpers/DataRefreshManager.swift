@@ -133,8 +133,8 @@ class DataRefreshManager: ObservableObject {
     // MARK: - Data Fetching
 
     /// 获取用量数据（Claude + Codex 并发）
-    /// - Parameter bypassBackoff: 是否无视失败退避。只有用户手动刷新传 true；定时器、系统唤醒、
-    ///   打开 Popover、重置验证等自动触发都必须遵守退避，避免限流期间按固定间隔持续重试
+    /// - Parameter bypassBackoff: 是否无视失败退避。只有用户主动操作（手动刷新、打开 Popover）传 true；
+    ///   定时器、系统唤醒、重置验证等自动触发都必须遵守退避，避免限流期间按固定间隔持续重试
     func fetchUsage(bypassBackoff: Bool = false) {
         let claudeEnabled = shouldFetchClaudeUsage
         let codexEnabled = shouldFetchCodexUsage
@@ -162,7 +162,7 @@ class DataRefreshManager: ObservableObject {
         guard fetchClaude || fetchCodex else { return }
 
         isLoading = true
-        lastAPIFetchTime = now
+        markRequestIssued(at: now)
         // 只清除本次实际发起请求的 Provider 的错误；因退避被跳过的一方继续显示原来的错误横幅
         if fetchClaude {
             errorMessage = nil
@@ -328,6 +328,14 @@ class DataRefreshManager: ObservableObject {
         timerManager.invalidate(TimerID.popoverRefresh)
     }
 
+    /// 记录一次请求已发出，并把主定时器顺延一个完整间隔
+    /// - Note: 打开 Popover、手动刷新、点圆环、唤醒都会在定时器周期之外发请求。不顺延的话，
+    ///   定时器可能几秒后又到点形成连发；日志里 Claude OAuth 用量接口对这种连发返回了 429
+    private func markRequestIssued(at date: Date = Date()) {
+        lastAPIFetchTime = date
+        restartTimer()
+    }
+
     /// 重启刷新定时器
     /// 根据用户设置的刷新频率重新创建定时器
     private func restartTimer() {
@@ -382,12 +390,13 @@ class DataRefreshManager: ObservableObject {
 
     // MARK: - Smart Refresh
 
-    /// 打开Popover时的智能刷新
-    /// 如果距离上次刷新 > 30秒，则立即刷新数据
+    /// 打开 Popover 时立即刷新一次
+    /// 与手动刷新同属用户主动操作，不受失败退避约束；只有 10 秒内刚发过请求时跳过，
+    /// 那时的数据已是最新，重复请求只会形成连发（日志里连发正是触发 429 的原因）
     func refreshOnPopoverOpen() {
         let now = Date()
 
-        // 独立旁支，放在最前面：即使下面因 30 秒防抖提前 return，预告检查仍应按自己的频率策略执行
+        // 独立旁支，放在最前面：即使下面因最小间隔提前 return，预告检查仍应按自己的频率策略执行
         fetchCodexResetAnnouncementIfNeeded()
 
         // 用户打开详细界面，强制切换到活跃模式（1分钟刷新）
@@ -405,14 +414,16 @@ class DataRefreshManager: ObservableObject {
             }
         }
 
-        // 如果距离上次刷新 < 30秒，跳过
         if let lastFetch = lastAPIFetchTime,
-           now.timeIntervalSince(lastFetch) < 30 {
+           now.timeIntervalSince(lastFetch) < Self.popoverOpenMinimumInterval {
             return
         }
 
-        fetchUsage()
+        fetchUsage(bypassBackoff: true)
     }
+
+    /// 打开 Popover 触发刷新的最小间隔：挡住快速开关弹窗造成的连发
+    private static let popoverOpenMinimumInterval: TimeInterval = 10
 
     // MARK: - Codex Reset Announcement (Beta)
 
@@ -560,7 +571,7 @@ class DataRefreshManager: ObservableObject {
         isLoading = true
         errorMessage = nil
         errorRequiresAuthAction = false
-        lastAPIFetchTime = Date()
+        markRequestIssued()
 
         // ClaudeAPIService.fetchUsage 保证 completion 一律在主线程回调，此处无需再包一层 DispatchQueue.main.async
         apiService.fetchUsage { [weak self] result in
@@ -601,7 +612,7 @@ class DataRefreshManager: ObservableObject {
         }
         isLoading = true
         codexErrorMessage = nil
-        lastAPIFetchTime = Date()
+        markRequestIssued()
 
         codexApiService.fetchUsage { [weak self] result in
             DispatchQueue.main.async {
