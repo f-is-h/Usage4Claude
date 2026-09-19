@@ -457,7 +457,7 @@
 "codex_announcement.tooltip_countdown_deadline" = "늦어도 리셋: %@";
 "codex_announcement.tooltip_no_time" = "리셋 예고됨 (시간 미정)";
 "codex_announcement.tooltip_overdue" = "예고 시간이 지났지만 아직 확인되지 않음";
-"codex_announcement.tooltip_footer" = "Beta · 제3자 codex-reset.com 데이터 · 클릭하여 열기";
+"codex_announcement.tooltip_footer" = "Beta · 출처: codex-reset.com";
 "settings.general.codex_announcement_section" = "Codex 리셋 예고 (Beta)";
 "settings.general.codex_announcement_enable" = "리셋 예고 배지 표시";
 "settings.general.codex_announcement_hint" = "OpenAI의 Tibo Sottiaux가 아직 지나지 않은 전역 리셋을 공개적으로 예고했을 때만 Codex 링 옆에 작은 배지가 표시됩니다. 대부분의 시간에는 아무것도 표시되지 않습니다. 데이터는 독립 커뮤니티 프로젝트인 codex-reset.com에서 제공됩니다(Beta: 데이터 출처가 변경되거나 중단될 수 있음). 끄면 해당 사이트로 어떤 요청도 보내지 않습니다.";

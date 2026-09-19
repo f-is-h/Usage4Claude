@@ -457,7 +457,7 @@
 "codex_announcement.tooltip_countdown_deadline" = "最遲重置：%@";
 "codex_announcement.tooltip_no_time" = "已公布重置，未提供時間";
 "codex_announcement.tooltip_overdue" = "已過預告時間，尚未確認";
-"codex_announcement.tooltip_footer" = "Beta · 第三方資料，來自 codex-reset.com · 點擊開啟";
+"codex_announcement.tooltip_footer" = "Beta · 資料來源：codex-reset.com";
 "settings.general.codex_announcement_section" = "Codex 重置預告（Beta）";
 "settings.general.codex_announcement_enable" = "顯示重置預告徽章";
 "settings.general.codex_announcement_hint" = "僅當 OpenAI 的 Tibo Sottiaux 公開預告了一個尚未到達的全域重置時，才會在 Codex 圓環旁顯示一個小徽章——大部分時間不會有任何顯示。資料來自第三方社群專案 codex-reset.com（Beta：資料來源可能變更或失效）。關閉後將不再向該網站發出任何請求。";

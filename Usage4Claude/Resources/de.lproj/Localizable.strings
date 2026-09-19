@@ -456,7 +456,7 @@
 "codex_announcement.tooltip_countdown_deadline" = "Reset spätestens: %@";
 "codex_announcement.tooltip_no_time" = "Reset angekündigt, ohne Zeitangabe";
 "codex_announcement.tooltip_overdue" = "Angekündigte Zeit verstrichen, noch nicht bestätigt";
-"codex_announcement.tooltip_footer" = "Beta · Drittanbieterdaten von codex-reset.com · zum Öffnen klicken";
+"codex_announcement.tooltip_footer" = "Beta · Quelle: codex-reset.com";
 "settings.general.codex_announcement_section" = "Codex-Reset-Ankündigung (Beta)";
 "settings.general.codex_announcement_enable" = "Reset-Ankündigungs-Badge anzeigen";
 "settings.general.codex_announcement_hint" = "Zeigt ein kleines Badge neben dem Codex-Ring, aber nur wenn Tibo Sottiaux von OpenAI öffentlich einen noch bevorstehenden globalen Reset angekündigt hat — meistens gibt es nichts anzuzeigen. Die Daten stammen von codex-reset.com, einem unabhängigen Community-Projekt (Beta: die Quelle kann sich ändern oder wegfallen). Wird diese Option deaktiviert, werden keine Anfragen mehr an diese Website gesendet.";
