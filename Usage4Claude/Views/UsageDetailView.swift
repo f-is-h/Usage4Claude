@@ -263,94 +263,110 @@ struct UsageDetailView: View {
         } else if let data = usageData {
             // 使用数据
             VStack(spacing: 15) {
-                // 圆形进度条
-                ZStack {
-                    let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
+                // 根据用户设置选择圆形或线性图表
+                Group {
+                    switch UserSettings.shared.graphDisplayType {
+                    case .circular:
+                        // 圆形进度条
+                        ZStack {
+                            let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
 
-                    if let primary = primaryLimitData {
-                        let primaryRingColor = colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes)
-                        let primaryRingRange = UsageRingDisplay.displayedTrimRange(
-                            usedPercentage: primary.percentage,
-                            showRemainingMode: showRemainingMode
-                        )
-
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                            .frame(width: 100, height: 100)
-
-                        if isClaudeRefreshing {
-                            loadingAnimation()
-                        } else {
-                            Circle()
-                                .trim(from: primaryRingRange.from, to: primaryRingRange.to)
-                                .stroke(
-                                    primaryRingColor,
-                                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                                )
-                                .frame(width: 100, height: 100)
-                                .rotationEffect(.degrees(-90))
-                                .animation(
-                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
-                                    value: primaryRingRange
-                                )
-                        }
-
-                        if activeDisplayTypes.contains(.fiveHour) &&
-                           activeDisplayTypes.contains(.sevenDay) {
-                            let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.shouldShowCustomPlaceholderInPopover ? 0 : nil)
-
-                            if let percentage = sevenDayPercentage {
-                                let outerRingRange = UsageRingDisplay.displayedTrimRange(
-                                    usedPercentage: percentage,
+                            if let primary = primaryLimitData {
+                                let primaryRingColor = colorForPrimaryByActiveTypes(data: data, activeTypes: activeDisplayTypes)
+                                let primaryRingRange = UsageRingDisplay.displayedTrimRange(
+                                    usedPercentage: primary.percentage,
                                     showRemainingMode: showRemainingMode
                                 )
 
                                 Circle()
-                                    .stroke(Color.gray.opacity(0.15), lineWidth: 3)
-                                    .frame(width: 114, height: 114)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                                    .frame(width: 100, height: 100)
 
                                 if isClaudeRefreshing {
-                                    outerLoadingAnimation()
+                                    loadingAnimation()
                                 } else {
                                     Circle()
-                                        .trim(from: outerRingRange.from, to: outerRingRange.to)
+                                        .trim(from: primaryRingRange.from, to: primaryRingRange.to)
                                         .stroke(
-                                            colorForSevenDay(percentage),
-                                            style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                            primaryRingColor,
+                                            style: StrokeStyle(lineWidth: 10, lineCap: .round)
                                         )
-                                        .frame(width: 114, height: 114)
+                                        .frame(width: 100, height: 100)
                                         .rotationEffect(.degrees(-90))
                                         .animation(
                                             .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
-                                            value: outerRingRange
+                                            value: primaryRingRange
                                         )
                                 }
+
+                                if activeDisplayTypes.contains(.fiveHour) &&
+                                   activeDisplayTypes.contains(.sevenDay) {
+                                    let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.shouldShowCustomPlaceholderInPopover ? 0 : nil)
+
+                                    if let percentage = sevenDayPercentage {
+                                        let outerRingRange = UsageRingDisplay.displayedTrimRange(
+                                            usedPercentage: percentage,
+                                            showRemainingMode: showRemainingMode
+                                        )
+
+                                        Circle()
+                                            .stroke(Color.gray.opacity(0.15), lineWidth: 3)
+                                            .frame(width: 114, height: 114)
+
+                                        if isClaudeRefreshing {
+                                            outerLoadingAnimation()
+                                        } else {
+                                            Circle()
+                                                .trim(from: outerRingRange.from, to: outerRingRange.to)
+                                                .stroke(
+                                                    colorForSevenDay(percentage),
+                                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                                )
+                                                .frame(width: 114, height: 114)
+                                                .rotationEffect(.degrees(-90))
+                                                .animation(
+                                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                                    value: outerRingRange
+                                                )
+                                        }
+                                    }
+                                }
+
+                                if !isClaudeRefreshing {
+                                    DetailUsageRingSweep(
+                                        trigger: remainingModeAnimationTrigger,
+                                        diameter: 122,
+                                        lineWidth: 3,
+                                        color: primaryRingColor
+                                    )
+                                }
+
+                                DetailUsageRingCenterText(
+                                    usedPercentage: primary.percentage,
+                                    showRemainingMode: showRemainingMode
+                                )
                             }
                         }
-
-                        if !isClaudeRefreshing {
-                            DetailUsageRingSweep(
-                                trigger: remainingModeAnimationTrigger,
-                                diameter: 122,
-                                lineWidth: 3,
-                                color: primaryRingColor
-                            )
-                        }
-
-                        DetailUsageRingCenterText(
-                            usedPercentage: primary.percentage,
+                        .contentShape(Circle())
+                    case .linear:
+                        LinearUsageGraphView(
+                            usageData: data,
+                            activeDisplayTypes: activeDisplayTypes,
+                            isRefreshing: isClaudeRefreshing,
                             showRemainingMode: showRemainingMode
                         )
+                        .contentShape(Rectangle())
                     }
                 }
                 .frame(height: 114)
-                .contentShape(Circle())
                 .onTapGesture {
                     if refreshState.canRefresh && !refreshState.isRefreshing {
                         onMenuAction?(.refreshClaude)
                     }
                 }
                 .onLongPressGesture(minimumDuration: 3.0) {
+                    // 长按圆环切换动画类型（仅圆形模式有效）
+                    guard UserSettings.shared.graphDisplayType == .circular else { return }
                     let allTypes = LoadingAnimationType.allCases
                     let currentIndex = allTypes.firstIndex(of: claudeAnimationType) ?? 0
                     let nextIndex = (currentIndex + 1) % allTypes.count

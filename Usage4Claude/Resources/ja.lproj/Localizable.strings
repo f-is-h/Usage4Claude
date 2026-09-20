@@ -435,6 +435,18 @@
 "account.add_codex_account" = "Codex アカウントを追加";
 "account.codex_current_account" = "現在の Codex アカウント";
 
+// MARK: - Graph Type
+"graph_type.circular" = "サークル";
+"graph_type.linear" = "ライン";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "グラフスタイル";
+"graph_style.hint" = "使用量の表示方法を選択";
+"graph_style.circular_description" = "使用量をパーセントリングで表示";
+"graph_style.linear_description" = "各リミットを均等な使用ペースと比較して表示";
+"graph_style.weekdays_only" = "平日のみ";
+"graph_style.weekdays_only_description" = "週間制限のペースを平日の時間だけで計算します（土曜・日曜は除外）";
+
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "サインインを準備しています…";
 "weblogin.codex_oauth_waiting_browser" = "ブラウザでサインインを続けてください";

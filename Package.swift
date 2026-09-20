@@ -48,7 +48,8 @@ let package = Package(
                 "Models/ProviderAuthPath.swift",
                 "Helpers/OAuthGrantFailure.swift",
                 "Helpers/UsageDisplayMode.swift",
-                "Helpers/NetworkCachePolicy.swift"
+                "Helpers/NetworkCachePolicy.swift",
+                "Helpers/UsagePaceGraphMath.swift"
             ]
         ),
         .testTarget(

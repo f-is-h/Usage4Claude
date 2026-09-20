@@ -578,6 +578,22 @@ enum L {
         static var preview: String { localized("settings.general.time_format_preview") }
     }
 
+    // MARK: - Graph Type
+    enum GraphType {
+        static var circular: String { localized("graph_type.circular") }
+        static var linear: String { localized("graph_type.linear") }
+    }
+
+    // MARK: - Graph Style Settings
+    enum GraphStyle {
+        static var title: String { localized("graph_style.title") }
+        static var hint: String { localized("graph_style.hint") }
+        static var circularDescription: String { localized("graph_style.circular_description") }
+        static var linearDescription: String { localized("graph_style.linear_description") }
+        static var weekdaysOnly: String { localized("graph_style.weekdays_only") }
+        static var weekdaysOnlyDescription: String { localized("graph_style.weekdays_only_description") }
+    }
+
     // MARK: - Helper Methods
     
     /// 本地化字符串辅助方法

@@ -434,6 +434,18 @@
 "account.add_codex_account" = "Codex Account hinzufügen";
 "account.codex_current_account" = "Aktueller Codex Account";
 
+// MARK: - Graph Type
+"graph_type.circular" = "Kreis";
+"graph_type.linear" = "Linear";
+
+// MARK: - Graph Style Settings
+"graph_style.title" = "Diagrammstil";
+"graph_style.hint" = "Darstellung der Nutzung auswählen";
+"graph_style.circular_description" = "Zeigt die Nutzung als Prozentring";
+"graph_style.linear_description" = "Zeigt jedes Limit im Vergleich zu gleichmäßigem Verbrauch";
+"graph_style.weekdays_only" = "Nur Wochentage";
+"graph_style.weekdays_only_description" = "Wöchentliche Limits werden nur an der Zeit von Montag bis Freitag gemessen; Samstag und Sonntag werden übersprungen";
+
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "Anmeldung wird vorbereitet…";
 "weblogin.codex_oauth_waiting_browser" = "Im Browser fortsetzen";
