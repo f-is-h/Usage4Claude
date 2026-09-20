@@ -98,7 +98,7 @@
 "settings.auth.need_credentials" = "Veuillez saisir la clé de session";
 "settings.auth.show_password" = "Afficher";
 "settings.auth.hide_password" = "Masquer";
-"settings.auth.manual_input_claude_only_help" = "Claude uniquement : la saisie manuelle de la clé de session n'est pas prise en charge pour Codex.";
+"settings.auth.manual_input_claude_only_help" = "Seul Claude prend en charge la saisie manuelle de la clé de session. Pour Codex, utilisez la connexion via le navigateur.";
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";
@@ -299,11 +299,11 @@
 "welcome_display_subtitle" = "Sélectionnez les limites d'utilisation à afficher dans la barre des menus";
 "preview" = "Aperçu";
 "welcome.skip" = "Passer";
+"welcome.skip_hint" = "Vous pourrez ajouter des comptes plus tard dans Réglages → Comptes";
 "welcome.finish" = "Terminer";
 "welcome.authentication_setup" = "Configuration de l'authentification";
 "welcome.session_key" = "Clé de session";
-"welcome.session_key_placeholder" = "Collez votre clé de session ici";
-"welcome.session_key_hint" = "Collez la valeur complète du cookie sessionKey";
+"welcome.session_key_placeholder" = "Collez la valeur complète du cookie sessionKey";
 "welcome.valid_format" = "Format valide";
 "welcome.invalid_format" = "La clé de session doit contenir entre 20 et 500 caractères";
 "welcome.select_limits" = "Sélectionner les limites";

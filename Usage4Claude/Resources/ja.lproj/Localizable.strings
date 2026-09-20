@@ -98,7 +98,7 @@
 "settings.auth.need_credentials" = "Session Keyを入力してください";
 "settings.auth.show_password" = "表示";
 "settings.auth.hide_password" = "非表示";
-"settings.auth.manual_input_claude_only_help" = "Claude 専用: Codex は Session Key の手動入力に対応していません。";
+"settings.auth.manual_input_claude_only_help" = "Session Key の手動入力に対応しているのは Claude のみです。Codex はブラウザログインをご利用ください。";
 
 // MARK: - Settings - About
 "settings.about.version" = "バージョン %@";
@@ -299,11 +299,11 @@
 "welcome_display_subtitle" = "メニューバーに表示する使用量制限を選択してください";
 "preview" = "プレビュー";
 "welcome.skip" = "スキップ";
+"welcome.skip_hint" = "アカウントは後から「設定 → アカウント」で追加できます";
 "welcome.finish" = "完了";
 "welcome.authentication_setup" = "認証設定";
 "welcome.session_key" = "セッションキー";
-"welcome.session_key_placeholder" = "セッションキーをここに貼り付けてください";
-"welcome.session_key_hint" = "完全な sessionKey Cookie 値を貼り付けてください";
+"welcome.session_key_placeholder" = "Cookie の sessionKey の値を完全な形で貼り付け";
 "welcome.valid_format" = "形式が正しい";
 "welcome.invalid_format" = "セッションキーは20〜500文字である必要があります";
 "welcome.select_limits" = "制限を選択";

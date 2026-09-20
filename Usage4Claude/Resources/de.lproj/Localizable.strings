@@ -97,7 +97,7 @@
 "settings.auth.need_credentials" = "Bitte Session Key eingeben";
 "settings.auth.show_password" = "Anzeigen";
 "settings.auth.hide_password" = "Verbergen";
-"settings.auth.manual_input_claude_only_help" = "Nur Claude: Manuelle Eingabe des Session Key wird für Codex nicht unterstützt.";
+"settings.auth.manual_input_claude_only_help" = "Nur Claude unterstützt die manuelle Eingabe des Session Key. Für Codex bitte die Browser-Anmeldung verwenden.";
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";
@@ -298,11 +298,11 @@
 "welcome_display_subtitle" = "Auswählen, welche Nutzungslimits in der Menüleiste angezeigt werden";
 "preview" = "Vorschau";
 "welcome.skip" = "Überspringen";
+"welcome.skip_hint" = "Konten lassen sich später unter Einstellungen → Konten hinzufügen";
 "welcome.finish" = "Fertigstellen";
 "welcome.authentication_setup" = "Anmeldung einrichten";
 "welcome.session_key" = "Session Key";
-"welcome.session_key_placeholder" = "Den Session Key hier einfügen";
-"welcome.session_key_hint" = "Den vollständigen sessionKey-Cookie-Wert einfügen";
+"welcome.session_key_placeholder" = "Den vollständigen Wert des sessionKey-Cookies einfügen";
 "welcome.valid_format" = "Gültiges Format";
 "welcome.invalid_format" = "Der Session Key sollte 20–500 Zeichen lang sein";
 "welcome.select_limits" = "Limits auswählen";

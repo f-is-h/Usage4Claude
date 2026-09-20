@@ -1,5 +1,5 @@
 //
-//  GeneralSettingsDisplaySection.swift
+//  MenuBarAppearanceSection.swift
 //  Usage4Claude
 //
 //  Created by Claude Code on 2025-12-02.
@@ -8,9 +8,8 @@
 
 import SwiftUI
 
-/// 通用设置页的"显示设置"卡片：菜单栏图标样式 + 显示内容（图标/百分比）开关
-/// 从 GeneralSettingsView 拆出，便于保持单文件体量可控
-struct GeneralSettingsDisplaySection: View {
+/// 「显示」页的「菜单栏外观」卡片：菜单栏图标样式 + 显示内容（图标/百分比）开关
+struct MenuBarAppearanceSection: View {
     @ObservedObject private var settings = UserSettings.shared
 
     var body: some View {

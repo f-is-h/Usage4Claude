@@ -48,6 +48,17 @@ extension Notification.Name {
     /// 发送此通知以打开设置窗口
     static let openSettings = Notification.Name("openSettings")
 
+    /// 首次启动引导已结束
+    /// AppDelegate 据此关闭引导窗口并开始刷新。
+    /// 不要复用 .openSettings：那个通知会被 MenuBarManager 当成「打开设置窗口」，
+    /// 引导完成后会莫名其妙弹出设置窗（v2.0.0 起就有的副作用）
+    static let onboardingFinished = Notification.Name("onboardingFinished")
+
+    #if DEBUG
+    /// 重新打开首次启动引导窗口（仅 DEBUG 的调试入口使用）
+    static let showWelcomeWindow = Notification.Name("showWelcomeWindow")
+    #endif
+
     /// 主界面里弹出的说明小弹窗（标题旁小叹号、Codex 重置预告）已收起
     /// MenuBarUI 据此判断用户是否点了主界面之外：是的话主界面一并关闭
     static let detailPopoverDismissed = Notification.Name("detailPopoverDismissed")

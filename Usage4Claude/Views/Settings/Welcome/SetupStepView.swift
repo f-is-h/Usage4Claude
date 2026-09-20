@@ -14,6 +14,8 @@ import SwiftUI
 struct SetupStepView: View {
     @Binding var sessionKey: String
     @Binding var isShowingPassword: Bool
+    /// 浏览器登录成功后直接结束引导：OAuth 那边已经把账户建好了
+    let onLoginSucceeded: () -> Void
     @ObservedObject private var settings = UserSettings.shared
 
     // MARK: - Checkbox Helper Methods
@@ -89,21 +91,31 @@ struct SetupStepView: View {
                             }
                         }
 
-                        // 浏览器登录按钮（推荐）
-                        Button(action: {
-                            WebLoginWindowManager.shared.showLoginWindow { account in
-                                // 登录成功后自动填充 sessionKey
-                                sessionKey = account.sessionKey
+                        // 浏览器登录：两家并排，Codex 不再是二等公民。
+                        // 任一登录成功就直接结束引导——OAuth 流程内部已经建好账户，
+                        // 不需要再拿返回值去补一次请求。
+                        //
+                        // 「浏览器登录」几个字提到上面当小标题，按钮里只留服务商名字：
+                        // 两个按钮各占半宽，法语的「Connexion via le navigateur」塞不进去
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L.WebLogin.browserLoginRecommended)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            HStack(spacing: 10) {
+                                browserLoginButton(provider: .claude) {
+                                    WebLoginWindowManager.shared.showLoginWindow { _ in
+                                        onLoginSucceeded()
+                                    }
+                                }
+
+                                browserLoginButton(provider: .codex) {
+                                    WebLoginWindowManager.shared.showCodexLoginWindow { _ in
+                                        onLoginSucceeded()
+                                    }
+                                }
                             }
-                        }) {
-                            HStack {
-                                Image(systemName: "globe")
-                                Text(L.WebLogin.browserLoginRecommended)
-                            }
-                            .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
 
                         // 分隔线
                         HStack {
@@ -119,7 +131,15 @@ struct SetupStepView: View {
                                 .frame(height: 1)
                         }
 
-                        // Session Key输入 - 横向
+                        // 手动输入只对 Claude 有效，Codex 只能走浏览器登录。
+                        // 这一条必须写在界面上：两个登录按钮并排之后，
+                        // 用户很容易以为下面的输入框对两家都适用
+                        Text(L.SettingsAuth.manualInputClaudeOnlyHelp)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        // Session Key 输入 - 横向
                         HStack(alignment: .top, spacing: 12) {
                             Text(L.Welcome.sessionKey)
                                 .font(.subheadline)
@@ -145,6 +165,7 @@ struct SetupStepView: View {
                                             .foregroundColor(.secondary)
                                     }
                                     .buttonStyle(.plain)
+                                    .focusable(false)
                                 }
 
                                 // 验证状态
@@ -160,24 +181,9 @@ struct SetupStepView: View {
                                     }
                                 }
 
-                                Text(L.Welcome.sessionKeyHint)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                // 帮助按钮
-                                Button(action: {
-                                    if let url = URL(string: getGitHubReadmeURL(section: .initialSetup)) {
-                                        NSWorkspace.shared.open(url)
-                                    }
-                                }) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "questionmark.circle")
-                                        Text(L.Welcome.howToGetSessionKey)
-                                            .font(.caption)
-                                    }
-                                    .foregroundColor(.blue)
-                                }
-                                .buttonStyle(.plain)
+                                // 「粘贴完整的 sessionKey Cookie 值」已经挪进输入框占位符，
+                                // 这里只留去文档的入口
+                                howToGetSessionKeyLink
                             }
                         }
                     }
@@ -217,6 +223,7 @@ struct SetupStepView: View {
                                     .foregroundColor(.blue)
                                 }
                                 .buttonStyle(.plain)
+                                .focusable(false)
                             }
                         }
 
@@ -261,6 +268,7 @@ struct SetupStepView: View {
                                         Text(L.Display.showIcon)
                                     }
                                     .toggleStyle(.checkbox)
+                                    .focusable(false)
                                     .disabled(settings.iconDisplayMode == .iconOnly)
 
                                     Toggle(isOn: Binding(
@@ -279,6 +287,7 @@ struct SetupStepView: View {
                                         Text(L.Display.showPercentage)
                                     }
                                     .toggleStyle(.checkbox)
+                                    .focusable(false)
                                     .disabled(settings.iconDisplayMode == .percentageOnly)
                                 }
                             }
@@ -381,6 +390,61 @@ struct SetupStepView: View {
                 .padding(.horizontal, 40)
 
                 Spacer(minLength: 20)
+            }
+        }
+    }
+
+    // MARK: - Session Key Hint
+
+    private var howToGetSessionKeyLink: some View {
+        Button(action: {
+            if let url = URL(string: getGitHubReadmeURL(section: .initialSetup)) {
+                NSWorkspace.shared.open(url)
+            }
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: "questionmark.circle")
+                Text(L.Welcome.howToGetSessionKey)
+                    .font(.caption)
+                    .lineLimit(1)
+            }
+            .foregroundColor(.blue)
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+    }
+
+    // MARK: - Browser Login Button
+
+    /// 带服务商图标的浏览器登录按钮（文字只有服务商名，说明在上方小标题里）
+    @ViewBuilder
+    private func browserLoginButton(provider: ProviderType, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                providerIcon(provider: provider, size: 16)
+                Text(provider.displayName)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .focusable(false)
+    }
+
+    @ViewBuilder
+    private func providerIcon(provider: ProviderType, size: CGFloat) -> some View {
+        switch provider {
+        case .claude:
+            if let icon = ImageHelper.createAppIcon(size: size) {
+                Image(nsImage: icon).resizable().frame(width: size, height: size)
+            } else {
+                Image(systemName: "sparkles").frame(width: size, height: size)
+            }
+        case .codex:
+            if let icon = ImageHelper.createCodexIcon(size: size) {
+                Image(nsImage: icon).resizable().frame(width: size, height: size)
+            } else {
+                Image(systemName: "chevron.left.forwardslash.chevron.right").frame(width: size, height: size)
             }
         }
     }

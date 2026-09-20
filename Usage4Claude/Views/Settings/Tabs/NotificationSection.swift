@@ -1,5 +1,5 @@
 //
-//  GeneralSettingsNotificationSection.swift
+//  NotificationSection.swift
 //  Usage4Claude
 //
 //  Copyright © 2025 f-is-h. All rights reserved.
@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-/// 通知设置卡片：总开关 + 三类提醒阈值滑块
+/// 「数据」页的通知卡片：总开关 + 三类提醒阈值滑块
 /// 5 小时与周限额由 Claude/Codex 共用；额外用量只在最近的数据里确实有额外用量时出现
-struct GeneralSettingsNotificationSection: View {
+struct NotificationSection: View {
     @ObservedObject private var settings = UserSettings.shared
     @ObservedObject private var notificationManager = NotificationManager.shared
 

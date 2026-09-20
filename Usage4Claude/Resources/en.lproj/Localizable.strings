@@ -98,7 +98,7 @@
 "settings.auth.need_credentials" = "Please enter Session Key";
 "settings.auth.show_password" = "Show";
 "settings.auth.hide_password" = "Hide";
-"settings.auth.manual_input_claude_only_help" = "Claude only: manual Session Key input is not supported for Codex.";
+"settings.auth.manual_input_claude_only_help" = "Only Claude supports manual Session Key entry. Use browser login for Codex.";
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";
@@ -299,11 +299,11 @@
 "welcome_display_subtitle" = "Select which usage limits to show in the menu bar";
 "preview" = "Preview";
 "welcome.skip" = "Skip";
+"welcome.skip_hint" = "You can add accounts later in Settings → Accounts";
 "welcome.finish" = "Finish";
 "welcome.authentication_setup" = "Authentication Setup";
 "welcome.session_key" = "Session Key";
-"welcome.session_key_placeholder" = "Paste your Session Key here";
-"welcome.session_key_hint" = "Paste the full sessionKey cookie value";
+"welcome.session_key_placeholder" = "Paste the full value of the sessionKey cookie";
 "welcome.valid_format" = "Valid format";
 "welcome.invalid_format" = "Session Key should be 20-500 characters";
 "welcome.select_limits" = "Select Limits";

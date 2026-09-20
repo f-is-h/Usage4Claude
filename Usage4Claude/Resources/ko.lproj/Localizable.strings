@@ -98,7 +98,7 @@
 "settings.auth.need_credentials" = "Session Key를 입력해야 합니다";
 "settings.auth.show_password" = "표시";
 "settings.auth.hide_password" = "숨기기";
-"settings.auth.manual_input_claude_only_help" = "Claude 전용: Codex는 Session Key 수동 입력을 지원하지 않습니다.";
+"settings.auth.manual_input_claude_only_help" = "Session Key 수동 입력은 Claude만 지원합니다. Codex는 브라우저 로그인을 사용하세요.";
 
 // MARK: - Settings - About
 "settings.about.version" = "버전 %@";
@@ -299,11 +299,11 @@
 "welcome_display_subtitle" = "메뉴바에 표시할 사용 제한 선택";
 "preview" = "미리보기";
 "welcome.skip" = "건너뛰기";
+"welcome.skip_hint" = "계정은 나중에 설정 → 계정에서 추가할 수 있습니다";
 "welcome.finish" = "완료";
 "welcome.authentication_setup" = "인증 설정";
 "welcome.session_key" = "Session Key";
-"welcome.session_key_placeholder" = "여기에 Session Key를 붙여넣으세요";
-"welcome.session_key_hint" = "전체 sessionKey Cookie 값을 붙여넣으세요";
+"welcome.session_key_placeholder" = "Cookie의 sessionKey 값을 전체로 붙여넣으세요";
 "welcome.valid_format" = "형식이 올바릅니다";
 "welcome.invalid_format" = "Session Key 길이는 20-500자 사이여야 합니다";
 "welcome.select_limits" = "제한 선택";

@@ -16,8 +16,8 @@ struct DisplaySettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                GeneralSettingsDisplaySection()
-                GeneralSettingsDisplayOptionsSection()
+                MenuBarAppearanceSection()
+                LimitSelectionSection()
 
                 // 图表样式卡片
                 SettingCard(

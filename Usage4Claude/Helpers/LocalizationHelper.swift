@@ -181,11 +181,11 @@ enum L {
         static var back: String { localized("welcome.back") }
         static var continue_: String { localized("welcome.continue") }
         static var skip: String { localized("welcome.skip") }
+        static var skipHint: String { localized("welcome.skip_hint") }
         static var finish: String { localized("welcome.finish") }
         static var authenticationSetup: String { localized("welcome.authentication_setup") }
         static var sessionKey: String { localized("welcome.session_key") }
         static var sessionKeyPlaceholder: String { localized("welcome.session_key_placeholder") }
-        static var sessionKeyHint: String { localized("welcome.session_key_hint") }
         static var validFormat: String { localized("welcome.valid_format") }
         static var howToGetSessionKey: String { localized("welcome.how_to_get_session_key") }
         static var invalidFormat: String { localized("welcome.invalid_format") }

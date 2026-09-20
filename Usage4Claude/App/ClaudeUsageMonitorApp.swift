@@ -96,11 +96,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // 使用 Combine 订阅通知，自动管理生命周期
-        NotificationCenter.default.publisher(for: .openSettings)
-            .sink { [weak self] notification in
-                self?.openSettingsFromNotification(notification)
+        NotificationCenter.default.publisher(for: .onboardingFinished)
+            .sink { [weak self] _ in
+                self?.handleOnboardingFinished()
             }
             .store(in: &cancellables)
+
+        #if DEBUG
+        // 调试入口：不改 isFirstLaunch，单纯把引导窗口再开出来看一眼
+        NotificationCenter.default.publisher(for: .showWelcomeWindow)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.showWelcomeWindow()
+            }
+            .store(in: &cancellables)
+        #endif
 
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
@@ -114,6 +124,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// 显示欢迎窗口
     /// 在首次启动或未配置认证信息时调用
     private func showWelcomeWindow() {
+        if let existing = welcomeWindow {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
         NSApp.setActivationPolicy(.regular)
 
         let welcomeView = WelcomeView()
@@ -124,7 +140,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         welcomeWindow?.title = L.Window.welcomeTitle
         welcomeWindow?.styleMask = [.titled, .closable]
-        welcomeWindow?.level = .floating
+        // 同样不设 .floating：引导里点浏览器登录时，它会连同登录小窗一起
+        // 压在浏览器上面。这里已经切到 .regular 策略并会 activate，
+        // 普通层级也能正常到前台
 
         if let screen = NSScreen.main {
             let screenFrame = screen.visibleFrame
@@ -146,9 +164,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
     
-    /// 处理打开设置的通知
-    /// 关闭欢迎窗口并根据认证配置状态启动刷新
-    private func openSettingsFromNotification(_ notification: Notification) {
+    /// 引导结束：关闭引导窗口，配置齐全的话立即开始刷新
+    private func handleOnboardingFinished() {
         welcomeWindow?.close()
         welcomeWindow = nil
 

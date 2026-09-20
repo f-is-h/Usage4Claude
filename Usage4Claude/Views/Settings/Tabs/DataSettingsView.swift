@@ -55,7 +55,7 @@ struct DataSettingsView: View {
                 }
 
                 // 通知设置卡片
-                GeneralSettingsNotificationSection()
+                NotificationSection()
 
                 // Codex 重置预告卡片（Beta）：状态驱动，只登录 Claude 时完全不出现这个词
                 if settings.hasValidCodexCredentials {

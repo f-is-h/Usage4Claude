@@ -1,5 +1,5 @@
 //
-//  GeneralSettingsDisplayOptionsSection.swift
+//  LimitSelectionSection.swift
 //  Usage4Claude
 //
 //  Created by Claude Code on 2025-12-02.
@@ -8,9 +8,8 @@
 
 import SwiftUI
 
-/// 通用设置页的"显示选项"卡片：智能/自定义显示模式 + 自定义显示类型勾选
-/// 从 GeneralSettingsView 拆出，便于保持单文件体量可控
-struct GeneralSettingsDisplayOptionsSection: View {
+/// 「显示」页的「显示哪些限额」卡片：智能/自定义显示模式 + 自定义显示类型勾选
+struct LimitSelectionSection: View {
     @ObservedObject private var settings = UserSettings.shared
 
     var body: some View {

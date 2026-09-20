@@ -153,18 +153,20 @@ struct NavigationButtons: View {
                         }
                     }
                     .buttonStyle(.bordered)
+                    .focusable(false)
                     .disabled(isFetchingOrgId)
                 }
 
                 Spacer()
 
-                // 跳过按钮
-                if currentStep != .setup {
-                    Button(L.Welcome.skip, action: onSkip)
-                        .buttonStyle(.plain)
-                        .foregroundColor(.secondary)
-                        .disabled(isFetchingOrgId)
-                }
+                // 跳过按钮：两页都要有。
+                // 只放在第一页的话，用户进到设置页又不想填 key 时会卡住——
+                // 「完成」在没填 key 时是禁用的，只能先返回再跳过
+                Button(L.Welcome.skip, action: onSkip)
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .focusable(false)
+                    .disabled(isFetchingOrgId)
 
                 // 继续/完成按钮
                 Button(action: currentStep == .setup ? onComplete : onNext) {
@@ -184,8 +186,16 @@ struct NavigationButtons: View {
                     .frame(maxWidth: 150)
                 }
                 .buttonStyle(.borderedProminent)
+                .focusable(false)
                 .disabled(!canProceed || isFetchingOrgId)
             }
+
+            // 跳过之后去哪儿配置，写在点击之前就能看到的地方。
+            // 不在点「跳过」时弹确认框：那个动作本身就是想快点离开，
+            // 而且没配凭据的话下次启动引导还会自己弹出来，不是一去不回
+            Text(L.Welcome.skipHint)
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 }

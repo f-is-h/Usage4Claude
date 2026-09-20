@@ -26,6 +26,25 @@ struct GeneralSettingsDebugSection: View {
             hint: "切换场景后，点击刷新按钮查看效果"
         ) {
             VStack(alignment: .leading, spacing: 12) {
+                // 重新打开首次启动引导：只开窗口，不动 isFirstLaunch，
+                // 单纯用来检查引导流程的样子
+                HStack {
+                    Button("重新打开引导窗口") {
+                        NotificationCenter.default.post(name: .showWelcomeWindow, object: nil)
+                    }
+                    .controlSize(.small)
+                    .focusable(false)
+
+                    Spacer()
+
+                    Text("只看流程，别点完成")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+                    .padding(.vertical, 4)
+
                 // 启用调试模式开关
                 HStack {
                     Toggle("", isOn: $settings.debugModeEnabled)

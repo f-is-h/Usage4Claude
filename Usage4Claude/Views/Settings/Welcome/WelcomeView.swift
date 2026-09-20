@@ -36,7 +36,8 @@ struct WelcomeView: View {
                 case .setup:
                     SetupStepView(
                         sessionKey: $sessionKey,
-                        isShowingPassword: $isShowingPassword
+                        isShowingPassword: $isShowingPassword,
+                        onLoginSucceeded: finishOnboarding
                     )
                 }
             }
@@ -100,6 +101,17 @@ struct WelcomeView: View {
         dismiss()
     }
 
+    /// 引导收尾：标记完成、让 AppDelegate 关窗并开始刷新
+    ///
+    /// 浏览器登录成功后直接走这里。OAuth 流程里 `ClaudeOAuthCoordinator` /
+    /// `CodexOAuthCoordinator` 已经建好并切换了账户，不需要再补一次网络请求
+    private func finishOnboarding() {
+        settings.isFirstLaunch = false
+        NotificationCenter.default.post(name: .onboardingFinished, object: nil)
+        dismiss()
+    }
+
+    /// 手动填 Session Key 的收尾路径：拿 key 换 Organization ID 再建账户
     private func completeSetup() {
         let trimmedKey = sessionKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -113,24 +125,13 @@ struct WelcomeView: View {
                 isFetchingOrgId = false
 
                 if success {
-                    // 获取成功，标记首次启动完成
-                    settings.isFirstLaunch = false
-
-                    // 发送通知以启动数据刷新
-                    NotificationCenter.default.post(name: .openSettings, object: nil)
-
-                    // 关闭窗口
-                    dismiss()
+                    finishOnboarding()
                 } else {
-                    // 获取失败，显示错误但不阻止用户继续
-                    // 用户可以稍后在设置中重新配置
+                    // 停在原地，让用户改完 key 再试一次。
+                    // 这里刻意不自动关窗、也不置 isFirstLaunch：配置没成功的话，
+                    // 下次启动 hasAnyValidCredentials 仍为 false，引导照样会弹，
+                    // 置不置这个标记都一样，倒计时关窗只会让用户来不及看清错误
                     fetchError = L.Welcome.fetchOrgIdFailed
-
-                    // 3秒后自动关闭错误提示并继续
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        settings.isFirstLaunch = false
-                        dismiss()
-                    }
                 }
             }
         }

@@ -82,22 +82,6 @@ final class WebLoginWindowManager {
 
     // MARK: - Private
 
-    private func makeWindow<V: View>(title: String, content: V) -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 700),
-            styleMask: [.titled, .closable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.contentView = NSHostingView(rootView: content)
-        window.title = title
-        window.minSize = NSSize(width: 600, height: 500)
-        window.center()
-        window.isReleasedWhenClosed = false
-        window.level = .floating
-        return window
-    }
-
     /// 固定尺寸的小窗口（用于 OAuth 进度展示，不可缩放）
     private func makeCompactWindow<V: View>(title: String, content: V, width: CGFloat, height: CGFloat) -> NSWindow {
         let window = NSWindow(
@@ -110,7 +94,9 @@ final class WebLoginWindowManager {
         window.title = title
         window.center()
         window.isReleasedWhenClosed = false
-        window.level = .floating
+        // 刻意不设 .floating：这个窗口的内容就是「请去浏览器完成登录」，
+        // floating 会跨应用压在浏览器上面，正好挡住用户该看的东西。
+        // 登录成功与否由本地回调 HTTP 服务器判定，窗口沉到后面不影响流程
         return window
     }
 }
