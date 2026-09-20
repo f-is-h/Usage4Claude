@@ -53,18 +53,22 @@ struct CodexResetAnnouncementBadge: View {
         .onDisappear { showsDetail = false }
     }
 
-    /// 图标 + "重置预告"。刻意不加实心胶囊背景和描边——那是 macOS 里按钮的视觉语言，
+    /// 喇叭图标 + "重置预告"。刻意不加实心胶囊背景和描边——那是 macOS 里按钮的视觉语言，
     /// 会让人误以为点一下就能手动触发重置。这里只是一条信息标记。
     ///
-    /// 也刻意不在这里放 Beta 标签：角标可用宽度只有约 84pt，而 Beta 标签要占 24pt，
-    /// 英文文案（"Reset expected" 约 67pt）加上它必然溢出、压到圆环上，且每新增一种
-    /// 语言都要重新验证宽度。Beta 信息改由设置页标题、弹出说明末行和 README 承载。
+    /// 放在 Codex 标题行里，与标题、刷新/菜单按钮共用约 258pt 宽度，因此各语言文案都尽量短。
+    /// 图标用喇叭而非循环箭头：标题行右侧就是刷新按钮，循环箭头与它几乎一样。
+    /// 始终带文字——只剩图标时用户不点开就不知道它是什么。标题行最挤的情况
+    /// （同时显示数据过期小叹号，日文 / 法文）文字允许缩小至 80% 而不是截断成省略号。
+    /// Beta 信息由设置页标题、弹出说明末行和 README 承载，不占标题行宽度。
     private var content: some View {
         HStack(spacing: 3) {
-            Image(systemName: "arrow.triangle.2.circlepath")
-                .font(.system(size: 8, weight: .semibold))
+            Image(systemName: "megaphone.fill")
+                .font(.system(size: 10, weight: .semibold))
             Text(L.CodexAnnouncement.title)
-                .font(.system(size: 9, weight: .medium))
+                .font(.system(size: 10, weight: .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .foregroundColor(accentColor)
     }

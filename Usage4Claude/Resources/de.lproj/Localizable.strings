@@ -463,7 +463,7 @@
 "weblogin.claude_oauth_manual_invalid" = "Kein Autorisierungscode gefunden. Den vollständigen Link aus der Adressleiste des Browsers kopieren und erneut versuchen.";
 
 // MARK: - Codex Reset Announcement (Beta)
-"codex_announcement.title" = "Reset erwartet";
+"codex_announcement.title" = "Reset bald";
 "codex_announcement.tooltip_countdown" = "Reset erwartet: %@";
 "codex_announcement.tooltip_countdown_deadline" = "Reset spätestens: %@";
 "codex_announcement.tooltip_no_time" = "Reset angekündigt, ohne Zeitangabe";

@@ -20,7 +20,7 @@
 "menu.account_prefix" = "Compte :";
 
 // MARK: - Usage Detail View
-"usage.title" = "Utilisation de Claude";
+"usage.title" = "Usage Claude";
 "usage.not_started" = "S'affichera après le début de l'utilisation";
 "usage.reset_in" = "Réinitialisation dans";
 "usage.remaining" = "Restant";
@@ -38,7 +38,7 @@
 "usage.refresh" = "Actualiser";
 "usage.refresh_cooldown" = "Veuillez patienter un instant";
 "usage.run_diagnostic" = "Lancer le diagnostic";
-"usage.codex_title" = "Utilisation de Codex";
+"usage.codex_title" = "Usage Codex";
 "usage.codex_relogin" = "Se reconnecter";
 
 // MARK: - Settings - Tabs
@@ -464,7 +464,7 @@
 "weblogin.claude_oauth_manual_invalid" = "Aucun code d'autorisation trouvé. Copiez le lien complet depuis la barre d'adresse et réessayez.";
 
 // MARK: - Codex Reset Announcement (Beta)
-"codex_announcement.title" = "Reset annoncé";
+"codex_announcement.title" = "Reset prévu";
 "codex_announcement.tooltip_countdown" = "Reset prévu : %@";
 "codex_announcement.tooltip_countdown_deadline" = "Reset au plus tard : %@";
 "codex_announcement.tooltip_no_time" = "Reset annoncé, sans heure précise";

@@ -636,14 +636,27 @@ struct UsageDetailView: View {
                     .frame(width: headerIconSize, height: headerIconSize)
             }
 
-            Text(provider == .claude ? L.Usage.title : L.Usage.codexTitle)
-                .font(.headline)
+            // 标题与其后的状态标记视觉上是一组，间距收紧到 4pt，给重置预告的文字留出宽度
+            HStack(spacing: 4) {
+                Text(provider == .claude ? L.Usage.title : L.Usage.codexTitle)
+                    .font(.headline)
+                    // 标题优先完整显示，挤不下时由重置预告的文字缩小让位
+                    .layoutPriority(1)
 
-            if let error = staleDataWarning(for: provider) {
-                staleDataIndicator(error, provider: provider)
+                if let error = staleDataWarning(for: provider) {
+                    staleDataIndicator(error, provider: provider)
+                }
+
+                // 重置预告放在标题行：高度固定，出现/消失都不挤动下方图表，圆环与线性图共用同一位置
+                if provider == .codex, let announcement = codexResetAnnouncement {
+                    CodexResetAnnouncementBadge(announcement: announcement)
+                }
             }
+            // 高于 Spacer：放得下时整组不被 Spacer 分走宽度
+            .layoutPriority(1)
 
-            Spacer()
+            // 最小宽度为 0：与刷新按钮之间仍有 HStack 默认间距，最挤时把这 4pt 也让给文字
+            Spacer(minLength: 0)
 
             if showsControls {
                 refreshAndMenuButtons
@@ -687,7 +700,6 @@ struct UsageDetailView: View {
                 animationType: $codexAnimationType,
                 rotationAngle: $rotationAngle,
                 remainingModeAnimationTrigger: remainingModeAnimationTrigger,
-                codexResetAnnouncement: codexResetAnnouncement,
                 onRefresh: { onMenuAction?(.refreshCodex) },
                 onAnimationHint: { showAnimationHint($0, provider: .codex) },
                 onToggleRemainingMode: toggleRemainingMode
