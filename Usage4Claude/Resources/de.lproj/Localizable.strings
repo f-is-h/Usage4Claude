@@ -6,8 +6,8 @@
 */
 
 // MARK: - Menu Items
-"menu.general_settings" = "Allgemeine Einstellungen";
-"menu.auth_settings" = "Account-Einstellungen";
+"menu.settings" = "Einstellungen";
+"menu.accounts" = "Konten";
 "menu.check_updates" = "Auf Updates prüfen";
 "menu.about" = "Über";
 "menu.claude_status" = "Claude Status";
@@ -41,15 +41,17 @@
 "usage.codex_relogin" = "Neu anmelden";
 
 // MARK: - Settings - Tabs
+"settings.tab.display" = "Anzeige";
+"settings.tab.data" = "Daten";
 "settings.tab.general" = "Allgemein";
-"settings.tab.auth" = "Anmeldung";
+"settings.tab.accounts" = "Konten";
 "settings.tab.about" = "Über";
 
 // MARK: - Settings - General
 "settings.general.launch_section" = "Beim Login starten";
 "settings.general.launch_at_login" = "Automatisch beim Login starten";
 "settings.general.launch_hint" = "Wenn aktiviert, startet die App automatisch bei der Anmeldung am System";
-"settings.general.display_section" = "Anzeigeeinstellungen";
+"settings.general.display_section" = "Menüleisten-Darstellung";
 "settings.general.menubar_icon" = "Menüleisten-Symbol";
 "settings.general.menubar_hint" = "Legt fest, was in der Menüleiste angezeigt wird";
 "settings.general.menubar_theme" = "Menüleisten-Theme";
@@ -64,7 +66,7 @@
 "settings.general.language_section" = "Spracheinstellungen";
 "settings.general.interface_language" = "Oberflächensprache";
 "settings.general.language_hint" = "Ändert die Anzeigesprache der Oberfläche";
-"settings.general.reset_button" = "Auf Standard zurücksetzen";
+"settings.general.reset_button" = "Alles auf Standard zurücksetzen";
 "icon_style.color_translucent" = "Farbig transparent";
 "icon_style.color_with_background" = "Farbig mit Hintergrund";
 "icon_style.monochrome" = "Einfarbig";
@@ -99,7 +101,7 @@
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";
-"settings.about.description" = "Überwacht das 5-Stunden-Nutzungslimit von Claude AI";
+"settings.about.description" = "Claude- und Codex-Nutzung in der Menüleiste verfolgen";
 "settings.about.developer" = "Entwickler";
 "settings.about.license" = "Lizenz";
 "settings.about.license_value" = "MIT-Lizenz";
@@ -258,7 +260,7 @@
 "detail_row.extra_usage" = "Zusätzliche Nutzung";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "Anzeigeoptionen";
+"display_options" = "Anzuzeigende Limits";
 "smart_display" = "Intelligente Anzeige";
 "smart_display_description" = "Zeigt automatisch alle Limit-Typen mit Daten an";
 "custom_display" = "Benutzerdefinierte Anzeige";

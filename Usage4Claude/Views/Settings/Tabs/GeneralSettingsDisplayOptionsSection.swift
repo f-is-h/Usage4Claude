@@ -97,6 +97,7 @@ struct GeneralSettingsDisplayOptionsSection: View {
                                     .font(.subheadline)
                             }
                             .toggleStyle(.checkbox)
+                            .focusable(false)
 
                             Text(L.DisplayOptions.menuBarOnlyDescription)
                                 .font(.caption)
@@ -191,6 +192,7 @@ struct LimitTypeCheckbox: View {
             }
         }
         .buttonStyle(.plain)
+        .focusable(false)
         .disabled(isDisabled)
         .help(isDisabled ? L.DisplayOptions.circularIconConstraint : "")
         .fixedSize()

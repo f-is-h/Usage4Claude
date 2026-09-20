@@ -7,8 +7,8 @@
 */
 
 // MARK: - Menu Items
-"menu.general_settings" = "一般設定";
-"menu.auth_settings" = "認証情報";
+"menu.settings" = "設定";
+"menu.accounts" = "アカウント";
 "menu.check_updates" = "アップデートを確認";
 "menu.about" = "このアプリについて";
 "menu.claude_status" = "Claudeステータス";
@@ -42,15 +42,17 @@
 "usage.codex_relogin" = "再ログイン";
 
 // MARK: - Settings - Tabs
+"settings.tab.display" = "表示";
+"settings.tab.data" = "データ";
 "settings.tab.general" = "一般";
-"settings.tab.auth" = "認証";
+"settings.tab.accounts" = "アカウント";
 "settings.tab.about" = "情報";
 
 // MARK: - Settings - General
 "settings.general.launch_section" = "ログイン時に起動";
 "settings.general.launch_at_login" = "ログイン時に自動起動";
 "settings.general.launch_hint" = "有効にすると、システムログイン時にアプリが自動的に起動されます";
-"settings.general.display_section" = "表示設定";
+"settings.general.display_section" = "メニューバーの外観";
 "settings.general.menubar_icon" = "メニューバーアイコン";
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
 "settings.general.menubar_theme" = "メニューバーテーマ";
@@ -65,7 +67,7 @@
 "settings.general.language_section" = "言語設定";
 "settings.general.interface_language" = "インターフェース言語";
 "settings.general.language_hint" = "表示言語を変更";
-"settings.general.reset_button" = "デフォルトに戻す";
+"settings.general.reset_button" = "すべてをデフォルトに戻す";
 "icon_style.color_translucent" = "カラー透明";
 "icon_style.color_with_background" = "カラー背景付き";
 "icon_style.monochrome" = "モノクローム";
@@ -100,7 +102,7 @@
 
 // MARK: - Settings - About
 "settings.about.version" = "バージョン %@";
-"settings.about.description" = "Claude AI の5時間使用制限を監視";
+"settings.about.description" = "Claude と Codex の使用量をメニューバーで追跡";
 "settings.about.developer" = "開発者";
 "settings.about.license" = "ライセンス";
 "settings.about.license_value" = "MIT License";
@@ -259,7 +261,7 @@
 "detail_row.extra_usage" = "追加使用量";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "表示オプション";
+"display_options" = "表示する上限";
 "smart_display" = "スマート表示";
 "smart_display_description" = "データのある制限タイプを自動的に表示";
 "custom_display" = "カスタム表示";

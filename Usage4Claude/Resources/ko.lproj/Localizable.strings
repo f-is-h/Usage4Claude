@@ -7,8 +7,8 @@
 */
 
 // MARK: - Menu Items
-"menu.general_settings" = "일반 설정";
-"menu.auth_settings" = "인증 정보";
+"menu.settings" = "설정";
+"menu.accounts" = "계정";
 "menu.check_updates" = "업데이트 확인";
 "menu.about" = "정보";
 "menu.claude_status" = "Claude 상태 페이지";
@@ -42,15 +42,17 @@
 "usage.codex_relogin" = "다시 로그인";
 
 // MARK: - Settings - Tabs
+"settings.tab.display" = "표시";
+"settings.tab.data" = "데이터";
 "settings.tab.general" = "일반";
-"settings.tab.auth" = "인증";
+"settings.tab.accounts" = "계정";
 "settings.tab.about" = "정보";
 
 // MARK: - Settings - General
 "settings.general.launch_section" = "시작 프로그램";
 "settings.general.launch_at_login" = "로그인 시 자동 시작";
 "settings.general.launch_hint" = "활성화 시 시스템 로그인 시 앱이 자동으로 실행됩니다";
-"settings.general.display_section" = "표시 설정";
+"settings.general.display_section" = "메뉴바 모양";
 "settings.general.menubar_icon" = "메뉴바 아이콘";
 "settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
 "settings.general.menubar_theme" = "메뉴바 테마";
@@ -65,7 +67,7 @@
 "settings.general.language_section" = "언어 설정";
 "settings.general.interface_language" = "인터페이스 언어";
 "settings.general.language_hint" = "인터페이스 표시 언어 변경";
-"settings.general.reset_button" = "기본값으로 복원";
+"settings.general.reset_button" = "모두 기본값으로 복원";
 "icon_style.color_translucent" = "컬러 반투명";
 "icon_style.color_with_background" = "컬러 배경";
 "icon_style.monochrome" = "단색 테마";
@@ -100,7 +102,7 @@
 
 // MARK: - Settings - About
 "settings.about.version" = "버전 %@";
-"settings.about.description" = "Claude AI의 5시간 사용 제한 모니터링";
+"settings.about.description" = "메뉴바에서 Claude와 Codex 사용량 추적";
 "settings.about.developer" = "개발자";
 "settings.about.license" = "라이선스";
 "settings.about.license_value" = "MIT License";
@@ -259,7 +261,7 @@
 "detail_row.extra_usage" = "추가 사용량";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "표시 옵션";
+"display_options" = "표시할 한도";
 "smart_display" = "스마트 표시";
 "smart_display_description" = "데이터가 있는 모든 제한 유형을 자동으로 표시";
 "custom_display" = "사용자 정의 표시";

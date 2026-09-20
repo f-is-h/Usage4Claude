@@ -48,6 +48,7 @@ struct AuthSettingsView: View {
                                     .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
+                            .focusable(false)
                         }
                         .padding(12)
                         .background(Color.blue.opacity(0.08))
@@ -208,6 +209,7 @@ struct AuthSettingsView: View {
             }
         }
         .buttonStyle(.bordered)
+        .focusable(false)
         .help(help)
         .accessibilityLabel(help)
     }
@@ -316,5 +318,7 @@ struct AuthSettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // 设置窗口一律不接受键盘焦点，否则打开时会有一圈默认焦点环
+        .focusable(false)
     }
 }

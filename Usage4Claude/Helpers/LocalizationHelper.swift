@@ -15,8 +15,8 @@ enum L {
     
     // MARK: - Menu Items
     enum Menu {
-        static var generalSettings: String { localized("menu.general_settings") }
-        static var authSettings: String { localized("menu.auth_settings") }
+        static var settings: String { localized("menu.settings") }
+        static var accounts: String { localized("menu.accounts") }
         static var checkUpdates: String { localized("menu.check_updates") }
         static var about: String { localized("menu.about") }
         static var claudeStatus: String { localized("menu.claude_status") }
@@ -80,8 +80,10 @@ enum L {
     
     // MARK: - Settings Tabs
     enum SettingsTab {
+        static var display: String { localized("settings.tab.display") }
+        static var data: String { localized("settings.tab.data") }
         static var general: String { localized("settings.tab.general") }
-        static var auth: String { localized("settings.tab.auth") }
+        static var accounts: String { localized("settings.tab.accounts") }
         static var about: String { localized("settings.tab.about") }
     }
     

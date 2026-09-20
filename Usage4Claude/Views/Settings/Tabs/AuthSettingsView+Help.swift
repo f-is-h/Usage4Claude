@@ -44,6 +44,7 @@ extension AuthSettingsView {
                         Text(L.SettingsAuth.openBrowser)
                     }
                 }
+                .focusable(false)
                 .buttonStyle(.borderedProminent)
                 .padding(.top, 8)
             }

@@ -7,8 +7,8 @@
 */
 
 // MARK: - Menu Items
-"menu.general_settings" = "General Settings";
-"menu.auth_settings" = "Authentication Settings";
+"menu.settings" = "Settings";
+"menu.accounts" = "Accounts";
 "menu.check_updates" = "Check for Updates";
 "menu.about" = "About";
 "menu.claude_status" = "Claude Status";
@@ -42,15 +42,17 @@
 "usage.codex_relogin" = "Sign In Again";
 
 // MARK: - Settings - Tabs
+"settings.tab.display" = "Display";
+"settings.tab.data" = "Data";
 "settings.tab.general" = "General";
-"settings.tab.auth" = "Authentication Settings";
+"settings.tab.accounts" = "Accounts";
 "settings.tab.about" = "About";
 
 // MARK: - Settings - General
 "settings.general.launch_section" = "Launch at Login";
 "settings.general.launch_at_login" = "Start automatically at login";
 "settings.general.launch_hint" = "When enabled, the app will launch automatically when you log in to your system";
-"settings.general.display_section" = "Display Settings";
+"settings.general.display_section" = "Menu Bar Appearance";
 "settings.general.menubar_icon" = "Menu Bar Icon";
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
 "settings.general.menubar_theme" = "Menu Bar Theme";
@@ -65,7 +67,7 @@
 "settings.general.language_section" = "Language Settings";
 "settings.general.interface_language" = "Interface Language";
 "settings.general.language_hint" = "Change the interface display language";
-"settings.general.reset_button" = "Reset to Defaults";
+"settings.general.reset_button" = "Reset All to Defaults";
 "icon_style.color_translucent" = "Color Translucent";
 "icon_style.color_with_background" = "Color with Background";
 "icon_style.monochrome" = "Monochrome";
@@ -100,7 +102,7 @@
 
 // MARK: - Settings - About
 "settings.about.version" = "Version %@";
-"settings.about.description" = "Monitor Claude AI 5-hour usage limit";
+"settings.about.description" = "Track Claude and Codex usage in your menu bar";
 "settings.about.developer" = "Developer";
 "settings.about.license" = "License";
 "settings.about.license_value" = "MIT License";
@@ -259,7 +261,7 @@
 "detail_row.extra_usage" = "Extra Usage";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "Display Options";
+"display_options" = "Which Limits to Show";
 "smart_display" = "Smart Display";
 "smart_display_description" = "Automatically display all limit types with data";
 "custom_display" = "Custom Display";

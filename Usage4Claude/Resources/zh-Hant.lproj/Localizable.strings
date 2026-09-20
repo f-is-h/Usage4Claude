@@ -7,8 +7,8 @@
 */
 
 // MARK: - Menu Items
-"menu.general_settings" = "一般設定";
-"menu.auth_settings" = "認證資訊";
+"menu.settings" = "設定";
+"menu.accounts" = "帳號";
 "menu.check_updates" = "檢查更新";
 "menu.about" = "關於";
 "menu.claude_status" = "Claude 狀態頁面";
@@ -42,15 +42,17 @@
 "usage.codex_relogin" = "重新登入";
 
 // MARK: - Settings - Tabs
+"settings.tab.display" = "顯示";
+"settings.tab.data" = "資料";
 "settings.tab.general" = "一般";
-"settings.tab.auth" = "認證";
+"settings.tab.accounts" = "帳號";
 "settings.tab.about" = "關於";
 
 // MARK: - Settings - General
 "settings.general.launch_section" = "開機啟動";
 "settings.general.launch_at_login" = "登入時自動啟動";
 "settings.general.launch_hint" = "啟用後，應用程式將在系統登入時自動執行";
-"settings.general.display_section" = "顯示設定";
+"settings.general.display_section" = "選單列外觀";
 "settings.general.menubar_icon" = "選單列圖示";
 "settings.general.menubar_hint" = "選擇選單列中顯示的內容";
 "settings.general.menubar_theme" = "選單列主題";
@@ -65,7 +67,7 @@
 "settings.general.language_section" = "語言設定";
 "settings.general.interface_language" = "介面語言";
 "settings.general.language_hint" = "變更介面顯示語言";
-"settings.general.reset_button" = "恢復預設設定";
+"settings.general.reset_button" = "恢復所有預設設定";
 "icon_style.color_translucent" = "彩色通透";
 "icon_style.color_with_background" = "彩色背景";
 "icon_style.monochrome" = "單色主題";
@@ -100,7 +102,7 @@
 
 // MARK: - Settings - About
 "settings.about.version" = "版本 %@";
-"settings.about.description" = "監控 Claude AI 的5小時使用限制";
+"settings.about.description" = "在選單列追蹤 Claude 與 Codex 的用量";
 "settings.about.developer" = "開發者";
 "settings.about.license" = "授權條款";
 "settings.about.license_value" = "MIT License";
@@ -259,7 +261,7 @@
 "detail_row.extra_usage" = "額外用量";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "顯示選項";
+"display_options" = "顯示哪些額度";
 "smart_display" = "智慧顯示";
 "smart_display_description" = "自動顯示所有有資料的限制類型";
 "custom_display" = "自訂顯示";

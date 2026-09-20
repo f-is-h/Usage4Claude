@@ -194,18 +194,18 @@ class MenuBarManager: ObservableObject {
             dataManager.handleClaudeOnlyRefresh()
         case .refreshCodex:
             dataManager.handleCodexOnlyRefresh()
-        case .generalSettings:
+        case .settings:
             closePopover()
-            openSettingsWindow(tab: 0)
-        case .authSettings:
+            openSettingsWindow(tab: .display)
+        case .accounts:
             closePopover()
-            openSettingsWindow(tab: 1)
+            openSettingsWindow(tab: .accounts)
         case .checkForUpdates:
             closePopover()
             checkForUpdates()
         case .about:
             closePopover()
-            openSettingsWindow(tab: 2)
+            openSettingsWindow(tab: .about)
         case .claudeStatus:
             closePopover()
             openClaudeStatus()
@@ -323,8 +323,8 @@ class MenuBarManager: ObservableObject {
         NotificationCenter.default.publisher(for: .openSettings)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                let tab = notification.userInfo?["tab"] as? Int ?? 0
-                self?.openSettingsWindow(tab: tab)
+                let index = notification.userInfo?["tab"] as? Int ?? 0
+                self?.openSettingsWindow(tab: SettingsTab(index: index))
             }
             .store(in: &cancellables)
 
@@ -464,19 +464,15 @@ class MenuBarManager: ObservableObject {
     // MARK: - Settings Window
     
     @objc func openSettings() {
-        openSettingsWindow(tab: 0)
+        openSettingsWindow(tab: .display)
     }
 
-    @objc func openGeneralSettings() {
-        openSettingsWindow(tab: 0)
-    }
-
-    @objc func openAuthSettings() {
-        openSettingsWindow(tab: 1)
+    @objc func openAccounts() {
+        openSettingsWindow(tab: .accounts)
     }
 
     @objc func openAbout() {
-        openSettingsWindow(tab: 2)
+        openSettingsWindow(tab: .about)
     }
 
     @objc func openCoffee() {
@@ -542,9 +538,12 @@ class MenuBarManager: ObservableObject {
         updateMenuBarIcon()
     }
 
+    /// 设置窗口的内容尺寸，与 SettingsView 的 .frame 保持一致
+    private static let settingsWindowSize = NSSize(width: 500, height: 550)
+
     /// 打开设置窗口
-    /// - Parameter tab: 要显示的标签页索引 (0: 通用, 1: 认证, 2: 关于)
-    private func openSettingsWindow(tab: Int) {
+    /// - Parameter tab: 要显示的标签页
+    private func openSettingsWindow(tab: SettingsTab) {
         if settingsWindow == nil {
             // 切换为 regular 模式，使应用显示在 Dock 中
             NSApp.setActivationPolicy(.regular)
@@ -557,7 +556,15 @@ class MenuBarManager: ObservableObject {
             )
             settingsWindow?.title = L.Window.settingsTitle
             settingsWindow?.styleMask = [.titled, .closable, .miniaturizable]
-            settingsWindow?.setFrameAutosaveName("Usage4Claude.SettingsWindow")
+
+            // 尺寸在这里定死，和 SettingsView 的 .frame 一致。
+            // 不这么做的话，窗口大小要等 SwiftUI 第一次布局完成才确定，
+            // 而 center() 是按当前宽高算位置的：先按错误尺寸居中、再被改大，
+            // 改大时 AppKit 固定左上角不动，窗口就会从中心偏出去。
+            //
+            // 这里也刻意不再用 setFrameAutosaveName：它会记住并恢复上次的位置，
+            // 和下面每次都居中的行为互相打架，谁生效取决于时序
+            settingsWindow?.setContentSize(Self.settingsWindowSize)
 
             // 移除旧的观察者（如果存在）
             if let observer = windowCloseObserver {
@@ -614,13 +621,21 @@ class MenuBarManager: ObservableObject {
             }
         }
 
-        // 先激活应用，再居中和显示窗口
+        // 先激活应用，再居中和显示窗口。
+        // 这里刻意同步做完，不再延时：延时期间窗口尺寸、所在屏幕都可能变，
+        // 位置就成了碰运气的事（曾出现过窗口贴在菜单栏下方的情况）
         NSApp.activate(ignoringOtherApps: true)
 
-        // 延迟一小段时间确保应用激活完成后再居中窗口
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            self?.settingsWindow?.center()
-            self?.settingsWindow?.makeKeyAndOrderFront(nil)
+        if let window = settingsWindow {
+            window.center()
+            window.makeKeyAndOrderFront(nil)
+
+            // 窗口成为 key 之后 SwiftUI 才会指派第一响应者，所以排一次异步把它清掉，
+            // 否则账号页的别名输入框会被自动聚焦，一进来就带着光标和焦点环。
+            // 用户点进去照样能编辑，只是不再抢初始焦点
+            DispatchQueue.main.async {
+                window.makeFirstResponder(nil)
+            }
         }
 
         if ui.popover.isShown {

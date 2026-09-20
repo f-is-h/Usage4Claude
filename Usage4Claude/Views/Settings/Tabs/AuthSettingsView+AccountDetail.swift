@@ -49,6 +49,7 @@ extension AuthSettingsView {
                                     .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
+                            .focusable(false)
                             .help(L.Account.clearAlias)
                         }
                     }
@@ -87,6 +88,7 @@ extension AuthSettingsView {
                                 .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
+                        .focusable(false)
                         .help(isShowingPassword ? L.SettingsAuth.hidePassword : L.SettingsAuth.showPassword)
                     }
                 }
@@ -119,6 +121,7 @@ extension AuthSettingsView {
                                 .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
+                        .focusable(false)
                         .help(L.Account.copyOrgId)
                     }
                 }
@@ -138,6 +141,7 @@ extension AuthSettingsView {
                         .foregroundColor(.red)
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
                 }
             }
         }
@@ -181,6 +185,7 @@ extension AuthSettingsView {
                                     .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
+                            .focusable(false)
                             .help(L.Account.clearAlias)
                         }
                     }
@@ -220,6 +225,7 @@ extension AuthSettingsView {
                     .foregroundColor(.red)
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
             }
         }
     }

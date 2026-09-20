@@ -423,26 +423,26 @@ class MenuBarUI: NSObject {
             menu.addItem(NSMenuItem.separator())
         }
 
-        // 通用设置
-        let generalItem = NSMenuItem(
-            title: L.Menu.generalSettings,
-            action: #selector(MenuBarManager.openGeneralSettings),
+        // 设置：带 ⌘, 的主入口，落在设置窗口第一页而不是某个特定标签
+        let settingsItem = NSMenuItem(
+            title: L.Menu.settings,
+            action: #selector(MenuBarManager.openSettings),
             keyEquivalent: ","
         )
-        generalItem.target = target
-        setMenuItemIcon(generalItem, systemName: "gearshape")
-        menu.addItem(generalItem)
+        settingsItem.target = target
+        setMenuItemIcon(settingsItem, systemName: "gearshape")
+        menu.addItem(settingsItem)
 
-        // 认证信息
-        let authItem = NSMenuItem(
-            title: L.Menu.authSettings,
-            action: #selector(MenuBarManager.openAuthSettings),
+        // 账号
+        let accountsItem = NSMenuItem(
+            title: L.Menu.accounts,
+            action: #selector(MenuBarManager.openAccounts),
             keyEquivalent: "a"
         )
-        authItem.target = target
-        authItem.keyEquivalentModifierMask = [.command, .shift] as NSEvent.ModifierFlags
-        setMenuItemIcon(authItem, systemName: "key.horizontal")
-        menu.addItem(authItem)
+        accountsItem.target = target
+        accountsItem.keyEquivalentModifierMask = [.command, .shift] as NSEvent.ModifierFlags
+        setMenuItemIcon(accountsItem, systemName: "key.horizontal")
+        menu.addItem(accountsItem)
 
         // 检查更新
         let updateItem = NSMenuItem(
@@ -494,6 +494,31 @@ class MenuBarUI: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
+        // 赞助组：单独成组放在菜单中段，是功能入口之后最容易被扫到的位置。
+        // 再往上会挤掉设置和检查更新，显得急功近利
+        let sponsorItem = NSMenuItem(
+            title: L.Menu.githubSponsor,
+            action: #selector(MenuBarManager.openGithubSponsor),
+            keyEquivalent: ""
+        )
+        sponsorItem.target = target
+        // 唯一一个彩色图标：不挪位置的前提下提高可见度
+        setMenuItemIcon(sponsorItem, systemName: "heart.fill", color: .systemPink)
+        menu.addItem(sponsorItem)
+
+        // Buy Me A Coffee
+        let coffeeItem = NSMenuItem(
+            title: L.Menu.coffee,
+            action: #selector(MenuBarManager.openCoffee),
+            keyEquivalent: ""
+        )
+        coffeeItem.target = target
+        setMenuItemIcon(coffeeItem, systemName: "cup.and.saucer")
+        menu.addItem(coffeeItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // 服务状态页：只在排查故障时才用，放在赞助组之后
         if !settings.accounts.isEmpty {
             let claudeStatusItem = NSMenuItem(
                 title: L.Menu.claudeStatus,
@@ -516,26 +541,6 @@ class MenuBarUI: NSObject {
             menu.addItem(codexStatusItem)
         }
 
-        // Buy Me A Coffee
-        let coffeeItem = NSMenuItem(
-            title: L.Menu.coffee,
-            action: #selector(MenuBarManager.openCoffee),
-            keyEquivalent: ""
-        )
-        coffeeItem.target = target
-        setMenuItemIcon(coffeeItem, systemName: "cup.and.saucer")
-        menu.addItem(coffeeItem)
-
-        // GitHub Sponsor
-        let sponsorItem = NSMenuItem(
-            title: L.Menu.githubSponsor,
-            action: #selector(MenuBarManager.openGithubSponsor),
-            keyEquivalent: ""
-        )
-        sponsorItem.target = target
-        setMenuItemIcon(sponsorItem, systemName: "heart")
-        menu.addItem(sponsorItem)
-
         menu.addItem(NSMenuItem.separator())
 
         // 退出
@@ -555,12 +560,25 @@ class MenuBarUI: NSObject {
     /// - Parameters:
     ///   - item: 菜单项
     ///   - systemName: SF Symbol 图标名称
-    private func setMenuItemIcon(_ item: NSMenuItem, systemName: String) {
-        if let image = NSImage(systemSymbolName: systemName, accessibilityDescription: nil) {
+    ///   - color: 指定颜色则按彩色渲染（isTemplate = false，不跟随菜单明暗反色）；
+    ///            传 nil 走默认的 template 模式，由系统决定黑白
+    private func setMenuItemIcon(_ item: NSMenuItem, systemName: String, color: NSColor? = nil) {
+        guard let image = NSImage(systemSymbolName: systemName, accessibilityDescription: nil) else {
+            return
+        }
+
+        guard let color else {
             image.size = NSSize(width: 16, height: 16)
             image.isTemplate = true
             assignIcon(image, to: item)
+            return
         }
+
+        let configuration = NSImage.SymbolConfiguration(paletteColors: [color])
+        let colored = image.withSymbolConfiguration(configuration) ?? image
+        colored.size = NSSize(width: 16, height: 16)
+        colored.isTemplate = false
+        assignIcon(colored, to: item)
     }
 
     /// 为菜单项赋图标，并声明图标始终可见

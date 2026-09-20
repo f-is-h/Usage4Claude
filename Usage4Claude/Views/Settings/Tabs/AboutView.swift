@@ -57,16 +57,18 @@ struct AboutView: View {
             // 内容区高度固定时允许中间留白完全收缩，避免反向顶起顶部导航。
             Spacer(minLength: 0)
             
-            // 链接按钮
+            // 链接按钮：顺序与菜单保持一致，赞助在前、仓库在最后
             VStack(spacing: 8) {
                 Button(action: {
-                    if let url = URL(string: "https://github.com/f-is-h/Usage4Claude") {
+                    if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=app&metadata_placement=about") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
                     HStack {
-                        Image(systemName: "link")
-                        Text(L.SettingsAbout.github)
+                        // 与菜单里的赞助项同款粉色实心心形
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(.pink)
+                        Text(L.SettingsAbout.githubSponsor)
                     }
                     .frame(minWidth: 200)
                 }
@@ -78,7 +80,7 @@ struct AboutView: View {
                     }
                 }) {
                     HStack {
-                        Image(systemName: "cup.and.saucer.fill")
+                        Image(systemName: "cup.and.saucer")
                         Text(L.SettingsAbout.coffee)
                     }
                     .frame(minWidth: 200)
@@ -86,13 +88,13 @@ struct AboutView: View {
                 .focusable(false)
 
                 Button(action: {
-                    if let url = URL(string: "https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=app&metadata_placement=about") {
+                    if let url = URL(string: "https://github.com/f-is-h/Usage4Claude") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
                     HStack {
-                        Image(systemName: "heart")
-                        Text(L.SettingsAbout.githubSponsor)
+                        Image(systemName: "link")
+                        Text(L.SettingsAbout.github)
                     }
                     .frame(minWidth: 200)
                 }
@@ -108,6 +110,7 @@ struct AboutView: View {
                         .underline()
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
                 .help("GitHub: f-is-h")
             }
             .font(.caption)

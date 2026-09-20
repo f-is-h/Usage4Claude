@@ -9,9 +9,9 @@
 import SwiftUI
 import ServiceManagement
 
-/// 通用设置页面
-/// 使用卡片式布局，包含开机启动、显示设置、刷新设置和语言设置
-/// 各卡片内容按主题拆到 GeneralSettings*Section.swift，保持本文件体量可控
+/// 「通用」设置页
+/// 管理应用自身的行为：语言、开机启动、恢复默认设置，以及 DEBUG 下的调试开关
+/// 显示相关的卡片在 DisplaySettingsView，刷新与通知在 DataSettingsView
 struct GeneralSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var showErrorAlert = false
@@ -20,174 +20,6 @@ struct GeneralSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                GeneralSettingsDisplaySection()
-                GeneralSettingsDisplayOptionsSection()
-
-                // Codex 重置预告卡片（Beta）：状态驱动，只登录 Claude 时完全不出现这个词
-                if settings.hasValidCodexCredentials {
-                    SettingCard(
-                        icon: "bell.and.waves.left.and.right",
-                        iconColor: .teal,
-                        title: L.SettingsGeneral.codexAnnouncementSection,
-                        hint: L.SettingsGeneral.codexAnnouncementHint
-                    ) {
-                        HStack {
-                            Toggle("", isOn: $settings.showCodexResetAnnouncement)
-                                .toggleStyle(.switch)
-                                .controlSize(.mini)
-                                .focusable(false)
-                                .labelsHidden()
-                            Text(L.SettingsGeneral.codexAnnouncementEnable)
-                            Spacer()
-                        }
-                    }
-                }
-
-                // 图表样式卡片
-                SettingCard(
-                    icon: "chart.line.uptrend.xyaxis",
-                    iconColor: .cyan,
-                    title: L.GraphStyle.title,
-                    hint: L.GraphStyle.hint
-                ) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Picker("", selection: $settings.graphDisplayType) {
-                            ForEach(GraphDisplayType.allCases, id: \.self) { type in
-                                Text(type.localizedName).tag(type)
-                            }
-                        }
-                        .pickerStyle(.radioGroup)
-                        .labelsHidden()
-                        .focusable(false)
-
-                        // 描述文字
-                        HStack(alignment: .top, spacing: 4) {
-                            Image(systemName: "info.circle.fill")
-                                .font(.caption2)
-                                .foregroundColor(.blue)
-                            Text(settings.graphDisplayType == .circular
-                                ? L.GraphStyle.circularDescription
-                                : L.GraphStyle.linearDescription)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.leading, 20)
-
-                        // 仅工作日（只对线性图有意义）
-                        if settings.graphDisplayType == .linear {
-                            HStack {
-                                Toggle("", isOn: $settings.linearGraphWeekdaysOnly)
-                                    .toggleStyle(.switch)
-                                    .controlSize(.mini)
-                                    .focusable(false)
-                                    .labelsHidden()
-                                Text(L.GraphStyle.weekdaysOnly)
-                                Spacer()
-                            }
-
-                            HStack(alignment: .top, spacing: 4) {
-                                Image(systemName: "info.circle.fill")
-                                    .font(.caption2)
-                                    .foregroundColor(.blue)
-                                Text(L.GraphStyle.weekdaysOnlyDescription)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            .padding(.leading, 20)
-                        }
-                    }
-                }
-
-                // 刷新设置卡片
-                SettingCard(
-                    icon: "clock.arrow.trianglehead.2.counterclockwise.rotate.90",
-                    iconColor: .green,
-                    title: L.SettingsGeneral.refreshSection,
-                    hint: settings.refreshMode == .smart ? L.SettingsGeneral.refreshHintSmart : L.SettingsGeneral.refreshHintFixed
-                ) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 刷新模式选择
-                        Picker("", selection: $settings.refreshMode) {
-                            ForEach(RefreshMode.allCases, id: \.self) { mode in
-                                Text(mode.localizedName).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.radioGroup)
-                        .labelsHidden()
-                        .focusable(false)
-
-                        // 固定频率选择（仅在选择固定模式时显示）
-                        if settings.refreshMode == .fixed {
-                            HStack {
-                                Text(L.SettingsGeneral.refreshInterval)
-                                    .foregroundColor(.secondary)
-
-                                Picker("", selection: $settings.refreshInterval) {
-                                    ForEach(RefreshInterval.allCases, id: \.rawValue) { interval in
-                                        Text(interval.localizedName).tag(interval.rawValue)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .frame(width: 120)
-                            }
-                            .padding(.leading, 20)
-                        }
-                    }
-                }
-
-                // 通知设置卡片
-                GeneralSettingsNotificationSection()
-
-                // 外观设置卡片
-                SettingCard(
-                    icon: "circle.lefthalf.filled",
-                    iconColor: .indigo,
-                    title: L.SettingsGeneralAppearance.section,
-                    hint: L.SettingsGeneralAppearance.hint
-                ) {
-                    Picker("", selection: $settings.appearance) {
-                        ForEach(AppAppearance.allCases, id: \.self) { mode in
-                            Text(mode.localizedName).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
-                    .labelsHidden()
-                    .focusable(false)
-                }
-
-                // 时间格式设置卡片
-                SettingCard(
-                    icon: "clock",
-                    iconColor: .cyan,
-                    title: L.SettingsGeneralTimeFormat.section,
-                    hint: L.SettingsGeneralTimeFormat.hint
-                ) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Picker("", selection: $settings.timeFormatPreference) {
-                            ForEach(TimeFormatPreference.allCases, id: \.self) { format in
-                                Text(format.localizedName).tag(format)
-                            }
-                        }
-                        .pickerStyle(.radioGroup)
-                        .labelsHidden()
-                        .focusable(false)
-
-                        // 当前时间预览
-                        HStack(spacing: 4) {
-                            Text(L.SettingsGeneralTimeFormat.preview + ":")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(timePreviewString)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(.leading, 20)
-                    }
-                }
-
                 // 语言设置卡片
                 SettingCard(
                     icon: "globe",
@@ -234,13 +66,15 @@ struct GeneralSettingsView: View {
                     }
                 }
 
-                // 重置按钮
+                // 重置按钮：resetToDefaults 会重置全部标签页的设置，不只是本页，
+                // 所以按钮文案写的是「所有」，位置也放在这一页而不是「显示」页
                 HStack {
                     Spacer()
                     Button(L.SettingsGeneral.resetButton) {
                         settings.resetToDefaults()
                     }
                     .buttonStyle(.borderedProminent)
+                    .focusable(false)
                 }
                 .padding(.top, 8)
 
@@ -273,12 +107,6 @@ struct GeneralSettingsView: View {
     }
 
     // MARK: - Computed Properties
-
-    /// 时间预览字符串
-    private var timePreviewString: String {
-        let now = Date()
-        return TimeFormatHelper.formatTimeOnly(now)
-    }
 
     /// 状态图标
     private var statusIcon: String {

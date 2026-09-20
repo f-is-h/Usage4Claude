@@ -55,8 +55,8 @@ struct UsageDetailView: View {
 
     /// 菜单操作类型
     enum MenuAction {
-        case generalSettings
-        case authSettings
+        case settings
+        case accounts
         case checkForUpdates
         case about
         case claudeStatus
@@ -233,7 +233,7 @@ struct UsageDetailView: View {
                     // 如果是认证信息错误，显示设置按钮
                     if errorRequiresAuthAction {
                         Button(action: {
-                            onMenuAction?(.authSettings)
+                            onMenuAction?(.accounts)
                         }) {
                             Label(L.Usage.goToSettings, systemImage: "key.fill")
                                 .padding(.horizontal, 16)
@@ -247,7 +247,7 @@ struct UsageDetailView: View {
 
                     // 诊断连接按钮（所有错误都显示）
                     Button(action: {
-                        onMenuAction?(.authSettings)
+                        onMenuAction?(.accounts)
                     }) {
                         Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
                             .padding(.horizontal, 16)
@@ -556,11 +556,11 @@ struct UsageDetailView: View {
                     Divider()
                 }
 
-                Button(action: { onMenuAction?(.generalSettings) }) {
-                    Label(L.Menu.generalSettings, systemImage: "gearshape")
+                Button(action: { onMenuAction?(.settings) }) {
+                    Label(L.Menu.settings, systemImage: "gearshape")
                 }
-                Button(action: { onMenuAction?(.authSettings) }) {
-                    Label(L.Menu.authSettings, systemImage: "key")
+                Button(action: { onMenuAction?(.accounts) }) {
+                    Label(L.Menu.accounts, systemImage: "key")
                 }
                 if hasAvailableUpdate {
                     Button(action: { onMenuAction?(.checkForUpdates) }) {
@@ -577,6 +577,19 @@ struct UsageDetailView: View {
                     Label(L.Menu.about, systemImage: "info.circle")
                 }
                 Divider()
+                // 赞助组放在功能入口之后、状态页之前，与右键菜单保持同一顺序
+                Button(action: { onMenuAction?(.githubSponsor) }) {
+                    Label {
+                        Text(L.Menu.githubSponsor)
+                    } icon: {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(.pink)
+                    }
+                }
+                Button(action: { onMenuAction?(.coffee) }) {
+                    Label(L.Menu.coffee, systemImage: "cup.and.saucer")
+                }
+                Divider()
                 if !UserSettings.shared.accounts.isEmpty {
                     Button(action: { onMenuAction?(.claudeStatus) }) {
                         Label(L.Menu.claudeStatus, systemImage: "safari")
@@ -586,12 +599,6 @@ struct UsageDetailView: View {
                     Button(action: { onMenuAction?(.codexStatus) }) {
                         Label(L.Menu.codexStatus, systemImage: "safari.fill")
                     }
-                }
-                Button(action: { onMenuAction?(.coffee) }) {
-                    Label(L.Menu.coffee, systemImage: "cup.and.saucer")
-                }
-                Button(action: { onMenuAction?(.githubSponsor) }) {
-                    Label(L.Menu.githubSponsor, systemImage: "heart")
                 }
                 Divider()
                 Button(action: { onMenuAction?(.quit) }) {
@@ -732,7 +739,7 @@ struct UsageDetailView: View {
                         // 与 Claude 一致：只有认证类错误才引导去设置，网络/限流错误去改凭据无济于事
                         if codexErrorRequiresAuthAction {
                             Button(action: {
-                                onMenuAction?(.authSettings)
+                                onMenuAction?(.accounts)
                             }) {
                                 Label(L.Usage.goToSettings, systemImage: "key.fill")
                                     .padding(.horizontal, 16)
@@ -745,7 +752,7 @@ struct UsageDetailView: View {
                         }
 
                         Button(action: {
-                            onMenuAction?(.authSettings)
+                            onMenuAction?(.accounts)
                         }) {
                             Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
                                 .padding(.horizontal, 16)

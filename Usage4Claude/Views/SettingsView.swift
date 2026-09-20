@@ -9,14 +9,13 @@
 import SwiftUI
 
 /// 设置视图
-/// 使用 Toolbar 风格布局，包含通用设置、认证信息和关于三个标签页
+/// 使用 Toolbar 风格布局，标签页定义见 SettingsTab
 struct SettingsView: View {
-    @ObservedObject private var settings = UserSettings.shared
-    @State private var selectedTab: Int
+    @State private var selectedTab: SettingsTab
     @Environment(\.dismiss) private var dismiss
     @StateObject private var localization = LocalizationManager.shared
 
-    init(initialTab: Int = 0) {
+    init(initialTab: SettingsTab = .display) {
         _selectedTab = State(initialValue: initialTab)
     }
 
@@ -24,37 +23,18 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             // Toolbar 风格的标签导航
             HStack(spacing: 0) {
-                // 通用设置按钮
-                ToolbarButton(
-                    icon: "gearshape",
-                    title: L.SettingsTab.general,
-                    isSelected: selectedTab == 0
-                ) {
-                    selectedTab = 0
-                }
+                ForEach(Array(SettingsTab.allCases.enumerated()), id: \.element) { index, tab in
+                    if index > 0 {
+                        TabDivider()
+                    }
 
-                // 分隔符
-                TabDivider()
-
-                // 认证设置按钮
-                ToolbarButton(
-                    icon: "key.horizontal",
-                    title: L.SettingsTab.auth,
-                    isSelected: selectedTab == 1
-                ) {
-                    selectedTab = 1
-                }
-
-                // 分隔符
-                TabDivider()
-
-                // 关于按钮
-                ToolbarButton(
-                    icon: "info.circle",
-                    title: L.SettingsTab.about,
-                    isSelected: selectedTab == 2
-                ) {
-                    selectedTab = 2
+                    ToolbarButton(
+                        icon: tab.icon,
+                        title: tab.title,
+                        isSelected: selectedTab == tab
+                    ) {
+                        selectedTab = tab
+                    }
                 }
             }
             .padding(.horizontal)
@@ -67,19 +47,27 @@ struct SettingsView: View {
             // 内容区域
             Group {
                 switch selectedTab {
-                case 0:
-                    GeneralSettingsView()
-                case 1:
+                case .display:
+                    DisplaySettingsView()
+                case .data:
+                    DataSettingsView()
+                case .accounts:
                     AuthSettingsView()
-                case 2:
-                    AboutView()
-                default:
+                case .general:
                     GeneralSettingsView()
+                case .about:
+                    AboutView()
                 }
             }
         }
         .frame(width: 500, height: 550, alignment: .top)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
+        .onChange(of: selectedTab) { _ in
+            // 切换标签后新页面的输入框会自动拿到第一响应者（账号页的别名框），清掉保持无焦点
+            DispatchQueue.main.async {
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+        }
     }
 }
 
