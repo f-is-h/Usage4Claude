@@ -30,18 +30,23 @@ struct LinearUsageGraphView: View {
     let showRemainingMode: Bool
     /// 周限制的时间轴只计工作日；5小时窗口始终按自然时间
     let weekdaysOnly: Bool
-    let graphHeight: CGFloat
 
     // MARK: - Constants
 
     private let graphWidth: CGFloat = 262
-    private let padding: CGFloat = 4
+    private let graphHeight: CGFloat = 100
     private let gridLineWidth: CGFloat = 0.5
     private let paceLineWidth: CGFloat = 1.5
     /// 标记绘制框边长；`IconShapePaths` 会为笔画内缩，实际形状约 10pt
     private let markerBoxSize: CGFloat = 16
     /// 标记的视觉半径，用于标签避让
     private let markerRadius: CGFloat = 5
+    /// 标记周围镂空描边的线宽，轮廓外侧留出一半（1pt）的空隙。
+    /// 再宽的话，两个标记贴在一起时后画的会在先画的上啃出明显缺口
+    private let markerKnockoutWidth: CGFloat = 2
+    /// 绘制区域到画布边缘的留白：要放得下落在边框上的标记（半径 + 镂空外侧 1pt），
+    /// 否则 0% / 100% 及窗口起点、终点的标记会被 Canvas 边界切掉一部分
+    private let padding: CGFloat = 7
 
     // MARK: - Body
 
@@ -110,19 +115,21 @@ struct LinearUsageGraphView: View {
         context.stroke(borderPath, with: .color(Color.gray.opacity(0.3)), lineWidth: gridLineWidth)
     }
 
-    /// 绘制匀速消耗参照线：从（窗口开始, 0%）到（重置, 100%）的虚线对角线
+    /// 绘制匀速消耗参照线：从（窗口开始, 0%）到（重置, 100%）的圆点对角线
+    /// - Note: 它是参照物而非数据，视觉上要弱于数据点、又要与实线网格区分开，
+    ///   所以用圆点线：近零长度的线段配圆头端点，每段画成一个直径等于线宽的圆点
     private func drawIdealPaceLine(context: GraphicsContext, in rect: CGRect) {
         var path = Path()
         path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
 
-        let dashStyle = StrokeStyle(
+        let dotStyle = StrokeStyle(
             lineWidth: paceLineWidth,
             lineCap: .round,
-            dash: [4, 4]
+            dash: [0.01, 4]
         )
 
-        context.stroke(path, with: .color(Color.gray.opacity(0.5)), style: dashStyle)
+        context.stroke(path, with: .color(Color.gray.opacity(0.5)), style: dotStyle)
     }
 
     /// 绘制数据点标记与百分比标签
@@ -145,8 +152,13 @@ struct LinearUsageGraphView: View {
                 height: markerBoxSize
             )
             let marker = IconShapePaths.pathForLimitType(point.type, in: box)
+            // 镂空：先沿轮廓挖掉一圈，让弹窗背景透出来，再填充标记。
+            // 浅色 / 深色模式下都表现为一圈与背景同色的空隙（白色描边在深色下会变成亮边），
+            // 同列重叠的标记（7天 / Opus / Sonnet 共用重置时间）也靠这圈空隙区分
+            var knockout = context
+            knockout.blendMode = .clear
+            knockout.stroke(marker, with: .color(.black), lineWidth: markerKnockoutWidth)
             context.fill(marker, with: .color(point.color))
-            context.stroke(marker, with: .color(.white.opacity(0.8)), lineWidth: 1)
         }
 
         let labels = points.map { context.resolve(labelText(for: $0)) }
@@ -213,13 +225,11 @@ extension LinearUsageGraphView {
         usageData: UsageData?,
         activeDisplayTypes: [LimitType],
         isRefreshing: Bool,
-        showRemainingMode: Bool,
-        graphHeight: CGFloat = 100
+        showRemainingMode: Bool
     ) {
         self.isRefreshing = isRefreshing
         self.showRemainingMode = showRemainingMode
         self.weekdaysOnly = UserSettings.shared.linearGraphWeekdaysOnly
-        self.graphHeight = graphHeight
         guard let data = usageData else {
             self.points = nil
             return
@@ -278,13 +288,11 @@ extension LinearUsageGraphView {
         codexUsageData: CodexUsageData?,
         activeDisplayTypes: [LimitType],
         isRefreshing: Bool,
-        showRemainingMode: Bool,
-        graphHeight: CGFloat = 100
+        showRemainingMode: Bool
     ) {
         self.isRefreshing = isRefreshing
         self.showRemainingMode = showRemainingMode
         self.weekdaysOnly = UserSettings.shared.linearGraphWeekdaysOnly
-        self.graphHeight = graphHeight
         guard let data = codexUsageData else {
             self.points = nil
             return
