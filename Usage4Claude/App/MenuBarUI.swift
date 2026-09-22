@@ -888,7 +888,7 @@ class MenuBarUI: NSObject {
     private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
         let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
-            var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
+            var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.menuBarColorMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
             if let codex = codexUsageData {
                 let activeTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex, forMenuBar: true)
                     .map(\.rawValue)
@@ -927,7 +927,7 @@ class MenuBarUI: NSObject {
         }
 
         // 口径要进 key：同一个 66% 在已用/余量两种模式下画出来是不同的图
-        var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
+        var key = "\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.menuBarColorMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
 
         if let fiveHour = data.fiveHour {
             key += "_5h\(Int(fiveHour.percentage))"

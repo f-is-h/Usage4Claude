@@ -98,7 +98,7 @@ enum UsageColorScheme {
     /// - Returns: 适配当前外观的状态颜色
     /// - Note: 深色模式下会自动提高亮度，确保在深色背景下清晰可见
     static func fiveHourColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = fiveHourColor(percentage)
+        let baseColor = menuBarBaseColor(.fiveHour, fiveHourColor(percentage))
 
         if isDarkMode(for: statusButton) {
             // 深色模式：提高亮度，让颜色更明亮
@@ -149,7 +149,7 @@ enum UsageColorScheme {
     /// - Returns: 适配当前外观的状态颜色
     /// - Note: 深色模式下会自动提高亮度和饱和度，确保在深色背景下清晰可见
     static func sevenDayColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = sevenDayColor(percentage)
+        let baseColor = menuBarBaseColor(.sevenDay, sevenDayColor(percentage))
 
         if isDarkMode(for: statusButton) {
             // 深色模式：提高亮度和饱和度
@@ -178,7 +178,7 @@ enum UsageColorScheme {
 
     /// 根据Extra Usage使用百分比返回自适应 NSColor
     static func extraUsageColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = extraUsageColor(percentage)
+        let baseColor = menuBarBaseColor(.extraUsage, extraUsageColor(percentage))
         if isDarkMode(for: statusButton) {
             return baseColor.adjustedForDarkMode()
         } else {
@@ -204,7 +204,7 @@ enum UsageColorScheme {
 
     /// 根据Opus Weekly使用百分比返回自适应 NSColor
     static func opusWeeklyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = opusWeeklyColor(percentage)
+        let baseColor = menuBarBaseColor(.opusWeekly, opusWeeklyColor(percentage))
         if isDarkMode(for: statusButton) {
             return baseColor.adjustedForDarkMode()
         } else {
@@ -230,7 +230,7 @@ enum UsageColorScheme {
 
     /// 根据Sonnet Weekly使用百分比返回自适应 NSColor
     static func sonnetWeeklyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = sonnetWeeklyColor(percentage)
+        let baseColor = menuBarBaseColor(.sonnetWeekly, sonnetWeeklyColor(percentage))
         if isDarkMode(for: statusButton) {
             return baseColor.adjustedForDarkMode()
         } else {
@@ -265,7 +265,7 @@ enum UsageColorScheme {
 
     /// 根据 Codex primary 使用百分比返回自适应 NSColor
     static func codexPrimaryColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = codexPrimaryColor(percentage)
+        let baseColor = menuBarBaseColor(.codexPrimary, codexPrimaryColor(percentage))
         if isDarkMode(for: statusButton) {
             return baseColor.adjustedForDarkMode()
         } else {
@@ -301,7 +301,7 @@ enum UsageColorScheme {
 
     /// 根据 Codex secondary 使用百分比返回自适应 NSColor
     static func codexSecondaryColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
-        let baseColor = codexSecondaryColor(percentage)
+        let baseColor = menuBarBaseColor(.codexSecondary, codexSecondaryColor(percentage))
         if isDarkMode(for: statusButton) {
             return baseColor.adjustedForDarkMode()
         } else {
@@ -332,27 +332,37 @@ enum UsageColorScheme {
 
     // MARK: - 限制类型标识色
 
-    /// 限制类型的固定标识色（不随用量变化），限制行图标与节奏图标记共用，便于一一对应
+    /// 限制类型的固定标识色（不随用量变化），限制行图标、节奏图标记共用，便于一一对应；
+    /// 菜单栏在「按限制类型」着色时也用它
     /// - Parameter codexExtraUsageExhausted: Codex 额外用量只有「充足」和「已耗尽」两色，没有中间档
-    static func identityColorSwiftUI(for type: LimitType, codexExtraUsageExhausted: Bool = false) -> Color {
+    static func identityColor(for type: LimitType, codexExtraUsageExhausted: Bool = false) -> NSColor {
         switch type {
         case .fiveHour:
-            return .green
+            return .systemGreen
         case .sevenDay:
-            return .purple
+            return .systemPurple
         case .opusWeekly:
-            return .orange
+            return .systemOrange
         case .sonnetWeekly:
-            return .blue
+            return .systemBlue
         case .extraUsage:
-            return .pink
+            return .systemPink
         case .codexPrimary:
-            return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)   // #2DD4BF
+            return NSColor(red: 45/255.0, green: 212/255.0, blue: 191/255.0, alpha: 1.0)   // #2DD4BF
         case .codexSecondary:
-            return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
+            return NSColor(red: 96/255.0, green: 165/255.0, blue: 250/255.0, alpha: 1.0)   // #60A5FA
         case .codexExtraUsage:
-            return codexExtraUsageBadgeColorSwiftUI(isExhausted: codexExtraUsageExhausted)
+            return codexExtraUsageBadgeColor(isExhausted: codexExtraUsageExhausted)
         }
+    }
+
+    static func identityColorSwiftUI(for type: LimitType, codexExtraUsageExhausted: Bool = false) -> Color {
+        Color(nsColor: identityColor(for: type, codexExtraUsageExhausted: codexExtraUsageExhausted))
+    }
+
+    /// 菜单栏图标的基础色：按用量分档（默认），或按设置改用固定标识色
+    private static func menuBarBaseColor(_ type: LimitType, _ usageLevelColor: @autoclosure () -> NSColor) -> NSColor {
+        UserSettings.shared.menuBarColorMode == .limitType ? identityColor(for: type) : usageLevelColor()
     }
 
     // MARK: - 备选配色方案（注释保留，方便切换测试）

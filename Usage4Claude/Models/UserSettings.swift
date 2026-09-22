@@ -67,6 +67,32 @@ enum MenuBarIconSize: String, CaseIterable, Codable {
     }
 }
 
+/// 菜单栏彩色图标的着色依据（单色模式下不适用）
+enum MenuBarColorMode: String, CaseIterable, Codable {
+    /// 按用量分档变色（默认，如5小时限制 绿→橙→红）
+    case usageLevel = "usage_level"
+    /// 每种限制固定一种颜色，与弹窗里的限制行图标、节奏图标记一致
+    case limitType = "limit_type"
+
+    var localizedName: String {
+        switch self {
+        case .usageLevel:
+            return L.MenuBarColor.usageLevel
+        case .limitType:
+            return L.MenuBarColor.limitType
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .usageLevel:
+            return L.MenuBarColor.usageLevelDesc
+        case .limitType:
+            return L.MenuBarColor.limitTypeDesc
+        }
+    }
+}
+
 /// 菜单栏图标样式模式
 enum IconStyleMode: String, CaseIterable, Codable {
     /// 彩色通透（默认，彩色无背景）
@@ -459,6 +485,14 @@ class UserSettings: ObservableObject {
         }
     }
     
+    /// 菜单栏彩色图标的着色依据
+    @Published var menuBarColorMode: MenuBarColorMode {
+        didSet {
+            defaults.set(menuBarColorMode.rawValue, forKey: "menuBarColorMode")
+            NotificationCenter.default.post(name: .settingsChanged, object: nil)
+        }
+    }
+
     /// 菜单栏图标尺寸档位
     @Published var menuBarIconSize: MenuBarIconSize {
         didSet {
@@ -970,6 +1004,13 @@ class UserSettings: ObservableObject {
         } else {
             self.iconStyleMode = .colorTranslucent  // 默认彩色通透
         }
+
+        if let colorModeString = defaults.string(forKey: "menuBarColorMode"),
+           let colorMode = MenuBarColorMode(rawValue: colorModeString) {
+            self.menuBarColorMode = colorMode
+        } else {
+            self.menuBarColorMode = .usageLevel
+        }
         
         if let sizeString = defaults.string(forKey: "menuBarIconSize"),
            let size = MenuBarIconSize(rawValue: sizeString) {
@@ -1163,6 +1204,7 @@ class UserSettings: ObservableObject {
         appearance = .system
         iconDisplayMode = .percentageOnly
         iconStyleMode = .colorTranslucent
+        menuBarColorMode = .usageLevel
         menuBarIconSize = .medium
         refreshMode = .smart
         refreshInterval = 180  // 固定模式默认3分钟

@@ -57,6 +57,7 @@
 "settings.general.menubar_hint" = "选择菜单栏中显示的内容";
 "settings.general.menubar_theme" = "菜单栏主题";
 "settings.general.menubar_icon_size" = "图标大小";
+"settings.general.menubar_color_mode" = "图标配色";
 "settings.general.display_content" = "显示内容";
 "settings.general.monochrome_no_icon_hint" = "单色主题下不支持显示图标";
 "settings.general.refresh_section" = "刷新设置";
@@ -74,6 +75,10 @@
 "icon_style.color_translucent_desc" = "彩色圆环，无背景，数字自动跟随菜单栏的明暗";
 "icon_style.color_with_background_desc" = "在圆环后加一层薄背景，适合壁纸花哨、数字不易辨认时";
 "icon_style.monochrome_desc" = "自动适应系统菜单栏样式，简洁优雅";
+"menubar_color.usage_level" = "按用量";
+"menubar_color.limit_type" = "按限制类型";
+"menubar_color.usage_level_desc" = "颜色随用量升高而变化（如5小时圆环 绿 → 橙 → 红），在额度用尽前提醒你";
+"menubar_color.limit_type_desc" = "每种限制固定一种颜色，与弹窗中的图标和节奏图标记一致";
 
 "menu_bar_icon_size.small" = "紧凑";
 "menu_bar_icon_size.medium" = "标准";
