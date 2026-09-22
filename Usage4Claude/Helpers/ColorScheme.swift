@@ -330,6 +330,31 @@ enum UsageColorScheme {
         isExhausted ? .red : Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
     }
 
+    // MARK: - 限制类型标识色
+
+    /// 限制类型的固定标识色（不随用量变化），限制行图标与节奏图标记共用，便于一一对应
+    /// - Parameter codexExtraUsageExhausted: Codex 额外用量只有「充足」和「已耗尽」两色，没有中间档
+    static func identityColorSwiftUI(for type: LimitType, codexExtraUsageExhausted: Bool = false) -> Color {
+        switch type {
+        case .fiveHour:
+            return .green
+        case .sevenDay:
+            return .purple
+        case .opusWeekly:
+            return .orange
+        case .sonnetWeekly:
+            return .blue
+        case .extraUsage:
+            return .pink
+        case .codexPrimary:
+            return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)   // #2DD4BF
+        case .codexSecondary:
+            return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
+        case .codexExtraUsage:
+            return codexExtraUsageBadgeColorSwiftUI(isExhausted: codexExtraUsageExhausted)
+        }
+    }
+
     // MARK: - 备选配色方案（注释保留，方便切换测试）
 
     /*

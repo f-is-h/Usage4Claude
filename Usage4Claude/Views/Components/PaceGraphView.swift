@@ -15,12 +15,11 @@ import SwiftUI
 struct PaceGraphView: View {
     /// 图上的一个限制数据点
     struct Point {
-        /// 决定标记形状与时间窗口长度
+        /// 决定标记形状、颜色（与限制行图标同色）与时间窗口长度
         let type: LimitType
         /// 已用百分比
         let percentage: Double
         let resetsAt: Date?
-        let color: Color
     }
 
     /// 要绘制的数据点；nil 表示尚无用量数据
@@ -158,7 +157,7 @@ struct PaceGraphView: View {
             var knockout = context
             knockout.blendMode = .clear
             knockout.stroke(marker, with: .color(.black), lineWidth: markerKnockoutWidth)
-            context.fill(marker, with: .color(point.color))
+            context.fill(marker, with: .color(UsageColorScheme.identityColorSwiftUI(for: point.type)))
         }
 
         let labels = points.map { context.resolve(labelText(for: $0)) }
@@ -206,12 +205,6 @@ struct PaceGraphView: View {
             return UsagePaceGraphMath.sevenDayWindow
         }
     }
-
-    fileprivate static func weeklyModelColor(_ type: LimitType, _ percentage: Double) -> Color {
-        type == .sonnetWeekly
-            ? Color(UsageColorScheme.sonnetWeeklyColor(percentage))
-            : Color(UsageColorScheme.opusWeeklyColor(percentage))
-    }
 }
 
 // MARK: - Provider Initializers
@@ -244,23 +237,19 @@ extension PaceGraphView {
             switch type {
             case .fiveHour:
                 return (data.fiveHour ?? placeholder).map {
-                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: UsageColorScheme.fiveHourColorSwiftUI($0.percentage))
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt)
                 }
             case .sevenDay:
                 return (data.sevenDay ?? placeholder).map {
-                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: UsageColorScheme.sevenDayColorSwiftUI($0.percentage))
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt)
                 }
             case .opusWeekly:
                 return data.opus.map {
-                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: Self.weeklyModelColor(type, $0.percentage))
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt)
                 }
             case .sonnetWeekly:
                 return data.sonnet.map {
-                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: Self.weeklyModelColor(type, $0.percentage))
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt)
                 }
             case .extraUsage, .codexPrimary, .codexSecondary, .codexExtraUsage:
                 return nil
@@ -273,8 +262,7 @@ extension PaceGraphView {
                 points.append(Point(
                     type: type,
                     percentage: model.limit.percentage,
-                    resetsAt: model.limit.resetsAt,
-                    color: Self.weeklyModelColor(type, model.limit.percentage)
+                    resetsAt: model.limit.resetsAt
                 ))
             }
         }
@@ -306,13 +294,11 @@ extension PaceGraphView {
             switch type {
             case .codexPrimary:
                 return (data.primary ?? placeholder).map {
-                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: UsageColorScheme.codexPrimaryColorSwiftUI($0.percentage))
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt)
                 }
             case .codexSecondary:
                 return (data.secondary ?? placeholder).map {
-                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
-                          color: UsageColorScheme.codexSecondaryColorSwiftUI($0.percentage))
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt)
                 }
             case .codexExtraUsage, .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly:
                 return nil
