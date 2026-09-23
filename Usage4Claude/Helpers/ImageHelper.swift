@@ -11,17 +11,34 @@ import AppKit
 /// 图像处理辅助工具
 /// 提供应用图标创建、缓存等功能
 enum ImageHelper {
+    // MARK: - Cache
+
+    /// SwiftUI 按对象身份比较 `Image(nsImage:)`：每次 body 重算都新建 NSImage 会被当成换图，
+    /// 处在动画事务里（切换剩余显示、刷新按钮旋转）就会做一次交叉淡入，看起来是图标闪一下。
+    /// 同尺寸复用同一个实例即可避免；返回的图像由调用方只读使用，不要修改。
+    private static let iconCache = NSCache<NSString, NSImage>()
+
+    private static func cachedIcon(key: String, make: () -> NSImage?) -> NSImage? {
+        let cacheKey = key as NSString
+        if let cached = iconCache.object(forKey: cacheKey) { return cached }
+        guard let image = make() else { return nil }
+        iconCache.setObject(image, forKey: cacheKey)
+        return image
+    }
+
     // MARK: - App Icon
 
-    /// 创建应用图标（非模板模式）
+    /// 创建应用图标（非模板模式），同尺寸返回缓存的同一实例
     /// - Parameter size: 图标大小
     /// - Returns: 指定大小的应用图标，如果无法加载则返回 nil
     static func createAppIcon(size: CGFloat) -> NSImage? {
-        guard let appIcon = NSImage(named: "AppIcon") else { return nil }
-        guard let iconCopy = appIcon.copy() as? NSImage else { return nil }
-        iconCopy.isTemplate = false
-        iconCopy.size = NSSize(width: size, height: size)
-        return iconCopy
+        cachedIcon(key: "AppIcon-\(size)") {
+            guard let appIcon = NSImage(named: "AppIcon") else { return nil }
+            guard let iconCopy = appIcon.copy() as? NSImage else { return nil }
+            iconCopy.isTemplate = false
+            iconCopy.size = NSSize(width: size, height: size)
+            return iconCopy
+        }
     }
 
     /// 创建应用图标（非模板模式，指定宽高）
@@ -39,8 +56,13 @@ enum ImageHelper {
 
     // MARK: - Codex Icon
 
+    /// 同尺寸返回缓存的同一实例，原因见 `iconCache`。
+    /// lockFocus 按当时主屏倍率出位图，倍率也进 key，1x/Retina 屏之间切换时重新生成
     static func createCodexIcon(size: CGFloat) -> NSImage? {
-        createSquareIcon(named: "CodexIcon", size: size, isTemplate: false, sourceInset: 2)
+        let scale = NSScreen.main?.backingScaleFactor ?? 2
+        return cachedIcon(key: "CodexIcon-\(size)@\(scale)x") {
+            createSquareIcon(named: "CodexIcon", size: size, isTemplate: false, sourceInset: 2)
+        }
     }
 
     /// 从资源中创建正方形图标。部分透明 PNG 的边缘 RGB 不是透明白，
