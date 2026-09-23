@@ -950,7 +950,7 @@ struct UsageDetailView: View {
         }
         #if DEBUG
         .background(
-            UserSettings.shared.debugKeepDetailWindowOpen ? Color.white : Color.clear
+            UserSettings.shared.effectiveDebugKeepDetailWindowOpen ? Color.white : Color.clear
         )
         #endif
     }

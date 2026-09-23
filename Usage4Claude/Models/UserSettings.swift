@@ -775,9 +775,27 @@ class UserSettings: ObservableObject {
         }
     }
 
+    // 以下为各调试子功能的实际生效值：总开关 debugModeEnabled 关闭时一律不生效。
+    // 子开关自身的取值照常保存，重新打开总开关即恢复原来的组合，不用逐个重调
+
+    /// 模拟有可用更新是否生效
+    var effectiveSimulateUpdateAvailable: Bool {
+        debugModeEnabled && simulateUpdateAvailable
+    }
+
+    /// 形状图标可单独显示是否生效
+    var effectiveDebugShowAllShapesIndividually: Bool {
+        debugModeEnabled && debugShowAllShapesIndividually
+    }
+
+    /// 保持详情窗口始终打开是否生效
+    var effectiveDebugKeepDetailWindowOpen: Bool {
+        debugModeEnabled && debugKeepDetailWindowOpen
+    }
+
     /// Codex 重置预告的调试注入场景
     enum DebugCodexAnnouncementScenario: String, CaseIterable {
-        /// 关闭注入，走真实的 CodexResetAnnouncementService 网络请求
+        /// 不显示预告，也不发真实请求
         case off = "off"
         /// "around 2 PM" 型：target_kind == "center"
         case center = "center"
@@ -794,7 +812,7 @@ class UserSettings: ObservableObject {
 
         var displayName: String {
             switch self {
-            case .off: return "关闭（真实网络请求）"
+            case .off: return "关闭（不显示预告）"
             case .center: return "预告：约 X 后（center）"
             case .deadline: return "预告：X 内（deadline）"
             case .range: return "预告：仅窗口（range）"
@@ -804,7 +822,7 @@ class UserSettings: ObservableObject {
             }
         }
 
-        /// 构造对应场景的虚构预告；`.off` 返回 nil（不覆盖真实数据）
+        /// 构造对应场景的虚构预告；`.off` 返回 nil（即不显示预告）
         func mockAnnouncement(now: Date = Date()) -> CodexResetAnnouncement? {
             switch self {
             case .off:

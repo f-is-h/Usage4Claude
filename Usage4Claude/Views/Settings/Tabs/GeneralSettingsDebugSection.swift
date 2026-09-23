@@ -26,26 +26,7 @@ struct GeneralSettingsDebugSection: View {
             hint: "切换场景后，点击刷新按钮查看效果"
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                // 重新打开首次启动引导：只开窗口，不动 isFirstLaunch，
-                // 单纯用来检查引导流程的样子
-                HStack {
-                    Button("重新打开引导窗口") {
-                        NotificationCenter.default.post(name: .showWelcomeWindow, object: nil)
-                    }
-                    .controlSize(.small)
-                    .focusable(false)
-
-                    Spacer()
-
-                    Text("只看流程，别点完成")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                Divider()
-                    .padding(.vertical, 4)
-
-                // 启用调试模式开关
+                // 启用调试模式总开关：下面所有调试功能只在打开时显示并生效
                 HStack {
                     Toggle("", isOn: $settings.debugModeEnabled)
                         .toggleStyle(.switch)
@@ -62,316 +43,341 @@ struct GeneralSettingsDebugSection: View {
                         .foregroundColor(.secondary)
                 }
 
-                // 百分比滑块（仅在启用调试模式时显示）
                 if settings.debugModeEnabled {
-                    Divider()
-                        .padding(.vertical, 4)
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 5小时限制
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("5小时限制百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugFiveHourPercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.green)
-                            }
-                            Slider(value: $settings.debugFiveHourPercentage, in: 0...100, step: 1)
-                                .tint(.green)
-                        }
-
-                        // 7天限制
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("7天限制百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugSevenDayPercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.purple)
-                            }
-                            Slider(value: $settings.debugSevenDayPercentage, in: 0...100, step: 1)
-                                .tint(.purple)
-                        }
-
-                        // Extra Usage 限制
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Extra Usage 百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugExtraUsagePercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.pink)
-                            }
-                            Slider(value: $settings.debugExtraUsagePercentage, in: 0...100, step: 1)
-                                .tint(.pink)
-                        }
-
-                        // Opus Weekly 限制
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Opus Weekly 百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugOpusPercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.orange)
-                            }
-                            Slider(value: $settings.debugOpusPercentage, in: 0...100, step: 1)
-                                .tint(.orange)
-                        }
-
-                        // Sonnet Weekly 限制
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Sonnet Weekly 百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugSonnetPercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.blue)
-                            }
-                            Slider(value: $settings.debugSonnetPercentage, in: 0...100, step: 1)
-                                .tint(.blue)
-                        }
-
-                        Divider()
-                            .padding(.vertical, 2)
-
-                        Text("Codex")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-
-                        // Codex 5小时窗口
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Codex 5小时百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugCodexPrimaryPercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0))
-                            }
-                            Slider(value: $settings.debugCodexPrimaryPercentage, in: 0...100, step: 1)
-                                .tint(Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0))
-                        }
-
-                        // Codex 7天窗口
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Codex 7天百分比：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(Int(settings.debugCodexSecondaryPercentage))%")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
-                            }
-                            Slider(value: $settings.debugCodexSecondaryPercentage, in: 0...100, step: 1)
-                                .tint(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
-                        }
-
-                        // Codex Extra Usage：没有限额可言，滑块调的是余额点数本身
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Codex Extra Usage 点数：")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(UserSettings.debugCodexCredits(forLevel: settings.debugCodexExtraCreditsLevel)) 点")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
-                            }
-                            // 步长 0.5：最低一段每格 2 点，个位数余额也调得出来
-                            Slider(value: $settings.debugCodexExtraCreditsLevel, in: 0...100, step: 0.5)
-                                .tint(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
-                        }
-                    }
-                    .padding(.leading, 20)
-                }
-
-                // 模拟更新开关
-                Divider()
-                    .padding(.vertical, 4)
-
-                HStack {
-                    Toggle("", isOn: $settings.simulateUpdateAvailable)
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                        .focusable(false)
-                        .labelsHidden()
-
-                    Text("模拟有可用更新")
-                        .font(.subheadline)
-
-                    Spacer()
-
-                    Text("实时显示红点标识")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                // 单独显示所有形状图标开关
-                Divider()
-                    .padding(.vertical, 4)
-
-                HStack {
-                    Toggle("", isOn: $settings.debugShowAllShapesIndividually)
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                        .focusable(false)
-                        .labelsHidden()
-
-                    Text("形状图标可单独显示")
-                        .font(.subheadline)
-
-                    Spacer()
-
-                    Text("方便截图")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                // 保持详情窗口打开开关
-                Divider()
-                    .padding(.vertical, 4)
-
-                HStack {
-                    Toggle("", isOn: $settings.debugKeepDetailWindowOpen)
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                        .focusable(false)
-                        .labelsHidden()
-
-                    Text("保持详情窗口始终打开")
-                        .font(.subheadline)
-
-                    Spacer()
-
-                    Text("背景变为不透明纯白色")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                // Codex 重置预告场景注入（Beta）：真实预告很罕见，没有这个开关几乎无法验收 UI
-                Divider()
-                    .padding(.vertical, 4)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Codex 重置预告场景（Beta）：")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Picker("", selection: $settings.debugCodexAnnouncementScenario) {
-                        ForEach(UserSettings.DebugCodexAnnouncementScenario.allCases, id: \.self) { scenario in
-                            Text(scenario.displayName).tag(scenario)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    // fixedSize 让下拉框只占内容自身宽度并紧贴左边；否则 .menu 样式的
-                    // Picker 会拉伸填满给定宽度，看起来是浮在中间的一条长条
-                    .fixedSize()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                // Codex 续期防线测试（仅适用于 Codex）
-                Divider()
-                    .padding(.vertical, 4)
-
-                // Level 1：SSR Token 刷新
-                HStack {
-                    Button(action: {
-                        isTestingTokenRefresh = true
-                        tokenRefreshStatus = nil
-                        Task { @MainActor in
-                            CodexTokenRefreshCoordinator.shared.refresh { result in
-                                isTestingTokenRefresh = false
-                                switch result {
-                                case .success(let token):
-                                    tokenRefreshStatus = "✓ 成功 (\(token.prefix(16))…)"
-                                case .failure:
-                                    tokenRefreshStatus = "✗ 失败"
-                                }
-                            }
-                        }
-                    }) {
-                        if isTestingTokenRefresh {
-                            ProgressView().controlSize(.small)
-                        } else {
-                            Text("Level 1：SSR 刷新")
-                        }
-                    }
-                    .disabled(isTestingTokenRefresh || !settings.hasValidCodexCredentials)
-                    .controlSize(.small)
-
-                    if let status = tokenRefreshStatus {
-                        Text(status)
-                            .font(.caption)
-                            .foregroundColor(status.hasPrefix("✓") ? .green : .red)
-                    }
-
-                    Spacer()
-
-                    Text("SSR bootstrap accessToken")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                // Level 2：隐藏 WebView 静默刷新
-                HStack {
-                    Button(action: {
-                        isTestingSilentRefresh = true
-                        silentRefreshStatus = nil
-                        CodexSilentRefreshCoordinator.shared.refresh { result in
-                            isTestingSilentRefresh = false
-                            switch result {
-                            case .success:
-                                silentRefreshStatus = "✓ 成功"
-                            case .failure(let error):
-                                silentRefreshStatus = "✗ 失败: \(error.localizedDescription)"
-                            }
-                        }
-                    }) {
-                        if isTestingSilentRefresh {
-                            ProgressView().controlSize(.small)
-                        } else {
-                            Text("Level 2：WebView 刷新")
-                        }
-                    }
-                    .disabled(isTestingSilentRefresh || !settings.hasValidCodexCredentials)
-                    .controlSize(.small)
-
-                    if let status = silentRefreshStatus {
-                        Text(status)
-                            .font(.caption)
-                            .foregroundColor(status.hasPrefix("✓") ? .green : .red)
-                    }
-
-                    Spacer()
-
-                    Text("隐藏 WebView 读取 cookie")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    debugFeatures
                 }
             }
+        }
+    }
+
+    /// 总开关打开后才出现的全部调试功能
+    @ViewBuilder
+    private var debugFeatures: some View {
+        Divider()
+            .padding(.vertical, 4)
+
+        // 重新打开首次启动引导：只开窗口，不动 isFirstLaunch，
+        // 单纯用来检查引导流程的样子
+        HStack {
+            Button("重新打开引导窗口") {
+                NotificationCenter.default.post(name: .showWelcomeWindow, object: nil)
+            }
+            .controlSize(.small)
+            .focusable(false)
+
+            Spacer()
+
+            Text("只看流程，别点完成")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+
+        Divider()
+            .padding(.vertical, 4)
+
+        // 百分比滑块
+        VStack(alignment: .leading, spacing: 12) {
+            // 5小时限制
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("5小时限制百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugFiveHourPercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.green)
+                }
+                Slider(value: $settings.debugFiveHourPercentage, in: 0...100, step: 1)
+                    .tint(.green)
+            }
+
+            // 7天限制
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("7天限制百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugSevenDayPercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.purple)
+                }
+                Slider(value: $settings.debugSevenDayPercentage, in: 0...100, step: 1)
+                    .tint(.purple)
+            }
+
+            // Extra Usage 限制
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Extra Usage 百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugExtraUsagePercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.pink)
+                }
+                Slider(value: $settings.debugExtraUsagePercentage, in: 0...100, step: 1)
+                    .tint(.pink)
+            }
+
+            // Opus Weekly 限制
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Opus Weekly 百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugOpusPercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.orange)
+                }
+                Slider(value: $settings.debugOpusPercentage, in: 0...100, step: 1)
+                    .tint(.orange)
+            }
+
+            // Sonnet Weekly 限制
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Sonnet Weekly 百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugSonnetPercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                }
+                Slider(value: $settings.debugSonnetPercentage, in: 0...100, step: 1)
+                    .tint(.blue)
+            }
+
+            Divider()
+                .padding(.vertical, 2)
+
+            Text("Codex")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+
+            // Codex 5小时窗口
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Codex 5小时百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugCodexPrimaryPercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0))
+                }
+                Slider(value: $settings.debugCodexPrimaryPercentage, in: 0...100, step: 1)
+                    .tint(Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0))
+            }
+
+            // Codex 7天窗口
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Codex 7天百分比：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(settings.debugCodexSecondaryPercentage))%")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
+                }
+                Slider(value: $settings.debugCodexSecondaryPercentage, in: 0...100, step: 1)
+                    .tint(Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0))
+            }
+
+            // Codex Extra Usage：没有限额可言，滑块调的是余额点数本身
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Codex Extra Usage 点数：")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(UserSettings.debugCodexCredits(forLevel: settings.debugCodexExtraCreditsLevel)) 点")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
+                }
+                // 步长 0.5：最低一段每格 2 点，个位数余额也调得出来
+                Slider(value: $settings.debugCodexExtraCreditsLevel, in: 0...100, step: 0.5)
+                    .tint(Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0))
+            }
+        }
+        .padding(.leading, 20)
+
+        // 模拟更新开关
+        Divider()
+            .padding(.vertical, 4)
+
+        HStack {
+            Toggle("", isOn: $settings.simulateUpdateAvailable)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .focusable(false)
+                .labelsHidden()
+
+            Text("模拟有可用更新")
+                .font(.subheadline)
+
+            Spacer()
+
+            Text("实时显示红点标识")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+
+        // 单独显示所有形状图标开关
+        Divider()
+            .padding(.vertical, 4)
+
+        HStack {
+            Toggle("", isOn: $settings.debugShowAllShapesIndividually)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .focusable(false)
+                .labelsHidden()
+
+            Text("形状图标可单独显示")
+                .font(.subheadline)
+
+            Spacer()
+
+            Text("方便截图")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+
+        // 保持详情窗口打开开关
+        Divider()
+            .padding(.vertical, 4)
+
+        HStack {
+            Toggle("", isOn: $settings.debugKeepDetailWindowOpen)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .focusable(false)
+                .labelsHidden()
+
+            Text("保持详情窗口始终打开")
+                .font(.subheadline)
+
+            Spacer()
+
+            Text("背景变为不透明纯白色")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+
+        // Codex 重置预告场景注入（Beta）：真实预告很罕见，没有这个开关几乎无法验收 UI
+        Divider()
+            .padding(.vertical, 4)
+
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Codex 重置预告场景（Beta）：")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Picker("", selection: $settings.debugCodexAnnouncementScenario) {
+                ForEach(UserSettings.DebugCodexAnnouncementScenario.allCases, id: \.self) { scenario in
+                    Text(scenario.displayName).tag(scenario)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            // fixedSize 让下拉框只占内容自身宽度并紧贴左边；否则 .menu 样式的
+            // Picker 会拉伸填满给定宽度，看起来是浮在中间的一条长条
+            .fixedSize()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+        // Codex 续期防线测试（仅适用于 Codex）
+        Divider()
+            .padding(.vertical, 4)
+
+        // Level 1：SSR Token 刷新
+        HStack {
+            Button(action: {
+                isTestingTokenRefresh = true
+                tokenRefreshStatus = nil
+                Task { @MainActor in
+                    CodexTokenRefreshCoordinator.shared.refresh { result in
+                        isTestingTokenRefresh = false
+                        switch result {
+                        case .success(let token):
+                            tokenRefreshStatus = "✓ 成功 (\(token.prefix(16))…)"
+                        case .failure:
+                            tokenRefreshStatus = "✗ 失败"
+                        }
+                    }
+                }
+            }) {
+                if isTestingTokenRefresh {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Text("Level 1：SSR 刷新")
+                }
+            }
+            .disabled(isTestingTokenRefresh || !settings.hasValidCodexCredentials)
+            .controlSize(.small)
+
+            if let status = tokenRefreshStatus {
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(status.hasPrefix("✓") ? .green : .red)
+            }
+
+            Spacer()
+
+            Text("SSR bootstrap accessToken")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+
+        // Level 2：隐藏 WebView 静默刷新
+        HStack {
+            Button(action: {
+                isTestingSilentRefresh = true
+                silentRefreshStatus = nil
+                CodexSilentRefreshCoordinator.shared.refresh { result in
+                    isTestingSilentRefresh = false
+                    switch result {
+                    case .success:
+                        silentRefreshStatus = "✓ 成功"
+                    case .failure(let error):
+                        silentRefreshStatus = "✗ 失败: \(error.localizedDescription)"
+                    }
+                }
+            }) {
+                if isTestingSilentRefresh {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Text("Level 2：WebView 刷新")
+                }
+            }
+            .disabled(isTestingSilentRefresh || !settings.hasValidCodexCredentials)
+            .controlSize(.small)
+
+            if let status = silentRefreshStatus {
+                Text(status)
+                    .font(.caption)
+                    .foregroundColor(status.hasPrefix("✓") ? .green : .red)
+            }
+
+            Spacer()
+
+            Text("隐藏 WebView 读取 cookie")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 }

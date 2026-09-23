@@ -221,7 +221,7 @@ class MenuBarUI: NSObject {
 
         #if DEBUG
         // 根据调试开关设置背景颜色
-        if settings.debugKeepDetailWindowOpen {
+        if settings.effectiveDebugKeepDetailWindowOpen {
             // 开启时：纯白色不透明背景
             popoverWindow.backgroundColor = NSColor.white
             popoverWindow.isOpaque = true
@@ -295,7 +295,7 @@ class MenuBarUI: NSObject {
                   !frame.contains(NSEvent.mouseLocation) else { return }
 
             #if DEBUG
-            if UserSettings.shared.debugKeepDetailWindowOpen {
+            if UserSettings.shared.effectiveDebugKeepDetailWindowOpen {
                 return
             }
             #endif
@@ -326,7 +326,7 @@ class MenuBarUI: NSObject {
 
             #if DEBUG
             // Debug模式：如果开启了"保持详情窗口打开"，则不自动关闭
-            if UserSettings.shared.debugKeepDetailWindowOpen {
+            if UserSettings.shared.effectiveDebugKeepDetailWindowOpen {
                 return
             }
             #endif
@@ -359,7 +359,7 @@ class MenuBarUI: NSObject {
 
             #if DEBUG
             // Debug模式：如果开启了"保持详情窗口打开"，则不自动关闭
-            if UserSettings.shared.debugKeepDetailWindowOpen {
+            if UserSettings.shared.effectiveDebugKeepDetailWindowOpen {
                 return
             }
             #endif

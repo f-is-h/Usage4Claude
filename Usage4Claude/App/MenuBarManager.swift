@@ -297,7 +297,7 @@ class MenuBarManager: ObservableObject {
                 }
 
                 // 模拟更新开关变化时，直接驱动 Sparkle 徽章状态机（无需真实 appcast）
-                if self.settings.simulateUpdateAvailable {
+                if self.settings.effectiveSimulateUpdateAvailable {
                     self.hasAvailableUpdate = true
                     self.latestVersion = "2.0.0"
                     self.updateMenuBarIcon()
@@ -596,7 +596,7 @@ class MenuBarManager: ObservableObject {
             ) { [weak self] _ in
                 #if DEBUG
                 // Debug模式：如果开启了"保持详情窗口打开"，则不自动关闭
-                if UserSettings.shared.debugKeepDetailWindowOpen {
+                if UserSettings.shared.effectiveDebugKeepDetailWindowOpen {
                     return
                 }
                 #endif

@@ -130,7 +130,7 @@ struct LimitSelectionSection: View {
     private func shouldDisableCheckbox(for limitType: LimitType) -> Bool {
         #if DEBUG
         // Debug模式下如果开启了"单独显示所有形状"，允许取消所有限制
-        if settings.debugShowAllShapesIndividually {
+        if settings.effectiveDebugShowAllShapesIndividually {
             return false
         }
         #endif

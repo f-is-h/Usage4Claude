@@ -446,18 +446,15 @@ class DataRefreshManager: ObservableObject {
         }
 
         #if DEBUG
-        // 调试注入独立于「已登录 Codex 账户」和「总调试开关 debugModeEnabled」——只要
-        // 选了非 .off 场景就立即生效，方便在没有真实 Codex 账户、也不想连带模拟用量数据
-        // 的情况下单独验收这个 Beta 徽章。真实预告很罕见（历史上约 10/53 次事件），
-        // 没有这个开关几乎无法验收 UI。
-        if let mock = settings.debugCodexAnnouncementScenario.mockAnnouncement() {
-            setCodexResetAnnouncement(mock)
+        // 调试模式下预告完全由调试场景决定，不发真实请求：此时用量本身就是模拟数据，
+        // 混进真实预告反而没法验收；选 .off 即不显示。不要求已登录 Codex 账户。
+        // 真实预告很罕见（历史上约 10/53 次事件），没有这个开关几乎无法验收 UI。
+        if settings.debugModeEnabled {
+            setCodexResetAnnouncement(settings.debugCodexAnnouncementScenario.mockAnnouncement())
             return
         }
-        let codexActive = settings.debugModeEnabled || settings.hasValidCodexCredentials
-        #else
-        let codexActive = settings.hasValidCodexCredentials
         #endif
+        let codexActive = settings.hasValidCodexCredentials
 
         guard codexActive else {
             if codexResetAnnouncement != nil {
