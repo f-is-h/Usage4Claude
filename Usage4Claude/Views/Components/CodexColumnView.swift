@@ -15,7 +15,6 @@ struct CodexColumnView: View {
     let refreshState: RefreshState
     @Binding var animationType: UsageDetailView.LoadingAnimationType
     @Binding var rotationAngle: Double
-    let remainingModeAnimationTrigger: Int
     var onRefresh: (() -> Void)?
     var onAnimationHint: ((String) -> Void)?
     var onToggleRemainingMode: (() -> Void)?
@@ -85,8 +84,7 @@ struct CodexColumnView: View {
                             if isCodexRefreshing {
                                 codexLoadingAnimation()
                             } else {
-                                Circle()
-                                    .trim(from: primaryRange.from, to: primaryRange.to)
+                                UsageRingArc(primaryRange)
                                     .stroke(
                                         primaryColor,
                                         style: StrokeStyle(lineWidth: 10, lineCap: .round)
@@ -94,7 +92,7 @@ struct CodexColumnView: View {
                                     .frame(width: 100, height: 100)
                                     .rotationEffect(.degrees(-90))
                                     .animation(
-                                        .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                        UsageRingDisplay.toggleAnimation,
                                         value: primaryRange
                                     )
                             }
@@ -113,8 +111,7 @@ struct CodexColumnView: View {
                                 if isCodexRefreshing {
                                     codexOuterLoadingAnimation()
                                 } else {
-                                    Circle()
-                                        .trim(from: secondaryRange.from, to: secondaryRange.to)
+                                    UsageRingArc(secondaryRange)
                                         .stroke(
                                             UsageColorScheme.codexSecondaryColorSwiftUI(secondary.percentage),
                                             style: StrokeStyle(lineWidth: 3, lineCap: .round)
@@ -122,19 +119,10 @@ struct CodexColumnView: View {
                                         .frame(width: 114, height: 114)
                                         .rotationEffect(.degrees(-90))
                                         .animation(
-                                            .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                            UsageRingDisplay.toggleAnimation,
                                             value: secondaryRange
                                         )
                                 }
-                            }
-
-                            if !isCodexRefreshing {
-                                DetailUsageRingSweep(
-                                    trigger: remainingModeAnimationTrigger,
-                                    diameter: 122,
-                                    lineWidth: 3,
-                                    color: primaryColor
-                                )
                             }
 
                             // 中心百分比

@@ -88,7 +88,6 @@ struct UsageDetailView: View {
     // 若改成观察 UserSettings，它任何一个 @Published 变动都会重建整个 popover，
     // 正是本文件其它地方（如 TimelineView 那处注释）刻意避开的开销。
     @State private var showRemainingMode = UserSettings.shared.showRemainingMode
-    @State private var remainingModeAnimationTrigger = 0
     
     // MARK: - Body
 
@@ -285,8 +284,7 @@ struct UsageDetailView: View {
                                 if isClaudeRefreshing {
                                     loadingAnimation()
                                 } else {
-                                    Circle()
-                                        .trim(from: primaryRingRange.from, to: primaryRingRange.to)
+                                    UsageRingArc(primaryRingRange)
                                         .stroke(
                                             primaryRingColor,
                                             style: StrokeStyle(lineWidth: 10, lineCap: .round)
@@ -294,7 +292,7 @@ struct UsageDetailView: View {
                                         .frame(width: 100, height: 100)
                                         .rotationEffect(.degrees(-90))
                                         .animation(
-                                            .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                            UsageRingDisplay.toggleAnimation,
                                             value: primaryRingRange
                                         )
                                 }
@@ -316,8 +314,7 @@ struct UsageDetailView: View {
                                         if isClaudeRefreshing {
                                             outerLoadingAnimation()
                                         } else {
-                                            Circle()
-                                                .trim(from: outerRingRange.from, to: outerRingRange.to)
+                                            UsageRingArc(outerRingRange)
                                                 .stroke(
                                                     colorForSevenDay(percentage),
                                                     style: StrokeStyle(lineWidth: 3, lineCap: .round)
@@ -325,20 +322,11 @@ struct UsageDetailView: View {
                                                 .frame(width: 114, height: 114)
                                                 .rotationEffect(.degrees(-90))
                                                 .animation(
-                                                    .spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05),
+                                                    UsageRingDisplay.toggleAnimation,
                                                     value: outerRingRange
                                                 )
                                         }
                                     }
-                                }
-
-                                if !isClaudeRefreshing {
-                                    DetailUsageRingSweep(
-                                        trigger: remainingModeAnimationTrigger,
-                                        diameter: 122,
-                                        lineWidth: 3,
-                                        color: primaryRingColor
-                                    )
                                 }
 
                                 DetailUsageRingCenterText(
@@ -706,7 +694,6 @@ struct UsageDetailView: View {
                 refreshState: refreshState,
                 animationType: $codexAnimationType,
                 rotationAngle: $rotationAngle,
-                remainingModeAnimationTrigger: remainingModeAnimationTrigger,
                 onRefresh: { onMenuAction?(.refreshCodex) },
                 onAnimationHint: { showAnimationHint($0, provider: .codex) },
                 onToggleRemainingMode: toggleRemainingMode
@@ -988,9 +975,8 @@ struct UsageDetailView: View {
     }
 
     private func toggleRemainingMode() {
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.78, blendDuration: 0.05)) {
+        withAnimation(UsageRingDisplay.toggleAnimation) {
             showRemainingMode.toggle()
-            remainingModeAnimationTrigger += 1
         }
         // 写回 settings：持久化，同时它的 didSet 会 post .remainingModeToggled，
         // MenuBarManager 收到后让菜单栏图标沿同一条 spring 曲线过渡过去

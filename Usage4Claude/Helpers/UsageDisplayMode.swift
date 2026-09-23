@@ -93,8 +93,9 @@ enum UsageDisplayMode {
 
     // MARK: - Spring 曲线
 
-    /// Popover 大圆环用的 spring 参数，菜单栏这边照抄以保证两处手感一致
-    /// （见 `UsageDetailView.toggleRemainingMode`）
+    /// 已用/剩余切换的 spring 参数，Popover 大圆环和菜单栏图标共用这一份，调手感只改这里。
+    /// Popover 经 `UsageRingDisplay.toggleAnimation` 交给 SwiftUI 驱动，菜单栏由 `springProgress` 逐帧手算。
+    /// 调低 `dampingFraction` 时回摆会变大，`UsageRingArc.minVisibleLength` 要跟着放宽，否则收尾会弹出小点
     enum Spring {
         static let response: Double = 0.42
         static let dampingFraction: Double = 0.78

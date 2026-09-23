@@ -16,7 +16,7 @@ struct UsageRingTrimRange: Equatable {
 }
 
 /// Popover 大圆环的 trim 换算。口径本身定义在 `UsageDisplayMode`，菜单栏图标读的是同一份，
-/// 这里只把它翻译成 SwiftUI `Circle().trim(from:to:)` 要的 CGFloat。
+/// 这里只把它翻译成 `UsageRingArc` 要的 CGFloat。
 enum UsageRingDisplay {
     static func displayedPercentage(usedPercentage: Double, showRemainingMode: Bool) -> Double {
         UsageDisplayMode.displayedPercentage(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
@@ -25,6 +25,47 @@ enum UsageRingDisplay {
     static func displayedTrimRange(usedPercentage: Double, showRemainingMode: Bool) -> UsageRingTrimRange {
         let range = UsageDisplayMode.fillRange(usedPercentage: usedPercentage, showRemainingMode: showRemainingMode)
         return UsageRingTrimRange(from: CGFloat(range.from), to: CGFloat(range.to))
+    }
+
+    /// 已用/剩余切换动画，参数取自 `UsageDisplayMode.Spring`，与菜单栏图标同一条曲线
+    static let toggleAnimation: Animation = .spring(
+        response: UsageDisplayMode.Spring.response,
+        dampingFraction: UsageDisplayMode.Spring.dampingFraction,
+        blendDuration: 0.05
+    )
+}
+
+/// 大圆环的实线段，替代 `Circle().trim(from:to:)`。
+///
+/// 切换口径用的是欠阻尼 spring，端点会在目标附近来回摆动。目标是空弧时（已用 100% 切到剩余，
+/// 或已用 0%），端点每摆回轨迹内一次就会切出一段几乎零长的弧，圆头线帽把它画成一个线宽大小的圆点，
+/// 看起来就是收尾时「弹」出来一下。这里把不足 `minVisibleLength` 的弧直接当空弧处理。
+struct UsageRingArc: Shape {
+    var from: CGFloat
+    var to: CGFloat
+
+    /// 0.2%：远小于真实数据能出现的最小非零值（1%），又盖得住 spring 第二次回摆的幅度（约 0.04%）
+    static let minVisibleLength: CGFloat = 0.002
+
+    init(_ range: UsageRingTrimRange) {
+        from = range.from
+        to = range.to
+    }
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(from, to) }
+        set {
+            from = newValue.first
+            to = newValue.second
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        // spring 过冲会把端点推出 0...1，先钳回轨迹内再判断长度
+        let start = min(1, max(0, from))
+        let end = min(1, max(0, to))
+        guard end - start >= Self.minVisibleLength else { return Path() }
+        return Circle().path(in: rect).trimmedPath(from: start, to: end)
     }
 }
 
@@ -54,54 +95,6 @@ struct DetailUsageRingCenterText: View {
         }
         .id(showRemainingMode ? "remaining" : "used")
         .transition(.scale(scale: 0.92).combined(with: .opacity))
-    }
-}
-
-/// 剩余/已用模式切换时的一次性外侧扫光。
-struct DetailUsageRingSweep: View {
-    let trigger: Int
-    let diameter: CGFloat
-    let lineWidth: CGFloat
-    let color: Color
-
-    @State private var rotation: Double = -90
-    @State private var opacity: Double = 0
-
-    var body: some View {
-        Circle()
-            .trim(from: 0, to: 0.18)
-            .stroke(
-                AngularGradient(
-                    gradient: Gradient(colors: [
-                        color.opacity(0.0),
-                        color.opacity(0.35),
-                        Color.white.opacity(0.95),
-                        color.opacity(0.85),
-                        color.opacity(0.0)
-                    ]),
-                    center: .center
-                ),
-                style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
-            )
-            .frame(width: diameter, height: diameter)
-            .rotationEffect(.degrees(rotation))
-            .opacity(opacity)
-            .scaleEffect(opacity > 0 ? 1.03 : 0.98)
-            .allowsHitTesting(false)
-            .onChange(of: trigger) { newValue in
-                guard newValue > 0 else { return }
-                runSweep()
-            }
-    }
-
-    private func runSweep() {
-        rotation = -90
-        opacity = 1
-
-        withAnimation(.easeOut(duration: 0.45)) {
-            rotation = 270
-            opacity = 0
-        }
     }
 }
 
