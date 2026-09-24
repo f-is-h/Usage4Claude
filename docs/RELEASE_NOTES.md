@@ -13,6 +13,28 @@
 > 版本号权威源仍是 CHANGELOG.md（与 Xcode `MARKETING_VERSION` 校验一致）。
 > 发版时本文件必须有对应的 `## [X.Y.Z]` 段落，否则 Sparkle / Release 正文会为空。
 
+## [3.5.0] - 2026-09-24
+
+### Added
+- **Pace graph**: A new graph style shows each limit against how much of its window has passed, next to a line for even use. Above the line means you are using it faster than time is passing. Weekly limits can count weekdays only. Switch in Settings → Display → Graph Style (thanks @quangyendn and @ericnondahl, #85; proposed by @yenpvn, #20)
+- **Custom notification thresholds**: Choose when you get notified: one threshold for the 5-hour limit and up to two each for weekly limits and extra usage, anywhere from 50% to 100%
+- **Menu bar icon follows the used/remaining toggle**: Clicking the limit list now flips the menu bar icon too, with the same animation
+- **Clearer temporary errors**: When a refresh fails, a small indicator appears next to the title instead of a banner that resized the window. Click it to see what went wrong and when the shown data was fetched
+
+### Changed
+- **Settings in five tabs**: Display, Data, Accounts, General and About, instead of one long page
+- **Codex credits shown as a balance**: The credits icon now shows how many credits you have left, instead of a percentage that could only read 0 or 100
+- **Codex reset announcement**: The badge now sits next to the Codex title, and clicking it shows the expected time and the announcement
+
+### Fixed
+- **"Too many requests" errors**: Smart refresh could send extra requests in quick bursts, get rate limited, and then keep retrying every minute. It now sends one request per refresh and waits longer after being rate limited (thanks @ericnondahl, #86; reported by @you3fen, #90)
+- **Codex asking you to sign in again**: This happened most with ChatGPT's Advanced Security turned on. Codex now keeps its sign-in across restarts and renews it before asking you (thanks @ViRb3, #87, #88)
+- **Codex usage disappearing after a network hiccup**: Codex now keeps showing your last usage, the same way Claude does
+- **Unreadable numbers on a dark menu bar**: The menu bar icon now adapts its colors when the wallpaper makes the menu bar dark
+- **Missed Codex reset announcements**: The badge now shows up as soon as a reset is announced, including announcements without a time
+- **Onboarding failing after browser sign-in**: Signing in from the welcome window now completes, Codex can be added there too, and sign-in windows no longer cover your browser
+- **Flickering icons and stray marks**: The Claude and Codex icons no longer blink when toggling, and an empty ring no longer flashes a dot
+
 ## [3.4.1] - 2026-09-04
 
 ### Fixed
