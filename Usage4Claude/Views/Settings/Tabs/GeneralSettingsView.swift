@@ -18,7 +18,7 @@ struct GeneralSettingsView: View {
     @State private var errorMessage = ""
 
     var body: some View {
-        ScrollView {
+        DocsScrollView {
             VStack(spacing: 16) {
                 // 语言设置卡片
                 SettingCard(

@@ -1,167 +1,234 @@
 ---
 name: capture-usage4claude-screenshots
-description: Automate Usage4Claude interface screenshots with CleanShot X on macOS. Use when Codex needs to capture localized Usage4Claude menu-bar popover screenshots, switch Usage4Claude display/language settings, save files such as detail.claude.en@2x.png, or troubleshoot CleanShot/window-capture automation that depends on macOS Accessibility, osascript, CoreGraphics mouse movement, and the Usage4Claude Debug app.
+description: Produce every Usage4Claude interface image used by the READMEs and docs. Renders the real SwiftUI views offscreen with ImageRenderer — no app launch, no screen capture, no synthetic mouse events, no Accessibility permission. Use when asked to refresh README images, add a new documented scene or language, change mock data, adjust image sizing or naming, wire images into the READMEs, or debug the renderer.
 ---
 
-# Capture Usage4Claude Screenshots
+# Usage4Claude Documentation Images
 
-## Overview
-
-Capture Usage4Claude popover screenshots by matching the user's manual CleanShot workflow: enter CleanShot window capture mode, hover the real mouse over the Usage4Claude popover, click, and rename the newly saved file in Downloads.
-
-This workflow is fragile because CleanShot's window selector reacts to the real mouse position. Do not rely on app-relative Computer Use clicks for the final selection; use CoreGraphics to move the mouse to the window center and post a real click.
-
-## Preflight
-
-Confirm these before capturing:
-
-- Use the Debug Usage4Claude instance when the user requests it.
-- Verify `Codex` has macOS Accessibility permission. `Computer Use` alone is not enough for shell-launched `osascript`.
-- Verify this succeeds before starting CleanShot:
+Everything the READMEs show of the app is rendered, not captured.
+`scripts/render_docs_images.sh` compiles the whole app plus
+`scripts/docs-images/main.swift` into a command-line tool and draws the real
+SwiftUI views into PNGs. It is deterministic, needs no GUI, and does not disturb
+whoever is using the machine.
 
 ```sh
-osascript -e 'tell application "System Events" to get count of application processes'
+./scripts/render_docs_images.sh [output-dir]      # default: docs/images
 ```
 
-If it fails with `not allowed assistive access` or `不允许辅助访问`, stop and ask the user to add Codex to System Settings > Privacy & Security > Accessibility.
+One run emits **28 files**: 7 languages × 2 scenes × light/dark. Expect a couple of
+minutes — the tool is rebuilt from scratch every time.
 
-## Configure Usage4Claude
+Render into a scratch directory first, look at the results, and only then write to
+`docs/images/`. Never overwrite the committed images with an unreviewed batch.
 
-Set the screenshot state in Usage4Claude settings before capture.
+## Output And Where It Goes
 
-- Claude-only: enable Claude 5-Hour, 7-Day, Extra Usage, 7D Opus, and 7D Sonnet; disable all Codex items.
-- Codex-only: enable all 3 Codex limits; disable all Claude items.
-- Mixed: enable Claude's first 3 limits and all 3 Codex limits.
-- Switch language only inside Usage4Claude settings. Do not change language by writing `UserDefaults` or by external app-level language overrides.
-- Keep the Usage4Claude screenshot setting that prevents the popover from closing.
+All images live in `docs/images/`.
 
-After changing settings, open the main Usage4Claude popover and inspect it with Computer Use. The screenshot should show the intended language and display items before CleanShot starts.
+| File | Size | Used by |
+| --- | --- | --- |
+| `hero.<lang>.<variant>@2x.png` | 950×348pt | README first screen |
+| `settings.display.<lang>.<variant>@2x.png` | 540×1244pt (CJK) / 540×1257pt (Latin) | README interface section |
 
-### Reference Debug Usage Values
+- `<lang>` is `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `fr`, `de`. These follow the existing
+  `docs/images` and `README.zh-CN.md` spelling and deliberately differ from
+  `AppLanguage`'s raw values (`zh-Hans`, `zh-Hant`). The mapping lives in
+  `docsLanguageCode`.
+- `<variant>` is `light` or `dark`.
+- `@2x` matches `renderer.scale = 2`; always display at the logical point width so the
+  image stays crisp without being upscaled.
+- Settings heights differ by language because the descriptions wrap differently. That is
+  expected; do not treat it as a defect.
 
-For canonical documentation screenshots, use a Debug build with Debug Mode enabled and set these eight slider values before capture:
+Path references differ by README: the root `README.md` uses `docs/images/…`, while
+`docs/README.<lang>.md` uses `images/…`.
 
-| Debug slider | Value |
-| --- | ---: |
-| Claude 5-Hour | 66% |
-| Claude 7-Day | 88% |
-| Claude Extra Usage | 66% |
-| Claude Opus 7-Day | 66% |
-| Claude Sonnet 7-Day | 66% |
-| Codex Primary | 66% |
-| Codex Secondary | 88% |
-| Codex Extra Usage | 88% |
+## README Integration
 
-With General settings open, apply this preset through the live Accessibility slider controls:
+Pair the variants and let the browser pick:
+
+```html
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/hero.zh-CN.dark@2x.png">
+  <img src="images/hero.zh-CN.light@2x.png" width="948" alt="Usage4Claude">
+</picture>
+```
+
+GitHub's README content area is about 948px wide inside the 1012px container.
+
+- **Hero**: `width="948"`, at the very top, in place of a large app icon. The icon already
+  appears twice inside the image; repeating it above only pushes the product below the fold.
+- **Settings**: `width="500"`. The page renders full height (~1250pt) rather than being
+  clipped to the real 550pt window, so every card is visible — including ones a user would
+  have to scroll for. Narrower than 500 makes the body text too small to read.
+
+To preview, serve a mock README page over HTTP (`python3 -m http.server`) and open it in
+the browser pane. `file://` renders as a static snapshot that page tools cannot drive.
+Check dark mode **in that page**, never from the standalone PNG.
+
+## How The Pipeline Is Wired
+
+Four non-obvious things make it work; breaking any one yields blank or broken output.
+
+1. **The entry file must be named `main.swift`.** Swift only allows top-level code there.
+2. **Sparkle must come from the SPM artifact.** `MenuBarManager` imports it, and the copy
+   embedded in `Usage4Claude.app/Contents/Frameworks` has its `Headers`/`Modules` stripped
+   by Xcode. The script globs DerivedData for `Sparkle.xcframework/macos-arm64_x86_64`.
+3. **`@main` is stripped from a copy of `ClaudeUsageMonitorApp.swift`.** The original is
+   never modified.
+4. **The binary runs from inside the app bundle** (`Contents/MacOS/`), which is what makes
+   `Bundle.main` resolve to the app so `Assets.xcassets` and the seven `.lproj` folders load.
+
+The script picks the app bundle by **modification time**, and rebuilds when any source is
+newer than the binary. Do not change this to sort by name: `build/` accumulates version
+directories, the alphabetically last one is not necessarily the newest, and rendering
+against a stale bundle silently produces images with outdated strings and assets.
+
+## Adding A Scene
+
+In `scripts/docs-images/main.swift`, inside the language loop:
+
+1. Add mock data to `MockUsage` if needed (see the data rules).
+2. Set `UserSettings.shared` to the state the scene needs.
+3. **Render to a bitmap with `renderImage(...)` immediately, before touching settings again.**
+4. Compose and `write(...)` with the `<name>.<code>.<variant>@2x.png` convention.
+
+Reset any setting the previous scene changed. Scenes run in sequence and share one
+`UserSettings`, so a scene that forgets to reset inherits the last one's state.
+
+Adding a language means extending `docsLanguageCode` and `heroLabels`. The hero captions
+live in the renderer, not in the app's `Localizable.strings` — that file is for strings
+the UI actually shows.
+
+## Pitfalls
+
+Each of these cost real debugging time.
+
+### Views read settings lazily
+
+SwiftUI views read `UserSettings.shared` **when they render**, not when they are
+constructed. Building two views under different settings and rendering them together makes
+both use whatever is in effect at render time — the first side-by-side hero came out with
+two pace graphs for this reason. Always `renderImage(...)` per scene, then compose bitmaps.
+
+### Never judge a render from a standalone PNG thumbnail
+
+Dark-variant PNGs are transparent and draw white content; viewers composite transparency
+onto white, so white text, hairlines and the monochrome icon all look **missing**. Small
+elements are just as deceptive — a 20pt icon in a 950pt canvas is easy to misread.
+This produced several rounds of chasing bugs that did not exist.
+
+Use the bundled previewer before concluding anything is wrong. It needs no dependencies —
+this is a Swift repo, `swift` runs a single file directly. Do **not** install Pillow or
+ImageMagick for this.
 
 ```sh
-scripts/apply_reference_debug_values.sh
+S=.agents/skills/capture-usage4claude-screenshots/scripts/preview_on_background.swift
+
+# whole image on GitHub's dark background (use ffffff for light)
+swift $S docs/images/hero.zh-CN.dark@2x.png /tmp/check.png 0d1117
+
+# top 50pt only, enlarged 3x — for the menu bar icon and other small elements
+swift $S docs/images/hero.zh-CN.dark@2x.png /tmp/check.png 0d1117 50
 ```
 
-The script reads each slider back after setting it and fails on a mismatch. It requires a Debug build with Debug Mode enabled; do not run it against a release build. It does not fix reset dates/times, account names, or Debug-only announcement badges—configure those separately when a reference image requires them.
+### `ImageRenderer` cannot draw AppKit-backed controls
 
-## Required Screenshot Matrix
+They render as a yellow "unsupported" block. `Usage4Claude/Helpers/DocsRenderMode.swift`
+holds the stand-ins, all inert in the shipping app:
 
-Every full screenshot pass usually needs all supported languages for these three scenarios:
+- `DocsRenderMode.isActive` — the flag.
+- `DocsScrollView` — `ScrollView` renders its content as **blank**, with no error. Out of
+  scroll mode the content lays out fully and the enclosing frame clips it.
+- `DocsSegmentedPicker` — replaces `.pickerStyle(.segmented)`. Size it to its content;
+  `NSSegmentedControl` does not stretch to fill the row.
+- `UsageDetailView.menuButtonLabel(rotated:)` — replaces the three-dot `Menu`.
 
-- `detail.claude.<lang>@2x.png`: Claude-only, with `five_hour`, `seven_day`, `extra_usage`, `seven_day_opus`, `seven_day_sonnet`.
-- `detail.codex.<lang>@2x.png`: Codex-only, with `codex_primary`, `codex_secondary`, `codex_extra_usage`; no Claude types.
-- `detail.both.<lang>@2x.png`: Claude + Codex, with Claude's first 3 types (`five_hour`, `seven_day`, `extra_usage`) and all 3 Codex types.
+When writing a stand-in, copy what the control **looks like on screen**, not what its
+source says. That `Menu` label carries `.rotationEffect(.degrees(90))` which AppKit
+ignores, so the replica must not rotate.
 
-Supported screenshot filename language codes:
+`SettingsView` also drops its fixed height under `DocsRenderMode` so the whole page renders.
 
-- `en` -> app language `en`
-- `ja` -> app language `ja`
-- `zh-CN` -> app language `zh-Hans`
-- `zh-TW` -> app language `zh-Hant`
-- `ko` -> app language `ko`
-- `fr` -> app language `fr`
-- `de` -> app language `de`
+### Monochrome menu bar icons need two fixes
 
-If the user asks for "all languages", capture in this order: `en`, `ja`, `zh-CN`, `zh-TW`, `ko`, `fr`, `de`.
+The template icon is an alpha mask and the app leaves tinting to macOS. Offscreen there is
+no system tinting, and the mask mixes two colour sources: rings use dynamic
+`NSColor.labelColor`, digits use a hardcoded `NSColor.black`. Under a dark appearance the
+rings turn white while the digits stay black.
 
-When only one group is requested, do that group first and wait for user confirmation before continuing to the next scenario.
+Both halves are required:
 
-## Capture Workflow
+- Generate with `NSApp.appearance` pinned to `.aqua` (`monochromeMenuBarIcon`) for a
+  uniformly black mask.
+- Tint in SwiftUI with `.renderingMode(.template)` + `foregroundStyle`.
 
-Use the bundled script for the final capture whenever possible:
+`colorInvert()` flips opaque regions too and turns the rings into solid blocks. Tinting the
+`NSImage` itself (`lockFocus` + `sourceAtop`, or rebuilding a bitmap rep) yields an image
+that exports to PNG correctly but renders empty through SwiftUI.
 
-```sh
-scripts/capture_usage4claude_window.sh detail.claude.en@2x.png
-```
+### Shadows belong on an opaque background shape
 
-The script:
+Applying `.shadow` to content shadows **every** element in it. With a transparent content
+area each card, radio dot and checkbox casts its own shadow and the window reads as several
+floating pieces. `WindowChrome` paints an opaque window background and puts the shadow on
+the shape behind it; `PopoverChrome` draws the arrow and card as one `Shape` for the same
+reason — separate views let the shadow trace the arrow's slanted edges.
 
-1. Records the current latest CleanShot file in `~/Downloads`.
-2. Finds the on-screen Usage4Claude popover bounds with `CGWindowListCopyWindowInfo`.
-3. Moves the real cursor to the popover center with `CGWarpMouseCursorPosition`.
-4. Opens `cleanshot://capture-window?action=save`.
-5. Moves the cursor to the popover center again and posts real mouse down/up events.
-6. Detects the newly saved CleanShot file and renames it to the requested filename.
+### The dual-provider layout needs debug mode
 
-If the target file already exists, choose a temporary test name or ask before replacing it. Do not silently overwrite screenshots.
+`isMultiProviderActive` normally requires real accounts for both providers. Under `DEBUG`
+it also accepts `debugModeEnabled == true` plus a custom display set containing both
+providers' limit types. Use that instead of faking credentials.
 
-For repeatable language captures, use the language script. It opens General settings, puts the app in custom display mode, and applies the requested display scenario through the Accessibility tree before it starts switching languages:
+### The renderer shares the real app's UserDefaults
 
-```sh
-scripts/capture_current_display_all_languages.sh claude
-```
+`Bundle.main` is the app bundle, so the process reads and writes the release app's
+preference domain. Every setting it touches is snapshotted and restored in a `defer`;
+**add new settings to that tuple** or the user's app is left in screenshot state.
 
-`apply_scenario.sh` controls the eight limit buttons in `LimitType.allCases` order: it first enables every requested type, then disables the remaining types. It reads `AXSelected` after each click and fails if the actual state does not match; this avoids the circular-icon constraint preventing a blind click from taking effect. It also turns off the menu-bar-only fallback so the detail popover observes the selected types. Use this workflow for display options and language changes; do not switch languages or display types by editing defaults.
+Light/dark is pinned with `-AppleInterfaceStyle Light|Dark` on the command line instead of
+being written. `NSArgumentDomain` outranks everything and never touches disk, so output
+does not depend on the machine's current appearance.
 
-For a full multilingual reference pass in Debug, opt into the same numeric preset before the scenario is applied:
+## Mock Data Rules
 
-```sh
-APPLY_REFERENCE_DEBUG_VALUES=1 scripts/capture_current_display_all_languages.sh claude
-```
+Numbers are chosen, not arbitrary. They live in `MockUsage`.
 
-## Manual Fallback
+- **The pace graph must demonstrate itself.** Its x axis is elapsed window time and the
+  diagonal is an even burn rate, so put one point clearly above the diagonal and one clearly
+  below, separated horizontally. `resetsAt` drives x: `elapsedRatio = 1 - remaining / window`.
+- **Vary the percentages.** A column of identical numbers reads as unfilled placeholder data.
+- **Anchor reset times to the current hour** (`MockUsage.anchor`). Using `Date()` directly
+  makes the minutes differ on every run, so every re-render produces a meaningless diff.
+  Renders within the same hour are identical; across hours they still differ. Pinning it
+  completely would need the views to pass an injected `now` down to `UsagePaceGraphMath` —
+  the parameter exists, the views just do not use it.
+- **Codex's 7-day reset is deliberately off the hour.** That window comes from
+  `reset_after_seconds` so it lands on an arbitrary minute, and the UI formats it with
+  minute precision while Claude's hour-precision `resets_at` does not. A round `:00` there
+  looks like an inconsistent format.
 
-If the script needs to be reproduced manually, use these pieces.
+## Scene Inventory
 
-Find the Usage4Claude popover bounds:
+**Hero** — two groups side by side in one PNG, each a menu bar icon between two hairlines
+with the popover hanging below. Left: Claude, ring graph, colour menu bar icon with app
+icon. Right: Claude + Codex, pace graph, monochrome icon, percentages only. The pair
+carries the caption text.
 
-```sh
-swift -e 'import CoreGraphics; if let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] { for w in windows { let owner = w[kCGWindowOwnerName as String] as? String ?? ""; if owner.contains("Usage4Claude") { print(owner, w[kCGWindowLayer as String] ?? "", w[kCGWindowBounds as String] ?? "") } } }'
-```
+No wallpaper, no clock, no traffic lights, no fake system chrome anywhere — it ages badly
+and this is a product illustration, not a screen capture. The only synthetic parts are the
+hairlines and the popover/window chrome that AppKit would otherwise provide.
 
-Open CleanShot window capture and click the popover center:
+**Settings** — the Display tab at full height, in `WindowChrome`. Reset the settings to a
+representative default first (colour theme, icon + percentage, medium size, smart display,
+ring graph); otherwise the shot inherits the hero's monochrome/pace state.
 
-```sh
-center_x=<center_x_from_bounds>
-center_y=<center_y_from_bounds>
-osascript -e 'do shell script "/usr/bin/open '\''cleanshot://capture-window?action=save'\''"'
-swift -e "import CoreGraphics; import Darwin; let p = CGPoint(x: $center_x, y: $center_y); CGWarpMouseCursorPosition(p); usleep(400000); let src = CGEventSource(stateID: .hidSystemState); CGEvent(mouseEventSource: src, mouseType: .mouseMoved, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap); usleep(200000); CGEvent(mouseEventSource: src, mouseType: .leftMouseDown, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap); usleep(80000); CGEvent(mouseEventSource: src, mouseType: .leftMouseUp, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)"
-```
+## Retired
 
-Replace `center_x` and `center_y` with the actual center from the current bounds.
-
-## Verification
-
-After capture:
-
-- Compare `~/Downloads` before and after to identify the new file.
-- Open the new image with `view_image` and confirm it is Usage4Claude, not Codex or Script Editor.
-- Confirm the language and display mode match the requested scenario.
-- Rename only the verified screenshot.
-
-## Known Pitfalls From The First Run
-
-Keep this short record in mind before debugging from scratch:
-
-- Terminal having Accessibility permission does not prove Codex has it. The same `osascript` command can succeed in Terminal and fail inside Codex until Codex is added to Accessibility.
-- `Computer Use` being enabled in Accessibility is not enough for shell-launched `osascript`; Codex itself also needs permission.
-- Earlier experiments changed language by writing `UserDefaults` and restarting the app. Do not use that for real screenshot passes. The required workflow is to switch language in Usage4Claude settings itself.
-- Computer Use clicks are useful for inspecting and interacting with app UI, but app-relative clicks are not reliable for CleanShot's system-level window picker.
-- `System Events click at {x, y}` can return a Usage4Claude AX object while CleanShot still captures the wrong window. CleanShot window mode depends on the real cursor hover target, so move the cursor with CoreGraphics before clicking.
-- Always record the latest Downloads file before capture. One earlier attempt found a new file that was not the intended screenshot, and another captured Codex instead of Usage4Claude.
-- Do not overwrite an existing target like `detail.claude.en@2x.png` during testing. Use a `.test` filename unless the user explicitly approves replacement.
-- If `screencapture -W` remains running, CleanShot is still waiting for window selection. Cancel it promptly before continuing.
-- Usage4Claude can occasionally become unresponsive when rapidly automated through restart/open cycles. Do not force-kill it repeatedly. If the app stops responding to Computer Use or LaunchServices returns `-1712`, stop the batch, let the user restart the app, then continue with a gentler per-language flow.
-
-Common failure signs:
-
-- A screenshot of Codex means the final click did not use real mouse hover over Usage4Claude.
-- A stuck `screencapture -W` process means CleanShot is still waiting for window selection. Cancel with Escape or stop only the stuck helper process that this workflow started.
-- `osascript` failing while Terminal works means Codex, not Terminal, lacks Accessibility permission.
-- `menu bar 2 ... invalid index` immediately after launch means the status item is not ready yet; wait and retry instead of looping rapid restarts.
+`scripts/` in this skill now holds only `preview_on_background.swift`.
+The CleanShot capture flow that used to live here is gone, along with
+`capture_usage4claude_window.sh`, `capture_current_display_all_languages.sh`,
+`apply_scenario.sh` and `apply_reference_debug_values.sh`. It drove the real cursor,
+needed Accessibility permission for the agent process, and was fragile by its own
+admission. If a scene is missing, extend the renderer rather than reviving it.

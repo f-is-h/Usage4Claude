@@ -14,7 +14,7 @@ struct DataSettingsView: View {
     @ObservedObject private var settings = UserSettings.shared
 
     var body: some View {
-        ScrollView {
+        DocsScrollView {
             VStack(spacing: 16) {
                 // 刷新设置卡片
                 SettingCard(

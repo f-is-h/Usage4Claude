@@ -60,14 +60,22 @@ struct MenuBarAppearanceSection: View {
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
 
-                    Picker("", selection: $settings.menuBarIconSize) {
-                        ForEach(MenuBarIconSize.allCases, id: \.self) { size in
-                            Text(size.localizedName).tag(size)
+                    if DocsRenderMode.isActive {
+                        // 出图时换成静态替身：分段选择器是 AppKit 控件，离屏渲染画不出来
+                        DocsSegmentedPicker(
+                            selection: settings.menuBarIconSize,
+                            options: MenuBarIconSize.allCases.map { ($0, $0.localizedName) }
+                        )
+                    } else {
+                        Picker("", selection: $settings.menuBarIconSize) {
+                            ForEach(MenuBarIconSize.allCases, id: \.self) { size in
+                                Text(size.localizedName).tag(size)
+                            }
                         }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .focusable(false)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .focusable(false)
                 }
 
                 Divider()

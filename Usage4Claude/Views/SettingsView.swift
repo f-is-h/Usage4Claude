@@ -60,7 +60,9 @@ struct SettingsView: View {
                 }
             }
         }
-        .frame(width: 500, height: 550, alignment: .top)
+        // 出图时不限高：内容一次铺开，配图不必迁就真实窗口的可视高度。
+        // 窗口宽度仍然照旧，不然卡片的换行位置会和实际不一致
+        .frame(width: 500, height: DocsRenderMode.isActive ? nil : 550, alignment: .top)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onChange(of: selectedTab) { _ in
             // 切换标签后新页面的输入框会自动拿到第一响应者（账号页的别名框），清掉保持无焦点

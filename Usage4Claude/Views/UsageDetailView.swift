@@ -489,6 +489,19 @@ struct UsageDetailView: View {
 
     // MARK: - Header Buttons
 
+    /// 三点菜单按钮的外观
+    ///
+    /// - Parameter rotated: 是否套用那个 90 度旋转。真实的 `Menu` 由 AppKit 绘制，
+    ///   会忽略 label 上的旋转，界面上看到的始终是横向的三个点；文档配图用的静态
+    ///   替身要显式不转，否则渲染出来会变成竖向的，和实际界面对不上
+    private func menuButtonLabel(rotated: Bool) -> some View {
+        Image(systemName: "ellipsis")
+            .font(.system(size: 14))
+            .foregroundColor(.secondary)
+            .rotationEffect(.degrees(rotated ? 90 : 0))
+            .frame(width: 20, height: 20)
+    }
+
     /// 刷新按钮 + 三点菜单按钮（共用于单列和双列头部）
     @ViewBuilder
     private var refreshAndMenuButtons: some View {
@@ -505,6 +518,10 @@ struct UsageDetailView: View {
         .focusable(false)
 
         ZStack(alignment: .topTrailing) {
+            // 渲染文档配图时换成静态图标：ImageRenderer 画不了 AppKit 支撑的 Menu
+            if DocsRenderMode.isActive {
+                menuButtonLabel(rotated: false)
+            } else {
             Menu {
                 if UserSettings.shared.accounts.count > 1 {
                     Menu {
@@ -593,17 +610,14 @@ struct UsageDetailView: View {
                     Label(L.Menu.quit, systemImage: "power")
                 }
             } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .rotationEffect(.degrees(90))
-                    .frame(width: 20, height: 20)
+                menuButtonLabel(rotated: true)
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
             .buttonStyle(.plain)
             .focusable(false)
+            }
 
             if shouldShowUpdateBadge {
                 Circle().fill(Color.red).frame(width: 6, height: 6).offset(x: 5, y: -5)
