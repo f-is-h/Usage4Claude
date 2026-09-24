@@ -4,20 +4,22 @@
 
 <div align="center">
 
-<img src="docs/images/icon@2x.png" width="256" alt="icon">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero.en.dark@2x.png">
+  <img src="docs/images/hero.en.light@2x.png" width="948" alt="Usage4Claude menu bar icons and detail window">
+</picture>
 
 [![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue?style=flat-square)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Downloads](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%99%A5-EA4AAA?style=flat-square&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=readme&metadata_placement=header&metadata_lang=en)
 
-**Track your Claude (and Codex) subscription quota — beautifully, in your menu bar.**
+**Track your Claude and Codex subscription usage from the menu bar.**
 
-✨ **Monitors all Claude platforms: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
-
-[Features](#-features) • [Installation](#-installation) • [User Guide](#-user-guide) • [FAQ](#-faq) • [Support](#-support)
+[Features](#-features) · [Installation](#-installation) · [Usage](#-usage) · [Privacy & Security](#-privacy--security) · [FAQ](#-faq) · [Contributing](#-contributing)
 
 </div>
 
@@ -25,585 +27,304 @@
 
 ## ✨ Features
 
-### 🎯 Core Features
+### What It Tracks
 
-- **📊 Real-time Monitoring** - Display Claude subscription (Free/Pro/Team/Max) usage quota in menu bar, with optional Codex monitoring
-- **🎯 Multi-Limit Support** - Claude supports 5-hour, 7-day, and Extra Usage limits plus weekly per-model usage for any number of models (e.g. Opus, Sonnet, Fable), while Codex supports 5-hour, 7-day, and Extra Usage/credits
-- **🎨 Smart Display Mode** - Auto-detect and display all limit types with available data
-- **⚙️ Custom Display** - Manually select which limit types to display, supports any combination
-- **🎨 Smart Colors** - Automatic color changes based on usage, each limit type has its own color scheme
-- **🔔 Usage Notifications** - Warning notification at 90% usage, reset notification when quota resets
-- **👥 Multi-Account Management** - Support multiple Claude accounts / multiple organizations per account, plus independent Codex account management and quick switching
-- **🧩 Codex Support** - Optional Codex quota monitoring; use Codex alone or show it alongside Claude in a dual-column view (add a Codex account in settings to enable)
-- **🌐 Built-in Browser Login** - Claude login automatically extracts Session Key; Codex uses built-in browser login for ChatGPT authentication
-- **🎨 Appearance Settings** - Support system default / light / dark appearance modes
-- **🕐 Time Format** - Support system default / 12-hour / 24-hour format
-- **⏰ Precise Timing** - Quota reset time displayed with minute precision
-- **🔄 Smart Refresh System** - Intelligent 4-level adaptive refresh or fixed intervals (1/3/5/10 min)
-- **⚡ Manual Refresh** - Click refresh button to update data instantly (10-second debounce protection)
-- **💻 Native Experience** - Pure native macOS app, lightweight and elegant
+Claude and Codex can be configured individually or together. All apps of a service share one quota, and the menu bar always shows its total usage.
 
-### 🌐 Cross-Platform Support
+| Service | Apps | Limits |
+|---|---|---|
+| **Claude** | claude.ai, Claude Code, desktop, mobile, Cowork | 5-hour, 7-day, Extra Usage, plus weekly usage per model (Opus, Sonnet, Fable, etc., as returned for the account) |
+| **Codex** | Codex CLI, IDE extension, Codex web | 5-hour, 7-day, credits balance |
 
-Works seamlessly with all Claude products:
-- 🌐 **Claude.ai** (Web interface)
-- 💻 **Claude Code** (CLI tool for developers)
-- 🖥️ **Desktop App** (macOS/Windows)
-- 📱 **Mobile App** (iOS/Android)
-- 🤝 **Cowork** (AI Agent)
+With one service configured, the interface has a single column. With both, the detail window splits into two columns and the menu bar shows both icons side by side.
 
-All platforms share the same usage quota, monitored in one place!
+Claude Pro, Max, Team and Enterprise are supported. Free accounts have no usage dashboard and cannot be read. On Team and Enterprise, an admin must enable the member usage dashboard.
 
-### 🧩 Codex Support
+### Two Graph Styles
 
-- Monitor Codex alone or together with Claude
-- Supports Codex 5-hour, 7-day, and Extra Usage/credits information
-- Add a Codex account by logging in to ChatGPT with the built-in browser
-- Claude-only users need no extra setup; the existing experience stays unchanged until a Codex account is added
-- **🧪 Reset Announcement (Beta)**: shows a small badge next to the Codex ring only when OpenAI has publicly announced a still-pending global reset — most of the time there's nothing to show, by design. Data comes from [codex-reset.com](https://codex-reset.com), an independent third-party community project, not an official API; can be turned off in Settings
+**Ring** shows the used share of each limit, with reset times listed below.
 
-### 🎨 Personalization
+**Pace** plots each limit against elapsed time, with a diagonal marking even consumption. Above the diagonal means usage is outpacing time; below means there is headroom. Weekly limits can count weekdays only.
 
-- **🕓 Multiple Display Modes**
-  - Percentage Only - Clean and intuitive, view at a glance
-  - Icon Only - Subtle and elegant, detailed info on click
-  - Icon + Percentage - Complete information, quick visual identification
+Switch between them in Settings → Display → Graph Style. Clicking the limit list toggles between "used share and reset time" and "available share and time remaining".
 
-- **🌍 Multilingual Support**
-  - English
-  - 日本語
-  - 简体中文
-  - 繁体中文
-  - 한국어
-  - Français (contributed by [@mtreize](https://github.com/mtreize))
-  - Deutsch (contributed by [@schaitl](https://github.com/schaitl))
-  - More languages coming soon... (Localization PRs are welcome!)
+<div align="center">
+<img src="docs/images/detail.toggle@2x.gif" width="606" alt="Clicking the limit list toggles between used and remaining">
+</div>
 
-### 🔧 Convenient Features
+### Menu Bar Icons
 
-- **⚙️ Visual Settings** - No code modification needed, GUI configuration for all options
-- **🆕 Smart Update Alerts** - Menu bar badge and rainbow animation notify new versions
-- **🚀 Launch at Login** - Optional automatic startup when system boots
-- **⌨️ Keyboard Shortcuts** - Common operations support shortcuts (⌘R | ⌘, | ⌘Q)
-- **👋 Friendly Onboarding** - Detailed setup wizard on first launch
-- **… Menu Display** - Multiple menu access methods, detail view and right-click
-- **🔔 Usage Notifications** - Claude usage warning and reset notifications, configurable in settings
-- **🛠️ Debug Mode** - Developer options: Claude/Codex fake data testing, simulated updates, instant refresh
+Each limit type has its own shape and color, and the color changes as usage rises.
 
-### 🔒 Security & Privacy
+| | Icon | 5-Hour | 7-Day | Extra Usage | Model 1 Weekly<br>(e.g. Fable) | Model 2 Weekly<br>(e.g. Opus, Sonnet) | Monochrome |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Claude** | <img src="docs/images/bar.icon@2x.png" width="40" alt="Claude icon"> | <img src="docs/images/bar.5h@2x.png" width="45" alt="5-hour"> | <img src="docs/images/bar.7d@2x.png" width="45" alt="7-day"> | <img src="docs/images/bar.ex@2x.png" width="45" alt="Extra Usage"> | <img src="docs/images/bar.7do@2x.png" width="45" alt="Model 1 weekly"> | <img src="docs/images/bar.7ds@2x.png" width="45" alt="Model 2 weekly"> | <img src="docs/images/bar.mono.b@2x.png" height="35" alt="Monochrome, light menu bar"><br><img src="docs/images/bar.mono.w@2x.png" height="35" alt="Monochrome, dark menu bar"> |
+| **Codex** | <img src="docs/images/bar.icon.codex@2x.png" width="40" alt="Codex icon"> | <img src="docs/images/bar.5h.codex@2x.png" width="45" alt="5-hour"> | <img src="docs/images/bar.7d.codex@2x.png" width="45" alt="7-day"> | <img src="docs/images/bar.ex.codex@2x.png" width="45" alt="credits"> | | | <img src="docs/images/bar.mono.b.codex@2x.png" height="35" alt="Monochrome, light menu bar"><br><img src="docs/images/bar.mono.w.codex@2x.png" height="35" alt="Monochrome, dark menu bar"> |
 
-- 🏠 **Local Storage Only** - All data stored locally only, never collect or upload any personal information
-- 🔐 **Keychain Protection** - Claude Session Key and Codex authentication token secured in Keychain, no plain text keys
-- 📖 **Open Source Transparency** - Code fully public, anyone can audit
-- 🛡️ **Sandbox Protection** - App Sandbox enabled for enhanced security
+Weekly per-model usage takes the Model 1 and Model 2 styles in the order the API returns the models, with names as returned for the account. The menu bar shows at most the first two models; the detail window lists every model, alternating between the two styles.
 
----
+Claude colors:
 
-## 📸 Screenshots
-
-### Menu Bar Display
-
-- Claude and Codex menu bar icons and limit indicators are shown below
-- Dual indicators through shape and color ensure easy identification even in monochrome themes
-
-| Icon | 5-Hour | 7-Day | Extra | 7-Day Opus | 7-Day Sonnet | Monochrome (Adaptive) |
-|:---:|:---:|:---:|:---:|:---:|:---:|-----|
-| <img src="docs/images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="docs/images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="docs/images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="docs/images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="docs/images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="docs/images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="docs/images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="docs/images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
-| <img src="docs/images/bar.icon.codex@2x.png" width="40" height="40" alt="codex icon"> | <img src="docs/images/bar.5h.codex@2x.png" width="45" height="45" alt="codex 5h ring"> | <img src="docs/images/bar.7d.codex@2x.png" width="45" height="45" alt="codex 7d ring"> | <img src="docs/images/bar.ex.codex@2x.png" width="45" height="45" alt="codex extra ring"> | — | — | <img src="docs/images/bar.mono.b.codex@2x.png" width="auto" height="35" alt="codex mono black"></br> <img src="docs/images/bar.mono.w.codex@2x.png" width="auto" height="35" alt="codex mono white"> |
-
-**Color Indicators**:
-
-Claude current colors:
-
-- **5-Hour Limit (incl. detail window)**: ![macOS Green](https://img.shields.io/badge/macOS_Green-34C759) → ![macOS Orange](https://img.shields.io/badge/macOS_Orange-FF9500) → ![macOS Red](https://img.shields.io/badge/macOS_Red-FF3B30)
-- **7-Day Limit (incl. detail window)**: ![Light Purple](https://img.shields.io/badge/Light_Purple-C084FC) → ![Purple](https://img.shields.io/badge/Purple-B450F0) → ![Deep Purple](https://img.shields.io/badge/Deep_Purple-B41EA0)
+- **5-Hour**: ![macOS Green](https://img.shields.io/badge/macOS_Green-34C759) → ![macOS Orange](https://img.shields.io/badge/macOS_Orange-FF9500) → ![macOS Red](https://img.shields.io/badge/macOS_Red-FF3B30)
+- **7-Day**: ![Light Purple](https://img.shields.io/badge/Light_Purple-C084FC) → ![Purple](https://img.shields.io/badge/Purple-B450F0) → ![Deep Purple](https://img.shields.io/badge/Deep_Purple-B41EA0)
 - **Extra Usage**: ![Pink](https://img.shields.io/badge/Pink-FF9ECD) → ![Rose](https://img.shields.io/badge/Rose-EC4899) → ![Magenta](https://img.shields.io/badge/Magenta-D946EF)
-- **7-Day Opus Limit**: ![Light Orange](https://img.shields.io/badge/Light_Orange-FFC864) → ![Amber](https://img.shields.io/badge/Amber-FBBF24) → ![Orange Red](https://img.shields.io/badge/Orange_Red-FF6432)
-- **7-Day Sonnet Limit**: ![Light Blue](https://img.shields.io/badge/Light_Blue-64C8FF) → ![Blue](https://img.shields.io/badge/Blue-007AFF) → ![Indigo](https://img.shields.io/badge/Indigo-4F46E5)
+- **Model 1 Weekly** (e.g. Fable): ![Light Orange](https://img.shields.io/badge/Light_Orange-FFC864) → ![Amber](https://img.shields.io/badge/Amber-FBBF24) → ![Orange Red](https://img.shields.io/badge/Orange_Red-FF6432)
+- **Model 2 Weekly** (e.g. Opus, Sonnet): ![Light Blue](https://img.shields.io/badge/Light_Blue-64C8FF) → ![Blue](https://img.shields.io/badge/Blue-007AFF) → ![Indigo](https://img.shields.io/badge/Indigo-4F46E5)
 
-Codex current colors:
+Codex colors:
 
-- **Codex 5-Hour Limit**: ![Bright Teal](https://img.shields.io/badge/Bright_Teal-2DD4BF) → ![Deep Teal](https://img.shields.io/badge/Deep_Teal-0D9488) → ![Darkest Teal](https://img.shields.io/badge/Darkest_Teal-134E4A)
-- **Codex 7-Day Limit**: ![Sky Blue](https://img.shields.io/badge/Sky_Blue-60A5FA) → ![Blue](https://img.shields.io/badge/Blue-2563EB) → ![Deep Blue](https://img.shields.io/badge/Deep_Blue-1E3A8A)
-- **Codex Extra Usage / credits**: ![Gold](https://img.shields.io/badge/Gold-F59E0B) → ![Deep Gold](https://img.shields.io/badge/Deep_Gold-D97706) → ![Darkest Amber](https://img.shields.io/badge/Darkest_Amber-78350F)
+- **5-Hour**: ![Bright Teal](https://img.shields.io/badge/Bright_Teal-2DD4BF) → ![Deep Teal](https://img.shields.io/badge/Deep_Teal-0D9488) → ![Darkest Teal](https://img.shields.io/badge/Darkest_Teal-134E4A)
+- **7-Day**: ![Sky Blue](https://img.shields.io/badge/Sky_Blue-60A5FA) → ![Blue](https://img.shields.io/badge/Blue-2563EB) → ![Deep Blue](https://img.shields.io/badge/Deep_Blue-1E3A8A)
+- **credits**: ![Gold](https://img.shields.io/badge/Gold-F59E0B) → ![Deep Gold](https://img.shields.io/badge/Deep_Gold-D97706) → ![Darkest Amber](https://img.shields.io/badge/Darkest_Amber-78350F)
 
-### Detail Window
+In the monochrome theme, limits stay distinguishable by shape, and the icons invert automatically with the menu bar. Menu bar brightness follows the wallpaper, not the system Light or Dark appearance.
 
-<table border="0">
-<tr>
-<td align="top" valign="top">
-<img src="docs/images/detail.claude.en@2x.png" width="280" alt="Claude-only mode">
-<br/>
-<sub><i>Claude-only mode</i></sub>
-</td>
-<td align="center" valign="top">
-<img src="docs/images/detail.codex.en@2x.png" width="280" alt="Codex-only mode">
-<br/>
-<sub><i>Codex-only mode</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="docs/images/detail.both.en@2x.png" width="560" alt="Claude and Codex mode">
-<br/>
-<sub><i>Claude + Codex mode</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="docs/images/detail@2x.gif" width="280" alt="Time Remaining Toggle Animation">
-<br/>
-<sub><i>Time Remaining Toggle Animation</i></sub>
-</td>
-</tr>
-</table>
+| Option | Values |
+|---|---|
+| Display Content | Percentage Only, Icon Only, Icon and Percentage |
+| Icon Size | Compact, Standard, Prominent |
+| Theme | Color Translucent, Color with Background, Monochrome |
 
-### Settings
+By default the menu bar shows every limit that has data. To pick them individually, switch to Custom Display in Settings → Display → Limit Types.
 
-**General** - Display options, menu bar theme, notification settings, appearance (system/light/dark), refresh mode, time format, language options, launch at login
-**Authentication** - Claude/Codex account management (add/delete/switch/alias editing), built-in browser login, Claude manual input, connection diagnostics
-**About** - Version info and related links
+### Notifications
 
-### Welcome Screen
+A system notification is sent when usage reaches a threshold, and again when a quota resets. Thresholds are set per category, from 50% to 100% in steps of 5%.
 
-**Configure Authentication** - Claude supports built-in browser one-click login (recommended) or manual Session Key input, auto-retrieves Organization ID, and auto-creates multiple organizations under the same Session Key; Codex can be added later in settings through built-in browser login to ChatGPT
-**Configure Display Options** - Menu bar theme, display content, display mode (smart/custom) selection with live preview
-**Set Up Later** - Close welcome screen, configure later in settings
+| Category | Levels | Default |
+|---|---|---|
+| 5-Hour | 1 | 90% |
+| Weekly (including per-model weekly usage) | 2 | 75%, 90% |
+| Extra Usage / credits | 2 | 75%, 90% |
+
+### Refresh
+
+**Smart mode** adapts to how usage changes: once a minute while usage moves, then stepping down to every 3, 5 and 10 minutes when nothing changes, and back to once a minute as soon as a change is detected. While idle, it sends about a tenth of the requests.
+
+**Fixed mode** refreshes every 1, 3, 5 or 10 minutes.
+
+Rate limits trigger an automatic backoff. When a refresh fails, the previous data stays on screen with a marker next to the title. The app refreshes on wake from sleep and when the detail window opens; clicking the ring or graph refreshes manually, with a 10-second debounce.
+
+### Accounts
+
+Claude supports multiple accounts and multiple organizations under one account; Codex accounts are managed separately. Each account can have an alias. Switch accounts from the "…" menu in the detail window or the menu bar icon's right-click menu.
+
+Sign-in runs in the system browser, so Google, Microsoft, enterprise SSO and passkeys all work. Claude also accepts a manually entered Session Key.
+
+### Codex Reset Announcement (Beta)
+
+When OpenAI announces an upcoming global quota reset, a badge appears next to the Codex column title; otherwise nothing is shown. The data comes from the third-party community project [codex-reset.com](https://codex-reset.com), not an official API, and can be turned off in Settings.
+
+### Languages
+
+English, 日本語, 简体中文, 繁體中文, 한국어, Français ([@mtreize](https://github.com/mtreize)), Deutsch ([@schaitl](https://github.com/schaitl)). The system language is used by default. New translations are welcome; see [Contributing](#-contributing).
 
 ---
 
 ## 💾 Installation
 
-### Option 1: Download Pre-built (Recommended)
+### Download
 
-1. Go to [Releases page](https://github.com/f-is-h/Usage4Claude/releases)
-2. Download the latest `.dmg` file
-3. Double-click to open, drag app to Applications folder
-4. Right-click the app and select "Open" on first launch (allow unsigned app)
-5. Allow Keychain access for authentication info (you may need to allow again after version updates; the prompt shows the relevant authentication token name)
+1. Download the latest `.dmg` from [Releases](https://github.com/f-is-h/Usage4Claude/releases) and drag the app into Applications
+2. Gatekeeper blocks the first launch; see the first [FAQ](#-faq) entry to allow it
+3. When the app first reads its credentials, grant Keychain access and choose "Always Allow"
 
-> **Updates after the first install are in-app.** Sparkle checks for new versions automatically (and on demand via Menu → Check for Updates), then downloads, verifies the EdDSA signature, and installs with one click — no need to re-download the DMG for future releases.
+Requires macOS 13 (Ventura) or later, on Intel or Apple silicon.
 
-### Option 2: Build from Source
+Updates are installed in-app by [Sparkle](https://sparkle-project.org). Each update is verified against an EdDSA signature before it is installed. Homebrew is not offered at this time.
 
-#### Requirements
-- macOS 13.0 or later
-- Xcode 15.0 or later
-- Git
+### Build from Source
 
-#### Build Steps
+Requires Xcode 26 or later.
 
 ```bash
-# Clone repository
 git clone https://github.com/f-is-h/Usage4Claude.git
 cd Usage4Claude
-
-# Open in Xcode
 open Usage4Claude.xcodeproj
-
-# Press Cmd + R to run in Xcode
 ```
+
+Press ⌘R in Xcode to run. The app is written in Swift and SwiftUI, with AppKit for the menu bar and window management.
 
 ---
 
-## 📖 User Guide
+## 📖 Usage
 
-### Initial Setup
+### Signing In
 
-1. **Launch App**
-   Welcome screen will appear on first run
+The first launch opens an onboarding window where both Claude and Codex can be signed in. Onboarding can be skipped; accounts can be added later in Settings → Accounts.
 
-2. **Configure Authentication**
-   - **Claude Option 1: Browser Login (Recommended)**
-     - Click the "Browser Login" button
-     - Log in to your Claude account in the built-in browser
-     - Session Key will be automatically extracted after successful login
-   - **Claude Option 2: Manual Input**
-     - Open browser and visit the Claude usage page
-     - Open developer tools (F12 or Cmd + Option + I)
-     - Switch to "Network" tab, refresh the page
-     - Find the `usage` request, extract `sessionKey=sk-ant-...` from Cookie
-     - Paste into the input field
-   - **Codex Account (Optional)**
-     - Open Settings → Authentication
-     - Click "Browser Login" for Codex
-     - Log in to your ChatGPT account in the built-in browser
-     - Authentication info is saved automatically after successful login
-     - Codex does not currently support manual Session Key input
+**Browser Login**: click the sign-in button, authorize in the system browser, and the app picks up the result automatically. The callback is received on a temporary local port. If a firewall blocks local connections, the browser stays on a `localhost` address; paste that address into the sign-in window to finish.
 
-### Daily Usage
+**Manual Session Key** (Claude only):
 
-- **Default Display** - Menu bar icon shows usage percentage
-- **View Details** - Click the menu bar icon to view details; when only Claude/Codex is configured, the detail window shows a Claude/Codex single column, and when both are configured it shows a dual-column view
-- **Manual Refresh** - Click refresh button in detail window or use shortcut ⌘R (data also auto-refreshes when opening the main window); in the dual-column view, Claude and Codex can also be refreshed separately
-- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon to select a Claude / Codex account
-- **Keyboard Shortcuts**
-  - ⌘R - Manual refresh data
-  - ⌘, - Open General Settings
-  - ⌘⇧A - Open Authentication Settings
-  - ⌘U - Check for updates
-  - ⌘Q - Quit app
-- **Update Alerts** - When a new version is available, the menu bar icon shows a badge and menu items display rainbow text
-- **Check Updates** - Menu → Check for Updates. New versions download, verify (EdDSA signature), and install in-app — no manual re-download needed (powered by [Sparkle](https://sparkle-project.org))
+1. Open the claude.ai usage page in a browser
+2. Open the developer tools (⌥⌘I), switch to the Network tab and reload the page
+3. Find the `usage` request and copy the full `sessionKey=sk-ant-...` value from the Cookie request header
+4. Paste it into the input field. The Organization ID is fetched automatically, and every organization under the Session Key is added
 
-### Refresh Mode
+### Everyday Use
 
-**Smart Frequency (Recommended)**
-- Automatically adjusts refresh rate based on usage patterns
-- Active mode (1 min) - Fast refresh when actively using Claude or Codex
-- Idle modes (3/5/10 min) - Progressively slower refresh when idle
-- Significantly reduces API calls during idle periods (up to 10x)
-- Instantly returns to 1-minute refresh when usage detected
-- Automatically refreshes after system wake to avoid stale data
+Left-click the menu bar icon to open the detail window; right-click for the menu. The menu holds account switching, Settings, Check for Updates, and links to the Claude and Codex status pages.
 
-**Fixed Frequency**
-- **1 minute** - Recommended for consistent monitoring
-- **3 minutes** - Balanced monitoring
-- **5 minutes** - Low frequency monitoring
-- **10 minutes** - Minimal API calls
+When a new version is available, the menu bar icon shows a badge and Check for Updates is marked in the menu.
+
+### Settings
+
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings.display.en.dark@2x.png">
+  <img src="docs/images/settings.display.en.light@2x.png" width="400" alt="The Display tab of the Settings window">
+</picture>
+</div>
+
+| Tab | Contents |
+|---|---|
+| **Display** | Menu bar appearance, limit types, graph style, appearance, time format |
+| **Data** | Refresh mode, notification thresholds, Codex reset announcement |
+| **Accounts** | Claude and Codex accounts, browser login, manual Session Key, connection diagnostics |
+| **General** | Interface language, launch at login, restore defaults |
+| **About** | Version information and links |
+
+---
+
+## 🔒 Privacy & Security
+
+- No server; data stays on the Mac, with no analytics or telemetry
+- Network requests fall into three groups only: the Claude and Codex sign-in and usage endpoints, Sparkle checking GitHub for updates, and codex-reset.com when the Codex reset announcement is on
+- Session Keys and tokens are stored in the Keychain, never in plain text; API responses are not written to the disk cache
+- App Sandbox is enabled. Beyond network access, it only opens the local port used by the sign-in callback and the system services Sparkle needs to install updates
+- Diagnostic reports are redacted before export, with tokens and other sensitive fields replaced
+- The source code is fully public and open to audit
 
 ---
 
 ## ❓ FAQ
 
 <details>
-<summary><b>Q: What if the app shows "Session Expired"?</b></summary>
+<summary><b>The app won't open: "cannot verify the developer"</b></summary>
 
-A: Claude Session Keys or Codex authentication tokens expire periodically (usually weeks to months), and you need to log in again:
-1. Open Settings → Authentication
-2. For Claude, click "Browser Login" to log in again (recommended), or manually re-obtain Session Key
-3. For Codex, click Codex "Browser Login" and log in to ChatGPT in the built-in browser
-4. Done, monitoring will resume
+The app is not notarized by Apple, so the first launch has to be allowed manually:
 
-</details>
+- **macOS 15 and later**: double-click the app and click "Done" in the dialog. Then go to System Settings → Privacy & Security and click "Open Anyway" at the bottom of the page
+- **macOS 14 and earlier**: Control-click the app, choose "Open", and confirm in the dialog
 
-<details>
-<summary><b>Q: How to enable auto-launch on startup?</b></summary>
-
-A: Two methods:
-
-**Method 1: Using built-in option (Recommended)**
-1. Open Settings → General
-2. Check "Launch at Login" option
-
-**Method 2: Via System Settings**
-1. Open System Settings → General → Login Items
-2. Click "+" to add Usage4Claude
+This is needed once. After that the app opens normally, and in-app updates don't require it again.
 
 </details>
 
 <details>
-<summary><b>Q: How much system resources does it use?</b></summary>
+<summary><b>Keychain access is requested again after an update</b></summary>
 
-A: Very lightweight:
-- CPU Usage: < 0.1% (idle)
-- Memory: ~20MB
-- Network: Refreshes at the configured smart frequency; when both Claude and Codex are configured, each service is requested separately
+The Keychain identifies an app by its signature. This app uses a self-signed certificate, so some updates cause the system to ask again. Choose "Always Allow". Credentials in the Keychain can only be read by this app.
 
 </details>
 
 <details>
-<summary><b>Q: Which macOS versions are supported?</b></summary>
+<summary><b>"Request blocked by security system"</b></summary>
 
-A: Requires macOS 13.0 (Ventura) or later. Supports both Intel and Apple Silicon (M1/M2/M3/M4/M5) chips.
-
-</details>
-
-<details>
-<summary><b>Q: Why does it need Keychain permission?</b></summary>
-
-A:
-- Keychain is macOS's system-level password manager
-- Claude Session Key and Codex authentication token are encrypted in Keychain
-- Claude Organization ID is stored in local config (non-sensitive identifier)
-- This is Apple's recommended secure storage method
-- Only this app can access the information, other apps cannot view it
+The Cloudflare protection in front of claude.ai blocks requests it judges to be automated. Visit claude.ai once in a browser and complete the human check; the app usually recovers after that. It is triggered more often behind a VPN or proxy. This block is unrelated to the account itself, and signing in again is not needed.
 
 </details>
 
 <details>
-<summary><b>Q: Is my data safe? How is privacy protected?</b></summary>
+<summary><b>"Session expired"</b></summary>
 
-**Completely safe!** 
-
-**Data Storage:**
-- All data stored **only** on your local Mac
-- No collection, no tracking, no statistics of any information
-- No network requests except Claude and Codex usage-related API calls
-- No third-party services used
-
-**Authentication Security:**
-- Claude Session Key and Codex authentication token encrypted via macOS Keychain (system-level encryption)
-- Keychain uses AES-256 encryption + hardware protection (T2 / Secure Enclave)
-- Only this app can access your credentials, other apps cannot read them
-- You can revoke access anytime via "Keychain Access" app
-
-**Code Transparency:**
-- 100% open source
-- No obfuscation or hidden features
-- Community can audit and verify
-
-**Additional Protection:**
-- App Sandbox enabled (limits system access)
-- No access to your files, contacts, or other apps
-- Minimal permissions (only network + Keychain)
-
-You can verify all of this by reviewing the source code on GitHub!
+Session Keys and sign-in tokens expire periodically, anywhere from a few weeks to a few months. Sign in again in Settings → Accounts.
 
 </details>
 
 <details>
-<summary><b>Q: Does it work with Claude Code / Desktop App / Mobile App?</b></summary>
+<summary><b>"Too many requests"</b></summary>
 
-A: **Yes, it works with all Claude platforms!**
-
-Since all Claude products (Web, Claude Code, Desktop App, Mobile App, Cowork) share the same usage quota, Usage4Claude monitors your combined usage across all platforms.
-
-Whether you're:
-- Coding in terminal with `claude code`
-- Chatting on claude.ai
-- Using the desktop app
-- Using mobile apps
-- Using Cowork agents
-
-You'll see your real-time total usage in the menu bar. No platform-specific configuration needed!
+The usage endpoint has hit its rate limit. The app backs off automatically and retries later, keeping the previous data on screen. Refreshing manually again and again extends the backoff.
 
 </details>
 
 <details>
-<summary><b>Q: How do I enable Codex support? Can I use Codex only?</b></summary>
+<summary><b>Codex keeps asking to sign in again</b></summary>
 
-A: Yes. Open Settings → Authentication, click Codex "Browser Login", and log in to ChatGPT in the built-in browser.
-
-- Codex only: the menu bar and detail window show Codex usage
-- Claude + Codex: the detail window shows both providers side by side
-- Codex currently supports browser login only, not manual Session Key input
+With "Advanced Security" enabled on a ChatGPT account, sign-in tokens expire much sooner, so the app has to sign in again frequently. For long-term Codex monitoring, consider turning that option off.
 
 </details>
 
 <details>
-<summary><b>Q: Can't see the icon in menu bar?</b></summary>
+<summary><b>No usage data for a Claude account</b></summary>
 
-A: macOS system or third-party software (like Bartender, Hidden Bar, etc.) may automatically hide menu bar icons.
-
-**Solution:**
-1. Hold **Command (⌘) key**
-2. Drag icons in the menu bar with mouse
-3. Drag Usage4Claude icon to the visible area on the right side of menu bar
-4. Release mouse
-
-**Note:**
-- macOS Sonoma (14.0+) automatically hides infrequently used icons to "Control Center"
-- You can adjust menu bar icon display in "System Settings" → "Control Center"
+The message "Your plan does not provide usage data" means the account has no usage dashboard on claude.ai. Free accounts have none; on Team and Enterprise, ask an admin to enable the member usage dashboard. Signing in again does not change this.
 
 </details>
 
 <details>
-<summary><b>Q: How to manage multiple accounts?</b></summary>
+<summary><b>The menu bar icon is missing</b></summary>
 
-A: Usage4Claude supports multiple Claude accounts, multiple organizations under the same Claude account, and independent Codex account management:
-- **Add Account** - Add via Claude browser login, Claude manual input, or Codex browser login in Settings → Authentication
-- **Switch Account** - Click "…" menu in detail window or right-click menu bar icon, select the Claude / Codex account to switch to
-- **Edit Alias** - Set easily recognizable aliases for each account
-- **Delete Account** - Swipe left or use edit mode to remove unwanted accounts
+macOS hides some icons when the menu bar runs out of space, and tools like Bartender or Hidden Bar may also collapse it. Hold ⌘ and drag menu bar icons to rearrange them.
 
 </details>
 
 <details>
-<summary><b>Q: How to enable usage notifications?</b></summary>
+<summary><b>The app quits unexpectedly</b></summary>
 
-A: Toggle Claude usage notifications in Settings → General:
-- **Usage Warning** - System notification when Claude usage reaches 90%
-- **Reset Notification** - Notification when Claude quota resets
-- macOS notification permission required on first enable
+Export a diagnostic report from Settings → Accounts → Connection Diagnostics and attach it to an [issue](https://github.com/f-is-h/Usage4Claude/issues). The report states whether the last exit was abnormal and includes recent logs. It is redacted before export.
 
 </details>
-
----
-
-## 🛠 Tech Stack
-
-Built with modern macOS native technologies:
-
-- **Language**: Swift 5.0+
-- **UI Framework**: SwiftUI + AppKit hybrid
-- **Architecture**: MVVM
-- **Networking**: URLSession
-- **Reactive**: Combine Framework
-- **Localization**: Built-in i18n support
-- **Platform**: macOS 13.0+
 
 ---
 
 ## 🗺 Roadmap
 
-### ✅ Completed
-- [x] Basic monitoring features
-- [x] Menu bar real-time display
-- [x] Circular progress indicator
-- [x] Smart color alerts
-- [x] Real-time countdown
-- [x] Multiple menu bar display modes
-- [x] Visual settings interface
-- [x] Multilingual support
-- [x] First-launch onboarding
-- [x] Update checking with visual alerts
-- [x] Keychain authentication storage
-- [x] Shell auto-package DMG
-- [x] GitHub Actions auto-release
-- [x] Settings interface display optimization
-- [x] Launch at login option
-- [x] Keyboard shortcuts support
-- [x] Manual refresh feature
-- [x] Three-dot menu dark mode adaptation
-- [x] Dual limit mode support (5-hour + 7-day)
-- [x] Dual-ring menu bar icon
-- [x] Unified color scheme management
-- [x] Debug mode (fake data, simulated updates)
-- [x] Detail window remove Focus state
-- [x] Multi-limit type support (5 types)
-- [x] Smart/custom display mode
-- [x] Auto-retrieve Organization ID
-- [x] Optimized welcome flow
-- [x] Monochrome theme icon display
-- [x] Korean language support
-- [x] GitHub Actions check online version
-- [x] Appearance settings (system/light/dark)
-- [x] Built-in browser auto-authentication
-- [x] Automatic credential configuration
-- [x] Usage notifications
-- [x] Multi-account management
-- [x] Unified time format settings
-- [x] Settings interface dark mode adaptation
-- [x] Codex usage monitoring support
-- [x] Codex-only mode
-- [x] Claude + Codex dual-column detail window
-- [x] Codex account management and browser login
-- [x] French localization
-- [x] Automatic refresh after system wake
+Changes in each release are recorded in [CHANGELOG.md](CHANGELOG.md).
 
-### Mid-term Plans
-1. **Feature Addition**
-    - More language localizations
+**In progress**: ongoing improvements and issue fixes
 
-### Long-term Vision
-2. **More Display Methods**
-   - Desktop widgets
-   - Browser extension icon usage display
+**Under consideration**: more interface languages, desktop widgets, usage history charts
 
-3. **Data Analysis**
-   - Usage history records
-   - Trend charts
+**Not planned**
 
-4. **Multi-platform Support**
-   - iOS / iPadOS version
-   - Apple Watch version
-   - Windows version
+- **Services other than Claude and Codex.** Menu bar space is limited, and every added provider takes space from every user's menu bar. The project focuses on doing these two well rather than becoming a general usage dashboard.
+- **Uploading data of any kind.** The project has no server and has no plans to add one.
+- **App Store distribution.** The app reads usage through undocumented APIs, which does not meet App Store requirements.
 
 ---
 
 ## 🤝 Contributing
 
-All contributions are welcome! Whether it's new features, bug fixes, or documentation improvements.
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) for the process.
 
-For detailed contribution guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-### How to Contribute
-
-1. Fork this repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+**Adding a language**: copy `Usage4Claude/Resources/en.lproj/Localizable.strings` into a new `<language-code>.lproj` folder and translate the values. CI checks that every language has the same keys.
 
 ### Contributors
 
-Thanks to all who have contributed to this project!
+**Code**
 
-<!-- ALL-CONTRIBUTORS-LIST:START -->
-<!-- Contributor list will be auto-generated here -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+<a href="https://github.com/f-is-h/Usage4Claude/graphs/contributors"><img src="docs/images/contributors.code.svg" alt="Code contributors"></a>
 
----
+**Translation**
 
-## 📝 Changelog
+<img src="docs/images/contributors.translation.svg" alt="Translation contributors">
 
-For detailed version history and updates, please see [CHANGELOG.md](CHANGELOG.md).
+**Feedback and Feature Requests**
 
----
+<img src="docs/images/contributors.feedback.svg" alt="Contributors who reported issues or proposed features">
 
-## 💖 Support
+### Support
 
-If this project helps you, please support in the following ways:
-
-### ⭐ Star the Project
-Giving a star is the biggest encouragement!
-
-### ☕ Buy Me a Coffee
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=en">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1atte">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
-
-### 📢 Share the Project
-If you like this project, please share it with more people!
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=en"><img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsors"></a>
+<a href="https://ko-fi.com/1atte"><img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi"></a>
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details
+MIT License; see [LICENSE](LICENSE). Copyright © 2025-2026 f-is-h.
 
-```
-MIT License
+This is an independent third-party tool with no official affiliation with Anthropic or OpenAI. Follow each service's terms when using it.
 
-Copyright (c) 2025-2026 f-is-h
+Most of the code was written by Claude and Codex. The icon design draws on both companies' official branding.
 
-You are free to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software.
-```
-
----
-
-## 🙏 Acknowledgments
-
-- Thanks to Claude/Codex - Most code written by AI
-- Thanks to all contributors and users for their support
-- Icon design inspired by Claude/Codex official branding
-
----
-
-## 📞 Contact
-
-- **Issues**: [Submit issues or suggestions](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [Join discussions](https://github.com/f-is-h/Usage4Claude/discussions)
-- **GitHub**: [@f-is-h](https://github.com/f-is-h)
-
----
-
-## ⚖️ Disclaimer
-
-This project is an independent third-party tool with no official affiliation with Anthropic, Claude AI, OpenAI, or Codex. Please comply with the relevant Terms of Service when using this software.
-
----
+Report problems in [Issues](https://github.com/f-is-h/Usage4Claude/issues); for everything else, use [Discussions](https://github.com/f-is-h/Usage4Claude/discussions).
 
 <div align="center">
 
-**If this project helps you, please give it a ⭐ Star!**
-
-Made with ❤️ by [f-is-h](https://github.com/f-is-h)
-
-[⬆ Back to Top](#usage4claude)
+[⬆ Back to top](#usage4claude)
 
 </div>

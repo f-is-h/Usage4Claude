@@ -4,20 +4,22 @@
 
 <div align="center">
 
-<img src="images/icon@2x.png" width="256" alt="icon">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/hero.ja.dark@2x.png">
+  <img src="images/hero.ja.light@2x.png" width="948" alt="Usage4Claude のメニューバーアイコンと詳細ウィンドウ">
+</picture>
 
 [![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue?style=flat-square)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](../LICENSE)
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Downloads](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%99%A5-EA4AAA?style=flat-square&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=readme&metadata_placement=header&metadata_lang=ja)
 
-**Claude（および Codex）のサブスクリプション使用量を、メニューバーで美しく追跡。**
+**Claude と Codex のサブスクリプション使用量をメニューバーで追跡する。**
 
-✨ **すべてのClaudeプラットフォームに対応: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
-
-[機能](#-機能) • [インストール](#-インストール) • [使用ガイド](#-使用ガイド) • [よくある質問](#-よくある質問) • [サポート](#-サポート)
+[機能](#-機能) · [インストール](#-インストール) · [使い方](#-使い方) · [プライバシーとセキュリティ](#-プライバシーとセキュリティ) · [よくある質問](#-よくある質問) · [参加](#-参加)
 
 </div>
 
@@ -25,583 +27,304 @@
 
 ## ✨ 機能
 
-### 🎯 コア機能
+### 監視対象
 
-- **📊 リアルタイム監視** - Claude サブスクリプション（Free/Pro/Team/Max）の使用クォータをメニューバーに表示し、Codex 使用量も任意で監視
-- **🎯 マルチ制限サポート** - Claude は5時間・7日間・追加使用量に加え、モデルごとの週間使用量（Opus、Sonnet、Fable など、モデル数の制限なし）に対応、Codex は5時間・7日間・追加使用量/creditsに対応
-- **🎨 スマート表示モード** - データのある制限タイプを自動検出して表示
-- **⚙️ カスタム表示** - 表示する制限タイプを手動で選択、任意の組み合わせをサポート
-- **🎨 スマートカラー** - 使用率に応じた自動色変更、制限タイプごとに独自のカラースキーム
-- **🔔 使用量通知** - 使用率90%で警告通知、クォータリセット時にリセット通知を送信
-- **👥 マルチアカウント管理** - Claude の複数アカウント / 同一アカウント複数組織に加え、独立した Codex アカウント管理と素早い切り替えに対応
-- **🧩 Codex サポート** - 任意の Codex 使用量監視。Codex 単独でも、Claude と並列のデュアルカラムビューでも使用可能（設定で Codex アカウントを追加すると有効化）
-- **🌐 内蔵ブラウザログイン** - Claude ログインでは Session Key を自動抽出、Codex は内蔵ブラウザで ChatGPT にログインして認証情報を取得
-- **🎨 外観設定** - システム設定に従う / ライト / ダークの3つの外観モードをサポート
-- **🕐 時刻形式** - システムデフォルト / 12時間制 / 24時間制をサポート
-- **⏰ 正確なタイミング** - 分単位でクォータリセット時間を表示
-- **🔄 スマートリフレッシュシステム** - インテリジェント4レベル適応型更新または固定間隔（1/3/5/10分）
-- **⚡ 手動リフレッシュ** - リフレッシュボタンをクリックしてデータを即座に更新（10秒デバウンス保護）
-- **💻 ネイティブ体験** - 純粋な macOS ネイティブアプリ、軽量でエレガント
+Claude と Codex は個別にも同時にも設定できる。各サービスのすべての利用手段は同じ枠を共有し、メニューバーには常にその合計使用量が表示される。
 
-### 🌐 クロスプラットフォーム対応
+| サービス | 利用手段 | 制限 |
+|---|---|---|
+| **Claude** | claude.ai、Claude Code、デスクトップ版、モバイル版、Cowork | 5時間、7日間、追加使用量、およびモデル別の週間使用量（Opus、Sonnet、Fable など。アカウントが実際に返すものに準ずる） |
+| **Codex** | Codex CLI、IDE 拡張機能、Codex Web 版 | 5時間、7日間、credits 残高 |
 
-すべてのClaude製品とシームレスに連携:
-- 🌐 **Claude.ai** (Webインターフェース)
-- 💻 **Claude Code** (開発者向けCLIツール)
-- 🖥️ **Desktop App** (macOS/Windows)
-- 📱 **Mobile App** (iOS/Android)
-- 🤝 **Cowork** (AIエージェント)
+1つのサービスのみ設定した場合は1列表示、両方を設定した場合は詳細ウィンドウが2列になり、メニューバーには両方のアイコンが並ぶ。
 
-すべてのプラットフォームで同じ使用量クォータを共有し、一箇所で監視できます!
+対応プランは Claude の Pro、Max、Team、Enterprise。無料プランには使用量ダッシュボードがなく、読み取れない。Team と Enterprise では管理者がメンバー使用量ダッシュボードを有効にする必要がある。
 
-### 🧩 Codex サポート
+### 2種類のグラフ
 
-- Codex 単独でも、Claude と一緒でも監視可能
-- Codex の5時間、7日間、追加使用量/credits 情報に対応
-- 内蔵ブラウザで ChatGPT にログインして Codex アカウントを追加
-- Claude-only ユーザーは追加設定不要。Codex アカウントを追加するまで既存体験のまま利用できます
-- **🧪 リセット予告（ベータ）**：OpenAI が未確定のグローバルリセットを公に予告した場合のみ、Codex のリング横に小さなバッジが表示されます。ほとんどの場合は何も表示されないのが意図した挙動です。データはサードパーティのコミュニティプロジェクト [codex-reset.com](https://codex-reset.com) から取得（非公式）。設定でオフにできます
+**リング**は各制限の使用率をリングで表示し、その下にリセット時刻を並べる。
 
-### 🎨 カスタマイズ
+**ペース**は各制限を「使用率 / 経過時間」の座標上に描き、対角線で均等な消費を示す。対角線より上なら時間の経過より速く消費しており、下なら余裕がある。週間制限は平日のみで計算するよう設定できる。
 
-- **🕓 複数の表示モード**
-  - パーセンテージのみ - シンプルで直感的、クリック不要で確認可能
-  - アイコンのみ - 控えめでエレガント、クリックで詳細表示
-  - アイコン + パーセンテージ - 完全な情報、素早く視覚的に識別
+「設定 → 表示 → グラフスタイル」で切り替える。制限リストをクリックすると「使用率とリセット時刻」と「残量と残り時間」が切り替わる。
 
-- **🌍 多言語サポート**
-  - English
-  - 日本語
-  - 简体中文
-  - 繁体中文
-  - 한국어
-  - Français（[@mtreize](https://github.com/mtreize) さんによる貢献）
-  - Deutsch（[@schaitl](https://github.com/schaitl) さんによる貢献）
-  - さらに多くの言語に対応予定...（ローカライズの PR を歓迎します！）
+<div align="center">
+<img src="images/detail.toggle@2x.gif" width="606" alt="制限リストをクリックして使用済みと残りを切り替える">
+</div>
 
-### 🔧 便利な機能
+### メニューバーアイコン
 
-- **⚙️ ビジュアル設定** - コード変更不要、すべてのオプションをGUIで設定
-- **🆕 スマート更新通知** - メニューバーバッジとレインボーアニメーションで新バージョンを通知
-- **🚀 ログイン時に起動** - システム起動時に自動起動するオプション
-- **⌨️ キーボードショートカット** - よく使う操作をショートカットでサポート（⌘R | ⌘, | ⌘Q）
-- **👋 親切なガイド** - 初回起動時に詳細な設定ウィザード
-- **… メニュー表示** - 複数のメニューアクセス方法、詳細ビューと右クリック
-- **🔔 使用量通知** - Claude 使用量警告とリセット通知をサポート、設定でオン/オフ可能
-- **🛠️ デバッグモード** - 開発者オプション：Claude/Codex 偽データテスト、シミュレート更新、即時リフレッシュ
+制限タイプごとに固有の形と配色を持ち、使用量が増えるにつれて色が変わる。
 
-### 🔒 セキュリティとプライバシー
+| | アイコン | 5時間 | 7日間 | 追加使用量 | モデル1 週間<br>（例：Fable） | モデル2 週間<br>（例：Opus、Sonnet） | モノクローム |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Claude** | <img src="images/bar.icon@2x.png" width="40" alt="Claude アイコン"> | <img src="images/bar.5h@2x.png" width="45" alt="5時間"> | <img src="images/bar.7d@2x.png" width="45" alt="7日間"> | <img src="images/bar.ex@2x.png" width="45" alt="追加使用量"> | <img src="images/bar.7do@2x.png" width="45" alt="モデル1 週間"> | <img src="images/bar.7ds@2x.png" width="45" alt="モデル2 週間"> | <img src="images/bar.mono.b@2x.png" height="35" alt="モノクローム、明るいメニューバー"><br><img src="images/bar.mono.w@2x.png" height="35" alt="モノクローム、暗いメニューバー"> |
+| **Codex** | <img src="images/bar.icon.codex@2x.png" width="40" alt="Codex アイコン"> | <img src="images/bar.5h.codex@2x.png" width="45" alt="5時間"> | <img src="images/bar.7d.codex@2x.png" width="45" alt="7日間"> | <img src="images/bar.ex.codex@2x.png" width="45" alt="credits"> | | | <img src="images/bar.mono.b.codex@2x.png" height="35" alt="モノクローム、明るいメニューバー"><br><img src="images/bar.mono.w.codex@2x.png" height="35" alt="モノクローム、暗いメニューバー"> |
 
-- 🏠 **ローカル保存のみ** - すべてのデータはローカルにのみ保存、個人情報の収集・アップロードは一切なし
-- 🔐 **Keychain 保護** - Claude Session Key と Codex 認証トークンは Keychain で保護、平文キーなし
-- 📖 **オープンソース** - コード完全公開、誰でも監査可能
-- 🛡️ **Sandbox 保護** - App Sandbox 有効でセキュリティ強化
+モデル別の週間使用量は、API が返す順にモデル1、モデル2の2つのスタイルを使い、モデル名はアカウントが実際に返すものに準ずる。メニューバーに表示されるのは先頭の2モデルまでで、詳細ウィンドウではすべてのモデルを一覧し、2つのスタイルを交互に使う。
 
----
+Claude の配色：
 
-## 📸 スクリーンショット
-
-### メニューバー表示
-
-- Claude と Codex のメニューバーアイコンと制限インジケーターを以下に示します
-- 形状と色の二重指示により、モノクロテーマでも識別しやすい
-
-| アイコン | 5時間 | 7日間 | 追加使用量 | 7日間 Opus | 7日間 Sonnet | モノクロ(自動調整) |
-|:---:|:---:|:---:|:---:|:---:|:---:|-----|
-| <img src="images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
-| <img src="images/bar.icon.codex@2x.png" width="40" height="40" alt="codex icon"> | <img src="images/bar.5h.codex@2x.png" width="45" height="45" alt="codex 5h ring"> | <img src="images/bar.7d.codex@2x.png" width="45" height="45" alt="codex 7d ring"> | <img src="images/bar.ex.codex@2x.png" width="45" height="45" alt="codex extra ring"> | — | — | <img src="images/bar.mono.b.codex@2x.png" width="auto" height="35" alt="codex mono black"></br> <img src="images/bar.mono.w.codex@2x.png" width="auto" height="35" alt="codex mono white"> |
-
-**カラーインジケーター**：
-
-Claude 現在の配色：
-
-- **5時間制限（詳細ウィンドウ含む）**：![macOS緑](https://img.shields.io/badge/macOS緑-34C759) → ![macOSオレンジ](https://img.shields.io/badge/macOSオレンジ-FF9500) → ![macOS赤](https://img.shields.io/badge/macOS赤-FF3B30)
-- **7日間制限（詳細ウィンドウ含む）**：![薄紫](https://img.shields.io/badge/薄紫-C084FC) → ![紫](https://img.shields.io/badge/紫-B450F0) → ![濃紫](https://img.shields.io/badge/濃紫-B41EA0)
+- **5時間**：![macOS緑](https://img.shields.io/badge/macOS緑-34C759) → ![macOSオレンジ](https://img.shields.io/badge/macOSオレンジ-FF9500) → ![macOS赤](https://img.shields.io/badge/macOS赤-FF3B30)
+- **7日間**：![薄紫](https://img.shields.io/badge/薄紫-C084FC) → ![紫](https://img.shields.io/badge/紫-B450F0) → ![濃紫](https://img.shields.io/badge/濃紫-B41EA0)
 - **追加使用量**：![ピンク](https://img.shields.io/badge/ピンク-FF9ECD) → ![ローズ](https://img.shields.io/badge/ローズ-EC4899) → ![マゼンタ](https://img.shields.io/badge/マゼンタ-D946EF)
-- **7日間 Opus 制限**：![薄オレンジ](https://img.shields.io/badge/薄オレンジ-FFC864) → ![アンバー](https://img.shields.io/badge/アンバー-FBBF24) → ![オレンジレッド](https://img.shields.io/badge/オレンジレッド-FF6432)
-- **7日間 Sonnet 制限**：![薄青](https://img.shields.io/badge/薄青-64C8FF) → ![青](https://img.shields.io/badge/青-007AFF) → ![インディゴ](https://img.shields.io/badge/インディゴ-4F46E5)
+- **モデル1 週間**（例：Fable）：![薄オレンジ](https://img.shields.io/badge/薄オレンジ-FFC864) → ![アンバー](https://img.shields.io/badge/アンバー-FBBF24) → ![オレンジレッド](https://img.shields.io/badge/オレンジレッド-FF6432)
+- **モデル2 週間**（例：Opus、Sonnet）：![薄青](https://img.shields.io/badge/薄青-64C8FF) → ![青](https://img.shields.io/badge/青-007AFF) → ![インディゴ](https://img.shields.io/badge/インディゴ-4F46E5)
 
-Codex 現在の配色：
+Codex の配色：
 
-- **Codex 5時間制限**：![明るいティール](https://img.shields.io/badge/明るいティール-2DD4BF) → ![深いティール](https://img.shields.io/badge/深いティール-0D9488) → ![最深ティール](https://img.shields.io/badge/最深ティール-134E4A)
-- **Codex 7日間制限**：![スカイブルー](https://img.shields.io/badge/スカイブルー-60A5FA) → ![ブルー](https://img.shields.io/badge/ブルー-2563EB) → ![深いブルー](https://img.shields.io/badge/深いブルー-1E3A8A)
-- **Codex 追加使用量 / credits**：![ゴールド](https://img.shields.io/badge/ゴールド-F59E0B) → ![深いゴールド](https://img.shields.io/badge/深いゴールド-D97706) → ![最深アンバー](https://img.shields.io/badge/最深アンバー-78350F)
+- **5時間**：![明るいティール](https://img.shields.io/badge/明るいティール-2DD4BF) → ![深いティール](https://img.shields.io/badge/深いティール-0D9488) → ![最深ティール](https://img.shields.io/badge/最深ティール-134E4A)
+- **7日間**：![スカイブルー](https://img.shields.io/badge/スカイブルー-60A5FA) → ![ブルー](https://img.shields.io/badge/ブルー-2563EB) → ![深いブルー](https://img.shields.io/badge/深いブルー-1E3A8A)
+- **credits**：![ゴールド](https://img.shields.io/badge/ゴールド-F59E0B) → ![深いゴールド](https://img.shields.io/badge/深いゴールド-D97706) → ![最深アンバー](https://img.shields.io/badge/最深アンバー-78350F)
 
-### 詳細ウィンドウ
+モノクロームテーマでも各制限は形で区別でき、メニューバーの明暗に合わせて自動で反転する。メニューバーの明暗は壁紙によって決まり、システムのライト / ダーク外観とは関係しない。
 
-<table border="0">
-<tr>
-<td align="top" valign="top">
-<img src="images/detail.claude.ja@2x.png" width="280" alt="Claude 単独使用モード">
-<br/>
-<sub><i>Claude 単独使用モード</i></sub>
-</td>
-<td align="center" valign="top">
-<img src="images/detail.codex.ja@2x.png" width="280" alt="Codex 単独使用モード">
-<br/>
-<sub><i>Codex 単独使用モード</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="images/detail.both.ja@2x.png" width="560" alt="Claude と Codex の共存モード">
-<br/>
-<sub><i>Claude + Codex 共存モード</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="images/detail@2x.gif" width="280" alt="残り時間切り替えアニメーション">
-<br/>
-<sub><i>残り時間切り替えアニメーション</i></sub>
-</td>
-</tr>
-</table>
+| 項目 | 選択肢 |
+|---|---|
+| 表示内容 | パーセンテージのみ、アイコンのみ、アイコンとパーセンテージ |
+| アイコンサイズ | コンパクト、標準、大きめ |
+| テーマ | カラー透明、カラー背景付き、モノクローム |
 
-### 設定画面
+メニューバーには既定でデータのあるすべての制限が表示される。「設定 → 表示 → 制限タイプ」でカスタム表示に切り替えると、個別に選択できる。
 
-**一般** - 表示オプション、メニューバーテーマ、通知設定、外観（システム設定に従う/ライト/ダーク）、リフレッシュモード、時刻形式、言語オプション、ログイン時起動
-**認証情報** - Claude/Codex アカウント管理（追加/削除/切り替え/エイリアス編集）、内蔵ブラウザログイン、Claude 手動入力、接続診断
-**について** - バージョン情報と関連リンク
+### 通知
 
-### ウェルカム画面
+使用量がしきい値に達するとシステム通知を送り、リセット時にも通知する。しきい値はカテゴリごとに設定し、範囲は 50% から 100%、5% 刻み。
 
-**認証情報の設定** - Claude は内蔵ブラウザワンクリックログイン（推奨）または Session Key の手動入力に対応し、Organization ID を自動取得、同一 Session Key 下の複数組織を自動作成；Codex は設定画面から内蔵ブラウザで ChatGPT にログインして追加可能
-**表示オプションの設定** - メニューバーテーマ、表示内容、表示モード（スマート/カスタム）選択、ライブプレビュー対応
-**後で設定** - ウェルカム画面を閉じて、後で設定画面で設定
+| カテゴリ | 段階数 | 既定値 |
+|---|---|---|
+| 5時間 | 1 | 90% |
+| 週間制限（モデル別の週間使用量を含む） | 2 | 75%、90% |
+| 追加使用量 / credits | 2 | 75%、90% |
+
+### 更新
+
+**スマートモード**は使用量の変化に応じて頻度を調整する。変化があれば1分ごと、変化がなければ 3、5、10 分へと段階的に下げ、変化を検知するとすぐに1分ごとに戻る。アイドル時のリクエスト数はアクティブ時の約10分の1。
+
+**固定モード**は 1、3、5、10 分から選ぶ。
+
+API のレート制限に達すると自動でバックオフする。更新に失敗しても前回のデータを残し、タイトルの横に表示するだけにとどめる。スリープからの復帰時と詳細ウィンドウを開いたときに自動で更新し、リングまたはグラフをクリックすると手動で更新できる（10秒のデバウンスあり）。
+
+### アカウント
+
+Claude は複数アカウントと、1つのアカウント内の複数組織に対応する。Codex のアカウントは別に管理する。各アカウントにはエイリアスを設定でき、詳細ウィンドウの「…」メニューまたはメニューバーアイコンの右クリックメニューで切り替える。
+
+ログインはシステムのブラウザで行うため、Google、Microsoft、企業 SSO、パスキーがいずれも使える。Claude は Session Key の手動入力にも対応する。
+
+### Codex リセット予告（Beta）
+
+OpenAI がまだ来ていない全体リセットを予告しているとき、Codex 列のタイトル横にバッジを表示する。それ以外のときは何も表示しない。データはサードパーティのコミュニティプロジェクト [codex-reset.com](https://codex-reset.com) から取得しており、公式 API ではない。設定でオフにできる。
+
+### インターフェース言語
+
+English、日本語、简体中文、繁體中文、한국어、Français（[@mtreize](https://github.com/mtreize)）、Deutsch（[@schaitl](https://github.com/schaitl)）。既定ではシステムの言語に従う。新しい言語への翻訳を歓迎する。方法は[参加](#-参加)を参照。
 
 ---
 
 ## 💾 インストール
 
-### 方法1：ビルド済みをダウンロード（推奨）
+### ダウンロード
 
-1. [Releases ページ](https://github.com/f-is-h/Usage4Claude/releases)へ移動
-2. 最新バージョンの `.dmg` ファイルをダウンロード
-3. ダブルクリックして開き、アプリを「アプリケーション」フォルダにドラッグ
-4. 初回起動時は、アプリを右クリックして「開く」を選択（未署名アプリの許可）
-5. Keychain での認証情報保存を許可（バージョン更新後は再度許可が必要な場合があります。認証プロンプトには該当する認証トークン名が表示されます）
+1. [Releases](https://github.com/f-is-h/Usage4Claude/releases) から最新の `.dmg` をダウンロードし、アプリを「アプリケーション」フォルダへドラッグする
+2. 初回起動は Gatekeeper にブロックされる。許可する方法は[よくある質問](#-よくある質問)の最初の項目を参照
+3. 初めて認証情報を読み込むときにキーチェーンへのアクセスを求められるので、「常に許可」を選ぶ
 
-### 方法2：ソースからビルド
+macOS 13 (Ventura) 以降が必要。Intel と Apple シリコンの両方に対応する。
 
-#### 必要要件
-- macOS 13.0 以降
-- Xcode 15.0 以降
-- Git
+アップデートは [Sparkle](https://sparkle-project.org) によりアプリ内で行われ、EdDSA 署名の検証に通ったものだけがインストールされる。現時点で Homebrew でのインストールは提供していない。
 
-#### ビルド手順
+### ソースからビルド
+
+Xcode 26 以降が必要。
 
 ```bash
-# リポジトリをクローン
 git clone https://github.com/f-is-h/Usage4Claude.git
 cd Usage4Claude
-
-# Xcode で開く
 open Usage4Claude.xcodeproj
-
-# Xcode で Cmd + R を押して実行
 ```
+
+Xcode で ⌘R を押して実行する。Swift と SwiftUI で書かれており、メニューバーとウィンドウ管理には AppKit を使っている。
 
 ---
 
-## 📖 使用ガイド
+## 📖 使い方
 
-### 初期設定
+### ログイン
 
-1. **アプリを起動**
-   初回実行時にウェルカム画面が表示されます
+初回起動時にオンボーディングウィンドウが開き、Claude と Codex のどちらもここでログインできる。オンボーディングはスキップでき、後から「設定 → アカウント」で追加できる。
 
-2. **認証情報を設定**
-   - **Claude 方法1：ブラウザログイン（推奨）**
-     - 「ブラウザログイン」ボタンをクリック
-     - 内蔵ブラウザで Claude アカウントにログイン
-     - ログイン成功後、Session Key が自動的に抽出されます
-   - **Claude 方法2：手動入力**
-     - ブラウザで Claude 使用量ページにアクセス
-     - 開発者ツールを開く（F12 または Cmd + Option + I）
-     - 「ネットワーク」タブに切り替え、ページを更新
-     - `usage` リクエストを見つけ、Cookie から `sessionKey=sk-ant-...` を抽出
-     - 入力フィールドに貼り付け
-   - **Codex アカウント（任意）**
-     - 設定 → 認証情報を開く
-     - Codex の「ブラウザログイン」をクリック
-     - 内蔵ブラウザで ChatGPT アカウントにログイン
-     - ログイン成功後、認証情報が自動保存されます
-     - Codex は現在、Session Key の手動入力に対応していません
+**ブラウザログイン**：ログインボタンを押すとシステムのブラウザで認可ページが開き、認可が終わると自動でアプリに戻る。認可結果はローカルの一時ポートで受け取る。ファイアウォールがローカル接続をブロックしている場合、ブラウザは `localhost` のアドレスで止まるので、アドレスバーのリンクをログインウィンドウに貼り付ければ完了する。
 
-### 日常使用
+**Session Key の手動入力**（Claude のみ）：
 
-- **デフォルト表示** - メニューバーアイコンに使用量パーセンテージを表示
-- **詳細を表示** - メニューバーアイコンをクリックして詳細を表示。Claude/Codex のみ設定時は Claude/Codex 単列、両方設定時はデュアルカラムビューで表示
-- **手動リフレッシュ** - 詳細ウィンドウのリフレッシュボタンをクリック、またはショートカット ⌘R を使用（メインウィンドウを開くとデータも自動更新）。デュアルカラムビューでは Claude / Codex を個別に更新可能
-- **アカウント切り替え** - 詳細ウィンドウの「…」メニューまたはメニューバーアイコンを右クリックして、切り替える Claude / Codex アカウントを選択
-- **キーボードショートカット**
-  - ⌘R - データを手動でリフレッシュ
-  - ⌘, - 一般設定を開く
-  - ⌘⇧A - 認証設定を開く
-  - ⌘U - アップデートを確認
-  - ⌘Q - アプリを終了
-- **更新通知** - 新バージョンがある場合、メニューバーアイコンにバッジが表示され、メニュー項目にレインボーテキストが表示されます
-- **更新を確認** - メニュー → 更新を確認
+1. ブラウザで claude.ai の使用量ページを開く
+2. 開発者ツール（⌥⌘I）を開き、「ネットワーク」タブに切り替えてページを再読み込みする
+3. `usage` リクエストを探し、リクエストヘッダーの Cookie から `sessionKey=sk-ant-...` の値をすべてコピーする
+4. 入力欄に貼り付ける。Organization ID は自動で取得され、同じ Session Key 配下の複数の組織もまとめて追加される
 
-### 更新モード
+### 日常の使い方
 
-**スマート頻度（推奨）**
-- 使用パターンに応じて自動的に更新間隔を調整
-- アクティブモード（1分）- Claude または Codex をアクティブに使用しているときは高速更新
-- アイドルモード（3/5/10分）- アイドル時は段階的に更新を遅く
-- アイドル時のAPI呼び出しを大幅に削減（10倍まで）
-- 使用が検出されると即座に1分更新に戻る
-- システムのスリープ解除後に自動更新し、古いデータ表示を防止
+メニューバーアイコンを左クリックすると詳細ウィンドウが開き、右クリックでメニューが開く。メニューにはアカウントの切り替え、設定、アップデートを確認、Claude と Codex のステータスページへのリンクがある。
 
-**固定頻度**
-- **1分** - 一貫した監視に推奨
-- **3分** - バランスの取れた監視
-- **5分** - 低頻度監視
-- **10分** - 最小限のAPI呼び出し
+新しいバージョンがあると、メニューバーアイコンにバッジが付き、メニューの「アップデートを確認」にも表示が付く。
+
+### 設定
+
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/settings.display.ja.dark@2x.png">
+  <img src="images/settings.display.ja.light@2x.png" width="400" alt="設定ウィンドウの表示タブ">
+</picture>
+</div>
+
+| タブ | 内容 |
+|---|---|
+| **表示** | メニューバーの外観、制限タイプ、グラフスタイル、外観、時刻形式 |
+| **データ** | 更新モード、通知のしきい値、Codex リセット予告 |
+| **アカウント** | Claude と Codex のアカウント、ブラウザログイン、Session Key の手動入力、接続診断 |
+| **一般** | インターフェース言語、ログイン時に起動、設定のリセット |
+| **情報** | バージョン情報と関連リンク |
+
+---
+
+## 🔒 プライバシーとセキュリティ
+
+- サーバーはなく、データはこの Mac にのみ保存される。解析やテレメトリもない
+- ネットワークリクエストは3種類に限られる：Claude と Codex のログインおよび使用量 API、Sparkle による GitHub でのアップデート確認、Codex リセット予告が有効な場合の codex-reset.com へのアクセス
+- Session Key と各種トークンはキーチェーンに保存され、平文では保存されない。API のレスポンスもディスクキャッシュに書き込まない
+- App Sandbox を有効にしている。ネットワークアクセス以外に開放しているのは、ログインのコールバックに使うローカルポートと、Sparkle がアップデートのインストールに使うシステムサービスのみ
+- 診断レポートはエクスポート前に自動でマスクされ、トークンなどの機密項目は置き換えられる
+- ソースコードはすべて公開されており、誰でも監査できる
 
 ---
 
 ## ❓ よくある質問
 
 <details>
-<summary><b>Q: アプリが「セッションが期限切れ」と表示される場合は？</b></summary>
+<summary><b>開けない：「開発元を検証できません」と表示される</b></summary>
 
-A: Claude Session Key または Codex 認証トークンは定期的に期限切れになります（通常数週間から数ヶ月）。再ログインが必要です：
-1. 設定 → 認証情報を開く
-2. Claude アカウントは「ブラウザログイン」で再ログイン（推奨）、または手動で新しい Session Key を取得
-3. Codex アカウントは Codex の「ブラウザログイン」をクリックし、内蔵ブラウザで ChatGPT に再ログイン
-4. 完了後、監視が再開されます
+アプリは Apple の公証を受けていないため、初回起動時に手動で許可する必要がある。
 
-</details>
+- **macOS 15 以降**：アプリをダブルクリックし、ダイアログで「完了」をクリックする。続いて「システム設定 → プライバシーとセキュリティ」を開き、ページ下部の「このまま開く」をクリックする
+- **macOS 14 以前**：Control キーを押しながらアプリをクリックして「開く」を選び、ダイアログで再度確認する
 
-<details>
-<summary><b>Q: 起動時に自動起動するには？</b></summary>
-
-A: 2つの方法があります：
-
-**方法1：アプリ内蔵オプションを使用（推奨）**
-1. 設定 → 一般を開く
-2. 「ログイン時に起動」オプションをチェック
-
-**方法2：システム設定経由**
-1. システム設定 → 一般 → ログイン項目を開く
-2. 「+」をクリックして Usage4Claude を追加
+許可は一度だけでよく、以降は通常どおりダブルクリックで起動できる。アプリ内アップデートの後に同じ操作をする必要はない。
 
 </details>
 
 <details>
-<summary><b>Q: システムリソースの使用量は？</b></summary>
+<summary><b>アップデート後にキーチェーンへのアクセスを再度求められる</b></summary>
 
-A: 非常に軽量です：
-- CPU 使用率：< 0.1%（アイドル時）
-- メモリ使用量：約 20MB
-- ネットワーク：設定されたスマート頻度で更新。Claude と Codex を両方設定している場合は、それぞれのサービスへ個別にリクエストします
+キーチェーンはアプリの署名で同一性を判断する。本アプリは自己署名証明書を使っているため、一部のアップデート後にシステムが再度確認を求める。「常に許可」を選べばよい。キーチェーン内の認証情報は本アプリだけが読み取れる。
 
 </details>
 
 <details>
-<summary><b>Q: サポートされている macOS バージョンは？</b></summary>
+<summary><b>「リクエストがセキュリティシステムによってブロックされました」と表示される</b></summary>
 
-A: macOS 13.0 (Ventura) 以降が必要です。Intel と Apple Silicon（M1/M2/M3/M4/M5）チップの両方をサポートしています。
-
-</details>
-
-<details>
-<summary><b>Q: なぜ Keychain の許可が必要ですか？</b></summary>
-
-A:
-- Keychain は macOS のシステムレベルパスワードマネージャー
-- Claude Session Key と Codex 認証トークンは Keychain で暗号化されて保存されます
-- Claude Organization ID はローカル設定に保存（非機密識別子）
-- これは Apple が推奨する最も安全な機密情報保存方法
-- このアプリのみがこの情報にアクセス可能、他のアプリは閲覧不可
+claude.ai の手前にある Cloudflare の保護が、リクエストを自動化プログラムからのものと判断するとブロックする。ブラウザで一度 claude.ai にアクセスして人間であることの確認を済ませれば、通常はアプリも復旧する。VPN やプロキシを使っていると発生しやすい。このブロックはアカウントの状態とは関係なく、再ログインは不要。
 
 </details>
 
 <details>
-<summary><b>Q: データは安全ですか？プライバシーはどう保護されていますか？</b></summary>
+<summary><b>「セッションが期限切れです」と表示される</b></summary>
 
-**完全に安全です！** 
-
-**データ保存：**
-- すべてのデータはローカル Mac に**のみ**保存
-- 情報の収集、追跡、統計は一切なし
-- Claude と Codex の使用量関連 API 呼び出し以外のネットワークリクエストなし
-- サードパーティサービス未使用
-
-**認証情報のセキュリティ：**
-- Claude Session Key と Codex 認証トークンは macOS Keychain 経由で暗号化（システムレベル暗号化）
-- Keychain は AES-256 暗号化 + ハードウェア保護（T2 / Secure Enclave）使用
-- このアプリのみが認証情報にアクセス可能、他のアプリは読み取り不可
-- 「キーチェーンアクセス」アプリからいつでも権限を取り消し可能
-
-**コードの透明性：**
-- 100% オープンソース
-- 難読化や隠し機能なし
-- コミュニティが監査・検証可能
-
-**追加保護：**
-- App Sandbox 有効（システムアクセス制限）
-- ファイル、連絡先、他のアプリへのアクセス権限なし
-- 最小限の権限（ネットワーク + Keychain のみ）
-
-GitHub でソースコードを確認してこれらすべてを検証できます！
+Session Key とログイントークンは定期的に失効し、その周期は数週間から数か月。「設定 → アカウント」で再ログインすればよい。
 
 </details>
 
 <details>
-<summary><b>Q: Claude Code / Desktop App / Mobile App でも動作しますか?</b></summary>
+<summary><b>「リクエストが多すぎます」と表示される</b></summary>
 
-A: **はい、すべてのClaudeプラットフォームで動作します!**
-
-すべてのClaude製品 (Web, Claude Code, Desktop App, Mobile App, Cowork) は同じ使用量クォータを共有しているため、Usage4Claudeはすべてのプラットフォームでの総使用量を監視します。
-
-以下のような場合でも:
-- ターミナルで `claude code` を使用してコーディング
-- claude.ai でチャット
-- デスクトップアプリを使用
-- モバイルアプリを使用
-- Cowork エージェントを使用
-
-メニューバーでリアルタイムの総使用量を確認できます。プラットフォーム固有の設定は不要です!
+使用量 API のレート制限に達している。アプリは自動でバックオフしてしばらく後に再試行し、その間は前回のデータを表示し続ける。手動更新を繰り返すとバックオフが長くなる。
 
 </details>
 
 <details>
-<summary><b>Q: Codex サポートを有効にするには？Codex だけでも使えますか？</b></summary>
+<summary><b>Codex にログインしてもすぐに再ログインを求められる</b></summary>
 
-A: はい。設定 → 認証情報を開き、Codex の「ブラウザログイン」をクリックして、内蔵ブラウザで ChatGPT にログインしてください。
-
-- Codex のみ設定：メニューバーと詳細ウィンドウに Codex 使用量が表示されます
-- Claude + Codex：詳細ウィンドウに両方の Provider が横並びで表示されます
-- Codex は現在ブラウザログインのみ対応しており、Session Key の手動入力には対応していません
+ChatGPT アカウントで「Advanced Security」を有効にすると、ログイントークンの有効期間が大幅に短くなり、頻繁な再ログインが必要になる。Codex の使用量を長期的に監視したい場合は、このオプションをオフにすることを検討してほしい。
 
 </details>
 
 <details>
-<summary><b>Q: メニューバーにアイコンが表示されない場合は？</b></summary>
+<summary><b>Claude アカウントの使用量が読み取れない</b></summary>
 
-A: macOS システムまたはサードパーティソフトウェア（Bartender、Hidden Bar など）がメニューバーアイコンを自動的に非表示にすることがあります。
-
-**解決方法：**
-1. **Command (⌘) キー**を押したまま
-2. メニューバー内のアイコンをマウスでドラッグ
-3. Usage4Claude アイコンをメニューバー右側の可視エリアにドラッグ
-4. マウスを離す
-
-**ヒント：**
-- macOS Sonoma (14.0+) では、使用頻度の低いアイコンが自動的に「コントロールセンター」に非表示になります
-- 「システム設定」→「コントロールセンター」でメニューバーアイコンの表示を調整できます
+「現在のプランでは使用量データを取得できません」と表示される場合、そのアカウントには claude.ai 上の使用量ダッシュボードがない。無料プランにはダッシュボードがなく、Team と Enterprise では管理者にメンバー使用量ダッシュボードの有効化を依頼する必要がある。再ログインしても解決しない。
 
 </details>
 
 <details>
-<summary><b>Q: 複数のアカウントを管理するには？</b></summary>
+<summary><b>メニューバーにアイコンが見当たらない</b></summary>
 
-A: Usage4Claude は Claude の複数アカウント、同一 Claude アカウント下の複数組織、独立した Codex アカウント管理をサポートしています：
-- **アカウント追加** - 設定 → 認証情報で Claude ブラウザログイン、Claude 手動入力、または Codex ブラウザログインで追加
-- **アカウント切り替え** - 詳細ウィンドウの「…」メニューまたはメニューバーアイコンを右クリックして、切り替える Claude / Codex アカウントを選択
-- **エイリアス編集** - 各アカウントに識別しやすいエイリアスを設定
-- **アカウント削除** - 左スワイプまたは編集モードで不要なアカウントを削除
+メニューバーの空きが足りないと macOS は一部のアイコンを隠す。Bartender や Hidden Bar などのツールが格納している場合もある。⌘ キーを押しながらメニューバーアイコンをドラッグすると位置を変えられる。
 
 </details>
 
 <details>
-<summary><b>Q: 使用量通知を有効にするには？</b></summary>
+<summary><b>アプリが勝手に終了する</b></summary>
 
-A: 設定 → 一般で Claude 使用量通知機能のオン/オフを切り替えられます：
-- **使用量警告** - Claude 使用率が90%に達するとシステム通知を送信
-- **リセット通知** - Claude クォータがリセットされると通知を送信
-- 初回有効化時に macOS の通知権限の許可が必要です
+「設定 → アカウント → 接続診断」で診断レポートをエクスポートし、[issue](https://github.com/f-is-h/Usage4Claude/issues) に添付してほしい。レポートには前回の終了が異常だったかどうかの判定と最近のログが含まれ、エクスポート前にマスク済みである。
 
 </details>
-
----
-
-## 🛠 技術スタック
-
-最新の macOS ネイティブ技術で構築：
-
-- **言語**: Swift 5.0+
-- **UI フレームワーク**: SwiftUI + AppKit ハイブリッド
-- **アーキテクチャ**: MVVM
-- **ネットワーク**: URLSession
-- **リアクティブ**: Combine Framework
-- **ローカライゼーション**: 組み込み i18n サポート
-- **プラットフォーム**: macOS 13.0+
 
 ---
 
 ## 🗺 ロードマップ
 
-### ✅ 完了
-- [x] 基本監視機能
-- [x] メニューバーリアルタイム表示
-- [x] 円形プログレスインジケーター
-- [x] スマートカラーアラート
-- [x] リアルタイムカウントダウン
-- [x] メニューバー複数表示モード
-- [x] ビジュアル設定画面
-- [x] 多言語サポート
-- [x] 初回起動ガイド
-- [x] 更新チェック
-- [x] 認証情報 Keychain 保存
-- [x] Shell 自動 DMG パッケージング
-- [x] GitHub Actions 自動リリース
-- [x] 設定画面表示の最適化
-- [x] 起動時自動起動設定
-- [x] キーボードショートカット
-- [x] 手動リフレッシュ機能
-- [x] 三点メニューのダークモード対応
-- [x] デュアル制限モードサポート（5時間 + 7日間）
-- [x] デュアルリングメニューバーアイコン
-- [x] 統一カラースキーム管理
-- [x] デバッグモード（偽データ、シミュレート更新）
-- [x] 詳細ウィンドウ Focus 状態削除
-- [x] マルチ制限タイプサポート（5種類）
-- [x] スマート/カスタム表示モード
-- [x] Organization ID 自動取得
-- [x] ウェルカムフロー最適化
-- [x] モノクロテーマアイコン表示
-- [x] 韓国語サポート
-- [x] GitHub Actions オンラインバージョンチェック
-- [x] 外観設定（システム設定に従う/ライト/ダーク）
-- [x] 内蔵ブラウザ自動認証
-- [x] 認証情報の自動設定
-- [x] 使用量通知
-- [x] マルチアカウント管理
-- [x] 統一時刻形式設定
-- [x] 設定画面ダークモード対応
-- [x] Codex 使用量監視サポート
-- [x] Codex 単独使用モード
-- [x] Claude + Codex デュアルカラム詳細ウィンドウ
-- [x] Codex アカウント管理とブラウザログイン
-- [x] フランス語ローカライゼーション
-- [x] システムスリープ解除後の自動更新
+各バージョンの変更点は [CHANGELOG.md](../CHANGELOG.md) に記録している。
 
-### 中期計画
-1. **機能追加**
-    - より多くの言語ローカライゼーション
+**進行中**：継続的な改善と Issue の解決
 
-### 長期ビジョン
-2. **より多くの表示方法**
-   - デスクトップウィジェット
-   - ブラウザ拡張機能アイコン使用量表示
+**検討中**：インターフェース言語の追加、デスクトップウィジェット、使用量履歴のグラフ
 
-3. **データ分析**
-   - 使用履歴記録
-   - トレンドグラフ
+**実装しないもの**
 
-4. **マルチプラットフォーム対応**
-   - iOS / iPadOS バージョン
-   - Apple Watch バージョン
-   - Windows バージョン
+- **Claude と Codex 以外のサービス。** メニューバーの幅は限られており、サービスを1つ増やすごとにすべてのユーザーのメニューバーを占有する。本プロジェクトはこの2つを深く作り込むことに集中し、汎用の使用量ダッシュボードにはしない。
+- **あらゆる形でのデータのアップロード。** 本プロジェクトにはサーバーがなく、導入する予定もない。
+- **App Store での配布。** 本アプリは非公開の API で使用量を取得しており、App Store の掲載基準を満たさない。
 
 ---
 
-## 🤝 コントリビュート
+## 🤝 参加
 
-あらゆる形式のコントリビュートを歓迎します！新機能、バグ修正、ドキュメント改善など。
+Issue と PR はいずれも歓迎する。手順は [CONTRIBUTING.md](../CONTRIBUTING.md) を参照。
 
-詳細なコントリビュートガイドラインについては、[CONTRIBUTING.md](../CONTRIBUTING.md) をご覧ください。
-
-### コントリビュート方法
-
-1. このリポジトリをフォーク
-2. 機能ブランチを作成 (`git checkout -b feature/AmazingFeature`)
-3. 変更をコミット (`git commit -m 'Add some AmazingFeature'`)
-4. ブランチにプッシュ (`git push origin feature/AmazingFeature`)
-5. プルリクエストを開く
+**インターフェース言語の追加**：`Usage4Claude/Resources/en.lproj/Localizable.strings` を新しい `<言語コード>.lproj` フォルダにコピーし、値を翻訳する。各言語のキーが揃っているかは CI が検証する。
 
 ### コントリビューター
 
-このプロジェクトにコントリビュートしてくださったすべての方に感謝します！
+**コード**
 
-<!-- ALL-CONTRIBUTORS-LIST:START -->
-<!-- コントリビューターリストは自動生成されます -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+<a href="https://github.com/f-is-h/Usage4Claude/graphs/contributors"><img src="images/contributors.code.svg" alt="コードのコントリビューター"></a>
 
----
+**翻訳**
 
-## 📝 変更履歴
+<img src="images/contributors.translation.svg" alt="翻訳のコントリビューター">
 
-詳細なバージョン履歴と更新内容については、[CHANGELOG.md](../CHANGELOG.md) をご覧ください。
+**不具合報告と機能提案**
 
----
+<img src="images/contributors.feedback.svg" alt="不具合報告と機能提案のコントリビューター">
 
-## 💖 サポート
+### サポート
 
-このプロジェクトが役立つ場合は、以下の方法でサポートしてください：
-
-### ⭐ プロジェクトにスター
-スターを付けることが最大の励みになります！
-
-### ☕ コーヒーをおごる
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=ja">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1atte">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
-
-### 📢 プロジェクトを共有
-このプロジェクトが気に入ったら、より多くの人に共有してください！
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=ja"><img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsors"></a>
+<a href="https://ko-fi.com/1atte"><img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi"></a>
 
 ---
 
-## 📄 ライセンス
+## 📄 ライセンスと免責事項
 
-このプロジェクトは MIT ライセンスの下でライセンスされています - 詳細は [LICENSE](../LICENSE) ファイルを参照
+MIT ライセンス。詳細は [LICENSE](../LICENSE) を参照。Copyright © 2025-2026 f-is-h。
 
-```
-MIT License
+本プロジェクトは独立したサードパーティ製ツールであり、Anthropic および OpenAI とは公式な関係はない。利用にあたっては各サービスの規約に従うこと。
 
-Copyright (c) 2025-2026 f-is-h
+コードの大部分は Claude と Codex が書いた。アイコンのデザインは両社の公式ブランドを参考にしている。
 
-ソフトウェアのコピーを自由に使用、コピー、変更、マージ、公開、配布、
-サブライセンス、および/または販売できます。
-```
-
----
-
-## 🙏 謝辞
-
-- Claude/Codex に感謝 - ほとんどのコードは AI によって書かれました
-- すべてのコントリビューターとユーザーのサポートに感謝
-- アイコンデザインは Claude/Codex 公式ブランディングからインスピレーション
-
----
-
-## 📞 連絡先
-
-- **Issues**: [問題や提案を送信](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [ディスカッションに参加](https://github.com/f-is-h/Usage4Claude/discussions)
-- **GitHub**: [@f-is-h](https://github.com/f-is-h)
-
----
-
-## ⚖️ 免責事項
-
-このプロジェクトは独立したサードパーティツールであり、Anthropic、Claude AI、OpenAI、Codex との公式な関連はありません。このソフトウェアを使用する際は、関連サービスの利用規約を遵守してください。
-
----
+不具合の報告は [Issues](https://github.com/f-is-h/Usage4Claude/issues) へ、その他の議論は [Discussions](https://github.com/f-is-h/Usage4Claude/discussions) へ。
 
 <div align="center">
 
-**このプロジェクトが役立つ場合は、⭐ スターをお願いします！**
-
-Made with ❤️ by [f-is-h](https://github.com/f-is-h)
-
 [⬆ トップに戻る](#usage4claude)
 
-</div> 
+</div>

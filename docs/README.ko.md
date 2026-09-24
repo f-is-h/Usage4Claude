@@ -4,20 +4,22 @@
 
 <div align="center">
 
-<img src="images/icon@2x.png" width="256" alt="icon">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/hero.ko.dark@2x.png">
+  <img src="images/hero.ko.light@2x.png" width="948" alt="Usage4Claude의 메뉴 막대 아이콘과 상세 창">
+</picture>
 
 [![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue?style=flat-square)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](../LICENSE)
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Downloads](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%99%A5-EA4AAA?style=flat-square&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=readme&metadata_placement=header&metadata_lang=ko)
 
-**메뉴 바에서 Claude(및 Codex) 구독 할당량을 아름답게 추적하세요.**
+**메뉴 막대에서 Claude와 Codex의 구독 사용량을 추적한다.**
 
-✨ **모든 Claude 플랫폼 모니터링 지원: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
-
-[기능](#-기능) • [다운로드 및 설치](#-다운로드-및-설치) • [사용 가이드](#-사용-가이드) • [자주 묻는 질문](#-자주-묻는-질문) • [프로젝트 지원](#-프로젝트-지원)
+[기능](#-기능) · [설치](#-설치) · [사용법](#-사용법) · [개인정보와 보안](#-개인정보와-보안) · [자주 묻는 질문](#-자주-묻는-질문) · [참여](#-참여)
 
 </div>
 
@@ -25,583 +27,303 @@
 
 ## ✨ 기능
 
-### 🎯 핵심 기능
+### 모니터링 범위
 
-- **📊 실시간 모니터링** - 메뉴 바에서 Claude 구독(Free/Pro/Team/Max) 사용 할당량을 실시간 표시하고, Codex 사용량도 선택적으로 모니터링
-- **🎯 다중 제한 지원** - Claude는 5시간/7일/추가 사용량 제한과 함께 모델별 주간 사용량(Opus, Sonnet, Fable 등 모델 수 제한 없음)을 지원하며, Codex는 5시간/7일/추가 사용량/credits 지원
-- **🎨 스마트 표시 모드** - 데이터가 있는 모든 제한 유형을 자동 감지하여 표시
-- **⚙️ 사용자 정의 표시** - 표시할 제한 유형을 수동으로 선택, 모든 조합 지원
-- **🎨 스마트 컬러** - 사용률에 따라 자동 색상 변경, 각 제한 유형별 고유한 색상 체계
-- **🔔 사용량 알림** - 사용량 90% 도달 시 경고 알림, 할당량 재설정 시 리셋 알림 전송
-- **👥 다중 계정 관리** - Claude 다중 계정 / 동일 계정 다중 조직과 독립적인 Codex 계정 관리 및 빠른 전환 지원
-- **🧩 Codex 지원** - 선택적 Codex 사용량 모니터링. Codex 단독 사용 또는 Claude와 나란히 이중 열 뷰로 표시 가능(설정에서 Codex 계정 추가 시 활성화)
-- **🌐 내장 브라우저 로그인** - Claude 로그인은 Session Key를 자동 추출하고, Codex는 내장 브라우저에서 ChatGPT에 로그인해 인증 정보를 가져옵니다
-- **🎨 외관 설정** - 시스템 설정 따르기 / 라이트 / 다크 세 가지 외관 모드 지원
-- **🕐 시간 형식** - 시스템 기본 / 12시간제 / 24시간제 지원
-- **⏰ 정확한 타이밍** - 분 단위로 할당량 재설정 시간 표시
-- **🔄 스마트 새로고침 시스템** - 지능형 4단계 적응형 새로고침 또는 고정 간격(1/3/5/10분)
-- **⚡ 수동 새로고침** - 새로고침 버튼 클릭으로 즉시 데이터 업데이트(10초 디바운스 보호)
-- **💻 네이티브 경험** - 순수 네이티브 macOS 앱, 가볍고 우아함
+Claude와 Codex는 각각 또는 함께 설정할 수 있다. 각 서비스의 모든 이용 경로는 같은 한도를 공유하며, 메뉴 막대에는 항상 그 총사용량이 표시된다.
 
-### 🌐 크로스 플랫폼 지원
+| 서비스 | 이용 경로 | 제한 |
+|---|---|---|
+| **Claude** | claude.ai, Claude Code, 데스크톱 앱, 모바일 앱, Cowork | 5시간, 7일, 추가 사용량, 그리고 모델별 주간 사용량(Opus, Sonnet, Fable 등, 계정이 실제로 반환하는 값 기준) |
+| **Codex** | Codex CLI, IDE 확장 프로그램, Codex 웹 | 5시간, 7일, credits 잔액 |
 
-모든 Claude 제품과 원활하게 작동:
-- 🌐 **Claude.ai** (웹 인터페이스)
-- 💻 **Claude Code** (개발자용 CLI 도구)
-- 🖥️ **Desktop App** (macOS/Windows)
-- 📱 **Mobile App** (iOS/Android)
-- 🤝 **Cowork** (AI 에이전트)
+서비스를 하나만 설정하면 한 열로, 둘 다 설정하면 상세 창이 두 열로 나뉘고 메뉴 막대에 두 아이콘이 나란히 표시된다.
 
-모든 플랫폼이 동일한 사용 할당량을 공유하므로 한 곳에서 모니터링!
+Claude의 Pro, Max, Team, Enterprise 요금제를 지원한다. 무료 플랜에는 사용량 대시보드가 없어 읽을 수 없으며, Team과 Enterprise는 관리자가 멤버 사용량 대시보드를 활성화해야 한다.
 
-### 🧩 Codex 지원
+### 두 가지 그래프
 
-- Codex 단독 또는 Claude와 함께 모니터링 가능
-- Codex 5시간, 7일, 추가 사용량/credits 정보 지원
-- 내장 브라우저에서 ChatGPT에 로그인해 Codex 계정 추가
-- Claude-only 사용자는 추가 설정이 필요 없으며, Codex 계정을 추가하기 전까지 기존 경험이 유지됩니다
-- **🧪 리셋 예고 (베타)**: OpenAI가 아직 지나지 않은 전역 리셋을 공개적으로 예고했을 때만 Codex 링 옆에 작은 배지가 표시됩니다 — 대부분의 시간에는 아무것도 표시되지 않는 것이 의도된 동작입니다. 데이터는 독립 커뮤니티 프로젝트인 [codex-reset.com](https://codex-reset.com)에서 제공되며 비공식입니다. 설정에서 끌 수 있습니다
+**링**은 각 제한의 사용 비율을 링으로 표시하고, 아래에 재설정 시간을 나열한다.
 
-### 🎨 개인화
+**페이스**는 각 제한을 '사용 비율 / 경과 시간' 좌표에 그리고, 대각선으로 균등한 소비를 나타낸다. 대각선 위에 있으면 시간보다 빠르게 소비하고 있다는 뜻이고, 아래에 있으면 여유가 있다는 뜻이다. 주간 제한은 평일만 계산하도록 설정할 수 있다.
 
-- **🕓 다양한 표시 모드**
-  - 백분율만 표시 - 깔끔하고 직관적, 클릭 없이 확인 가능
-  - 아이콘만 표시 - 절제되고 우아함, 클릭 시 상세 정보 표시
-  - 아이콘 + 백분율 - 완전한 정보, 빠른 시각적 식별
+'설정 → 표시 → 그래프 스타일'에서 전환한다. 제한 목록을 클릭하면 '사용 비율과 재설정 시각'과 '사용 가능 비율과 남은 시간' 사이를 전환한다.
 
-- **🌍 다국어 지원**
-  - English
-  - 日本語
-  - 简体中文
-  - 繁體中文
-  - 한국어
-  - Français ([@mtreize](https://github.com/mtreize) 님 기여)
-  - Deutsch ([@schaitl](https://github.com/schaitl) 님 기여)
-  - 더 많은 언어 지원 예정... (현지화 PR을 환영합니다!)
+<div align="center">
+<img src="images/detail.toggle@2x.gif" width="606" alt="제한 목록을 클릭해 사용량과 남은 양을 전환">
+</div>
 
-### 🔧 편리한 기능
+### 메뉴 막대 아이콘
 
-- **⚙️ 시각적 설정** - 코드 수정 없이 GUI로 모든 옵션 구성
-- **🆕 스마트 업데이트 알림** - 메뉴 바 배지와 무지개 애니메이션으로 새 버전 알림
-- **🚀 로그인 시 실행** - 시스템 시작 시 자동 실행 옵션
-- **⌨️ 키보드 단축키** - 일반적인 작업에 단축키 지원(⌘R | ⌘, | ⌘Q)
-- **👋 친절한 안내** - 첫 실행 시 상세한 설정 마법사 제공
-- **… 메뉴 표시** - 다양한 메뉴 접근 방법, 상세 보기 및 우클릭
-- **🔔 사용량 알림** - Claude 사용량 경고 및 리셋 알림 지원, 설정에서 켜기/끄기 가능
-- **🛠️ 디버그 모드** - 개발자 옵션: Claude/Codex 가짜 데이터 테스트, 시뮬레이션 업데이트, 즉시 새로고침
+제한 유형마다 고유한 모양과 색상이 있으며, 사용량이 늘어남에 따라 색이 바뀐다.
 
-### 🔒 보안 및 개인정보
+| | 아이콘 | 5시간 | 7일 | 추가 사용량 | 모델 1 주간<br>(예: Fable) | 모델 2 주간<br>(예: Opus, Sonnet) | 단색 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Claude** | <img src="images/bar.icon@2x.png" width="40" alt="Claude 아이콘"> | <img src="images/bar.5h@2x.png" width="45" alt="5시간"> | <img src="images/bar.7d@2x.png" width="45" alt="7일"> | <img src="images/bar.ex@2x.png" width="45" alt="추가 사용량"> | <img src="images/bar.7do@2x.png" width="45" alt="모델 1 주간"> | <img src="images/bar.7ds@2x.png" width="45" alt="모델 2 주간"> | <img src="images/bar.mono.b@2x.png" height="35" alt="단색, 밝은 메뉴 막대"><br><img src="images/bar.mono.w@2x.png" height="35" alt="단색, 어두운 메뉴 막대"> |
+| **Codex** | <img src="images/bar.icon.codex@2x.png" width="40" alt="Codex 아이콘"> | <img src="images/bar.5h.codex@2x.png" width="45" alt="5시간"> | <img src="images/bar.7d.codex@2x.png" width="45" alt="7일"> | <img src="images/bar.ex.codex@2x.png" width="45" alt="credits"> | | | <img src="images/bar.mono.b.codex@2x.png" height="35" alt="단색, 밝은 메뉴 막대"><br><img src="images/bar.mono.w.codex@2x.png" height="35" alt="단색, 어두운 메뉴 막대"> |
 
-- 🏠 **로컬 저장소만** - 모든 데이터는 로컬에만 저장, 개인 정보 수집 및 업로드 절대 없음
-- 🔐 **Keychain 보호** - Claude Session Key와 Codex 인증 토큰은 Keychain에 저장, 평문 키 없음
-- 📖 **오픈 소스 투명성** - 코드 완전 공개, 누구나 감사 가능
-- 🛡️ **샌드박스 보호** - App Sandbox 활성화로 보안 강화
+모델별 주간 사용량은 API가 반환하는 순서대로 모델 1, 모델 2 두 가지 스타일을 사용하며, 모델 이름은 계정이 실제로 반환하는 값을 따른다. 메뉴 막대에는 앞의 두 모델까지만 표시되고, 상세 창에는 모든 모델이 두 스타일을 번갈아 사용해 표시된다.
+
+Claude 색상:
+
+- **5시간**: ![macOS 녹색](https://img.shields.io/badge/macOS_녹색-34C759) → ![macOS 주황](https://img.shields.io/badge/macOS_주황-FF9500) → ![macOS 빨강](https://img.shields.io/badge/macOS_빨강-FF3B30)
+- **7일**: ![연보라](https://img.shields.io/badge/연보라-C084FC) → ![보라](https://img.shields.io/badge/보라-B450F0) → ![진보라](https://img.shields.io/badge/진보라-B41EA0)
+- **추가 사용량**: ![분홍](https://img.shields.io/badge/분홍-FF9ECD) → ![장미](https://img.shields.io/badge/장미-EC4899) → ![마젠타](https://img.shields.io/badge/마젠타-D946EF)
+- **모델 1 주간**(예: Fable): ![연주황](https://img.shields.io/badge/연주황-FFC864) → ![호박색](https://img.shields.io/badge/호박색-FBBF24) → ![주황빨강](https://img.shields.io/badge/주황빨강-FF6432)
+- **모델 2 주간**(예: Opus, Sonnet): ![연파랑](https://img.shields.io/badge/연파랑-64C8FF) → ![파랑](https://img.shields.io/badge/파랑-007AFF) → ![남색](https://img.shields.io/badge/남색-4F46E5)
+
+Codex 색상:
+
+- **5시간**: ![밝은 틸](https://img.shields.io/badge/밝은_틸-2DD4BF) → ![진한 틸](https://img.shields.io/badge/진한_틸-0D9488) → ![가장 진한 틸](https://img.shields.io/badge/가장_진한_틸-134E4A)
+- **7일**: ![하늘색](https://img.shields.io/badge/하늘색-60A5FA) → ![파랑](https://img.shields.io/badge/파랑-2563EB) → ![진파랑](https://img.shields.io/badge/진파랑-1E3A8A)
+- **credits**: ![금색](https://img.shields.io/badge/금색-F59E0B) → ![진한 금색](https://img.shields.io/badge/진한_금색-D97706) → ![가장 진한 호박색](https://img.shields.io/badge/가장_진한_호박색-78350F)
+
+단색 테마에서도 각 제한은 모양으로 구분되며, 메뉴 막대의 밝기에 맞춰 자동으로 반전된다. 메뉴 막대의 밝기는 배경화면에 따라 정해지며, 시스템의 라이트 / 다크 모드와는 무관하다.
+
+| 항목 | 선택지 |
+|---|---|
+| 표시 내용 | 백분율만 표시, 아이콘만 표시, 아이콘과 백분율 |
+| 아이콘 크기 | 작게, 표준, 크게 |
+| 테마 | 컬러 반투명, 컬러 배경, 단색 테마 |
+
+메뉴 막대에는 기본적으로 데이터가 있는 모든 제한이 표시된다. '설정 → 표시 → 제한 유형'에서 사용자 정의 표시로 바꾸면 개별적으로 선택할 수 있다.
+
+### 알림
+
+사용량이 임계값에 도달하면 시스템 알림을 보내고, 한도가 재설정될 때도 알린다. 임계값은 범주별로 설정하며, 범위는 50%~100%, 5% 단위다.
+
+| 범주 | 단계 수 | 기본값 |
+|---|---|---|
+| 5시간 | 1 | 90% |
+| 주간 제한(모델별 주간 사용량 포함) | 2 | 75%, 90% |
+| 추가 사용량 / credits | 2 | 75%, 90% |
+
+### 새로고침
+
+**스마트 모드**는 사용량 변화에 따라 빈도를 조절한다. 변화가 있으면 1분마다, 변화가 없으면 3분, 5분, 10분으로 차례로 늘리고, 변화가 감지되면 즉시 1분으로 돌아간다. 유휴 시 요청 수는 활동 시의 약 10분의 1이다.
+
+**고정 모드**는 1, 3, 5, 10분 중에서 고른다.
+
+API 요청 제한에 걸리면 자동으로 백오프한다. 새로고침에 실패하면 이전 데이터를 유지하고 제목 옆에만 표시한다. 잠자기에서 깨어날 때와 상세 창을 열 때 자동으로 새로고침하며, 링이나 그래프를 클릭하면 수동으로 새로고침할 수 있다(10초 디바운스 적용).
+
+### 계정
+
+Claude는 여러 계정과 한 계정 안의 여러 조직을 지원하고, Codex 계정은 따로 관리한다. 각 계정에 별명을 지정할 수 있으며, 상세 창의 '…' 메뉴나 메뉴 막대 아이콘의 오른쪽 클릭 메뉴에서 전환한다.
+
+로그인은 시스템 브라우저에서 진행되므로 Google, Microsoft, 기업 SSO, 패스키를 모두 사용할 수 있다. Claude는 Session Key 수동 입력도 지원한다.
+
+### Codex 리셋 예고 (Beta)
+
+OpenAI가 아직 오지 않은 전체 한도 리셋을 예고하면 Codex 열 제목 옆에 배지가 표시되고, 그 밖에는 아무것도 표시되지 않는다. 데이터는 서드파티 커뮤니티 프로젝트 [codex-reset.com](https://codex-reset.com)에서 가져오며 공식 API가 아니다. 설정에서 끌 수 있다.
+
+### 인터페이스 언어
+
+English, 日本語, 简体中文, 繁體中文, 한국어, Français([@mtreize](https://github.com/mtreize)), Deutsch([@schaitl](https://github.com/schaitl)). 기본적으로 시스템 언어를 따른다. 새로운 언어 번역을 환영하며, 방법은 [참여](#-참여)를 참고한다.
 
 ---
 
-## 📸 스크린샷
+## 💾 설치
 
-### 메뉴 바 표시
+### 다운로드
 
-- Claude와 Codex의 메뉴 바 아이콘 및 제한 표시를 아래에 표시합니다
-- 형태와 색상의 이중 표시로 단색 테마에서도 쉽게 식별
+1. [Releases](https://github.com/f-is-h/Usage4Claude/releases)에서 최신 `.dmg`를 내려받아 앱을 '응용 프로그램' 폴더로 드래그한다
+2. 처음 실행하면 Gatekeeper가 차단한다. 허용하는 방법은 [자주 묻는 질문](#-자주-묻는-질문)의 첫 항목을 참고한다
+3. 처음 자격 증명을 읽을 때 키체인 접근 권한을 요청하면 '항상 허용'을 선택한다
 
-| 아이콘 | 5시간 | 7일 | 추가 사용량 | 7일 Opus | 7일 Sonnet | 단색(적응형) |
-|:---:|:---:|:---:|:---:|:---:|:---:|-----|
-| <img src="images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
-| <img src="images/bar.icon.codex@2x.png" width="40" height="40" alt="codex icon"> | <img src="images/bar.5h.codex@2x.png" width="45" height="45" alt="codex 5h ring"> | <img src="images/bar.7d.codex@2x.png" width="45" height="45" alt="codex 7d ring"> | <img src="images/bar.ex.codex@2x.png" width="45" height="45" alt="codex extra ring"> | — | — | <img src="images/bar.mono.b.codex@2x.png" width="auto" height="35" alt="codex mono black"></br> <img src="images/bar.mono.w.codex@2x.png" width="auto" height="35" alt="codex mono white"> |
+macOS 13 (Ventura) 이상이 필요하며, Intel과 Apple 실리콘을 모두 지원한다.
 
-**색상 표시**:
+업데이트는 [Sparkle](https://sparkle-project.org)이 앱 안에서 설치하며, EdDSA 서명 검증을 통과한 업데이트만 설치된다. 현재 Homebrew 설치는 제공하지 않는다.
 
-Claude 현재 색상:
+### 소스에서 빌드
 
-- **5시간 제한(상세 창 포함)**: ![macOS 녹색](https://img.shields.io/badge/macOS_녹색-34C759) → ![macOS 주황](https://img.shields.io/badge/macOS_주황-FF9500) → ![macOS 빨강](https://img.shields.io/badge/macOS_빨강-FF3B30)
-- **7일 제한(상세 창 포함)**: ![연보라](https://img.shields.io/badge/연보라-C084FC) → ![보라](https://img.shields.io/badge/보라-B450F0) → ![진보라](https://img.shields.io/badge/진보라-B41EA0)
-- **추가 사용량**: ![분홍](https://img.shields.io/badge/분홍-FF9ECD) → ![장미](https://img.shields.io/badge/장미-EC4899) → ![마젠타](https://img.shields.io/badge/마젠타-D946EF)
-- **7일 Opus 제한**: ![연주황](https://img.shields.io/badge/연주황-FFC864) → ![호박색](https://img.shields.io/badge/호박색-FBBF24) → ![주황빨강](https://img.shields.io/badge/주황빨강-FF6432)
-- **7일 Sonnet 제한**: ![연파랑](https://img.shields.io/badge/연파랑-64C8FF) → ![파랑](https://img.shields.io/badge/파랑-007AFF) → ![남색](https://img.shields.io/badge/남색-4F46E5)
+Xcode 26 이상이 필요하다.
 
-Codex 현재 색상:
+```bash
+git clone https://github.com/f-is-h/Usage4Claude.git
+cd Usage4Claude
+open Usage4Claude.xcodeproj
+```
 
-- **Codex 5시간 제한**: ![밝은 틸](https://img.shields.io/badge/밝은_틸-2DD4BF) → ![진한 틸](https://img.shields.io/badge/진한_틸-0D9488) → ![가장 진한 틸](https://img.shields.io/badge/가장_진한_틸-134E4A)
-- **Codex 7일 제한**: ![하늘색](https://img.shields.io/badge/하늘색-60A5FA) → ![파랑](https://img.shields.io/badge/파랑-2563EB) → ![진파랑](https://img.shields.io/badge/진파랑-1E3A8A)
-- **Codex 추가 사용량 / credits**: ![금색](https://img.shields.io/badge/금색-F59E0B) → ![진한 금색](https://img.shields.io/badge/진한_금색-D97706) → ![가장 진한 호박색](https://img.shields.io/badge/가장_진한_호박색-78350F)
+Xcode에서 ⌘R을 눌러 실행한다. Swift와 SwiftUI로 작성되었으며, 메뉴 막대와 창 관리에는 AppKit을 사용한다.
 
-### 상세 창
+---
 
-<table border="0">
-<tr>
-<td align="top" valign="top">
-<img src="images/detail.claude.ko@2x.png" width="280" alt="Claude 단독 사용 모드">
-<br/>
-<sub><i>Claude 단독 사용 모드</i></sub>
-</td>
-<td align="center" valign="top">
-<img src="images/detail.codex.ko@2x.png" width="280" alt="Codex 단독 사용 모드">
-<br/>
-<sub><i>Codex 단독 사용 모드</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="images/detail.both.ko@2x.png" width="560" alt="Claude와 Codex 공존 모드">
-<br/>
-<sub><i>Claude + Codex 공존 모드</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="images/detail@2x.gif" width="280" alt="전환 애니메이션">
-<br/>
-<sub><i>남은 시간 전환 애니메이션</i></sub>
-</td>
-</tr>
-</table>
+## 📖 사용법
 
+### 로그인
 
+처음 실행하면 온보딩 창이 열리며, 여기서 Claude와 Codex 모두 로그인할 수 있다. 온보딩은 건너뛸 수 있고, 나중에 '설정 → 계정'에서 추가할 수 있다.
+
+**브라우저 로그인**: 로그인 버튼을 누르면 시스템 브라우저에서 인증 페이지가 열리고, 인증이 끝나면 자동으로 앱으로 돌아온다. 인증 결과는 로컬의 임시 포트로 받는다. 방화벽이 로컬 연결을 차단하면 브라우저가 `localhost` 주소에서 멈추는데, 주소 표시줄의 링크를 로그인 창에 붙여 넣으면 완료된다.
+
+**Session Key 수동 입력**(Claude 전용):
+
+1. 브라우저에서 claude.ai의 사용량 페이지를 연다
+2. 개발자 도구(⌥⌘I)를 열고 '네트워크' 탭으로 전환한 뒤 페이지를 새로고침한다
+3. `usage` 요청을 찾아 요청 헤더의 Cookie에서 `sessionKey=sk-ant-...` 값을 전부 복사한다
+4. 입력란에 붙여 넣는다. Organization ID는 자동으로 가져오며, 같은 Session Key 아래의 여러 조직도 함께 추가된다
+
+### 일상 사용
+
+메뉴 막대 아이콘을 왼쪽 클릭하면 상세 창이, 오른쪽 클릭하면 메뉴가 열린다. 메뉴에는 계정 전환, 설정, 업데이트 확인, Claude와 Codex 서비스 상태 페이지 링크가 있다.
+
+새 버전이 있으면 메뉴 막대 아이콘에 배지가 표시되고, 메뉴의 '업데이트 확인'에도 표시가 붙는다.
 
 ### 설정
 
-**일반** - 표시 옵션, 메뉴 바 테마, 알림 설정, 외관(시스템/라이트/다크), 새로고침 모드, 시간 형식, 언어 옵션, 로그인 시 실행
-**인증** - Claude/Codex 계정 관리(추가/삭제/전환/별명 편집), 내장 브라우저 로그인, Claude 수동 입력, 연결 진단
-**정보** - 버전 정보 및 관련 링크
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/settings.display.ko.dark@2x.png">
+  <img src="images/settings.display.ko.light@2x.png" width="400" alt="설정 창의 표시 탭">
+</picture>
+</div>
 
-### 환영 화면
-
-**인증 정보 구성** - Claude는 내장 브라우저 원클릭 로그인(권장) 또는 Session Key 수동 입력을 지원하고 Organization ID 자동 검색 및 동일 Session Key 하 다중 조직 자동 생성을 제공합니다. Codex는 설정에서 내장 브라우저로 ChatGPT에 로그인해 추가할 수 있습니다
-**표시 옵션 구성** - 메뉴 바 테마, 표시 내용, 표시 모드(스마트/사용자 정의) 선택, 실시간 미리보기 지원
-**나중에 설정** - 환영 화면을 닫고 나중에 설정에서 구성
-
----
-
-## 💾 다운로드 및 설치
-
-### 방법 1: 미리 빌드된 버전 다운로드(권장)
-
-1. [Releases 페이지](https://github.com/f-is-h/Usage4Claude/releases)로 이동
-2. 최신 `.dmg` 파일 다운로드
-3. 더블 클릭하여 열고 앱을 Applications 폴더로 드래그
-4. 첫 실행 시 앱을 우클릭하고 "열기" 선택(서명되지 않은 앱 허용)
-5. 인증 정보 저장을 위한 Keychain 접근 허용(버전 업데이트 후 다시 허용이 필요할 수 있으며, 프롬프트에는 해당 인증 토큰 이름이 표시됩니다)
-
-### 방법 2: 소스에서 빌드
-
-#### 요구사항
-- macOS 13.0 이상
-- Xcode 15.0 이상
-- Git
-
-#### 빌드 단계
-
-```bash
-# 저장소 복제
-git clone https://github.com/f-is-h/Usage4Claude.git
-cd Usage4Claude
-
-# Xcode에서 열기
-open Usage4Claude.xcodeproj
-
-# Xcode에서 Cmd + R로 실행
-```
+| 탭 | 내용 |
+|---|---|
+| **표시** | 메뉴 막대 외관, 제한 유형, 그래프 스타일, 외관, 시간 형식 |
+| **데이터** | 새로고침 모드, 알림 임계값, Codex 리셋 예고 |
+| **계정** | Claude와 Codex 계정, 브라우저 로그인, Session Key 수동 입력, 연결 진단 |
+| **일반** | 인터페이스 언어, 시작 프로그램, 기본 설정 복원 |
+| **정보** | 버전 정보와 관련 링크 |
 
 ---
 
-## 📖 사용 가이드
+## 🔒 개인정보와 보안
 
-### 초기 설정
-
-1. **앱 실행**
-   첫 실행 시 환영 화면이 표시됩니다
-
-2. **인증 정보 구성**
-   - **Claude 방법 1: 브라우저 로그인(권장)**
-     - "브라우저 로그인" 버튼 클릭
-     - 내장 브라우저에서 Claude 계정에 로그인
-     - 로그인 성공 후 Session Key가 자동으로 추출됩니다
-   - **Claude 방법 2: 수동 입력**
-     - 브라우저에서 Claude 사용량 페이지 열기
-     - 개발자 도구 열기(F12 또는 Cmd + Option + I)
-     - "Network" 탭으로 전환, 페이지 새로고침
-     - `usage` 요청을 찾아 Cookie에서 `sessionKey=sk-ant-...` 추출
-     - 입력 필드에 붙여넣기
-   - **Codex 계정(선택 사항)**
-     - 설정 → 인증 열기
-     - Codex의 "브라우저 로그인" 클릭
-     - 내장 브라우저에서 ChatGPT 계정에 로그인
-     - 로그인 성공 후 인증 정보가 자동 저장됩니다
-     - Codex는 현재 Session Key 수동 입력을 지원하지 않습니다
-
-### 일상적인 사용
-
-- **기본 표시** - 메뉴 바에 사용량 백분율 표시
-- **상세 보기** - 메뉴 바 아이콘을 클릭하여 상세 정보 확인. Claude/Codex만 설정한 경우 Claude/Codex 단일 열로, 둘 다 설정한 경우 이중 열 뷰로 표시됩니다
-- **수동 새로고침** - 상세 창에서 새로고침 버튼 클릭 또는 단축키 ⌘R 사용(메인 창 열 때 데이터 자동 새로고침). 이중 열 뷰에서는 Claude / Codex를 각각 새로고침할 수 있습니다
-- **계정 전환** - 상세 창에서 "…" 메뉴 또는 메뉴 바 아이콘 우클릭으로 전환할 Claude / Codex 계정 선택
-- **키보드 단축키**
-  - ⌘R - 수동으로 데이터 새로고침
-  - ⌘, - 일반 설정 열기
-  - ⌘⇧A - 인증 설정 열기
-  - ⌘U - 업데이트 확인
-  - ⌘Q - 앱 종료
-- **업데이트 알림** - 새 버전이 있을 때 메뉴 바 아이콘에 배지 표시, 메뉴 항목에 무지개 텍스트 표시
-- **업데이트 확인** - 메뉴 → 업데이트 확인
-
-### 새로고침 모드
-
-**스마트 빈도(권장)**
-- 사용 패턴에 따라 새로고침 간격 자동 조정
-- 활성 모드(1분) - Claude 또는 Codex를 활발히 사용 중일 때 빠른 새로고침
-- 유휴 모드(3/5/10분) - 유휴 시 점진적으로 새로고침 속도 감소
-- 유휴 기간 동안 API 호출 크게 감소(최대 10배)
-- 사용 감지 시 즉시 1분 새로고침으로 복귀
-- 시스템 절전 해제 후 자동으로 새로고침해 오래된 데이터 표시를 방지
-
-**고정 빈도**
-- **1분** - 일관된 모니터링에 권장
-- **3분** - 균형잡힌 모니터링
-- **5분** - 저빈도 모니터링
-- **10분** - 최소 API 호출
+- 서버가 없으며 데이터는 이 Mac에만 저장된다. 분석이나 원격 측정도 없다
+- 네트워크 요청은 세 가지뿐이다: Claude와 Codex의 로그인 및 사용량 API, Sparkle의 GitHub 업데이트 확인, Codex 리셋 예고를 켰을 때의 codex-reset.com 접속
+- Session Key와 각종 토큰은 키체인에 저장되며 평문으로 저장되지 않는다. API 응답도 디스크 캐시에 기록하지 않는다
+- App Sandbox를 사용한다. 네트워크 접근 외에는 로그인 콜백용 로컬 포트와 Sparkle이 업데이트 설치에 쓰는 시스템 서비스만 연다
+- 진단 보고서는 내보내기 전에 자동으로 마스킹되며, 토큰 등 민감한 항목은 치환된다
+- 소스 코드는 모두 공개되어 있어 누구나 검토할 수 있다
 
 ---
 
 ## ❓ 자주 묻는 질문
 
 <details>
-<summary><b>Q: 앱이 "세션 만료됨"을 표시하면 어떻게 하나요?</b></summary>
+<summary><b>'개발자를 확인할 수 없다'며 열리지 않는다</b></summary>
 
-A: Claude Session Key 또는 Codex 인증 토큰은 주기적으로 만료됩니다(보통 몇 주에서 몇 달). 다시 로그인해야 합니다:
-1. 설정 → 인증 열기
-2. Claude 계정은 "브라우저 로그인"으로 다시 로그인(권장)하거나 수동으로 새 Session Key 가져오기
-3. Codex 계정은 Codex의 "브라우저 로그인"을 클릭하고 내장 브라우저에서 ChatGPT에 다시 로그인
-4. 완료 후 모니터링이 재개됩니다
+앱이 Apple의 공증을 받지 않았으므로 처음 실행할 때 직접 허용해야 한다.
 
-</details>
+- **macOS 15 이상**: 앱을 더블 클릭하고 대화상자에서 '완료'를 클릭한다. 이어서 '시스템 설정 → 개인정보 보호 및 보안'을 열고 페이지 아래쪽의 '그래도 열기'를 클릭한다
+- **macOS 14 이하**: Control 키를 누른 채 앱을 클릭하고 '열기'를 선택한 뒤 대화상자에서 한 번 더 확인한다
 
-<details>
-<summary><b>Q: 시작 시 자동 실행을 활성화하려면?</b></summary>
-
-A: 두 가지 방법이 있습니다:
-
-**방법 1: 내장 옵션 사용(권장)**
-1. 설정 → 일반 열기
-2. "로그인 시 실행" 옵션 체크
-
-**방법 2: 시스템 설정을 통해**
-1. 시스템 설정 → 일반 → 로그인 항목 열기
-2. "+"를 클릭하여 Usage4Claude 추가
+허용은 한 번이면 되고, 이후에는 평소처럼 더블 클릭으로 실행된다. 앱 내 업데이트 후에 다시 할 필요는 없다.
 
 </details>
 
 <details>
-<summary><b>Q: 시스템 리소스를 얼마나 사용하나요?</b></summary>
+<summary><b>업데이트 후 키체인 접근 권한을 다시 묻는다</b></summary>
 
-A: 매우 가볍습니다:
-- CPU 사용률: < 0.1%(유휴 시)
-- 메모리: ~20MB
-- 네트워크: 설정된 스마트 빈도에 따라 새로고침됩니다. Claude와 Codex를 모두 설정한 경우 각 서비스에 별도로 요청합니다
+키체인은 앱의 서명으로 같은 앱인지 판단한다. 이 앱은 자체 서명 인증서를 사용하므로 일부 업데이트 후 시스템이 다시 묻는다. '항상 허용'을 선택하면 된다. 키체인의 자격 증명은 이 앱만 읽을 수 있다.
 
 </details>
 
 <details>
-<summary><b>Q: 어떤 macOS 버전을 지원하나요?</b></summary>
+<summary><b>'요청이 보안 시스템에 의해 차단되었습니다'라고 표시된다</b></summary>
 
-A: macOS 13.0(Ventura) 이상이 필요합니다. Intel 및 Apple Silicon(M1/M2/M3/M4/M5) 칩 모두 지원합니다.
-
-</details>
-
-<details>
-<summary><b>Q: Keychain 권한이 왜 필요한가요?</b></summary>
-
-A:
-- Keychain은 macOS의 시스템 수준 비밀번호 관리자입니다
-- Claude Session Key와 Codex 인증 토큰은 Keychain에 암호화되어 저장됩니다
-- Claude Organization ID는 로컬 구성에 저장(민감하지 않은 식별자)
-- 이것은 Apple이 권장하는 안전한 저장 방법입니다
-- 이 앱만 정보에 액세스할 수 있으며 다른 앱은 볼 수 없습니다
+claude.ai 앞단의 Cloudflare 보호가 요청을 자동화 프로그램으로 판단하면 차단한다. 브라우저에서 claude.ai에 한 번 접속해 사람 확인을 마치면 보통 앱도 복구된다. VPN이나 프록시를 쓰면 더 자주 발생한다. 이 차단은 계정 상태와 무관하므로 다시 로그인할 필요는 없다.
 
 </details>
 
 <details>
-<summary><b>Q: 내 데이터는 안전한가요? 개인정보는 어떻게 보호되나요?</b></summary>
+<summary><b>'세션이 만료되었습니다'라고 표시된다</b></summary>
 
-**완전히 안전합니다!**
-
-**데이터 저장:**
-- 모든 데이터는 **오직** 로컬 Mac에만 저장
-- 정보 수집, 추적, 통계 전혀 없음
-- Claude와 Codex 사용량 관련 API 호출 외 다른 네트워크 요청 없음
-- 타사 서비스 사용 안 함
-
-**인증 보안:**
-- Claude Session Key와 Codex 인증 토큰은 macOS Keychain을 통해 암호화(시스템 수준 암호화)
-- Keychain은 AES-256 암호화 + 하드웨어 보호(T2 / Secure Enclave) 사용
-- 이 앱만 자격 증명에 액세스 가능, 다른 앱은 읽을 수 없음
-- "Keychain Access" 앱을 통해 언제든 액세스 취소 가능
-
-**코드 투명성:**
-- 100% 오픈 소스
-- 난독화 또는 숨겨진 기능 없음
-- 커뮤니티가 감사 및 검증 가능
-
-**추가 보호:**
-- App Sandbox 활성화(시스템 액세스 제한)
-- 파일, 연락처 또는 다른 앱에 대한 액세스 권한 없음
-- 최소 권한(네트워크 + Keychain만)
-
-GitHub에서 소스 코드를 검토하여 이 모든 것을 확인할 수 있습니다!
+Session Key와 로그인 토큰은 주기적으로 만료되며, 주기는 몇 주에서 몇 달이다. '설정 → 계정'에서 다시 로그인하면 된다.
 
 </details>
 
 <details>
-<summary><b>Q: Claude Code / Desktop App / Mobile App에서 작동하나요?</b></summary>
+<summary><b>'요청이 너무 빈번합니다'라고 표시된다</b></summary>
 
-A: **예, 모든 Claude 플랫폼에서 작동합니다!**
-
-모든 Claude 제품(Web, Claude Code, Desktop App, Mobile App, Cowork)이 동일한 사용 할당량을 공유하므로 Usage4Claude는 모든 플랫폼에서의 총 사용량을 모니터링합니다.
-
-다음과 같은 경우에도:
-- 터미널에서 `claude code`로 코딩
-- claude.ai에서 채팅
-- 데스크톱 앱 사용
-- 모바일 앱 사용
-- Cowork 에이전트 사용
-
-메뉴 바에서 실시간 총 사용량을 볼 수 있습니다. 플랫폼별 구성이 필요 없습니다!
+사용량 API의 요청 제한에 걸린 것이다. 앱은 자동으로 백오프한 뒤 잠시 후 다시 시도하며, 그동안 이전 데이터를 계속 표시한다. 수동 새로고침을 반복하면 백오프 시간이 길어진다.
 
 </details>
 
 <details>
-<summary><b>Q: Codex 지원은 어떻게 활성화하나요? Codex만 사용할 수 있나요?</b></summary>
+<summary><b>Codex에 로그인해도 금방 다시 로그인을 요구한다</b></summary>
 
-A: 가능합니다. 설정 → 인증을 열고 Codex의 "브라우저 로그인"을 클릭한 뒤, 내장 브라우저에서 ChatGPT에 로그인하세요.
-
-- Codex만 설정: 메뉴 바와 상세 창에 Codex 사용량이 표시됩니다
-- Claude + Codex: 상세 창에 두 Provider가 나란히 표시됩니다
-- Codex는 현재 브라우저 로그인만 지원하며 Session Key 수동 입력은 지원하지 않습니다
+ChatGPT 계정에서 'Advanced Security'를 켜면 로그인 토큰의 유효 기간이 크게 짧아져 자주 다시 로그인해야 한다. Codex 사용량을 장기간 모니터링하려면 이 옵션을 끄는 것을 고려한다.
 
 </details>
 
 <details>
-<summary><b>Q: 메뉴 바에 아이콘이 보이지 않으면?</b></summary>
+<summary><b>Claude 계정의 사용량을 읽지 못한다</b></summary>
 
-A: macOS 시스템 또는 타사 소프트웨어(Bartender, Hidden Bar 등)가 메뉴 바 아이콘을 자동으로 숨길 수 있습니다.
-
-**해결 방법:**
-1. **Command (⌘) 키** 누르기
-2. 메뉴 바에서 마우스로 아이콘 드래그
-3. Usage4Claude 아이콘을 메뉴 바 오른쪽 보이는 영역으로 드래그
-4. 마우스 놓기
-
-**참고:**
-- macOS Sonoma(14.0+)는 자주 사용하지 않는 아이콘을 자동으로 "제어 센터"에 숨깁니다
-- "시스템 설정" → "제어 센터"에서 메뉴 바 아이콘 표시를 조정할 수 있습니다
+'현재 요금제에서는 사용량 데이터를 제공하지 않습니다'라고 표시되면 해당 계정에는 claude.ai의 사용량 대시보드가 없다. 무료 플랜에는 대시보드가 없으며, Team과 Enterprise는 관리자에게 멤버 사용량 대시보드 활성화를 요청해야 한다. 다시 로그인해도 해결되지 않는다.
 
 </details>
 
 <details>
-<summary><b>Q: 여러 계정을 어떻게 관리하나요?</b></summary>
+<summary><b>메뉴 막대에 아이콘이 보이지 않는다</b></summary>
 
-A: Usage4Claude는 Claude 다중 계정, 동일 Claude 계정 하 다중 조직, 독립적인 Codex 계정 관리를 지원합니다:
-- **계정 추가** - 설정 → 인증에서 Claude 브라우저 로그인, Claude 수동 입력 또는 Codex 브라우저 로그인으로 추가
-- **계정 전환** - 상세 창에서 "…" 메뉴 또는 메뉴 바 아이콘 우클릭으로 전환할 Claude / Codex 계정 선택
-- **별명 편집** - 각 계정에 쉽게 식별할 수 있는 별명 설정
-- **계정 삭제** - 왼쪽 스와이프 또는 편집 모드로 불필요한 계정 제거
+메뉴 막대 공간이 부족하면 macOS가 일부 아이콘을 숨기며, Bartender나 Hidden Bar 같은 도구가 접어 둘 수도 있다. ⌘ 키를 누른 채 메뉴 막대 아이콘을 드래그하면 위치를 바꿀 수 있다.
 
 </details>
 
 <details>
-<summary><b>Q: 사용량 알림을 어떻게 활성화하나요?</b></summary>
+<summary><b>앱이 저절로 종료된다</b></summary>
 
-A: 설정 → 일반에서 Claude 사용량 알림 기능을 켜거나 끌 수 있습니다:
-- **사용량 경고** - Claude 사용량이 90%에 도달하면 시스템 알림 전송
-- **리셋 알림** - Claude 할당량이 재설정되면 알림 전송
-- 처음 활성화 시 macOS 알림 권한 허가 필요
+'설정 → 계정 → 연결 진단'에서 진단 보고서를 내보내 [issue](https://github.com/f-is-h/Usage4Claude/issues)에 첨부한다. 보고서에는 직전 종료가 비정상이었는지에 대한 판정과 최근 로그가 들어 있으며, 내보내기 전에 마스킹된다.
 
 </details>
-
----
-
-## 🛠 기술 스택
-
-최신 macOS 네이티브 기술로 구축:
-
-- **언어**: Swift 5.0+
-- **UI 프레임워크**: SwiftUI + AppKit 하이브리드
-- **아키텍처**: MVVM
-- **네트워킹**: URLSession
-- **반응형**: Combine Framework
-- **현지화**: 내장 i18n 지원
-- **플랫폼**: macOS 13.0+
 
 ---
 
 ## 🗺 로드맵
 
-### ✅ 완료됨
-- [x] 기본 모니터링 기능
-- [x] 메뉴 바 실시간 표시
-- [x] 원형 진행 표시기
-- [x] 스마트 색상 알림
-- [x] 실시간 카운트다운
-- [x] 메뉴 바 다중 표시 모드
-- [x] 시각적 설정 인터페이스
-- [x] 다국어 지원
-- [x] 첫 실행 안내
-- [x] 업데이트 확인 및 시각적 알림
-- [x] Keychain 인증 저장
-- [x] Shell 자동 DMG 패키징
-- [x] GitHub Actions 자동 릴리스
-- [x] 설정 인터페이스 표시 최적화
-- [x] 로그인 시 실행 옵션
-- [x] 키보드 단축키 지원
-- [x] 수동 새로고침 기능
-- [x] 3점 메뉴 다크 모드 적응
-- [x] 이중 제한 모드 지원(5시간 + 7일)
-- [x] 이중 링 메뉴 바 아이콘
-- [x] 통합 색상 체계 관리
-- [x] 디버그 모드(가짜 데이터, 시뮬레이션 업데이트)
-- [x] 상세 창 Focus 상태 제거
-- [x] 다중 제한 유형 지원(5가지)
-- [x] 스마트/사용자 정의 표시 모드
-- [x] Organization ID 자동 검색
-- [x] 최적화된 환영 플로우
-- [x] 단색 테마 아이콘 표시
-- [x] 한국어 지원
-- [x] GitHub Actions 온라인 버전 확인
-- [x] 외관 설정(시스템/라이트/다크)
-- [x] 내장 브라우저 자동 인증
-- [x] 자격 증명 자동 구성
-- [x] 사용량 알림
-- [x] 다중 계정 관리
-- [x] 통합 시간 형식 설정
-- [x] 설정 인터페이스 다크 모드 적응
-- [x] Codex 사용량 모니터링 지원
-- [x] Codex 단독 사용 모드
-- [x] Claude + Codex 이중 열 상세 창
-- [x] Codex 계정 관리 및 브라우저 로그인
-- [x] 프랑스어 현지화
-- [x] 시스템 절전 해제 후 자동 새로고침
+버전별 변경 사항은 [CHANGELOG.md](../CHANGELOG.md)에 기록한다.
 
-### 중기 계획
-1. **기능 추가**
-    - 더 많은 언어 현지화
+**진행 중**: 지속적인 개선과 Issue 해결
 
-### 장기 비전
-2. **더 많은 표시 방법**
-   - 데스크톱 위젯
-   - 브라우저 확장 프로그램 아이콘 사용량 표시
+**검토 중**: 인터페이스 언어 추가, 데스크톱 위젯, 사용량 기록 그래프
 
-3. **데이터 분석**
-   - 사용 기록
-   - 트렌드 차트
+**구현하지 않는 것**
 
-4. **멀티플랫폼 지원**
-   - iOS / iPadOS 버전
-   - Apple Watch 버전
-   - Windows 버전
+- **Claude와 Codex 이외의 서비스.** 메뉴 막대 폭은 한정되어 있어 서비스를 하나 늘릴 때마다 모든 사용자의 메뉴 막대 공간을 차지한다. 이 프로젝트는 두 서비스를 제대로 지원하는 데 집중하며, 범용 사용량 대시보드로 확장하지 않는다.
+- **어떤 형태의 데이터 업로드.** 프로젝트에는 서버가 없으며, 도입할 계획도 없다.
+- **App Store 배포.** 앱이 공개되지 않은 API로 사용량을 읽으므로 App Store 등록 기준에 맞지 않는다.
 
 ---
 
-## 🤝 기여
+## 🤝 참여
 
-모든 형태의 기여를 환영합니다! 새로운 기능, 버그 수정 또는 문서 개선이든.
+Issue와 PR 모두 환영한다. 절차는 [CONTRIBUTING.md](../CONTRIBUTING.md)를 참고한다.
 
-자세한 기여 가이드라인은 [CONTRIBUTING.md](../CONTRIBUTING.md)를 참조하세요.
-
-### 기여 방법
-
-1. 이 저장소 포크
-2. 기능 브랜치 생성(`git checkout -b feature/AmazingFeature`)
-3. 변경 사항 커밋(`git commit -m 'Add some AmazingFeature'`)
-4. 브랜치에 푸시(`git push origin feature/AmazingFeature`)
-5. Pull Request 열기
+**인터페이스 언어 추가**: `Usage4Claude/Resources/en.lproj/Localizable.strings`를 새 `<언어 코드>.lproj` 폴더에 복사하고 값을 번역한다. 각 언어의 키가 일치하는지는 CI가 검사한다.
 
 ### 기여자
 
-이 프로젝트에 기여한 모든 분들께 감사드립니다!
+**코드**
 
-<!-- ALL-CONTRIBUTORS-LIST:START -->
-<!-- 기여자 목록이 자동으로 생성됩니다 -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+<a href="https://github.com/f-is-h/Usage4Claude/graphs/contributors"><img src="images/contributors.code.svg" alt="코드 기여자"></a>
 
----
+**번역**
 
-## 📝 변경 로그
+<img src="images/contributors.translation.svg" alt="번역 기여자">
 
-자세한 버전 기록 및 업데이트 내용은 [CHANGELOG.md](../CHANGELOG.md)를 참조하세요.
+**문제 제보와 기능 제안**
 
----
+<img src="images/contributors.feedback.svg" alt="문제 제보와 기능 제안 기여자">
 
-## 💖 프로젝트 지원
+### 후원
 
-이 프로젝트가 도움이 되었다면 다음 방법으로 지원해 주세요:
-
-### ⭐ 프로젝트에 Star 주기
-Star를 주는 것이 가장 큰 격려입니다!
-
-### ☕ 커피 사주기
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=ko">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1atte">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
-
-### 📢 프로젝트 공유
-이 프로젝트가 마음에 드신다면 더 많은 사람들에게 공유해 주세요!
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=ko"><img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsors"></a>
+<a href="https://ko-fi.com/1atte"><img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi"></a>
 
 ---
 
-## 📄 라이선스
+## 📄 라이선스와 고지
 
-이 프로젝트는 MIT 라이선스에 따라 라이선스가 부여됩니다 - 자세한 내용은 [LICENSE](../LICENSE) 파일 참조
+MIT 라이선스. 자세한 내용은 [LICENSE](../LICENSE)를 참고한다. Copyright © 2025-2026 f-is-h.
 
-```
-MIT License
+이 프로젝트는 독립적인 서드파티 도구로, Anthropic 및 OpenAI와 공식적인 관계가 없다. 사용 시 각 서비스의 약관을 따른다.
 
-Copyright (c) 2025-2026 f-is-h
+코드의 대부분은 Claude와 Codex가 작성했다. 아이콘 디자인은 두 회사의 공식 브랜드를 참고했다.
 
-소프트웨어의 사본을 자유롭게 사용, 복사, 수정, 병합, 게시, 배포, 재라이선스 및/또는 판매할 수 있습니다.
-```
-
----
-
-## 🙏 감사의 말
-
-- Claude/Codex에 감사드립니다 - 대부분의 코드가 AI에 의해 작성되었습니다
-- 모든 기여자와 사용자의 지원에 감사드립니다
-- 아이콘 디자인은 Claude/Codex 공식 브랜딩에서 영감을 받았습니다
-
----
-
-## 📞 연락처
-
-- **Issues**: [문제 또는 제안 제출](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [토론 참여](https://github.com/f-is-h/Usage4Claude/discussions)
-- **GitHub**: [@f-is-h](https://github.com/f-is-h)
-
----
-
-## ⚖️ 면책 조항
-
-이 프로젝트는 Anthropic, Claude AI, OpenAI 또는 Codex와 공식적인 관련이 없는 독립적인 타사 도구입니다. 이 소프트웨어를 사용할 때 관련 서비스 약관을 준수하십시오.
-
----
+문제 제보는 [Issues](https://github.com/f-is-h/Usage4Claude/issues)로, 그 밖의 논의는 [Discussions](https://github.com/f-is-h/Usage4Claude/discussions)로.
 
 <div align="center">
-
-**이 프로젝트가 도움이 되었다면 ⭐ Star를 주세요!**
-
-Made with ❤️ by [f-is-h](https://github.com/f-is-h)
 
 [⬆ 맨 위로](#usage4claude)
 

@@ -4,604 +4,326 @@
 
 <div align="center">
 
-<img src="images/icon@2x.png" width="256" alt="icon">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/hero.zh-CN.dark@2x.png">
+  <img src="images/hero.zh-CN.light@2x.png" width="948" alt="Usage4Claude 的菜单栏图标与详情窗口">
+</picture>
 
 [![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue?style=flat-square)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.0%2B-orange?style=flat-square)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-✓-green?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](../LICENSE)
 [![Release](https://img.shields.io/github/v/release/f-is-h/Usage4Claude?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
-[![Downloads (all assets, all releases)](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Downloads](https://img.shields.io/github/downloads/f-is-h/Usage4Claude/total?style=flat-square)](https://github.com/f-is-h/Usage4Claude/releases)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%99%A5-EA4AAA?style=flat-square&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/f-is-h?frequency=one-time&metadata_project=usage4claude&metadata_source=readme&metadata_placement=header&metadata_lang=zh-cn)
 
-**在菜单栏中优雅地追踪您的 Claude（以及 Codex）订阅用量。**
+**在菜单栏中追踪 Claude 与 Codex 的订阅用量。**
 
-✨ **支持监控所有Claude平台: Web • Claude Code • Desktop • Mobile App • Cowork** ✨
-
-[功能特性](#-功能特性) • [下载安装](#-下载安装) • [使用指南](#-使用指南) • [常见问题](#-常见问题) • [支持项目](#-支持项目)
+[功能](#-功能) · [安装](#-安装) · [使用](#-使用) · [隐私与安全](#-隐私与安全) · [常见问题](#-常见问题) · [参与](#-参与)
 
 </div>
 
 ---
 
-## ✨ 功能特性
+## ✨ 功能
 
-### 🎯 核心功能
+### 监控范围
 
-- **📊 实时监控** - 在菜单栏实时显示 Claude 订阅（Free/Pro/Team/Max）的使用配额，并可选监控 Codex 用量
-- **🎯 多限制支持** - Claude 支持 5小时、7天与额外用量限制，并支持任意数量模型的每周用量（如 Opus、Sonnet、Fable），Codex 支持 5小时、7天与额外用量/credits
-- **🎨 智能显示模式** - 自动检测并显示所有有数据的限制类型
-- **⚙️ 自定义显示** - 手动选择要显示的限制类型，支持任意组合
-- **🎨 智能色彩** - 根据使用率自动变色提醒，不同限制类型拥有各自的色彩方案
-- **🔔 用量通知** - 用量达到 90% 时发送警告通知，配额重置时发送重置通知
-- **👥 多账户管理** - 支持 Claude 多账户 / 同一账户多组织，也支持独立的 Codex 账户管理与快速切换
-- **🧩 Codex 支持** - 可选的 Codex 用量监控；可单独使用 Codex，也可与 Claude 并列显示为双栏视图（在设置中添加 Codex 账户即可启用）
-- **🌐 内置浏览器登录** - Claude 登录自动提取 Session Key；Codex 通过内置浏览器登录 ChatGPT 获取认证信息
-- **🎨 外观设置** - 支持跟随系统 / 浅色 / 深色三种外观模式
-- **🕐 时间格式** - 支持系统默认 / 12小时制 / 24小时制
-- **⏰ 精确计时** - 精确到分的配额重置时间显示
-- **🔄 智能刷新系统** - 智能4级自适应刷新或固定间隔（1/3/5/10分钟）
-- **⚡ 手动刷新** - 点击刷新按钮立即更新数据（10秒防抖保护）
-- **💻 原生体验** - 纯原生 macOS 应用，轻量且优雅
+Claude 和 Codex 可单独或同时配置。各服务的所有入口共享同一额度，菜单栏始终显示其总使用量。
 
-### 🌐 跨平台支持
+| 服务 | 入口 | 限制 |
+|---|---|---|
+| **Claude** | claude.ai、Claude Code、桌面端、手机端、Cowork | 5 小时、7 天、额外用量，以及各模型的每周用量（Opus、Sonnet、Fable 等，以账户实际返回为准） |
+| **Codex** | Codex CLI、IDE 扩展、Codex 网页版 | 5 小时、7 天、credits 余额 |
 
-无缝支持所有Claude产品:
-- 🌐 **Claude.ai** (Web界面)
-- 💻 **Claude Code** (开发者CLI工具)
-- 🖥️ **Desktop App** (macOS/Windows)
-- 📱 **Mobile App** (iOS/Android)
-- 🤝 **Cowork** (AI代理)
+仅配置一项服务时界面为单栏；两项均配置时，详情窗口分为双栏，菜单栏并列显示两者的图标。
 
-所有平台共享同一使用配额，在一个地方监控！
+支持 Claude 的 Pro、Max、Team 与 Enterprise 档位。免费版没有用量看板，无法读取；Team 与 Enterprise 账户需由管理员开启成员用量看板。
 
-### 🧩 Codex 支持
+### 两种图表
 
-- 可单独监控 Codex 用量，也可与 Claude 一起显示
-- 支持 Codex 5小时、7天与额外用量/credits 信息
-- 通过内置浏览器登录 ChatGPT 添加 Codex 账户
-- Claude-only 用户无需额外配置；未添加 Codex 账户时界面保持原有体验
-- **🧪 重置预告（测试版）**：仅当 OpenAI 公开预告了一个尚未到达的全局重置时，才会在 Codex 圆环旁显示一个小徽章——大部分时间不会有任何显示，这是刻意的设计。数据来自第三方社区项目 [codex-reset.com](https://codex-reset.com)，非官方接口；可在设置中关闭
+**圆环图**显示各项限制的已用比例，下方列出重置时间。
 
-### 🎨 个性化
+**节奏图**将各项限制绘制在「已用比例 / 已过时间」坐标上，以对角线表示匀速消耗。位于对角线上方表示消耗快于时间流逝，下方表示仍有余量。周限制可设为只计工作日。
 
-- **🕓 多种显示模式**
-  - 仅显示百分比 - 简洁直观，无须点击即可查看
-  - 仅显示图标 - 低调优雅，点击后显示详细信息
-  - 图标 + 百分比 - 信息完整，视觉定位快速易识别
+两种图表在「设置 → 显示 → 图表样式」中切换。点击限制列表，可在「已用比例与重置时刻」和「可用比例与剩余时间」之间切换。
 
-- **🌍 多语言支持**
-  - English
-  - 日本語
-  - 简体中文
-  - 繁体中文
-  - 한국어
-  - Français（由 [@mtreize](https://github.com/mtreize) 贡献）
-  - Deutsch（由 [@schaitl](https://github.com/schaitl) 贡献）
-  - 更多语言适配中…（欢迎提交本地化 PR！）
+<div align="center">
+<img src="images/detail.toggle@2x.gif" width="606" alt="点击限制列表，在已用与剩余之间切换">
+</div>
 
-### 🔧 便捷功能
+### 菜单栏图标
 
-- **⚙️ 可视化设置** - 无需修改代码，图形化配置所有选项
-- **🆕 智能更新提醒** - 菜单栏徽章和彩虹动画提示新版本
-- **🚀 开机启动选项** - 可选择系统启动时自动运行
-- **⌨️ 快捷键支持** - 常用操作支持键盘快捷键（⌘R | ⌘, | ⌘Q）
-- **👋 友好引导** - 首次启动提供详细的配置向导
-- **… 菜单显示** - 多种菜单打开方式，详情页与右键
-- **🔔 用量通知** - 支持 Claude 用量警告和重置通知，可在设置中开关
-- **🛠️ 调试模式** - 开发者选项：Claude/Codex 假数据测试、模拟更新、即时刷新
+各限制类型有独立的形状与配色，颜色随用量升高而变化。
 
-### 🔒 安全与隐私
+| | 图标 | 5 小时 | 7 天 | 额外用量 | 模型一每周<br>（如 Fable） | 模型二每周<br>（如 Opus、Sonnet） | 单色 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Claude** | <img src="images/bar.icon@2x.png" width="40" alt="Claude 图标"> | <img src="images/bar.5h@2x.png" width="45" alt="5 小时"> | <img src="images/bar.7d@2x.png" width="45" alt="7 天"> | <img src="images/bar.ex@2x.png" width="45" alt="额外用量"> | <img src="images/bar.7do@2x.png" width="45" alt="模型一每周"> | <img src="images/bar.7ds@2x.png" width="45" alt="模型二每周"> | <img src="images/bar.mono.b@2x.png" height="35" alt="单色，浅色菜单栏"><br><img src="images/bar.mono.w@2x.png" height="35" alt="单色，深色菜单栏"> |
+| **Codex** | <img src="images/bar.icon.codex@2x.png" width="40" alt="Codex 图标"> | <img src="images/bar.5h.codex@2x.png" width="45" alt="5 小时"> | <img src="images/bar.7d.codex@2x.png" width="45" alt="7 天"> | <img src="images/bar.ex.codex@2x.png" width="45" alt="credits"> | | | <img src="images/bar.mono.b.codex@2x.png" height="35" alt="单色，浅色菜单栏"><br><img src="images/bar.mono.w.codex@2x.png" height="35" alt="单色，深色菜单栏"> |
 
-- 🏠 **仅本地存储** - 所有数据仅存储在本地，绝不收集和上传任何个人信息
-- 🔐 **Keychain保护** - Claude Session Key 与 Codex 认证令牌使用 Keychain 存储，无明文密钥
-- 📖 **开源透明** - 代码完全公开，任何人都可审计
-- 🛡️ **沙盒防护** - 启用 App Sandbox，增强安全性
+各模型的每周用量按接口返回的顺序依次使用模型一、模型二两种样式，模型名称以账户实际返回为准。菜单栏最多显示前两个模型，详情窗口列出全部模型并交替使用这两种样式。
 
----
+Claude 配色：
 
-## 📸 截图预览
+- **5 小时**：![macOS 绿色](https://img.shields.io/badge/macOS绿色-34C759) → ![macOS 橙色](https://img.shields.io/badge/macOS橙色-FF9500) → ![macOS 红色](https://img.shields.io/badge/macOS红色-FF3B30)
+- **7 天**：![浅紫色](https://img.shields.io/badge/浅紫色-C084FC) → ![紫色](https://img.shields.io/badge/紫色-B450F0) → ![深紫色](https://img.shields.io/badge/深紫色-B41EA0)
+- **额外用量**：![粉色](https://img.shields.io/badge/粉色-FF9ECD) → ![玫红色](https://img.shields.io/badge/玫红色-EC4899) → ![紫红色](https://img.shields.io/badge/紫红色-D946EF)
+- **模型一每周**（如 Fable）：![浅橙色](https://img.shields.io/badge/浅橙色-FFC864) → ![琥珀色](https://img.shields.io/badge/琥珀色-FBBF24) → ![橙红色](https://img.shields.io/badge/橙红色-FF6432)
+- **模型二每周**（如 Opus、Sonnet）：![浅蓝色](https://img.shields.io/badge/浅蓝色-64C8FF) → ![蓝色](https://img.shields.io/badge/蓝色-007AFF) → ![靛蓝色](https://img.shields.io/badge/靛蓝色-4F46E5)
 
-### 菜单栏显示效果
+Codex 配色：
 
-- 以下展示 Claude 与 Codex 的菜单栏图标与限制指示
-- 图形形状与颜色双重指示，保证在单色主题下仍容易识别
+- **5 小时**：![亮松石](https://img.shields.io/badge/亮松石-2DD4BF) → ![深松石](https://img.shields.io/badge/深松石-0D9488) → ![最深松石](https://img.shields.io/badge/最深松石-134E4A)
+- **7 天**：![天空蓝](https://img.shields.io/badge/天空蓝-60A5FA) → ![蓝色](https://img.shields.io/badge/蓝色-2563EB) → ![深蓝](https://img.shields.io/badge/深蓝-1E3A8A)
+- **credits**：![金色](https://img.shields.io/badge/金色-F59E0B) → ![深金色](https://img.shields.io/badge/深金色-D97706) → ![最深琥珀](https://img.shields.io/badge/最深琥珀-78350F)
 
-| 图标 | 5小时 | 7天 | 额外用量 | 7天 Opus | 7天 Sonnet | 单色(自适应) |
-|:---:|:---:|:---:|:---:|:---:|:---:|-----|
-| <img src="images/bar.icon@2x.png" width="40" height="40" alt="icon"> | <img src="images/bar.5h@2x.png" width="45" height="45" alt="5h ring"> | <img src="images/bar.7d@2x.png" width="45" height="45" alt="7d ring"> | <img src="images/bar.ex@2x.png" width="45" height="45" alt="extra ring"> | <img src="images/bar.7do@2x.png" width="45" height="45" alt="7d opus ring"> | <img src="images/bar.7ds@2x.png" width="45" height="45" alt="7d sonnet ring"> | <img src="images/bar.mono.b@2x.png" width="auto" height="35" alt="mono black"></br> <img src="images/bar.mono.w@2x.png" width="auto" height="35" alt="mono white"> |
-| <img src="images/bar.icon.codex@2x.png" width="40" height="40" alt="codex icon"> | <img src="images/bar.5h.codex@2x.png" width="45" height="45" alt="codex 5h ring"> | <img src="images/bar.7d.codex@2x.png" width="45" height="45" alt="codex 7d ring"> | <img src="images/bar.ex.codex@2x.png" width="45" height="45" alt="codex extra ring"> | — | — | <img src="images/bar.mono.b.codex@2x.png" width="auto" height="35" alt="codex mono black"></br> <img src="images/bar.mono.w.codex@2x.png" width="auto" height="35" alt="codex mono white"> |
+单色主题下各限制仍可凭形状区分，并随菜单栏明暗自动反色。菜单栏的明暗由壁纸决定，与系统的浅色 / 深色外观无关。
 
-**颜色指示**：
+| 项目 | 可选值 |
+|---|---|
+| 显示内容 | 仅百分比、仅图标、图标加百分比 |
+| 图标尺寸 | 紧凑、标准、醒目 |
+| 主题 | 彩色通透、彩色背景、单色 |
 
-Claude 当前配色：
+菜单栏默认显示所有有数据的限制，也可在「设置 → 显示 → 限制类型」中改为自定义并单独选择。
 
-- **5小时用量限制（含详情窗口）**：![macOS绿色](https://img.shields.io/badge/macOS绿色-34C759) → ![macOS橙色](https://img.shields.io/badge/macOS橙色-FF9500) → ![macOS红色](https://img.shields.io/badge/macOS红色-FF3B30)
-- **7天用量限制（含详情窗口）**：![浅紫色](https://img.shields.io/badge/浅紫色-C084FC) → ![紫色](https://img.shields.io/badge/紫色-B450F0) → ![深紫色](https://img.shields.io/badge/深紫色-B41EA0)
-- **额外使用量**：![粉色](https://img.shields.io/badge/粉色-FF9ECD) → ![玫红色](https://img.shields.io/badge/玫红色-EC4899) → ![紫红色](https://img.shields.io/badge/紫红色-D946EF)
-- **7天 Opus 用量限制**：![浅橙色](https://img.shields.io/badge/浅橙色-FFC864) → ![琥珀色](https://img.shields.io/badge/琥珀色-FBBF24) → ![橙红色](https://img.shields.io/badge/橙红色-FF6432)
-- **7天 Sonnet 用量限制**：![浅蓝色](https://img.shields.io/badge/浅蓝色-64C8FF) → ![蓝色](https://img.shields.io/badge/蓝色-007AFF) → ![靛蓝色](https://img.shields.io/badge/靛蓝色-4F46E5)
+### 提醒
 
-Codex 当前配色：
+用量达到阈值时发送系统通知，额度重置时同样通知。阈值按类别设置，范围 50% 至 100%，步长 5%。
 
-- **Codex 5小时限制**：![亮松石](https://img.shields.io/badge/亮松石-2DD4BF) → ![深松石](https://img.shields.io/badge/深松石-0D9488) → ![最深松石](https://img.shields.io/badge/最深松石-134E4A)
-- **Codex 7天限制**：![天空蓝](https://img.shields.io/badge/天空蓝-60A5FA) → ![蓝色](https://img.shields.io/badge/蓝色-2563EB) → ![深蓝](https://img.shields.io/badge/深蓝-1E3A8A)
-- **Codex 额外用量 / credits**：![金色](https://img.shields.io/badge/金色-F59E0B) → ![深金色](https://img.shields.io/badge/深金色-D97706) → ![最深琥珀](https://img.shields.io/badge/最深琥珀-78350F)
+| 类别 | 档数 | 默认 |
+|---|---|---|
+| 5 小时 | 1 | 90% |
+| 周限制（含各模型每周用量） | 2 | 75%、90% |
+| 额外用量 / credits | 2 | 75%、90% |
 
-### 详情窗口
+### 刷新
 
-<table border="0">
-<tr>
-<td align="top" valign="top">
-<img src="images/detail.claude.zh-CN@2x.png" width="280" alt="Claude 单独使用模式">
-<br/>
-<sub><i>Claude 单独使用模式</i></sub>
-</td>
-<td align="center" valign="top">
-<img src="images/detail.codex.zh-CN@2x.png" width="280" alt="Codex 单独使用模式">
-<br/>
-<sub><i>Codex 单独使用模式</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="images/detail.both.zh-CN@2x.png" width="560" alt="Claude 和 Codex 共存模式">
-<br/>
-<sub><i>Claude + Codex 共存模式</i></sub>
-</td>
-</tr>
-<tr>
-<td align="center" valign="top" colspan="2">
-<img src="images/detail@2x.gif" width="280" alt="切换动画">
-<br/>
-<sub><i>剩余时间切换动画</i></sub>
-</td>
-</tr>
-</table>
+**智能模式**按用量变化调整频率：有变化时每分钟一次，连续无变化后依次降至 3、5、10 分钟，检测到变化立即恢复。静默期间的请求量约为活跃期的十分之一。
 
+**固定模式**为 1、3、5、10 分钟。
 
+接口限流时自动退避。刷新失败时保留上一次的数据，仅在标题旁标注。系统唤醒与打开详情窗口时自动刷新；点击圆环或图表可手动刷新，带 10 秒防抖。
 
-### 设置界面
+### 账户
 
-**通用设置** - 显示选项、菜单栏主题、通知设置、外观（跟随系统/浅色/深色）、刷新模式、时间格式、语言选项、开机启动
-**认证信息** - Claude/Codex 账户管理（添加/删除/切换/别名编辑）、内置浏览器登录、Claude 手动输入、连接诊断
-**关于** - 版本信息和相关链接
+Claude 支持多账户及同一账户下的多个组织，Codex 账户独立管理。每个账户可设置别名，在详情窗口的「…」菜单或菜单栏图标的右键菜单中切换。
 
-### 欢迎界面
+登录通过系统浏览器完成，Google、Microsoft、企业 SSO 与通行密钥均可使用。Claude 另支持手动填写 Session Key。
 
-**配置认证信息** - Claude 支持内置浏览器一键登录（推荐）或手动输入 Session Key，自动获取 Organization ID，支持同一 Session Key 下的多组织自动创建；Codex 可在设置中通过内置浏览器登录 ChatGPT 添加
-**显示选项配置** - 菜单栏主题、显示内容、显示模式（智能/自定义）选择，支持实时预览
-**稍后设置** - 关闭欢迎窗口，稍后可在设置界面中进行配置
+### Codex 重置预告（测试版）
+
+OpenAI 预告了尚未到来的全局额度重置时，Codex 栏标题旁显示徽章，其余时间不显示。数据来自第三方社区项目 [codex-reset.com](https://codex-reset.com)，非官方接口，可在设置中关闭。
+
+### 界面语言
+
+English、日本語、简体中文、繁體中文、한국어、Français（[@mtreize](https://github.com/mtreize)）、Deutsch（[@schaitl](https://github.com/schaitl)），默认跟随系统语言。欢迎贡献新的本地化，方法见[参与](#-参与)。
 
 ---
 
-## 💾 下载安装
+## 💾 安装
 
-### 方式一：下载预编译版本（推荐）
+### 下载
 
-1. 前往 [Releases 页面](https://github.com/f-is-h/Usage4Claude/releases)
-2. 下载最新版本的 `.dmg` 文件
-3. 双击打开，将应用拖入「应用程序」文件夹
-4. 首次运行时，右键点击应用选择「打开」（需要允许运行未签名应用）
-5. 需要允许使用 Keychain 存储认证信息（版本更新后可能需要再次允许。授权窗口会显示对应的认证令牌名称）
+1. 在 [Releases](https://github.com/f-is-h/Usage4Claude/releases) 下载最新的 `.dmg`，将应用拖入「应用程序」文件夹
+2. 首次打开会被 Gatekeeper 拦截，放行方法见[常见问题](#-常见问题)第一条
+3. 首次读取凭据时授予钥匙串访问权限，选择「始终允许」
 
-### 方式二：从源码构建
+系统要求 macOS 13 (Ventura) 及以上，支持 Intel 与 Apple 芯片。
 
-#### 前置要求
-- macOS 13.0 或更高版本
-- Xcode 15.0 或更高版本
-- Git
+安装后由 [Sparkle](https://sparkle-project.org) 在应用内更新，更新包经 EdDSA 签名校验后安装。目前不提供 Homebrew 安装方式。
 
-#### 构建步骤
+### 从源码构建
+
+需要 Xcode 26 及以上。
 
 ```bash
-# 克隆仓库
 git clone https://github.com/f-is-h/Usage4Claude.git
 cd Usage4Claude
-
-# 在 Xcode 中打开
 open Usage4Claude.xcodeproj
-
-# 在 Xcode 中按 Cmd + R 运行
 ```
+
+在 Xcode 中按 ⌘R 运行。技术栈为 Swift 与 SwiftUI，菜单栏与窗口管理部分使用 AppKit。
 
 ---
 
-## 📖 使用指南
+## 📖 使用
 
-### 首次配置
+### 登录
 
-1. **启动应用**
-   首次运行会显示欢迎界面
+首次启动打开引导窗口，Claude 与 Codex 均可在此登录。引导可跳过，之后在「设置 → 账号」中添加。
 
-2. **配置认证信息**
-   - **Claude 方式一：浏览器登录（推荐）**
-     - 点击「浏览器登录」按钮
-     - 在内置浏览器中登录 Claude 账户
-     - 登录成功后自动提取 Session Key 并完成配置
-   - **Claude 方式二：手动输入**
-     - 打开浏览器访问 Claude 用量页面
-     - 打开开发者工具（F12 或 Cmd + Option + I）
-     - 切换到「网络」标签，刷新页面
-     - 找到 `usage` 请求，从 Cookie 中提取 `sessionKey=sk-ant-...`
-     - 粘贴到输入框
-   - **Codex 账户（可选）**
-     - 打开设置 → 认证信息
-     - 点击 Codex 的「浏览器登录」
-     - 在内置浏览器中登录 ChatGPT 账户
-     - 登录成功后自动保存认证信息
-     - Codex 目前不支持手动输入 Session Key
+**浏览器登录**：点击登录按钮，系统浏览器打开授权页，授权完成后自动返回应用。授权回调由本机的临时端口接收；若防火墙拦截了本机连接，浏览器会停留在 `localhost` 地址，将地址栏中的链接粘贴到登录窗口即可完成。
+
+**手动填写 Session Key**（仅 Claude）：
+
+1. 在浏览器中打开 claude.ai 的用量页面
+2. 打开开发者工具（⌥⌘I），切换到「网络」标签后刷新页面
+3. 找到 `usage` 请求，从请求头的 Cookie 中复制 `sessionKey=sk-ant-...` 的完整值
+4. 粘贴至输入框。Organization ID 自动获取，同一 Session Key 下的多个组织一并添加
 
 ### 日常使用
 
-- **默认显示** - 菜单栏图标显示使用量百分比
-- **查看详情** - 点击菜单栏图标即可查看详情；仅配置 Claude/Codex 时显示 Claude/Codex 单列，同时配置 Claude 与 Codex 时显示双栏视图
-- **手动刷新** - 详情窗口点击刷新按钮或使用快捷键 ⌘R（打开主界面时也会自动刷新数据）；双栏视图中也可分别刷新 Claude 或 Codex
-- **切换账户** - 在详情窗口点击「…」菜单或右键点击菜单栏图标，选择要切换的 Claude / Codex 账户
-- **快捷键操作**
-  - ⌘R - 手动刷新数据
-  - ⌘, - 打开通用设置
-  - ⌘⇧A - 打开认证设置
-  - ⌘U - 检查更新
-  - ⌘Q - 退出应用
-- **更新提醒** - 有新版本时菜单栏图标显示徽章，菜单项显示彩虹文字
-- **检查更新** - 菜单 → 检查更新
+左键点击菜单栏图标打开详情窗口，右键打开菜单。菜单中包含账户切换、设置、检查更新，以及 Claude 与 Codex 服务状态页的入口。
 
-### 刷新模式
+有新版本时，菜单栏图标显示徽章，菜单中的「检查更新」同时标注。
 
-**智能频率（推荐）**
-- 根据使用情况自动调整刷新间隔
-- 活跃模式（1分钟）- 正在使用 Claude 或 Codex 时快速刷新
-- 静默模式（3/5/10分钟）- 静默时逐步减慢刷新
-- 静默期间显著减少 API 调用（最多10倍）
-- 检测到使用变化后立即恢复到1分钟刷新
-- 系统从睡眠唤醒后会自动重新刷新，避免长时间停留在旧数据
+### 设置
 
-**固定频率**
-- **1分钟** - 推荐的持续监控
-- **3分钟** - 平衡监控
-- **5分钟** - 低频监控
-- **10分钟** - 最少 API 调用
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/settings.display.zh-CN.dark@2x.png">
+  <img src="images/settings.display.zh-CN.light@2x.png" width="400" alt="设置窗口的显示标签页">
+</picture>
+</div>
+
+| 标签 | 内容 |
+|---|---|
+| **显示** | 菜单栏外观、限制类型、图表样式、外观模式、时间格式 |
+| **数据** | 刷新模式、提醒阈值、Codex 重置预告 |
+| **账号** | Claude 与 Codex 账户、浏览器登录、手动填写 Session Key、连接诊断 |
+| **通用** | 界面语言、开机启动、恢复默认设置 |
+| **关于** | 版本信息与相关链接 |
+
+---
+
+## 🔒 隐私与安全
+
+- 无服务端，数据仅保存在本机，无统计与遥测
+- 网络请求仅限三类：Claude 与 Codex 的登录及用量接口、Sparkle 从 GitHub 检查更新、开启 Codex 重置预告时访问 codex-reset.com
+- Session Key 与各类令牌存入钥匙串，不以明文存储；接口响应不写入磁盘缓存
+- 启用 App Sandbox，除网络访问外，仅开放登录回调所需的本机端口与 Sparkle 安装更新所需的系统服务
+- 诊断报告导出前自动脱敏，令牌等敏感字段会被替换
+- 源代码完全公开，可自行审计
 
 ---
 
 ## ❓ 常见问题
 
 <details>
-<summary><b>Q: 应用显示"会话已过期"怎么办？</b></summary>
+<summary><b>无法打开，提示无法验证开发者</b></summary>
 
-A: Claude Session Key 或 Codex 认证令牌会定期过期（通常几周到几个月），需要重新登录：
-1. 打开设置 → 认证信息
-2. Claude 账户可点击「浏览器登录」重新登录（推荐），也可按照手动方式重新获取 Session Key
-3. Codex 账户请点击 Codex 的「浏览器登录」，在内置浏览器中重新登录 ChatGPT
-4. 完成后即可恢复正常
+应用未经 Apple 公证，首次打开需手动放行：
 
-</details>
+- **macOS 15 及以上**：双击应用，在弹窗中点击「完成」，再前往「系统设置 → 隐私与安全性」，在页面底部点击「仍要打开」
+- **macOS 14 及以下**：按住 Control 点击应用，选择「打开」，在弹窗中再次确认
 
-<details>
-<summary><b>Q: 如何让应用开机自动启动？</b></summary>
-
-A: 有两种方式：
-
-**方式一：使用应用内置选项（推荐）**
-1. 打开设置 → 通用设置
-2. 勾选「开机时启动」选项
-
-**方式二：通过系统设置**
-1. 打开「系统设置」→「通用」→「登录项」
-2. 点击「+」添加 Usage4Claude
+放行一次即可，此后正常双击启动，应用内更新无需重复操作。
 
 </details>
 
 <details>
-<summary><b>Q: 应用占用多少系统资源？</b></summary>
+<summary><b>更新后再次请求钥匙串权限</b></summary>
 
-A: 非常轻量：
-- CPU 使用率：< 0.1%（空闲时）
-- 内存占用：约 20MB
-- 网络请求：默认按智能频率刷新；同时配置 Claude 与 Codex 时会分别请求对应服务
+钥匙串依据应用签名判断身份。本应用使用自签名证书，部分版本更新后系统会重新询问，选择「始终允许」即可。钥匙串中的凭据仅本应用可读取。
 
 </details>
 
 <details>
-<summary><b>Q: 支持哪些 macOS 版本？</b></summary>
+<summary><b>提示「请求被安全系统拦截」</b></summary>
 
-A: 需要 macOS 13.0 (Ventura) 或更高版本。支持 Intel 和 Apple Silicon (M1/M2/M3/M4/M5) 芯片。
-
-</details>
-
-<details>
-<summary><b>Q: 为什么需要 Keychain 权限？</b></summary>
-
-A:
-- Keychain 是 macOS 的系统级密码管理器
-- Claude Session Key 与 Codex 认证令牌会被加密存储在 Keychain 中
-- Claude Organization ID 存储在本地配置中（非敏感标识符）
-- 这是 Apple 推荐的最安全的敏感信息存储方式
-- 只有本应用可以访问这些信息，其它应用无权查看
+claude.ai 前置的 Cloudflare 防护判定请求来自自动化程序时会拦截。在浏览器中访问一次 claude.ai 并完成人机验证，应用通常即可恢复。使用 VPN 或代理时更易触发。此类拦截与账户状态无关，无需重新登录。
 
 </details>
 
 <details>
-<summary><b>Q: 我的数据安全吗？隐私如何保护？</b></summary>
+<summary><b>提示「会话已过期」</b></summary>
 
-**完全安全！**
-
-**数据存储：**
-- 所有数据**仅**存储在您本地 Mac 上
-- 不收集、不追踪、不统计任何信息
-- 除了调用 Claude 与 Codex 相关用量接口外无其他网络请求
-- 不使用任何第三方服务
-
-**认证信息安全：**
-- Claude Session Key 与 Codex 认证令牌通过 macOS Keychain 加密（系统级加密）
-- Keychain 使用 AES-256 加密 + 硬件保护（T2 / Secure Enclave）
-- 仅本应用可访问您的凭证，其他应用无法读取
-- 您可随时通过"钥匙串访问"应用撤销权限
-
-**代码透明性：**
-- 100% 开源
-- 无混淆或隐藏功能
-- 社区可审计和验证
-
-**额外保护：**
-- 启用 App Sandbox（限制系统访问）
-- 无权访问您的文件、通讯录或其他应用
-- 最小化权限（仅网络 + Keychain）
-
-您可以通过GitHub查看源代码来验证这一切！
+Session Key 与登录令牌会定期失效，周期为数周至数月。在「设置 → 账号」中重新登录即可。
 
 </details>
 
 <details>
-<summary><b>Q: 是否支持 Claude Code / Desktop App / Mobile App?</b></summary>
+<summary><b>提示「请求过于频繁」</b></summary>
 
-A: **是的，支持所有Claude平台！**
-
-由于所有Claude产品 (Web, Claude Code, Desktop App, Mobile App, Cowork) 共享同一使用配额，Usage4Claude会监控您在所有平台上的总使用量。
-
-无论您是:
-- 在终端使用 `claude code` 编程
-- 在 claude.ai 聊天
-- 使用桌面应用
-- 使用手机应用
-- 使用 Cowork 协作
-
-您都能在菜单栏中看到实时的总使用量。无需特定平台的配置！
+用量接口触发了限流保护。应用会自动退避并稍后重试，期间保留上一次的数据。反复手动刷新会延长退避时间。
 
 </details>
 
 <details>
-<summary><b>Q: Codex 支持如何启用？可以只用 Codex 吗？</b></summary>
+<summary><b>Codex 登录后很快失效</b></summary>
 
-A: 可以。打开设置 → 认证信息，点击 Codex 的「浏览器登录」，在内置浏览器中登录 ChatGPT 后即可启用。
-
-- 只配置 Codex：菜单栏和详情窗口会显示 Codex 用量
-- 同时配置 Claude 与 Codex：详情窗口会以双栏视图并列显示两者
-- Codex 目前仅支持浏览器登录，不支持手动输入 Session Key
+ChatGPT 账户开启「Advanced Security」后，登录令牌的有效期大幅缩短，需频繁重新登录。如需长期监控 Codex 用量，可考虑关闭该选项。
 
 </details>
 
 <details>
-<summary><b>Q: 菜单栏看不到图标怎么办？</b></summary>
+<summary><b>Claude 账户读不到用量</b></summary>
 
-A: macOS 系统或第三方软件（如 Bartender、Hidden Bar 等）有时会自动隐藏菜单栏图标。
-
-**解决方法：**
-1. 按住 **Command (⌘) 键**
-2. 用鼠标拖动菜单栏中的图标
-3. 将 Usage4Claude 图标拖到菜单栏右侧可见区域
-4. 松开鼠标即可
-
-**提示：**
-- macOS Sonoma (14.0+) 会自动隐藏不常用的图标到"控制中心"
-- 您可以在「系统设置」→「控制中心」中调整菜单栏图标显示
+应用提示「当前账号套餐不提供用量数据」时，说明该账户在 claude.ai 上没有用量看板。免费版没有用量看板；Team 与 Enterprise 账户请联系管理员开启成员用量看板。重新登录无法解决此问题。
 
 </details>
 
 <details>
-<summary><b>Q: 如何管理多个账户？</b></summary>
+<summary><b>菜单栏看不到图标</b></summary>
 
-A: Usage4Claude 支持 Claude 多账户、同一 Claude 账户下的多组织，以及独立的 Codex 账户管理：
-- **添加账户** - 在设置 → 认证信息中通过 Claude 浏览器登录、Claude 手动输入或 Codex 浏览器登录添加
-- **切换账户** - 在详情窗口点击「…」菜单或右键点击菜单栏图标，选择要切换的 Claude / Codex 账户
-- **编辑别名** - 为每个账户设置易于辨识的别名
-- **删除账户** - 左滑或通过编辑模式移除不需要的账户
+菜单栏空间不足时 macOS 会隐藏部分图标，Bartender、Hidden Bar 等工具也可能将其收起。按住 ⌘ 拖动菜单栏图标可调整位置。
 
 </details>
 
 <details>
-<summary><b>Q: 如何开启用量通知？</b></summary>
+<summary><b>应用无故退出</b></summary>
 
-A: 在设置 → 通用设置中可以开关 Claude 用量通知功能：
-- **用量警告** - 当 Claude 使用量达到 90% 时发送系统通知
-- **重置通知** - 当 Claude 配额重置时发送通知提醒
-- 首次开启时需要授权 macOS 通知权限
+在「设置 → 账号 → 连接诊断」中导出诊断报告，附于 [issue](https://github.com/f-is-h/Usage4Claude/issues) 中。报告包含上次是否异常退出的判定与近期日志，导出前已脱敏。
 
 </details>
-
----
-
-## 🛠 技术栈
-
-本项目采用现代 macOS 原生技术栈构建：
-
-- **语言**: Swift 5.0+
-- **UI 框架**: SwiftUI + AppKit 混合
-- **架构**: MVVM
-- **网络**: URLSession
-- **响应式**: Combine Framework
-- **本地化**: 内置 i18n 支持
-- **平台**: macOS 13.0+
 
 ---
 
 ## 🗺 路线图
 
-### ✅ 已完成
-- [x] 基础监控功能
-- [x] 菜单栏实时显示
-- [x] 圆形进度指示器
-- [x] 智能颜色提醒
-- [x] 实时倒计时
-- [x] 菜单栏多种显示模式
-- [x] 可视化设置界面
-- [x] 多语言支持
-- [x] 首次启动引导
-- [x] 更新检查与视觉提醒
-- [x] 认证信息 Keychain 存储
-- [x] Shell 自动打包 DMG
-- [x] GitHub Actions 自动发布
-- [x] 设置界面显示优化
-- [x] 开机启动选项
-- [x] 快捷键支持
-- [x] 手动刷新功能
-- [x] 三点菜单暗黑模式适配
-- [x] 双限制模式支持（5小时 + 7天）
-- [x] 双圆环菜单栏图标
-- [x] 统一配色方案管理
-- [x] 调试模式（假数据、模拟更新）
-- [x] 详情窗口 去除Focus 状态
-- [x] 多限制类型支持（5种）
-- [x] 智能/自定义显示模式
-- [x] 自动获取 Organization ID
-- [x] 优化的欢迎流程
-- [x] 单色主题图标显示
-- [x] 韩语支持
-- [x] GitHub Actions 检查在线版本
-- [x] 外观设置（跟随系统/浅色/深色）
-- [x] 内置浏览器自动获取认证信息
-- [x] 认证信息自动设置
-- [x] 用量通知提醒
-- [x] 多账户管理
-- [x] 统一时间格式设置
-- [x] 设置界面暗黑模式适配
-- [x] Codex 用量监控支持
-- [x] Codex 单独使用模式
-- [x] Claude + Codex 双栏详情窗口
-- [x] Codex 账户管理与浏览器登录
-- [x] 法语本地化
-- [x] 系统睡眠唤醒后自动刷新数据
+各版本的改动记录于 [CHANGELOG.md](../CHANGELOG.md)。
 
-### 中期计划
-1. **功能增加**
-    - 更多语言本地化
+**正在进行**：持续优化与 Issue 解决
 
-### 长期愿景
-2. **更多显示方式**
-   - 桌面小组件
-   - 浏览器插件图标用量显示
+**考虑中**：更多界面语言、桌面小组件、历史用量图表
 
-3. **数据分析**
-   - 历史使用记录
-   - 趋势图表展示
+**不会实现**
 
-4. **多平台支持**
-   - iOS / iPadOS 版本
-   - Apple Watch 版本
-   - Windows 版本
+- **Claude 与 Codex 之外的服务。** 菜单栏宽度有限，每增加一家服务商都会占用所有用户的菜单栏空间。本项目专注于做好这两家，不扩展为通用的用量面板。
+- **任何形式的数据上传。** 项目没有服务端，也不计划引入。
+- **上架 App Store。** 应用通过未公开的接口读取用量，不符合 App Store 的上架规定。
 
 ---
 
-## 🤝 贡献
+## 🤝 参与
 
-欢迎所有形式的贡献！无论是新功能、Bug 修复还是文档改进。
+Issue 与 PR 均欢迎，流程见 [CONTRIBUTING.md](../CONTRIBUTING.md)。
 
-详细的贡献指南，请参阅 [CONTRIBUTING.md](../CONTRIBUTING.md)。
-
-### 如何贡献
-
-1. Fork 本仓库
-2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启一个 Pull Request
+**新增界面语言**：将 `Usage4Claude/Resources/en.lproj/Localizable.strings` 复制到新的 `<语言代码>.lproj` 目录并翻译其中的值。CI 会校验各语言的键是否一致。
 
 ### 贡献者
 
-感谢所有为这个项目做出贡献的人！
+**代码**
 
-<!-- ALL-CONTRIBUTORS-LIST:START -->
-<!-- 这里将自动生成贡献者列表 -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+<a href="https://github.com/f-is-h/Usage4Claude/graphs/contributors"><img src="images/contributors.code.svg" alt="代码贡献者"></a>
 
----
+**翻译**
 
-## 📝 更新日志
+<img src="images/contributors.translation.svg" alt="翻译贡献者">
 
-详细的版本历史和更新内容，请参阅 [CHANGELOG.md](../CHANGELOG.md)。
+**问题反馈与功能提议**
 
----
+<img src="images/contributors.feedback.svg" alt="问题反馈与功能提议的贡献者">
 
-## 💖 支持项目
+### 支持
 
-如果这个项目对您有帮助，欢迎通过以下方式支持：
-
-### ⭐ Star 项目
-给项目一个 Star 是对我最大的鼓励！
-
-### ☕ 请我喝杯咖啡
-
-<!-- GitHub Sponsors -->
-<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=zh-cn">
-  <img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsor">
-</a>
-
-<!-- Ko-fi -->
-<a href="https://ko-fi.com/1atte">
-  <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi">
-</a>
-
-<!-- Buy Me A Coffee -->
-<!-- <a href="https://buymeacoffee.com/fish_">
-  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee">
-</a> -->
-
-### 📢 分享项目
-如果您喜欢这个项目，请分享给更多可能需要的人！
+<a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=readme&amp;metadata_placement=badge&amp;metadata_lang=zh-cn"><img src="https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?style=for-the-badge&logo=github" alt="GitHub Sponsors"></a>
+<a href="https://ko-fi.com/1atte"><img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=ko-fi" alt="Ko-fi"></a>
 
 ---
 
-## 📄 许可证
+## 📄 许可与声明
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](../LICENSE) 文件
+MIT 许可证，详见 [LICENSE](../LICENSE)。Copyright © 2025-2026 f-is-h。
 
-```
-MIT License
+本项目为独立的第三方工具，与 Anthropic、OpenAI 无官方关联，使用时请遵守相应服务的条款。
 
-Copyright (c) 2025-2026 f-is-h
+项目的大部分代码由 Claude 与 Codex 编写，图标设计参考了两家的官方品牌形象。
 
-您可以自由地使用、复制、修改、合并、发布、分发、再许可和/或销售本软件的副本。
-```
-
----
-
-## 🙏 致谢
-
-- 感谢 Claude/Codex 大部分代码均由 AI 编写
-- 感谢所有贡献者和用户的支持
-- 图标设计灵感来自 Claude/Codex 官方品牌
-
----
-
-## 📞 联系方式
-
-- **Issues**: [提交问题或建议](https://github.com/f-is-h/Usage4Claude/issues)
-- **Discussions**: [参与讨论](https://github.com/f-is-h/Usage4Claude/discussions)
-- **GitHub**: [@f-is-h](https://github.com/f-is-h)
-
----
-
-## ⚖️ 免责声明
-
-本项目是一个独立的第三方工具，与 Anthropic、Claude AI、OpenAI 或 Codex 没有官方关联。使用本软件时请遵守相关服务条款。
-
----
+问题反馈见 [Issues](https://github.com/f-is-h/Usage4Claude/issues)，其他讨论见 [Discussions](https://github.com/f-is-h/Usage4Claude/discussions)。
 
 <div align="center">
-
-**如果这个项目对您有帮助，请给一个 ⭐ Star！**
-
-Made with ❤️ by [f-is-h](https://github.com/f-is-h)
 
 [⬆ 回到顶部](#usage4claude)
 
