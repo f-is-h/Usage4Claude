@@ -506,7 +506,7 @@ MenuBarIconRenderer.swift (614 行)
 
 - [CODE_COMMENT_GUIDELINES.md](CODE_COMMENT_GUIDELINES.md) - 代码注释规范
 - [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - 项目总结
-- [计划文件](/Users/iMac/.claude/plans/vivid-sprouting-graham.md) - 详细执行计划
+- 计划文件：`~/.claude/plans/vivid-sprouting-graham.md`（本机文件，未入库）- 详细执行计划
 
 ---
 

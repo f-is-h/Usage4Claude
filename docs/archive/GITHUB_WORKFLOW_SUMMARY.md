@@ -510,7 +510,7 @@ release (ubuntu, ~1min) [仅main分支]
 
 ```bash
 # 1. 在项目根目录执行
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 
 # 2. 将.p12转换为base64
 base64 -i Usage4Claude-CodeSigning.p12 -o cert_base64.txt
@@ -615,7 +615,7 @@ ls -l scripts/
 **步骤**:
 
 ```bash
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 
 # 1. 测试版本提取（从CHANGELOG）
 .github/scripts/verify_version.sh extract-changelog CHANGELOG.md
@@ -1171,7 +1171,7 @@ security: SecKeychainItemImport: The specified item already exists in the keycha
 **解决方案**:
 ```bash
 # 1. 重新生成base64证书
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 base64 -i Usage4Claude-CodeSigning.p12 -o cert_new.txt
 
 # 2. 更新GitHub Secrets

@@ -15,7 +15,7 @@
 - 使用 `bash_tool` 执行文件操作命令（如 `cp`, `mv`, `rm`, `mkdir`, `touch`, `chmod`）
 - 使用 `bash_tool` 执行文件搜索命令（如 `find`, `locate`, `ls`）
 
-**原因：** bash_tool 运行在隔离容器环境中（/home/claude），无法访问用户的真实文件系统（如 /Users/iMac/Coding）。
+**原因：** bash_tool 运行在隔离容器环境中（/home/claude），无法访问用户的真实文件系统（如 `/Users/<用户名>/`）。
 
 **例外：** 你可以使用 bash_tool 执行以下操作：
 - 运行程序和脚本（`npm run`, `python script.py`, `node app.js`）
@@ -94,7 +94,7 @@ Filesystem:edit_file({
 
 **你必须：**
 1. **始终使用绝对路径**
-   - 正确：`/Users/iMac/Coding/Projects/Usage4Claude/src/App.tsx`
+   - 正确：`/Users/<用户名>/Coding/Projects/Usage4Claude/src/App.tsx`
    - 错误：`./src/App.tsx`, `../Usage4Claude/src/App.tsx`
 
 2. **直接使用 `search_files`，不要先 list 再过滤**

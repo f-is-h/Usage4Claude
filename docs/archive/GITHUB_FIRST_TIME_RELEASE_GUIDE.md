@@ -57,7 +57,7 @@ git config --global --list
 在项目目录打开终端：
 
 ```bash
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 ```
 
 #### 1.1 修改 ClaudeAPIService.swift
@@ -101,7 +101,7 @@ print("Decoding error: \(error)")
 
 ### 步骤 2：添加免责声明到 README
 
-**编辑文件：** `/Users/iMac/Coding/Projects/Usage4Claude/README.md`
+**编辑文件：** `/path/to/Usage4Claude/README.md`
 
 在文件最底部（`Contact` 部分之后）添加：
 
@@ -137,7 +137,7 @@ git status --ignored | grep .p12
 
 ```bash
 # 确保在项目根目录
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 
 # 初始化 Git 仓库
 git init
@@ -148,7 +148,7 @@ git status
 
 **预期输出：**
 ```
-Initialized empty Git repository in /Users/iMac/Coding/Projects/Usage4Claude/.git/
+Initialized empty Git repository in /path/to/Usage4Claude/.git/
 ```
 
 ### 步骤 5：添加文件到 Git
@@ -446,7 +446,7 @@ GitHub 会自动生成预览，但效果一般。
 
 **确认 DMG 位置：**
 ```bash
-ls -lh /Users/iMac/Coding/Projects/Usage4Claude/build/Usage4Claude1.0.0/Usage4Claude-v1.0.0.dmg
+ls -lh /path/to/Usage4Claude/build/Usage4Claude1.0.0/Usage4Claude-v1.0.0.dmg
 ```
 
 **检查文件大小：**（应该在 10-30MB 之间）

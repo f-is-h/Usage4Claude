@@ -111,7 +111,7 @@ Cmd + R
 **手工编写发版 Commit Message：**
 
 ```bash
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 
 # 添加所有改动
 git add .

@@ -57,7 +57,7 @@
 
 ```bash
 # 切换到项目目录
-cd /Users/iMac/Coding/Projects/Usage4Claude
+cd /path/to/Usage4Claude
 
 # 查看当前状态
 git status
@@ -112,7 +112,7 @@ git diff
 
 ### 步骤 4：编辑 CHANGELOG.md
 
-**文件位置：** `/Users/iMac/Coding/Projects/Usage4Claude/CHANGELOG.md`
+**文件位置：** `/path/to/Usage4Claude/CHANGELOG.md`
 
 在文件顶部添加新版本记录（**保持 Keep a Changelog 格式**）：
 
@@ -247,7 +247,7 @@ To https://github.com/f-is-h/Usage4Claude.git
 
 **最终文件：**
 ```
-/Users/iMac/Coding/Projects/Usage4Claude/build/Usage4Claude-1.0.1/Usage4Claude-v1.0.1.dmg
+/path/to/Usage4Claude/build/Usage4Claude-1.0.1/Usage4Claude-v1.0.1.dmg
 ```
 
 ### 步骤 9：准备 Release Notes
