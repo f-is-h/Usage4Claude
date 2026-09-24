@@ -314,27 +314,10 @@ struct UnifiedLimitRow: View {
     }
 
     private var iconColor: Color {
-        switch type {
-        case .fiveHour:
-            return .green
-        case .sevenDay:
-            return .purple
-        case .opusWeekly:
-            return .orange
-        case .sonnetWeekly:
-            return .blue
-        case .extraUsage:
-            return .pink
-        case .codexPrimary:
-            return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)   // #2DD4BF
-        case .codexSecondary:
-            return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)   // #60A5FA
-        case .codexExtraUsage:
-            // 只有「充足」和「已耗尽」两色，没有中间档——见 codexExtraUsageBadgeColor
-            return UsageColorScheme.codexExtraUsageBadgeColorSwiftUI(
-                isExhausted: codexData?.extraUsage?.isExhausted ?? false
-            )
-        }
+        UsageColorScheme.identityColorSwiftUI(
+            for: type,
+            codexExtraUsageExhausted: codexData?.extraUsage?.isExhausted ?? false
+        )
     }
 
     /// Codex 额外用量的图标里画余额点数，不画百分比

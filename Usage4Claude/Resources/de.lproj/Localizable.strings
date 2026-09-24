@@ -56,6 +56,7 @@
 "settings.general.menubar_hint" = "Legt fest, was in der Menüleiste angezeigt wird";
 "settings.general.menubar_theme" = "Menüleisten-Theme";
 "settings.general.menubar_icon_size" = "Symbolgröße";
+"settings.general.menubar_color_mode" = "Symbolfarben";
 "settings.general.display_content" = "Angezeigter Inhalt";
 "settings.general.monochrome_no_icon_hint" = "Die Symbolanzeige wird im einfarbigen Theme nicht unterstützt";
 "settings.general.refresh_section" = "Aktualisierungseinstellungen";
@@ -73,6 +74,10 @@
 "icon_style.color_translucent_desc" = "Farbige Ringe ohne Hintergrund; die Zahlen passen sich automatisch an die helle oder dunkle Menüleiste an";
 "icon_style.color_with_background_desc" = "Legt eine dünne Fläche hinter die Ringe – für unruhige Hintergrundbilder, auf denen die Zahlen schwer zu erkennen sind";
 "icon_style.monochrome_desc" = "Passt sich automatisch dem Stil der System-Menüleiste an, schlicht und elegant";
+"menubar_color.usage_level" = "Nach Auslastung";
+"menubar_color.limit_type" = "Nach Limittyp";
+"menubar_color.usage_level_desc" = "Die Farben ändern sich mit steigender Nutzung (z. B. wird der 5-Stunden-Ring grün → orange → rot), um dich vor dem Erreichen eines Limits zu warnen";
+"menubar_color.limit_type_desc" = "Jedes Limit behält eine Farbe, passend zu seinem Symbol und Diagrammpunkt im Popover";
 
 "menu_bar_icon_size.small" = "Kompakt";
 "menu_bar_icon_size.medium" = "Standard";

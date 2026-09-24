@@ -57,6 +57,7 @@
 "settings.general.menubar_hint" = "Choose what to display in the menu bar";
 "settings.general.menubar_theme" = "Menu Bar Theme";
 "settings.general.menubar_icon_size" = "Icon Size";
+"settings.general.menubar_color_mode" = "Icon Colors";
 "settings.general.display_content" = "Display Content";
 "settings.general.monochrome_no_icon_hint" = "Icon display is not supported in Monochrome theme";
 "settings.general.refresh_section" = "Refresh Settings";
@@ -74,6 +75,10 @@
 "icon_style.color_translucent_desc" = "Colored rings with no background; the numbers follow the menu bar's light or dark appearance automatically";
 "icon_style.color_with_background_desc" = "Adds a thin backdrop behind each ring, for busy wallpapers where the numbers are hard to pick out";
 "icon_style.monochrome_desc" = "Automatically adapts to system menu bar style, clean and elegant";
+"menubar_color.usage_level" = "By Usage Level";
+"menubar_color.limit_type" = "By Limit Type";
+"menubar_color.usage_level_desc" = "Colors change as usage rises (e.g. the 5-hour ring goes green → orange → red) to warn you before a limit runs out";
+"menubar_color.limit_type_desc" = "Each limit keeps one color, matching its icon and graph marker in the popover";
 
 "menu_bar_icon_size.small" = "Compact";
 "menu_bar_icon_size.medium" = "Standard";
