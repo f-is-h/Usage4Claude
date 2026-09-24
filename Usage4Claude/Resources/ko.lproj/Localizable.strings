@@ -261,7 +261,7 @@
 "detail_row.extra_usage" = "추가 사용량";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "표시할 한도";
+"display_options" = "제한 유형";
 "smart_display" = "스마트 표시";
 "smart_display_description" = "데이터가 있는 모든 제한 유형을 자동으로 표시";
 "custom_display" = "사용자 정의 표시";
@@ -438,8 +438,8 @@
 "account.codex_current_account" = "현재 Codex 계정";
 
 // MARK: - Graph Type
-"graph_type.circular" = "원형";
-"graph_type.linear" = "선형";
+"graph_type.circular" = "링";
+"graph_type.linear" = "페이스";
 
 // MARK: - Graph Style Settings
 "graph_style.title" = "그래프 스타일";

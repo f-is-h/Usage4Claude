@@ -261,7 +261,7 @@
 "detail_row.extra_usage" = "額外用量";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "顯示哪些額度";
+"display_options" = "限制類型";
 "smart_display" = "智慧顯示";
 "smart_display_description" = "自動顯示所有有資料的限制類型";
 "custom_display" = "自訂顯示";
@@ -438,16 +438,16 @@
 "account.codex_current_account" = "目前的 Codex 帳號";
 
 // MARK: - Graph Type
-"graph_type.circular" = "圓形";
-"graph_type.linear" = "線性";
+"graph_type.circular" = "圓環";
+"graph_type.linear" = "節奏";
 
 // MARK: - Graph Style Settings
 "graph_style.title" = "圖表樣式";
 "graph_style.hint" = "選擇使用量的顯示方式";
 "graph_style.circular_description" = "以百分比圓環顯示使用量";
-"graph_style.linear_description" = "將各項限額與勻速使用節奏對比顯示";
+"graph_style.linear_description" = "將各項限制與勻速使用節奏對比顯示";
 "graph_style.weekdays_only" = "僅工作日";
-"graph_style.weekdays_only_description" = "每週限額只按工作日時間計算節奏，略過週六和週日";
+"graph_style.weekdays_only_description" = "每週限制只按工作日時間計算節奏，略過週六和週日";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "正在準備登入…";

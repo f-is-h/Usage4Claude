@@ -41,7 +41,7 @@ struct DisplaySettingsView: View {
                             Image(systemName: "info.circle.fill")
                                 .font(.caption2)
                                 .foregroundColor(.blue)
-                            Text(settings.graphDisplayType == .circular
+                            Text(settings.graphDisplayType == .ring
                                 ? L.GraphStyle.circularDescription
                                 : L.GraphStyle.linearDescription)
                                 .font(.caption)
@@ -51,9 +51,9 @@ struct DisplaySettingsView: View {
                         .padding(.leading, 20)
 
                         // 仅工作日（只对线性图有意义）
-                        if settings.graphDisplayType == .linear {
+                        if settings.graphDisplayType == .pace {
                             HStack {
-                                Toggle("", isOn: $settings.linearGraphWeekdaysOnly)
+                                Toggle("", isOn: $settings.paceGraphWeekdaysOnly)
                                     .toggleStyle(.switch)
                                     .controlSize(.mini)
                                     .focusable(false)

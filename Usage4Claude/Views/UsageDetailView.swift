@@ -262,10 +262,10 @@ struct UsageDetailView: View {
         } else if let data = usageData {
             // 使用数据
             VStack(spacing: 15) {
-                // 根据用户设置选择圆形或线性图表
+                // 根据用户设置选择圆环图或节奏图
                 Group {
                     switch UserSettings.shared.graphDisplayType {
-                    case .circular:
+                    case .ring:
                         // 圆形进度条
                         ZStack {
                             let primaryLimitData = getPrimaryLimitData(data: data, activeTypes: activeDisplayTypes)
@@ -336,8 +336,8 @@ struct UsageDetailView: View {
                             }
                         }
                         .contentShape(Circle())
-                    case .linear:
-                        LinearUsageGraphView(
+                    case .pace:
+                        PaceGraphView(
                             usageData: data,
                             activeDisplayTypes: activeDisplayTypes,
                             isRefreshing: isClaudeRefreshing,
@@ -353,8 +353,8 @@ struct UsageDetailView: View {
                     }
                 }
                 .onLongPressGesture(minimumDuration: 3.0) {
-                    // 长按圆环切换动画类型（仅圆形模式有效）
-                    guard UserSettings.shared.graphDisplayType == .circular else { return }
+                    // 长按圆环切换动画类型（仅圆环图有效）
+                    guard UserSettings.shared.graphDisplayType == .ring else { return }
                     let allTypes = LoadingAnimationType.allCases
                     let currentIndex = allTypes.firstIndex(of: claudeAnimationType) ?? 0
                     let nextIndex = (currentIndex + 1) % allTypes.count

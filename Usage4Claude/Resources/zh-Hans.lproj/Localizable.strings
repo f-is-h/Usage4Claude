@@ -261,7 +261,7 @@
 "detail_row.extra_usage" = "额外用量";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "显示哪些限额";
+"display_options" = "限制类型";
 "smart_display" = "智能显示";
 "smart_display_description" = "自动显示所有有数据的限制类型";
 "custom_display" = "自定义显示";
@@ -438,16 +438,16 @@
 "account.codex_current_account" = "当前 Codex 账户";
 
 // MARK: - Graph Type
-"graph_type.circular" = "圆形";
-"graph_type.linear" = "线性";
+"graph_type.circular" = "圆环";
+"graph_type.linear" = "节奏";
 
 // MARK: - Graph Style Settings
 "graph_style.title" = "图表样式";
 "graph_style.hint" = "选择使用量的显示方式";
 "graph_style.circular_description" = "以百分比圆环显示使用量";
-"graph_style.linear_description" = "将各项限额与匀速使用节奏对比显示";
+"graph_style.linear_description" = "将各项限制与匀速使用节奏对比显示";
 "graph_style.weekdays_only" = "仅工作日";
-"graph_style.weekdays_only_description" = "每周限额只按工作日时间计算节奏，跳过周六和周日";
+"graph_style.weekdays_only_description" = "每周限制只按工作日时间计算节奏，跳过周六和周日";
 
 /* Codex OAuth Login (system browser) */
 "weblogin.codex_oauth_preparing" = "正在准备登录…";

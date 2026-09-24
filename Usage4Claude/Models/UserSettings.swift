@@ -290,19 +290,24 @@ enum AppAppearance: String, CaseIterable, Codable {
     }
 }
 
-/// 图表显示类型（圆形 vs 线性）
+/// 图表显示类型（圆环 vs 节奏）
+///
+/// rawValue 沿用旧名 `"circular"` / `"linear"`：它存在 UserDefaults 里，
+/// 改了会把所有人已经选好的样式重置掉
 enum GraphDisplayType: String, CaseIterable, Codable {
-    /// 圆形图表 - 当前百分比环形显示
-    case circular = "circular"
-    /// 线性图表 - 时间轴与用量预测显示
-    case linear = "linear"
+    /// 圆环图 - 当前用量的百分比环
+    case ring = "circular"
+    /// 节奏图 - 把每项限额放到「已过时间」轴上，和匀速对角线比快慢。
+    /// 它不做任何预测，只画此刻的位置；旧名「线性」描述的是形状，
+    /// 容易被当成趋势图
+    case pace = "linear"
 
     var localizedName: String {
         switch self {
-        case .circular:
-            return L.GraphType.circular
-        case .linear:
-            return L.GraphType.linear
+        case .ring:
+            return L.GraphType.ring
+        case .pace:
+            return L.GraphType.pace
         }
     }
 }
@@ -547,9 +552,10 @@ class UserSettings: ObservableObject {
     }
 
     /// 线性图的周限制时间轴是否只计工作日（周末不计入匀速节奏）
-    @Published var linearGraphWeekdaysOnly: Bool {
+    @Published var paceGraphWeekdaysOnly: Bool {
         didSet {
-            defaults.set(linearGraphWeekdaysOnly, forKey: "linearGraphWeekdaysOnly")
+            // UserDefaults 键沿用旧名，换键等于把大家的开关重置掉
+            defaults.set(paceGraphWeekdaysOnly, forKey: "linearGraphWeekdaysOnly")
             NotificationCenter.default.post(name: .settingsChanged, object: nil)
         }
     }
@@ -1024,11 +1030,11 @@ class UserSettings: ObservableObject {
            let type = GraphDisplayType(rawValue: typeString) {
             self.graphDisplayType = type
         } else {
-            self.graphDisplayType = .circular
+            self.graphDisplayType = .ring
         }
 
         // 线性图仅工作日，默认关闭（按自然时间计算）
-        self.linearGraphWeekdaysOnly = defaults.bool(forKey: "linearGraphWeekdaysOnly")
+        self.paceGraphWeekdaysOnly = defaults.bool(forKey: "linearGraphWeekdaysOnly")
 
         // 加载"自定义显示仅应用于菜单栏"开关，默认关闭（保持向后兼容）
         self.customDisplayMenuBarOnly = defaults.bool(forKey: "customDisplayMenuBarOnly")
@@ -1168,8 +1174,8 @@ class UserSettings: ObservableObject {
         customDisplayMenuBarOnly = false
         notificationsEnabled = true
         notificationThresholds = .default
-        graphDisplayType = .circular
-        linearGraphWeekdaysOnly = false
+        graphDisplayType = .ring
+        paceGraphWeekdaysOnly = false
         showCodexResetAnnouncement = true
 
         // 重置智能模式状态

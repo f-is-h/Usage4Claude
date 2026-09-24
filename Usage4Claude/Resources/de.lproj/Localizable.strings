@@ -260,7 +260,7 @@
 "detail_row.extra_usage" = "Zusätzliche Nutzung";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "Anzuzeigende Limits";
+"display_options" = "Limit-Typen";
 "smart_display" = "Intelligente Anzeige";
 "smart_display_description" = "Zeigt automatisch alle Limit-Typen mit Daten an";
 "custom_display" = "Benutzerdefinierte Anzeige";
@@ -437,8 +437,8 @@
 "account.codex_current_account" = "Aktueller Codex Account";
 
 // MARK: - Graph Type
-"graph_type.circular" = "Kreis";
-"graph_type.linear" = "Linear";
+"graph_type.circular" = "Ring";
+"graph_type.linear" = "Tempo";
 
 // MARK: - Graph Style Settings
 "graph_style.title" = "Diagrammstil";

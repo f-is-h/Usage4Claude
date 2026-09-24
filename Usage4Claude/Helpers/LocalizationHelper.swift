@@ -582,8 +582,8 @@ enum L {
 
     // MARK: - Graph Type
     enum GraphType {
-        static var circular: String { localized("graph_type.circular") }
-        static var linear: String { localized("graph_type.linear") }
+        static var ring: String { localized("graph_type.circular") }
+        static var pace: String { localized("graph_type.linear") }
     }
 
     // MARK: - Graph Style Settings

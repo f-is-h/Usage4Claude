@@ -261,7 +261,7 @@
 "detail_row.extra_usage" = "追加使用量";
 
 // MARK: - Display Options (v2.0.0)
-"display_options" = "表示する上限";
+"display_options" = "制限タイプ";
 "smart_display" = "スマート表示";
 "smart_display_description" = "データのある制限タイプを自動的に表示";
 "custom_display" = "カスタム表示";
@@ -438,8 +438,8 @@
 "account.codex_current_account" = "現在の Codex アカウント";
 
 // MARK: - Graph Type
-"graph_type.circular" = "サークル";
-"graph_type.linear" = "ライン";
+"graph_type.circular" = "リング";
+"graph_type.linear" = "ペース";
 
 // MARK: - Graph Style Settings
 "graph_style.title" = "グラフスタイル";

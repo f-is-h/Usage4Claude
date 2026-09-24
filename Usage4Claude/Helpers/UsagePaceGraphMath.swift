@@ -9,7 +9,7 @@
 import Foundation
 import CoreGraphics
 
-/// 线性用量图（`LinearUsageGraphView`）的纯计算：时间轴位置、百分比钳制与标签避让。
+/// 节奏图（`PaceGraphView`）的纯计算：时间轴位置、百分比钳制与标签避让。
 ///
 /// 与 SwiftUI 解耦以便单元测试。坐标系与 Canvas 一致：y 轴向下，
 /// 所以 100% 在绘制区域顶部（minY），0% 在底部（maxY）。

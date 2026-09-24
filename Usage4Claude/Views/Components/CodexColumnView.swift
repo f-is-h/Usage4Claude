@@ -63,10 +63,10 @@ struct CodexColumnView: View {
     var body: some View {
         VStack(spacing: 15) {
             // 圆环区域
-            // 根据用户设置选择圆形或线性图表
+            // 根据用户设置选择圆环图或节奏图
             Group {
                 switch UserSettings.shared.graphDisplayType {
-                case .circular:
+                case .ring:
                     ZStack {
                         if let primary = primaryRingData {
                             let primaryColor = primaryRingColor(for: primary.percentage)
@@ -134,8 +134,8 @@ struct CodexColumnView: View {
                     }
                     .frame(height: 114)
                     .contentShape(Circle())
-                case .linear:
-                    LinearUsageGraphView(
+                case .pace:
+                    PaceGraphView(
                         codexUsageData: codexUsageData,
                         activeDisplayTypes: activeCodexTypes,
                         isRefreshing: isCodexRefreshing,
@@ -151,8 +151,8 @@ struct CodexColumnView: View {
                 }
             }
             .onLongPressGesture(minimumDuration: 3.0) {
-                // 长按圆环切换动画类型（仅圆形模式有效）
-                guard UserSettings.shared.graphDisplayType == .circular else { return }
+                // 长按圆环切换动画类型（仅圆环图有效）
+                guard UserSettings.shared.graphDisplayType == .ring else { return }
                 let allTypes = UsageDetailView.LoadingAnimationType.allCases
                 let currentIndex = allTypes.firstIndex(of: animationType) ?? 0
                 animationType = allTypes[(currentIndex + 1) % allTypes.count]

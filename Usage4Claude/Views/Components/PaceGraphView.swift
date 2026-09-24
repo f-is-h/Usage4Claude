@@ -1,5 +1,5 @@
 //
-//  LinearUsageGraphView.swift
+//  PaceGraphView.swift
 //  Usage4Claude
 //
 //  Created by Claude Code on 2026-01-11.
@@ -12,7 +12,7 @@ import SwiftUI
 /// 以匀速消耗对角线为参照，显示每个限制在当前窗口内是超前还是落后于匀速节奏：
 /// X 轴为窗口已过去的比例（0 = 窗口开始，1 = 重置），Y 轴为已用百分比。
 /// 与 Provider 无关：Claude 与 Codex 各自通过下方对应的初始化方法构建数据点。
-struct LinearUsageGraphView: View {
+struct PaceGraphView: View {
     /// 图上的一个限制数据点
     struct Point {
         /// 决定标记形状与时间窗口长度
@@ -216,7 +216,7 @@ struct LinearUsageGraphView: View {
 
 // MARK: - Provider Initializers
 
-extension LinearUsageGraphView {
+extension PaceGraphView {
     /// Claude 限制
     /// - Note: 额外用量是消费上限，没有重置窗口，不放在节奏图上；
     ///   与圆环一致，自定义模式下缺失的 5h / 7d 以 0% 占位；
@@ -229,7 +229,7 @@ extension LinearUsageGraphView {
     ) {
         self.isRefreshing = isRefreshing
         self.showRemainingMode = showRemainingMode
-        self.weekdaysOnly = UserSettings.shared.linearGraphWeekdaysOnly
+        self.weekdaysOnly = UserSettings.shared.paceGraphWeekdaysOnly
         guard let data = usageData else {
             self.points = nil
             return
@@ -292,7 +292,7 @@ extension LinearUsageGraphView {
     ) {
         self.isRefreshing = isRefreshing
         self.showRemainingMode = showRemainingMode
-        self.weekdaysOnly = UserSettings.shared.linearGraphWeekdaysOnly
+        self.weekdaysOnly = UserSettings.shared.paceGraphWeekdaysOnly
         guard let data = codexUsageData else {
             self.points = nil
             return
@@ -323,10 +323,10 @@ extension LinearUsageGraphView {
 
 // MARK: - Preview
 
-struct LinearUsageGraphView_Previews: PreviewProvider {
+struct PaceGraphView_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 20) {
-            LinearUsageGraphView(
+            PaceGraphView(
                 usageData: UsageData(
                     fiveHour: UsageData.LimitData(
                         percentage: 45,
@@ -345,7 +345,7 @@ struct LinearUsageGraphView_Previews: PreviewProvider {
                 showRemainingMode: false
             )
 
-            LinearUsageGraphView(
+            PaceGraphView(
                 codexUsageData: CodexUsageData(
                     primary: .init(percentage: 30, resetsAt: Date().addingTimeInterval(3600 * 3)),
                     secondary: .init(percentage: 12, resetsAt: Date().addingTimeInterval(3600 * 24 * 6)),
@@ -356,7 +356,7 @@ struct LinearUsageGraphView_Previews: PreviewProvider {
                 showRemainingMode: true
             )
 
-            LinearUsageGraphView(
+            PaceGraphView(
                 usageData: nil,
                 activeDisplayTypes: [.fiveHour],
                 isRefreshing: true,
