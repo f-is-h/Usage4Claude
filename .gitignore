@@ -55,6 +55,7 @@ iOSInjectionProject/
 xcuserdata/
 *.xcuserstate
 *.xcuserdatad
+.claude/settings.local.json
 
 # macOS
 .DS_Store
