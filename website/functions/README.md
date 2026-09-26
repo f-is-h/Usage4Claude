@@ -4,6 +4,14 @@ This directory contains Pages Functions that run on Cloudflare's edge network.
 
 ## _middleware.js
 
+### Canonical host redirect
+
+Requests to `usage4claude.pages.dev` get a 301 to `u4c.fi5h.xyz` with the path and query kept, so
+search engines index only the custom domain. Preview deployments (`<hash>.usage4claude.pages.dev`)
+are not redirected.
+
+### Placeholder replacement
+
 This middleware automatically replaces placeholders in HTML files with real information stored in environment variables.
 
 ### Placeholders

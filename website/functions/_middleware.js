@@ -1,4 +1,15 @@
+// Canonical host. Only the production pages.dev host is redirected, so preview
+// deployments (<hash>.usage4claude.pages.dev) keep working on their own URLs.
+const CANONICAL_HOST = 'u4c.fi5h.xyz';
+const LEGACY_HOST = 'usage4claude.pages.dev';
+
 export async function onRequest(context) {
+  const url = new URL(context.request.url);
+  if (url.hostname === LEGACY_HOST) {
+    url.hostname = CANONICAL_HOST;
+    return Response.redirect(url.toString(), 301);
+  }
+
   const response = await context.next();
 
   const contentType = response.headers.get('content-type');

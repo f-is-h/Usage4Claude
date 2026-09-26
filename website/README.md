@@ -8,7 +8,7 @@ Product website for the Usage4Claude macOS application.
 - **Deployment**: Cloudflare Pages
 - **Languages**: 7, matching the app - English (main), Japanese, Korean, Simplified Chinese,
   Traditional Chinese, French, German
-- **Website URL**: https://usage4claude.pages.dev
+- **Website URL**: https://u4c.fi5h.xyz
 
 ## Directory Structure
 
