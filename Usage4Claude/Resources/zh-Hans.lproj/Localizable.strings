@@ -183,7 +183,6 @@
 "launch.status.enabled" = "已启用";
 "launch.status.disabled" = "未启用";
 "launch.status.requires_approval" = "等待授权";
-"launch.status.not_found" = "未找到";
 "launch.error.title" = "开机启动错误";
 "launch.error.enable" = "启用开机启动失败";
 "launch.error.disable" = "禁用开机启动失败";

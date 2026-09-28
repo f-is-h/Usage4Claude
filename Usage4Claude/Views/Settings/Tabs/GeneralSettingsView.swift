@@ -107,6 +107,11 @@ struct GeneralSettingsView: View {
     }
 
     // MARK: - Computed Properties
+    //
+    // .notFound 与 .notRegistered 按同一状态展示：对 SMAppService.mainApp 而言，
+    // 从未调用过 register() 时系统返回的就是 .notFound（注册再注销后才变成
+    // .notRegistered），这是新装用户的正常初始状态，不是错误。真正的注册失败
+    // 会在 register() 抛错时由 handleLaunchError 弹窗提示，不依赖这里的状态文字。
 
     /// 状态图标
     private var statusIcon: String {
@@ -115,10 +120,8 @@ struct GeneralSettingsView: View {
             return "checkmark.circle.fill"
         case .requiresApproval:
             return "exclamationmark.circle.fill"
-        case .notRegistered:
+        case .notRegistered, .notFound:
             return "circle"
-        case .notFound:
-            return "xmark.circle.fill"
         @unknown default:
             // 未知状态按未启用处理，会在 onAppear 时同步真实状态
             return "circle"
@@ -132,10 +135,8 @@ struct GeneralSettingsView: View {
             return .green
         case .requiresApproval:
             return .orange
-        case .notRegistered:
+        case .notRegistered, .notFound:
             return .secondary
-        case .notFound:
-            return .red
         @unknown default:
             // 未知状态按未启用处理
             return .secondary
@@ -149,10 +150,8 @@ struct GeneralSettingsView: View {
             return L.LaunchAtLogin.statusEnabled
         case .requiresApproval:
             return L.LaunchAtLogin.statusRequiresApproval
-        case .notRegistered:
+        case .notRegistered, .notFound:
             return L.LaunchAtLogin.statusDisabled
-        case .notFound:
-            return L.LaunchAtLogin.statusNotFound
         @unknown default:
             // 未知状态按未启用处理
             return L.LaunchAtLogin.statusDisabled

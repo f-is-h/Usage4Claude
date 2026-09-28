@@ -182,7 +182,6 @@
 "launch.status.enabled" = "Aktiviert";
 "launch.status.disabled" = "Deaktiviert";
 "launch.status.requires_approval" = "Wartet auf Autorisierung";
-"launch.status.not_found" = "Nicht gefunden";
 "launch.error.title" = "Fehler beim Start beim Login";
 "launch.error.enable" = "Start beim Login konnte nicht aktiviert werden";
 "launch.error.disable" = "Start beim Login konnte nicht deaktiviert werden";

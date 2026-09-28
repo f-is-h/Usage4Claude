@@ -183,7 +183,6 @@
 "launch.status.enabled" = "有効";
 "launch.status.disabled" = "無効";
 "launch.status.requires_approval" = "認可待ち";
-"launch.status.not_found" = "見つかりません";
 "launch.error.title" = "起動設定エラー";
 "launch.error.enable" = "自動起動の有効化に失敗しました";
 "launch.error.disable" = "自動起動の無効化に失敗しました";

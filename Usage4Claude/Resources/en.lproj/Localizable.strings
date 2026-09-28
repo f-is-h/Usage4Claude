@@ -183,7 +183,6 @@
 "launch.status.enabled" = "Enabled";
 "launch.status.disabled" = "Disabled";
 "launch.status.requires_approval" = "Awaiting Authorization";
-"launch.status.not_found" = "Not Found";
 "launch.error.title" = "Launch at Login Error";
 "launch.error.enable" = "Failed to enable launch at login";
 "launch.error.disable" = "Failed to disable launch at login";

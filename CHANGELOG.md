@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Launch at login showed a red "Not Found" on a fresh install**: Before the app has ever called `register()`, `SMAppService.mainApp.status` reports `.notFound`; it only becomes `.notRegistered` after a register/unregister round trip. The settings page rendered `.notFound` as an error (red cross, "Not Found"), so every new user saw what looked like a failure for the normal initial state, and it only turned into "Disabled" after toggling the setting on and off once. Both states now display as "Disabled". Genuine registration failures are unaffected: they surface when `register()` throws, through the existing error alert, and never depended on this label. The now-unused `launch.status.not_found` string is removed from all 7 languages
+
 ## [3.5.0] - 2026-09-24
 
 ### Added

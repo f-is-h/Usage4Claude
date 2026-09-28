@@ -183,7 +183,6 @@
 "launch.status.enabled" = "활성화됨";
 "launch.status.disabled" = "비활성화됨";
 "launch.status.requires_approval" = "승인 대기 중";
-"launch.status.not_found" = "찾을 수 없음";
 "launch.error.title" = "시작 프로그램 오류";
 "launch.error.enable" = "시작 프로그램 활성화 실패";
 "launch.error.disable" = "시작 프로그램 비활성화 실패";

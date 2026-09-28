@@ -437,7 +437,6 @@ enum L {
         static var statusEnabled: String { localized("launch.status.enabled") }
         static var statusDisabled: String { localized("launch.status.disabled") }
         static var statusRequiresApproval: String { localized("launch.status.requires_approval") }
-        static var statusNotFound: String { localized("launch.status.not_found") }
         static var errorTitle: String { localized("launch.error.title") }
         static var errorEnable: String { localized("launch.error.enable") }
         static var errorDisable: String { localized("launch.error.disable") }

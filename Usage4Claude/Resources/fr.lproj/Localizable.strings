@@ -183,7 +183,6 @@
 "launch.status.enabled" = "Activé";
 "launch.status.disabled" = "Désactivé";
 "launch.status.requires_approval" = "En attente d'autorisation";
-"launch.status.not_found" = "Introuvable";
 "launch.error.title" = "Erreur de lancement au démarrage";
 "launch.error.enable" = "Impossible d'activer le lancement au démarrage";
 "launch.error.disable" = "Impossible de désactiver le lancement au démarrage";
