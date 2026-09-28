@@ -19,7 +19,7 @@
 
 **Track your Claude and Codex subscription usage from the menu bar.**
 
-[Features](#-features) · [Installation](#-installation) · [Usage](#-usage) · [Privacy & Security](#-privacy--security) · [FAQ](#-faq) · [Contributing](#-contributing)
+[Features](#-features) · [Installation](#-installation) · [Usage](#-usage) · [Privacy & Security](#-privacy--security) · [FAQ](#-faq) · [Contributing](#-contributing) · [Website](https://u4c.fi5h.xyz/)
 
 </div>
 

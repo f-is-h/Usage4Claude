@@ -19,7 +19,7 @@
 
 **Suivez l'utilisation de vos abonnements Claude et Codex depuis la barre des menus.**
 
-[Fonctionnalités](#-fonctionnalités) · [Installation](#-installation) · [Utilisation](#-utilisation) · [Confidentialité et sécurité](#-confidentialité-et-sécurité) · [Questions fréquentes](#-questions-fréquentes) · [Contribuer](#-contribuer)
+[Fonctionnalités](#-fonctionnalités) · [Installation](#-installation) · [Utilisation](#-utilisation) · [Confidentialité et sécurité](#-confidentialité-et-sécurité) · [Questions fréquentes](#-questions-fréquentes) · [Contribuer](#-contribuer) · [Site web](https://u4c.fi5h.xyz/fr/)
 
 </div>
 

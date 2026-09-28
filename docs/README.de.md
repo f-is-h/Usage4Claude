@@ -19,7 +19,7 @@
 
 **Die Nutzung der Claude- und Codex-Abos in der Menüleiste verfolgen.**
 
-[Funktionen](#-funktionen) · [Installation](#-installation) · [Verwendung](#-verwendung) · [Datenschutz und Sicherheit](#-datenschutz-und-sicherheit) · [Häufige Fragen](#-häufige-fragen) · [Mitwirken](#-mitwirken)
+[Funktionen](#-funktionen) · [Installation](#-installation) · [Verwendung](#-verwendung) · [Datenschutz und Sicherheit](#-datenschutz-und-sicherheit) · [Häufige Fragen](#-häufige-fragen) · [Mitwirken](#-mitwirken) · [Website](https://u4c.fi5h.xyz/de/)
 
 </div>
 
