@@ -1,185 +1,77 @@
 # Usage4Claude Website
 
-Product website for the Usage4Claude macOS application.
+Product website for the Usage4Claude macOS app: https://u4c.fi5h.xyz
 
-## Project Information
+It is a landing page, not a manual. It covers what the app does, its highlights, privacy and
+installation, and links to the README for everything else. Keep it that way: details such as exact
+thresholds, colors or model names go stale between website updates, while the README is updated
+with every release.
 
-- **Tech Stack**: HTML5 + Tailwind CSS (CDN) + Vanilla JS
-- **Deployment**: Cloudflare Pages
-- **Languages**: 7, matching the app - English (main), Japanese, Korean, Simplified Chinese,
-  Traditional Chinese, French, German
-- **Website URL**: https://u4c.fi5h.xyz
+## How It Works
 
-## Directory Structure
+The seven homepages are generated from one template and seven string files, and the generated
+files are committed. Cloudflare Pages has no build step and publishes `website/` as is.
 
 ```
 website/
-├── index.html              # English homepage (main version)
-├── index.zh-cn.html        # Simplified Chinese
-├── index.ja.html           # Japanese
-├── index.zh-tw.html        # Traditional Chinese
-├── index.ko.html           # Korean
-├── index.fr.html           # French
-├── index.de.html           # German
-├── legal.html              # Legal notice (JP/EN bilingual)
-├── privacy.html            # Privacy policy (7 languages)
-├── sitemap.xml             # Declared by robots.txt - keep new pages listed here
-├── functions/              # Cloudflare Pages Functions (address placeholder replacement)
-├── css/
-│   └── custom.css          # Custom styles
-├── js/
-│   ├── main.js             # Basic interactions
-│   ├── version.js          # Pulls the latest version from the GitHub Releases API
-│   ├── i18n.js             # Multi-language switching
-│   └── translations-privacy.js  # Privacy page translations
-├── images/
-│   ├── icon.png            # App icon
-│   ├── og-image.png        # Social sharing image
-│   └── screenshots/        # Product screenshots
-├── favicon.ico
-├── robots.txt
-└── .gitignore
+├── src/
+│   ├── index.html          # The only homepage template
+│   ├── strings/<lang>.json # Copy for en, ja, ko, zh-cn, zh-tw, fr, de (same keys in all seven)
+│   └── site.json           # Fallback version and copyright year
+├── build.py                # Generates the pages below and copies images from docs/images
+├── index.html              # Generated: English, served at /
+├── ja/ ko/ zh-cn/ zh-tw/ fr/ de/index.html   # Generated
+├── sitemap.xml             # Generated
+├── images/hero/, images/bar/                  # Copied from docs/images by build.py
+├── css/site.css            # Homepage styles (light and dark)
+├── js/site.js              # Language menu
+├── js/version.js           # Fills in the latest version from the GitHub Releases API
+├── functions/_middleware.js
+├── legal.html, privacy.html # Hand-written, still on Tailwind CDN + css/custom.css + js/i18n.js
+└── images/og-image.png     # 1200×630 share image
 ```
 
-## Multi-Language Strategy
+Never edit the generated `index.html` files by hand. CI runs `python3 website/build.py --check`
+and fails when they no longer match the template and strings.
 
-### Homepage: Multi-Page Approach
-- Each language has its own HTML file
-- Benefits: Perfect SEO, optimal performance, zero JS dependency
-- Main version: `index.html` (English)
-- All seven language files share an identical structure - when editing one, apply the same change to the others
+## Updating the Website
 
-### Legal Pages: Single-Page + JS Switching
-- `legal.html`: Japanese/English bilingual switching
-- `privacy.html`: 7-language switching (EN/JA/KO/ZH-CN/ZH-TW/FR/DE), first visit follows the browser language
-- Benefits: Better UX, no need for SEO (noindex set)
+The website is refreshed after larger updates only, not on every release.
 
-## Local Development
+1. Edit `src/strings/*.json` (all seven keep the same keys) and, for structural changes,
+   `src/index.html`
+2. Bump `fallback_version` and `copyright_year` in `src/site.json`
+3. If the app UI changed, re-render the images first with `./scripts/render_docs_images.sh`
+4. Run `python3 website/build.py` and commit the source and generated files together
 
-### Start Local Server
+Template syntax: `{{key}}` inserts a string (strings are HTML fragments, so write `&amp;`);
+`{{key|v}}` also replaces `{version}` with the fallback version; `{{_name}}` inserts a value computed
+by `build.py`. Strings must not contain a straight `"`, since some end up in attributes.
+
+## Edge Logic (functions/_middleware.js)
+
+- `usage4claude.pages.dev` → 301 to `u4c.fi5h.xyz`. Hashed preview subdomains are left alone
+- Old homepage URLs (`/index.ja`, `/index.ja.html`, …) → 301 to `/ja/` and so on
+- `/` redirects to a language homepage: the `u4c_lang` cookie set by the language menu wins,
+  otherwise the first supported language in `Accept-Language`. English or anything unsupported
+  stays on `/`
+- `[NAME_PLACEHOLDER]`, `[EMAIL_PLACEHOLDER]` and `[ADDRESS_PLACEHOLDER]` in `legal.html` are
+  replaced from environment variables, so the real details never enter the repository (see
+  `functions/README.md`)
+
+The middleware does not run under a local static server, so language redirects can only be seen
+after deployment.
+
+## Local Preview
 
 ```bash
-cd website
-python3 -m http.server 8000
+python3 -m http.server 8765 --directory website
 ```
 
-Visit: http://localhost:8000
+Pages use absolute paths (`/css/site.css`), so open them through the server rather than as files.
 
-### Test URLs
-- Homepage: http://localhost:8000/
-- Legal Notice: http://localhost:8000/legal.html
-- Privacy Policy: http://localhost:8000/privacy.html
+## Adding a Language
 
-## Deployment to Cloudflare Pages
-
-### Build Configuration
-```yaml
-Build command: (leave empty)
-Build output directory: /
-Root directory: website
-```
-
-### Deployment Steps
-
-1. **Connect Repository**
-   - Go to Cloudflare Dashboard → Pages
-   - Connect GitHub repository: `f-is-h/Usage4Claude`
-   - Select root directory: `website`
-
-2. **Address Placeholder**
-   - `legal.html` keeps `[NAME_PLACEHOLDER]` and `[ADDRESS_PLACEHOLDER]` in source
-   - `functions/` replaces them at request time, so the real address never enters the repository
-
-3. **Test Deployment**
-   - Visit generated `.pages.dev` URL
-   - Test all pages and language switching
-   - Check mobile responsiveness
-
-4. **Custom Domain** (Optional)
-   - Add custom domain in Pages settings
-   - Configure DNS records
-
-## Content Updates
-
-### Version Number
-The version number is **not hard-coded**. `js/version.js` reads the latest tag from the GitHub
-Releases API and fills every element carrying `data-latest-version`, whose attribute value is the
-text template (`{version}` is the placeholder). The text written in the HTML is only the fallback
-shown when the request fails, so it need not be updated on every release - refresh it occasionally
-so the fallback does not drift too far.
-
-### Add New Features
-1. Add a feature card in the Features section
-2. Follow the existing HTML structure
-3. Use emoji icons for consistency
-4. Apply the same edit to all seven language files
-
-### Add New Screenshots
-1. Copy screenshots from `docs/images/` into `images/screenshots/`
-2. Optimize image size (< 500KB recommended)
-3. Reference in HTML with `loading="lazy"`
-4. All seven languages have their own captures. New screenshots are captured in English only from
-   now on, so the other six sets are not re-shot on each release. The canonical Debug slider values
-   (66/88/66/66/66 for Claude, 66/88/88 for Codex) are recorded in the
-   `capture-usage4claude-screenshots` skill so a later capture matches the existing set.
-
-### Keep in Sync with the App
-When the app gains a user-visible feature, these places on the website usually need updating:
-- Feature cards on all seven homepages
-- The Codex / Claude rows in the menu bar screenshot table
-- `privacy.html` + `js/translations-privacy.js`, if the change adds a network request or a new credential type
-- `legal.html`, if the product description itself changes
-
-## Performance Optimization
-
-### Image Optimization
-- Use tools: TinyPNG, ImageOptim, Squoosh
-- Target: Single image < 500KB, total page < 3MB
-
-### Performance Targets
-Run Lighthouse test (https://pagespeed.web.dev/):
-- Performance: ≥ 90
-- Accessibility: ≥ 90
-- Best Practices: ≥ 90
-- SEO: ≥ 90
-
-## Compliance
-
-### Legal Notice (legal.html)
-- ⚠️ Address placeholders: `[NAME_PLACEHOLDER]` and `[ADDRESS_PLACEHOLDER]` in source, replaced by Pages Functions
-- ✅ noindex configured: `<meta name="robots" content="noindex, nofollow">`
-- ✅ Bilingual: Japanese and English versions provided
-
-### Privacy Policy (privacy.html)
-- ✅ Core principle: "We do not collect any user data"
-- ✅ Every network request the app makes is listed by endpoint (Claude / Codex / update check / codex-reset.com)
-- ✅ Keychain encryption details for both Claude and Codex credentials
-- ✅ 7-language support, matching the homepage
-
-## FAQ
-
-### Q: Why not use React/Vue frameworks?
-A: For simplicity and performance. Static HTML + Tailwind CSS is sufficient, fastest loading speed, no build step, and easy for AI to maintain.
-
-### Q: How to add more languages?
-A: Create a new HTML file (e.g. `index.it.html`), copy from `index.html`, translate all text, then
-register it in five places across **every** homepage: the language bar, the `hreflang` links, the
-language-detection script, `sitemap.xml`, and - for the legal pages - `js/translations-privacy.js`
-plus the language buttons in `privacy.html`.
-
-### Q: How to update Tailwind CSS version?
-A: Edit the CDN link in HTML:
-```html
-<script src="https://cdn.tailwindcss.com"></script>
-```
-
-## Technical Support
-
-For issues or questions:
-- GitHub Issues: https://github.com/f-is-h/Usage4Claude/issues
-- GitHub Discussions: https://github.com/f-is-h/Usage4Claude/discussions
-
----
-
-**Last Updated**: September 7, 2026
-**Maintainer**: f-is-h
+Add it to `LANGUAGES` in `build.py` and `LANGUAGES` in `functions/_middleware.js`, add
+`src/strings/<code>.json`, make sure `docs/images/hero.<code>.{light,dark}@2x.png` exists, and run
+the build. `privacy.html` and `js/translations-privacy.js` need the language separately.

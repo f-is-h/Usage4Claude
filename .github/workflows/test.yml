@@ -43,3 +43,6 @@ jobs:
 
       - name: Check localization consistency
         run: python3 scripts/check_l10n.py
+
+      - name: Check website is regenerated
+        run: python3 website/build.py --check

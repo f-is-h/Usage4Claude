@@ -7,6 +7,8 @@ A macOS menu bar app that monitors Claude / Codex subscription usage. Swift + Sw
 - Unit tests: `swift test` (SwiftPM only tests pure functions, runs in seconds; `Package.swift` uses a sources allowlist — newly extracted pure-function files must be added manually before they're testable)
 - Full build: `./scripts/build.sh --config Debug` (`.xcodeproj` is the authoritative build; SwiftPM exists only for testing)
 - Localization consistency: `python3 scripts/check_l10n.py` (checks key sync across 7 languages; enforced in CI)
+- Website: `python3 website/build.py` regenerates the 7 homepages from `website/src` (template + strings);
+  generated files are committed, `--check` runs in CI. Never hand-edit the generated `index.html` files — see `website/README.md`
 
 ## Architecture Map
 

@@ -3,58 +3,79 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://u4c.fi5h.xyz/</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/index.ja.html"/>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/index.ko.html"/>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/index.zh-cn.html"/>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/index.zh-tw.html"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/index.fr.html"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/index.de.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
   <url>
-    <loc>https://u4c.fi5h.xyz/index.ja.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://u4c.fi5h.xyz/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
   <url>
-    <loc>https://u4c.fi5h.xyz/index.ko.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://u4c.fi5h.xyz/ko/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
   <url>
-    <loc>https://u4c.fi5h.xyz/index.zh-cn.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://u4c.fi5h.xyz/zh-cn/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
   <url>
-    <loc>https://u4c.fi5h.xyz/index.zh-tw.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://u4c.fi5h.xyz/zh-tw/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
   <url>
-    <loc>https://u4c.fi5h.xyz/index.fr.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://u4c.fi5h.xyz/fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
   <url>
-    <loc>https://u4c.fi5h.xyz/index.de.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://u4c.fi5h.xyz/privacy.html</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <loc>https://u4c.fi5h.xyz/de/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://u4c.fi5h.xyz/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://u4c.fi5h.xyz/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://u4c.fi5h.xyz/ko/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://u4c.fi5h.xyz/zh-cn/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://u4c.fi5h.xyz/zh-tw/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://u4c.fi5h.xyz/fr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://u4c.fi5h.xyz/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://u4c.fi5h.xyz/"/>
   </url>
 </urlset>
