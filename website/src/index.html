@@ -81,6 +81,27 @@
 
         <div class="spotlight">
           <div class="spotlight-text">
+            <h3>{{bar_title}}</h3>
+            <p>{{bar_body}}</p>
+          </div>
+          <figure class="spotlight-visual menubar">
+            <div class="bar-strip">
+              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>{{bar_5h}}</figcaption></figure>
+              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>{{bar_7d}}</figcaption></figure>
+              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>{{bar_extra}}</figcaption></figure>
+              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>{{bar_model}}</figcaption></figure>
+              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>{{bar_model}}</figcaption></figure>
+            </div>
+            <div class="bar-mono">
+              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="{{bar_mono_light_alt}}">
+              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="{{bar_mono_dark_alt}}">
+            </div>
+            <figcaption class="bar-caption">{{bar_mono_caption}}</figcaption>
+          </figure>
+        </div>
+
+        <div class="spotlight spotlight-reverse">
+          <div class="spotlight-text">
             <h3>{{pace_title}}</h3>
             <p>{{pace_body}}</p>
           </div>
@@ -106,27 +127,6 @@
               <text class="pace-axis" x="188" y="226" text-anchor="middle">{{pace_axis_time}}</text>
               <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">{{pace_axis_used}}</text>
             </svg>
-          </figure>
-        </div>
-
-        <div class="spotlight spotlight-reverse">
-          <div class="spotlight-text">
-            <h3>{{bar_title}}</h3>
-            <p>{{bar_body}}</p>
-          </div>
-          <figure class="spotlight-visual menubar">
-            <div class="bar-strip">
-              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>{{bar_5h}}</figcaption></figure>
-              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>{{bar_7d}}</figcaption></figure>
-              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>{{bar_extra}}</figcaption></figure>
-              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>{{bar_model}}</figcaption></figure>
-              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>{{bar_model}}</figcaption></figure>
-            </div>
-            <div class="bar-mono">
-              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="{{bar_mono_light_alt}}">
-              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="{{bar_mono_dark_alt}}">
-            </div>
-            <figcaption class="bar-caption">{{bar_mono_caption}}</figcaption>
           </figure>
         </div>
       </div>
@@ -236,7 +236,7 @@
       <div>
         <h4>{{footer_legal}}</h4>
         <ul>
-          <li><a href="/legal.html">{{footer_legal_notice}}</a></li>
+          {{_legal_link}}
           <li><a href="/privacy.html">{{footer_privacy}}</a></li>
           <li><a href="{{_repo}}/blob/main/LICENSE" rel="noopener">{{footer_license}}</a></li>
         </ul>

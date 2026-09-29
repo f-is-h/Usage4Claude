@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Usage4Claude：Claude と Codex の使用量を Mac のメニューバーに</title>
-  <meta name="description" content="Claude と Codex のサブスクリプション制限を追跡する、無料・オープンソースの macOS メニューバーアプリ。5時間・週間・追加使用量を、リセット時刻と通知とともに表示します。">
+  <title>Usage4Claude：Claude と Codex の使用量を Mac のメニューバーに表示</title>
+  <meta name="description" content="Claude と Codex のサブスクリプションの5時間・週間・追加使用量とリセット時刻を macOS のメニューバーに表示する、無料のオープンソースアプリ。使用量の通知にも対応しています。">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
@@ -22,8 +22,8 @@
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
-  <meta property="og:title" content="Usage4Claude：Claude と Codex の使用量を Mac のメニューバーに">
-  <meta property="og:description" content="Claude と Codex のサブスクリプション制限を追跡する、無料・オープンソースの macOS メニューバーアプリ。5時間・週間・追加使用量を、リセット時刻と通知とともに表示します。">
+  <meta property="og:title" content="Usage4Claude：Claude と Codex の使用量を Mac のメニューバーに表示">
+  <meta property="og:description" content="Claude と Codex のサブスクリプションの5時間・週間・追加使用量とリセット時刻を macOS のメニューバーに表示する、無料のオープンソースアプリ。使用量の通知にも対応しています。">
   <meta property="og:url" content="https://u4c.fi5h.xyz/ja/">
   <meta property="og:image" content="https://u4c.fi5h.xyz/images/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -68,19 +68,19 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="最新リリース：{version}">最新リリース：v3.5.0</a>
-        <h1>Claude と Codex の制限を、いつも目の届くところに。</h1>
-        <p class="lead">5時間制限と週間制限をどれだけ使ったか、いつリセットされるかを表示する、小さな macOS メニューバーアプリです。</p>
+        <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="最新バージョン：{version}">最新バージョン：v3.5.0</a>
+        <h1>Claude と Codex の使用量をひと目で</h1>
+        <p class="lead">5時間制限と週間制限の使用率とリセット時刻を、macOS のメニューバーに表示します。</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="{version} をダウンロード">v3.5.0 をダウンロード</a>
           <a class="btn btn-secondary" href="https://github.com/f-is-h/Usage4Claude" rel="noopener">GitHub で見る</a>
         </div>
-        <p class="meta">無料・オープンソース · macOS 13 以降 · Intel と Apple シリコンに対応</p>
+        <p class="meta">無料・オープンソース · macOS 13 以降 · Intel / Apple シリコン対応</p>
       </div>
       <div class="wrap hero-shot">
         <picture>
           <source srcset="/images/hero/hero.ja.dark@2x.png" media="(prefers-color-scheme: dark)">
-          <img src="/images/hero/hero.ja.light@2x.png" width="950" height="348" alt="メニューバーの Usage4Claude：Claude のリング表示と、Claude と Codex を並べたペース表示">
+          <img src="/images/hero/hero.ja.light@2x.png" width="950" height="348" alt="Usage4Claude のメニューバーアイコンと詳細ウィンドウ。左は Claude のリング表示、右は Claude と Codex を並べたペース表示">
         </picture>
       </div>
     </section>
@@ -88,16 +88,37 @@
     <section id="features" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>ひと目で読み取れるように</h2>
-          <p>メニューバーを見るだけで、今の状況がわかります。</p>
+          <h2>主な機能</h2>
+          <p>普段はメニューバーのアイコンで十分です。詳しく見たいときは詳細ウィンドウを開きます。</p>
         </div>
 
         <div class="spotlight">
           <div class="spotlight-text">
-            <h3>ペースどおりか、すぐにわかる</h3>
-            <p>ペース表示では、各制限の使用率をその期間の経過時間に対して描きます。点線の対角線が均等なペースです。対角線より上なら時間の経過より速く消費しており、下なら余裕があります。週間制限は平日のみで計算することもできます。シンプルなリング表示にもいつでも切り替えられます。</p>
+            <h3>メニューバーのアイコン</h3>
+            <p>制限ごとに形が違い、使用量が増えるほど色が濃くなります。メニューバーにはパーセンテージだけ、アイコンだけ、またはその両方を表示でき、アイコンのサイズも変えられます。</p>
           </div>
-          <figure class="spotlight-visual pace" aria-label="ペース表示：経過時間に対する使用率と、均等な消費を示す対角線">
+          <figure class="spotlight-visual menubar">
+            <div class="bar-strip">
+              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>5時間</figcaption></figure>
+              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>7日</figcaption></figure>
+              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>追加使用量</figcaption></figure>
+              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>モデル別</figcaption></figure>
+              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>モデル別</figcaption></figure>
+            </div>
+            <div class="bar-mono">
+              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="明るいメニューバー上のモノクロームアイコン">
+              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="暗いメニューバー上のモノクロームアイコン">
+            </div>
+            <figcaption class="bar-caption">モノクロームテーマでは形で各制限を見分けます。アイコンの色はメニューバーの明暗に合わせて自動で切り替わります。</figcaption>
+          </figure>
+        </div>
+
+        <div class="spotlight spotlight-reverse">
+          <div class="spotlight-text">
+            <h3>ペース表示</h3>
+            <p>詳細ウィンドウのペース表示では、横軸が現在の期間の経過時間、縦軸が使用率で、制限ごとに点が1つ表示されます。点線の対角線は、一定のペースで使った場合の目安です。点が対角線より上にあれば時間の経過より速く使っていて、下にあればまだ余裕があります。週間制限は平日だけで計算するよう設定でき、リング表示にも設定から戻せます。</p>
+          </div>
+          <figure class="spotlight-visual pace" aria-label="ペース表示：横軸が経過時間、縦軸が使用率、対角線が一定ペースの目安">
             <svg viewBox="0 0 360 240" role="img">
               <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
               <g class="pace-grid">
@@ -121,65 +142,44 @@
             </svg>
           </figure>
         </div>
-
-        <div class="spotlight spotlight-reverse">
-          <div class="spotlight-text">
-            <h3>制限ごとに違う形</h3>
-            <p>制限ごとに固有の形があり、使用量が増えるにつれて色が濃くなります。パーセント、アイコン、またはその両方を、メニューバーに合ったサイズで表示できます。</p>
-          </div>
-          <figure class="spotlight-visual menubar">
-            <div class="bar-strip">
-              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>5時間</figcaption></figure>
-              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>7日</figcaption></figure>
-              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>追加使用量</figcaption></figure>
-              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>モデル別</figcaption></figure>
-              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>モデル別</figcaption></figure>
-            </div>
-            <div class="bar-mono">
-              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="明るいメニューバー上のモノクロアイコン">
-              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="暗いメニューバー上のモノクロアイコン">
-            </div>
-            <figcaption class="bar-caption">モノクロテーマでは形だけで区別でき、アイコンはメニューバーの明暗に合わせて反転します。</figcaption>
-          </figure>
-        </div>
       </div>
     </section>
 
     <section class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>ほかにも、必要なものはそろっています</h2>
+          <h2>そのほかの機能</h2>
         </div>
         <ul class="features">
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <h3>すべての Claude アプリをひとつの枠で</h3>
-            <p>claude.ai、Claude Code、デスクトップ版とモバイル版、Cowork は同じ制限を共有しています。メニューバーにはその合計が表示されます。</p>
+            <h3>すべての Claude アプリ</h3>
+            <p>claude.ai、Claude Code、デスクトップ版、モバイル版、Cowork は同じ制限を共有しているため、メニューバーには合計の使用量が表示されます。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12"/></svg>
-            <h3>Codex もあわせて</h3>
-            <p>Codex アカウントを追加すると、Codex CLI、IDE 拡張、Codex Web を Claude と並べて追跡できます。追加しなければ Codex は表示されません。</p>
+            <h3>Codex</h3>
+            <p>Codex アカウントを追加すると、Codex CLI、IDE 拡張機能、Web 版の使用量が Claude の横に表示されます。追加していなければ、Codex に関する表示は出ません。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 004 0"/></svg>
-            <h3>しきい値を自分で設定</h3>
-            <p>使用量が設定したしきい値を超えたときと、制限がリセットされたときに macOS の通知でお知らせします。</p>
+            <h3>使用量の通知</h3>
+            <p>使用量が設定したしきい値に達すると macOS の通知が届き、制限がリセットされたときにも通知します。しきい値は自分で変更できます。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 01-14.3 4.9M4 12a8 8 0 0114.3-4.9M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></svg>
-            <h3>状況に合わせた更新</h3>
-            <p>使用量が動いている間はこまめに確認し、変化がなければ間隔を広げます。数値を新しく保ちつつ、サーバーに負担をかけません。</p>
+            <h3>更新頻度の自動調整</h3>
+            <p>使用量が変化している間はこまめに更新し、しばらく変化がなければ間隔を少しずつ広げて、無駄なリクエストを減らします。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.8a3.5 3.5 0 010 6.4M18 14.5a6.5 6.5 0 013.5 5.5"/></svg>
             <h3>複数アカウント</h3>
-            <p>ブラウザからログインするので、Google、SSO、パスキーもそのまま使えます。Claude と Codex のアカウントを追加して名前を付け、メニューバーから切り替えられます。</p>
+            <p>ログインはブラウザで行うので、Google、SSO、パスキーも使えます。Claude と Codex のアカウントを複数追加して別名を付け、メニューバーから切り替えられます。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9M12 3C9.4 5.7 8.2 8.7 8.2 12s1.2 6.3 3.8 9"/></svg>
-            <h3>7つの言語</h3>
-            <p>日本語、英語、韓国語、簡体字中国語、繁体字中国語、フランス語、ドイツ語に対応。システムの言語に従うほか、手動で選ぶこともできます。</p>
+            <h3>多言語対応</h3>
+            <p>日本語、英語、韓国語、簡体字中国語、繁体字中国語、フランス語、ドイツ語に対応しています。標準ではシステムの言語で表示されます。</p>
           </li>
         </ul>
       </div>
@@ -188,35 +188,35 @@
     <section id="privacy" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>データは Mac の中だけに</h2>
-          <p>アカウント登録も、開発者のサーバーも、外部への送信もありません。</p>
+          <h2>プライバシー</h2>
+          <p>Usage4Claude にはユーザー登録がなく、開発者のサーバーもないため、データを収集することはありません。</p>
         </div>
         <ul class="privacy">
-          <li><h3>解析なし</h3><p>通信先は Claude と Codex、アップデート確認のための GitHub、そしてオプションの Codex リセット予告で使う codex-reset.com だけです。</p></li>
-          <li><h3>認証情報はキーチェーンに</h3><p>Session Key とトークンは macOS のキーチェーンに保存され、平文では保存されません。使用量のレスポンスもディスクにキャッシュしません。</p></li>
-          <li><h3>サンドボックスで実行</h3><p>macOS の App Sandbox の中で動作し、ログイン、使用量の取得、アップデートのインストールに必要な権限だけを使います。</p></li>
-          <li><h3>オープンソース</h3><p>すべてのコードは MIT ライセンスで GitHub に公開されており、誰でも読んで監査できます。</p></li>
+          <li><h3>通信先</h3><p>アプリが通信するのは、Claude と Codex の API、GitHub（アップデートの確認）、codex-reset.com（Codex のリセット予告。設定でオフにできます）だけです。</p></li>
+          <li><h3>認証情報の保存</h3><p>Session Key とトークンは macOS のキーチェーンに保存し、平文のファイルには書き込みません。使用量のデータもディスクにはキャッシュしません。</p></li>
+          <li><h3>App Sandbox</h3><p>アプリは macOS のサンドボックス内で動作します。ネットワーク接続のほかに使うのは、ログインのコールバックを受けるローカルポートと、アップデートのインストールに必要なシステムサービスだけです。</p></li>
+          <li><h3>オープンソース</h3><p>ソースコードは MIT ライセンスで GitHub に公開しているので、中身を自分で確認できます。</p></li>
         </ul>
-        <p class="more"><a href="/privacy.html">プライバシーポリシーを読む →</a></p>
+        <p class="more"><a href="/privacy.html">プライバシーポリシーを見る →</a></p>
       </div>
     </section>
 
     <section id="download" class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>Usage4Claude を入手</h2>
-          <p>macOS 13 Ventura 以降。Intel と Apple シリコンに対応しています。</p>
+          <h2>ダウンロードとインストール</h2>
+          <p>macOS 13 Ventura 以降が必要です。Intel と Apple シリコンのどちらの Mac でも使えます。</p>
         </div>
         <div class="actions actions-center">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="{version} をダウンロード">v3.5.0 をダウンロード</a>
         </div>
         <ol class="steps">
-          <li><h3>インストール</h3><p>ダウンロードした .dmg を開き、Usage4Claude を「アプリケーション」にドラッグします。</p></li>
-          <li><h3>初回起動を許可</h3><p>アプリは Apple の公証を受けていないため、最初の一度だけ確認されます。macOS 15 以降では、アプリを開いて「完了」をクリックし、「システム設定 → プライバシーとセキュリティ」で「このまま開く」を選びます。macOS 14 以前では、Control キーを押しながらアプリをクリックし、「開く」を選びます。</p></li>
+          <li><h3>インストール</h3><p>ダウンロードした .dmg ファイルを開き、Usage4Claude を「アプリケーション」フォルダにドラッグします。</p></li>
+          <li><h3>初回起動</h3><p>アプリは Apple の公証を受けていないため、初回はブロックされます。一度だけ手動で許可してください。macOS 15 以降：アプリを開いて「完了」をクリックし、「システム設定 → プライバシーとセキュリティ」の下部にある「このまま開く」をクリックします。macOS 14 以前：Control キーを押しながらアプリをクリックし、「開く」を選びます。</p></li>
           <li><h3>ログイン</h3><p>ブラウザで Claude または Codex にログインします。キーチェーンへのアクセスを求められたら「常に許可」を選んでください。</p></li>
         </ol>
-        <p class="note">Claude の Pro、Max、Team、Enterprise に対応しています。無料プランには読み取れる使用量データがありません。新しいバージョンはアプリ内からインストールされます。</p>
-        <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.ja.md" rel="noopener">詳しいガイドとよくある質問（GitHub） →</a></p>
+        <p class="note">Claude の Pro、Max、Team、Enterprise プランに対応しています。無料プランには使用量のデータがないため表示できません。今後の新しいバージョンはアプリ内からアップデートできます。</p>
+        <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.ja.md" rel="noopener">詳しい説明とよくある質問は GitHub へ →</a></p>
       </div>
     </section>
   </main>
@@ -228,7 +228,7 @@
           <img src="/images/icon.png" alt="" width="28" height="28">
           <span>Usage4Claude</span>
         </a>
-        <p>Claude と Codex の使用量を Mac のメニューバーに。</p>
+        <p>Claude と Codex の使用量を Mac のメニューバーに表示します。</p>
       </div>
       <div>
         <h4>リソース</h4>
@@ -240,7 +240,7 @@
         </ul>
       </div>
       <div>
-        <h4>サポート</h4>
+        <h4>開発を支援</h4>
         <ul>
           <li><a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=website&amp;metadata_placement=footer&amp;metadata_lang=ja" rel="noopener">GitHub Sponsors</a></li>
           <li><a href="https://ko-fi.com/1atte" rel="noopener">Ko-fi</a></li>

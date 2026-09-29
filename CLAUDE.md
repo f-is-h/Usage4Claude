@@ -42,3 +42,6 @@ A macOS menu bar app that monitors Claude / Codex subscription usage. Swift + Sw
   reused until expiry so login, launch and diagnostics never spend a refresh_token (#87, #88)
 - OAuth refresh_tokens rotate on every renewal — any new token-fetching code path must reuse `OAuthTokenCache`'s single-flight mechanism
 - New root-level `.md` files are gitignored by default via `/*.md` — add a `!/filename.md` allowlist entry to track them
+- `website/legal.html` is the Stripe-reviewed 特定商取引法に基づく表記 page (Stripe's registered site is `https://u4c.fi5h.xyz`).
+  Do not touch the page, its assets (`css/custom.css`, `js/i18n.js`) or the middleware placeholder replacement;
+  any change risks another Stripe review. It is linked only from the Japanese homepage (`LEGAL_NOTICE_LINK` in `website/build.py`)

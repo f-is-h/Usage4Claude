@@ -57,6 +57,11 @@ SHARED_IMAGES = [
     "bar.mono.w@2x.png",
 ]
 
+# legal.html 是经过 Stripe 审核的特定商取引法页面：页面和链接文字都不要改，只从日语首页链接
+LEGAL_NOTICE_LINK = {
+    "ja": '<li><a href="/legal.html">特定商取引法に基づく表記</a></li>',
+}
+
 PLACEHOLDER = re.compile(r"\{\{(_?\w+)(\|v)?\}\}")
 
 
@@ -118,6 +123,7 @@ def page_context(lang, version, year):
         "_hreflang": "\n  ".join(hreflang),
         "_lang_menu": "\n            ".join(menu),
         "_readme": f"{REPO_URL}/blob/main/{readme}",
+        "_legal_link": LEGAL_NOTICE_LINK.get(code, ""),
         "_hero_light": f"/images/hero/hero.{image_lang}.light@2x.png",
         "_hero_dark": f"/images/hero/hero.{image_lang}.dark@2x.png",
         "_version": version,

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Usage4Claude: Claude and Codex usage in your Mac menu bar</title>
-  <meta name="description" content="A free, open-source macOS menu bar app that tracks your Claude and Codex subscription limits: 5-hour, weekly and extra usage, with reset times and notifications.">
+  <meta name="description" content="A free, open-source macOS menu bar app that shows your Claude and Codex 5-hour, weekly and extra usage, when each limit resets, and can notify you as usage goes up.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
@@ -23,7 +23,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
   <meta property="og:title" content="Usage4Claude: Claude and Codex usage in your Mac menu bar">
-  <meta property="og:description" content="A free, open-source macOS menu bar app that tracks your Claude and Codex subscription limits: 5-hour, weekly and extra usage, with reset times and notifications.">
+  <meta property="og:description" content="A free, open-source macOS menu bar app that shows your Claude and Codex 5-hour, weekly and extra usage, when each limit resets, and can notify you as usage goes up.">
   <meta property="og:url" content="https://u4c.fi5h.xyz/">
   <meta property="og:image" content="https://u4c.fi5h.xyz/images/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -68,9 +68,9 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="Latest release: {version}">Latest release: v3.5.0</a>
-        <h1>Your Claude and Codex limits, always in view.</h1>
-        <p class="lead">A small macOS menu bar app that shows how much of your 5-hour and weekly limits you have used, and when they reset.</p>
+        <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="Latest version: {version}">Latest version: v3.5.0</a>
+        <h1>Claude and Codex usage at a glance</h1>
+        <p class="lead">A macOS menu bar app that shows how much of your 5-hour and weekly limits you have used and when they reset.</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="Download {version}">Download v3.5.0</a>
           <a class="btn btn-secondary" href="https://github.com/f-is-h/Usage4Claude" rel="noopener">View on GitHub</a>
@@ -80,7 +80,7 @@
       <div class="wrap hero-shot">
         <picture>
           <source srcset="/images/hero/hero.en.dark@2x.png" media="(prefers-color-scheme: dark)">
-          <img src="/images/hero/hero.en.light@2x.png" width="950" height="348" alt="Usage4Claude in the menu bar: a ring view for Claude, and a pace view with Claude and Codex side by side">
+          <img src="/images/hero/hero.en.light@2x.png" width="950" height="348" alt="Usage4Claude menu bar icons and detail window: the ring view for Claude on the left, and the pace view with Claude and Codex side by side on the right">
         </picture>
       </div>
     </section>
@@ -88,44 +88,14 @@
     <section id="features" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>Made to be read at a glance</h2>
-          <p>One look at the menu bar tells you where you stand.</p>
+          <h2>Main features</h2>
+          <p>For everyday use the menu bar icons are enough. Open the detail window when you want a closer look.</p>
         </div>
 
         <div class="spotlight">
           <div class="spotlight-text">
-            <h3>Know whether you are on pace</h3>
-            <p>The pace graph plots each limit against the time that has passed in its window. The dotted diagonal is an even rate: above it you are using faster than the clock, below it you have room to spare. Weekly limits can count weekdays only. Prefer a simple ring? Switch any time.</p>
-          </div>
-          <figure class="spotlight-visual pace" aria-label="Pace graph: usage against elapsed time, with a diagonal for even consumption">
-            <svg viewBox="0 0 360 240" role="img">
-              <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
-              <g class="pace-grid">
-                <line x1="118" y1="20" x2="118" y2="200"/>
-                <line x1="188" y1="20" x2="188" y2="200"/>
-                <line x1="258" y1="20" x2="258" y2="200"/>
-                <line x1="48" y1="65" x2="328" y2="65"/>
-                <line x1="48" y1="110" x2="328" y2="110"/>
-                <line x1="48" y1="155" x2="328" y2="155"/>
-              </g>
-              <rect class="pace-frame" x="48" y="20" width="280" height="180"/>
-              <line class="pace-diagonal" x1="48" y1="200" x2="328" y2="20"/>
-              <text class="pace-region" x="60" y="40">Ahead of pace</text>
-              <text class="pace-region" x="316" y="188" text-anchor="end">Room to spare</text>
-              <circle class="dot dot-5h" cx="146" cy="70" r="7"/>
-              <text class="dot-label" x="158" y="75">72%</text>
-              <circle class="dot dot-7d" cx="244" cy="137" r="7"/>
-              <text class="dot-label" x="256" y="142">35%</text>
-              <text class="pace-axis" x="188" y="226" text-anchor="middle">Time elapsed</text>
-              <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">Used</text>
-            </svg>
-          </figure>
-        </div>
-
-        <div class="spotlight spotlight-reverse">
-          <div class="spotlight-text">
-            <h3>A shape for every limit</h3>
-            <p>Each limit has its own shape, and its color deepens as usage climbs. Show a percentage, an icon, or both, in the size that suits your menu bar.</p>
+            <h3>Menu bar icons</h3>
+            <p>Each limit has its own shape, and the color gets darker as usage goes up. The menu bar can show the percentage, the icon, or both, and the icon size is adjustable.</p>
           </div>
           <figure class="spotlight-visual menubar">
             <div class="bar-strip">
@@ -139,7 +109,37 @@
               <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="Monochrome icons on a light menu bar">
               <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="Monochrome icons on a dark menu bar">
             </div>
-            <figcaption class="bar-caption">In the monochrome theme the shapes carry the meaning, and the icons follow a light or dark menu bar.</figcaption>
+            <figcaption class="bar-caption">In the monochrome theme you tell the limits apart by shape, and the icons switch automatically to match a light or dark menu bar.</figcaption>
+          </figure>
+        </div>
+
+        <div class="spotlight spotlight-reverse">
+          <div class="spotlight-text">
+            <h3>Pace view</h3>
+            <p>The pace view in the detail window puts the time elapsed in the current period on the horizontal axis and the share of the limit used on the vertical axis, with one dot per limit. The dotted diagonal is an even rate. A dot above it means you are using the limit faster than time is passing; below it, you still have room. Weekly limits can be set to count weekdays only, and you can switch back to the ring view in Settings.</p>
+          </div>
+          <figure class="spotlight-visual pace" aria-label="Pace view: time elapsed on the horizontal axis, usage on the vertical axis, and a diagonal for an even rate">
+            <svg viewBox="0 0 360 240" role="img">
+              <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
+              <g class="pace-grid">
+                <line x1="118" y1="20" x2="118" y2="200"/>
+                <line x1="188" y1="20" x2="188" y2="200"/>
+                <line x1="258" y1="20" x2="258" y2="200"/>
+                <line x1="48" y1="65" x2="328" y2="65"/>
+                <line x1="48" y1="110" x2="328" y2="110"/>
+                <line x1="48" y1="155" x2="328" y2="155"/>
+              </g>
+              <rect class="pace-frame" x="48" y="20" width="280" height="180"/>
+              <line class="pace-diagonal" x1="48" y1="200" x2="328" y2="20"/>
+              <text class="pace-region" x="60" y="40">Ahead of pace</text>
+              <text class="pace-region" x="316" y="188" text-anchor="end">Room left</text>
+              <circle class="dot dot-5h" cx="146" cy="70" r="7"/>
+              <text class="dot-label" x="158" y="75">72%</text>
+              <circle class="dot dot-7d" cx="244" cy="137" r="7"/>
+              <text class="dot-label" x="256" y="142">35%</text>
+              <text class="pace-axis" x="188" y="226" text-anchor="middle">Time elapsed</text>
+              <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">Used</text>
+            </svg>
           </figure>
         </div>
       </div>
@@ -148,38 +148,38 @@
     <section class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>Everything else you would expect</h2>
+          <h2>More features</h2>
         </div>
         <ul class="features">
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <h3>Every Claude app, one quota</h3>
-            <p>claude.ai, Claude Code, the desktop and mobile apps and Cowork all draw from the same limits. The menu bar shows the total.</p>
+            <h3>All Claude apps</h3>
+            <p>claude.ai, Claude Code, the desktop and mobile apps, and Cowork share the same limits, so the menu bar shows their combined usage.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12"/></svg>
-            <h3>Codex, if you use it</h3>
-            <p>Add a Codex account to follow Codex CLI, the IDE extension and Codex web next to Claude. Without one, Codex never shows up.</p>
+            <h3>Codex</h3>
+            <p>Once you add a Codex account, usage from Codex CLI, the IDE extension and Codex web shows up next to Claude. If you don't add one, nothing Codex-related appears.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 004 0"/></svg>
-            <h3>Alerts at your thresholds</h3>
-            <p>A macOS notification when usage crosses the levels you choose, and another when a limit resets.</p>
+            <h3>Usage alerts</h3>
+            <p>You get a macOS notification when usage reaches a threshold you set, and another when a limit resets. The thresholds are adjustable.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 01-14.3 4.9M4 12a8 8 0 0114.3-4.9M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></svg>
-            <h3>Refresh that adapts</h3>
-            <p>Checks often while usage is moving and slows down when it is idle, so the numbers stay current without flooding the servers.</p>
+            <h3>Smart refresh</h3>
+            <p>Refreshes often while usage is changing, then gradually slows down when nothing has changed for a while, to avoid unnecessary requests.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.8a3.5 3.5 0 010 6.4M18 14.5a6.5 6.5 0 013.5 5.5"/></svg>
-            <h3>Several accounts</h3>
-            <p>Sign in through your browser with Google, SSO or a passkey. Add Claude and Codex accounts, name them, and switch from the menu bar.</p>
+            <h3>Multiple accounts</h3>
+            <p>Sign in through your browser, including with Google, SSO or a passkey. You can add several Claude and Codex accounts, give them aliases and switch between them from the menu bar.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9M12 3C9.4 5.7 8.2 8.7 8.2 12s1.2 6.3 3.8 9"/></svg>
             <h3>Seven languages</h3>
-            <p>English, Japanese, Korean, Simplified and Traditional Chinese, French and German. It follows your system language, or pick one.</p>
+            <p>English, Simplified Chinese, Traditional Chinese, Japanese, Korean, French and German. By default the app uses your system language.</p>
           </li>
         </ul>
       </div>
@@ -188,14 +188,14 @@
     <section id="privacy" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>Your data stays on your Mac</h2>
-          <p>No account with us, no server of ours, nothing to phone home to.</p>
+          <h2>Privacy</h2>
+          <p>There is no sign-up and the developer doesn't run any servers, so your data isn't collected anywhere.</p>
         </div>
         <ul class="privacy">
-          <li><h3>No analytics</h3><p>The app only talks to Claude and Codex, to GitHub to check for updates, and to codex-reset.com for the optional Codex reset announcement.</p></li>
-          <li><h3>Credentials in the Keychain</h3><p>Session keys and tokens are kept in the macOS Keychain, never in plain text, and usage responses are never cached to disk.</p></li>
-          <li><h3>Sandboxed</h3><p>It runs inside the macOS App Sandbox with only the access it needs to sign in, fetch usage and install updates.</p></li>
-          <li><h3>Open source</h3><p>Every line is on GitHub under the MIT license, open for anyone to read and audit.</p></li>
+          <li><h3>Network requests</h3><p>The app only connects to the Claude and Codex APIs, GitHub (to check for updates) and codex-reset.com (Codex reset announcements, which you can turn off in Settings).</p></li>
+          <li><h3>Credential storage</h3><p>Session keys and tokens are stored in the macOS Keychain, never in plain-text files. Usage data isn't cached to disk either.</p></li>
+          <li><h3>App Sandbox</h3><p>The app runs in the macOS sandbox. Apart from network access, it only opens a local port for the sign-in callback and uses the system services needed to install updates.</p></li>
+          <li><h3>Open source</h3><p>The source code is on GitHub under the MIT license if you want to check it yourself.</p></li>
         </ul>
         <p class="more"><a href="/privacy.html">Read the privacy policy →</a></p>
       </div>
@@ -204,18 +204,18 @@
     <section id="download" class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>Get Usage4Claude</h2>
-          <p>macOS 13 Ventura or later, on Intel or Apple silicon.</p>
+          <h2>Download and install</h2>
+          <p>Requires macOS 13 Ventura or later. Runs on both Intel and Apple silicon Macs.</p>
         </div>
         <div class="actions actions-center">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="Download {version}">Download v3.5.0</a>
         </div>
         <ol class="steps">
-          <li><h3>Install</h3><p>Open the downloaded .dmg and drag Usage4Claude into Applications.</p></li>
-          <li><h3>Allow the first launch</h3><p>The app is not notarized by Apple, so macOS asks once. On macOS 15 or later, open it, click Done, then choose Open Anyway in System Settings → Privacy &amp; Security. On macOS 14 or earlier, Control-click the app and choose Open.</p></li>
-          <li><h3>Sign in</h3><p>Sign in to Claude or Codex in your browser. When the Keychain asks for access, choose Always Allow.</p></li>
+          <li><h3>Install</h3><p>Open the downloaded .dmg file and drag Usage4Claude into the Applications folder.</p></li>
+          <li><h3>First launch</h3><p>The app isn't notarized by Apple, so macOS blocks it the first time and you need to allow it once. On macOS 15 or later, open the app, click Done, then click Open Anyway at the bottom of System Settings → Privacy &amp; Security. On macOS 14 or earlier, Control-click the app and choose Open.</p></li>
+          <li><h3>Sign in</h3><p>Sign in to Claude or Codex in your browser. When macOS asks for Keychain access, choose Always Allow.</p></li>
         </ol>
-        <p class="note">Works with Claude Pro, Max, Team and Enterprise; Free plans have no usage data to read. New versions install from inside the app.</p>
+        <p class="note">Supports Claude Pro, Max, Team and Enterprise. Free accounts have no usage data to read. Later versions can be installed from inside the app.</p>
         <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/README.md" rel="noopener">Full guide and FAQ on GitHub →</a></p>
       </div>
     </section>
@@ -240,7 +240,7 @@
         </ul>
       </div>
       <div>
-        <h4>Support</h4>
+        <h4>Support the project</h4>
         <ul>
           <li><a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=website&amp;metadata_placement=footer&amp;metadata_lang=en" rel="noopener">GitHub Sponsors</a></li>
           <li><a href="https://ko-fi.com/1atte" rel="noopener">Ko-fi</a></li>
@@ -249,7 +249,7 @@
       <div>
         <h4>Legal</h4>
         <ul>
-          <li><a href="/legal.html">Legal notice</a></li>
+          
           <li><a href="/privacy.html">Privacy policy</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" rel="noopener">MIT License</a></li>
         </ul>

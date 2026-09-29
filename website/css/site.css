@@ -74,6 +74,8 @@ body:lang(zh-TW) { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC"
 h1, h2, .lead, .section-head p { text-wrap: balance; }
 /* 日文按词组断行，避免把一个词拆到两行（Chromium 支持，其他浏览器照常断行） */
 :lang(ja) h1, :lang(ja) h2, :lang(ja) h3, :lang(ja) .lead, :lang(ja) .section-head p { word-break: auto-phrase; }
+/* 中文标题、副标题优先在空格和标点处断行，不把「用量」这样的词拆开；窄屏放不下时 break-word 兜底，避免横向溢出 */
+:lang(zh) h1, :lang(zh) h2, :lang(zh) h3, :lang(zh) .lead, :lang(zh) .meta { word-break: keep-all; overflow-wrap: break-word; }
 
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--accent); text-decoration: none; }
@@ -246,7 +248,8 @@ figure { margin: 0; }
 @media (max-width: 900px) {
   .features { grid-template-columns: repeat(2, 1fr); }
   .steps { grid-template-columns: 1fr; max-width: 560px; margin-left: auto; margin-right: auto; }
-  .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 20px; }
+  .footer li, .footer h4 { overflow-wrap: break-word; hyphens: auto; }
   .footer-brand { grid-column: 1 / -1; }
 }
 

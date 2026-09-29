@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Usage4Claude: Mac 메뉴 막대에서 보는 Claude와 Codex 사용량</title>
-  <meta name="description" content="Claude와 Codex 구독 제한을 추적하는 무료 오픈 소스 macOS 메뉴 막대 앱. 5시간, 주간, 추가 사용량을 재설정 시간 및 알림과 함께 보여 줍니다.">
+  <title>Usage4Claude: Mac 메뉴 막대에서 확인하는 Claude와 Codex 사용량</title>
+  <meta name="description" content="Claude와 Codex 구독의 5시간·주간·추가 사용량과 재설정 시간을 macOS 메뉴 막대에 표시하는 무료 오픈 소스 앱입니다. 사용량 알림도 지원합니다.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
@@ -22,8 +22,8 @@
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
-  <meta property="og:title" content="Usage4Claude: Mac 메뉴 막대에서 보는 Claude와 Codex 사용량">
-  <meta property="og:description" content="Claude와 Codex 구독 제한을 추적하는 무료 오픈 소스 macOS 메뉴 막대 앱. 5시간, 주간, 추가 사용량을 재설정 시간 및 알림과 함께 보여 줍니다.">
+  <meta property="og:title" content="Usage4Claude: Mac 메뉴 막대에서 확인하는 Claude와 Codex 사용량">
+  <meta property="og:description" content="Claude와 Codex 구독의 5시간·주간·추가 사용량과 재설정 시간을 macOS 메뉴 막대에 표시하는 무료 오픈 소스 앱입니다. 사용량 알림도 지원합니다.">
   <meta property="og:url" content="https://u4c.fi5h.xyz/ko/">
   <meta property="og:image" content="https://u4c.fi5h.xyz/images/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -68,9 +68,9 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="최신 릴리스: {version}">최신 릴리스: v3.5.0</a>
-        <h1>Claude와 Codex 제한을 항상 눈앞에.</h1>
-        <p class="lead">5시간 제한과 주간 제한을 얼마나 썼는지, 언제 재설정되는지 보여 주는 작은 macOS 메뉴 막대 앱입니다.</p>
+        <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="최신 버전: {version}">최신 버전: v3.5.0</a>
+        <h1>Claude와 Codex 사용량을 한눈에</h1>
+        <p class="lead">5시간 제한과 주간 제한의 사용 비율과 재설정 시간을 macOS 메뉴 막대에 표시합니다.</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="{version} 다운로드">v3.5.0 다운로드</a>
           <a class="btn btn-secondary" href="https://github.com/f-is-h/Usage4Claude" rel="noopener">GitHub에서 보기</a>
@@ -80,7 +80,7 @@
       <div class="wrap hero-shot">
         <picture>
           <source srcset="/images/hero/hero.ko.dark@2x.png" media="(prefers-color-scheme: dark)">
-          <img src="/images/hero/hero.ko.light@2x.png" width="950" height="348" alt="메뉴 막대의 Usage4Claude: Claude 링 보기와 Claude·Codex를 나란히 놓은 페이스 보기">
+          <img src="/images/hero/hero.ko.light@2x.png" width="950" height="348" alt="Usage4Claude의 메뉴 막대 아이콘과 상세 창: 왼쪽은 Claude 링 그래프, 오른쪽은 Claude와 Codex를 나란히 표시한 페이스 그래프">
         </picture>
       </div>
     </section>
@@ -88,44 +88,14 @@
     <section id="features" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>한눈에 읽히도록</h2>
-          <p>메뉴 막대를 한 번 보면 지금 상황을 알 수 있습니다.</p>
+          <h2>주요 기능</h2>
+          <p>평소에는 메뉴 막대 아이콘만으로 충분하고, 자세히 보고 싶을 때 상세 창을 엽니다.</p>
         </div>
 
         <div class="spotlight">
           <div class="spotlight-text">
-            <h3>페이스를 지키고 있는지 바로 확인</h3>
-            <p>페이스 그래프는 각 제한의 사용 비율을 해당 기간의 경과 시간에 맞춰 그립니다. 점선 대각선이 균등한 속도입니다. 대각선 위에 있으면 시간보다 빠르게 쓰고 있고, 아래에 있으면 여유가 있습니다. 주간 제한은 평일만 계산할 수도 있습니다. 단순한 링이 좋다면 언제든 전환할 수 있습니다.</p>
-          </div>
-          <figure class="spotlight-visual pace" aria-label="페이스 그래프: 경과 시간 대비 사용 비율과 균등 소비를 나타내는 대각선">
-            <svg viewBox="0 0 360 240" role="img">
-              <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
-              <g class="pace-grid">
-                <line x1="118" y1="20" x2="118" y2="200"/>
-                <line x1="188" y1="20" x2="188" y2="200"/>
-                <line x1="258" y1="20" x2="258" y2="200"/>
-                <line x1="48" y1="65" x2="328" y2="65"/>
-                <line x1="48" y1="110" x2="328" y2="110"/>
-                <line x1="48" y1="155" x2="328" y2="155"/>
-              </g>
-              <rect class="pace-frame" x="48" y="20" width="280" height="180"/>
-              <line class="pace-diagonal" x1="48" y1="200" x2="328" y2="20"/>
-              <text class="pace-region" x="60" y="40">페이스보다 빠름</text>
-              <text class="pace-region" x="316" y="188" text-anchor="end">여유 있음</text>
-              <circle class="dot dot-5h" cx="146" cy="70" r="7"/>
-              <text class="dot-label" x="158" y="75">72%</text>
-              <circle class="dot dot-7d" cx="244" cy="137" r="7"/>
-              <text class="dot-label" x="256" y="142">35%</text>
-              <text class="pace-axis" x="188" y="226" text-anchor="middle">경과 시간</text>
-              <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">사용</text>
-            </svg>
-          </figure>
-        </div>
-
-        <div class="spotlight spotlight-reverse">
-          <div class="spotlight-text">
-            <h3>제한마다 다른 모양</h3>
-            <p>제한마다 고유한 모양이 있고, 사용량이 늘수록 색이 짙어집니다. 백분율, 아이콘 또는 둘 다를 메뉴 막대에 맞는 크기로 표시할 수 있습니다.</p>
+            <h3>메뉴 막대 아이콘</h3>
+            <p>제한마다 모양이 다르고, 사용량이 많을수록 색이 진해집니다. 메뉴 막대에는 백분율만, 아이콘만, 또는 둘 다 표시할 수 있으며 아이콘 크기도 조절됩니다.</p>
           </div>
           <figure class="spotlight-visual menubar">
             <div class="bar-strip">
@@ -139,7 +109,37 @@
               <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="밝은 메뉴 막대의 단색 아이콘">
               <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="어두운 메뉴 막대의 단색 아이콘">
             </div>
-            <figcaption class="bar-caption">단색 테마에서는 모양만으로 구별되며, 아이콘은 메뉴 막대의 밝기에 맞춰 반전됩니다.</figcaption>
+            <figcaption class="bar-caption">단색 테마에서는 모양으로 제한을 구분하며, 아이콘 색은 메뉴 막대의 밝기에 따라 자동으로 바뀝니다.</figcaption>
+          </figure>
+        </div>
+
+        <div class="spotlight spotlight-reverse">
+          <div class="spotlight-text">
+            <h3>페이스 그래프</h3>
+            <p>상세 창의 페이스 그래프에서 가로축은 현재 기간에서 지난 시간, 세로축은 사용 비율이며, 제한마다 점 하나로 표시됩니다. 점선 대각선은 일정한 속도로 사용했을 때의 기준선입니다. 점이 대각선 위에 있으면 시간보다 빨리 쓰고 있다는 뜻이고, 아래에 있으면 아직 여유가 있다는 뜻입니다. 주간 제한은 평일만 계산하도록 설정할 수 있고, 설정에서 링 그래프로 되돌릴 수도 있습니다.</p>
+          </div>
+          <figure class="spotlight-visual pace" aria-label="페이스 그래프: 가로축은 지난 시간, 세로축은 사용 비율, 대각선은 일정한 사용 속도">
+            <svg viewBox="0 0 360 240" role="img">
+              <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
+              <g class="pace-grid">
+                <line x1="118" y1="20" x2="118" y2="200"/>
+                <line x1="188" y1="20" x2="188" y2="200"/>
+                <line x1="258" y1="20" x2="258" y2="200"/>
+                <line x1="48" y1="65" x2="328" y2="65"/>
+                <line x1="48" y1="110" x2="328" y2="110"/>
+                <line x1="48" y1="155" x2="328" y2="155"/>
+              </g>
+              <rect class="pace-frame" x="48" y="20" width="280" height="180"/>
+              <line class="pace-diagonal" x1="48" y1="200" x2="328" y2="20"/>
+              <text class="pace-region" x="60" y="40">빠르게 사용 중</text>
+              <text class="pace-region" x="316" y="188" text-anchor="end">여유 있음</text>
+              <circle class="dot dot-5h" cx="146" cy="70" r="7"/>
+              <text class="dot-label" x="158" y="75">72%</text>
+              <circle class="dot dot-7d" cx="244" cy="137" r="7"/>
+              <text class="dot-label" x="256" y="142">35%</text>
+              <text class="pace-axis" x="188" y="226" text-anchor="middle">경과 시간</text>
+              <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">사용</text>
+            </svg>
           </figure>
         </div>
       </div>
@@ -148,38 +148,38 @@
     <section class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>필요한 것은 모두 갖췄습니다</h2>
+          <h2>그 밖의 기능</h2>
         </div>
         <ul class="features">
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <h3>모든 Claude 앱, 하나의 한도</h3>
-            <p>claude.ai, Claude Code, 데스크톱 앱과 모바일 앱, Cowork는 같은 제한을 공유합니다. 메뉴 막대에는 그 합계가 표시됩니다.</p>
+            <h3>모든 Claude 앱</h3>
+            <p>claude.ai, Claude Code, 데스크톱 앱, 모바일 앱, Cowork는 같은 한도를 함께 쓰기 때문에 메뉴 막대에는 합산된 사용량이 표시됩니다.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12"/></svg>
-            <h3>Codex도 함께</h3>
-            <p>Codex 계정을 추가하면 Codex CLI, IDE 확장, Codex 웹을 Claude와 나란히 추적할 수 있습니다. 추가하지 않으면 Codex는 나타나지 않습니다.</p>
+            <h3>Codex</h3>
+            <p>Codex 계정을 추가하면 Codex CLI, IDE 확장 프로그램, 웹 버전의 사용량이 Claude 옆에 표시됩니다. 추가하지 않으면 Codex 관련 항목은 나타나지 않습니다.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 004 0"/></svg>
-            <h3>직접 정한 임계값으로 알림</h3>
-            <p>사용량이 설정한 임계값을 넘을 때, 그리고 제한이 재설정될 때 macOS 알림으로 알려 줍니다.</p>
+            <h3>사용량 알림</h3>
+            <p>사용량이 설정한 기준에 도달하면 macOS 알림을 보내고, 제한이 재설정될 때도 알려 줍니다. 알림 기준은 직접 바꿀 수 있습니다.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 01-14.3 4.9M4 12a8 8 0 0114.3-4.9M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></svg>
-            <h3>상황에 맞춘 새로 고침</h3>
-            <p>사용량이 움직일 때는 자주 확인하고, 변화가 없으면 간격을 늘립니다. 숫자는 최신으로 유지하면서 서버에 부담을 주지 않습니다.</p>
+            <h3>새로 고침 간격 자동 조절</h3>
+            <p>사용량이 변하는 동안에는 자주 새로 고치고, 한동안 변화가 없으면 간격을 점점 늘려 불필요한 요청을 줄입니다.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.8a3.5 3.5 0 010 6.4M18 14.5a6.5 6.5 0 013.5 5.5"/></svg>
             <h3>여러 계정</h3>
-            <p>브라우저에서 로그인하므로 Google, SSO, 패스키를 그대로 쓸 수 있습니다. Claude와 Codex 계정을 추가하고 이름을 붙여 메뉴 막대에서 전환하세요.</p>
+            <p>로그인은 브라우저에서 하며 Google, SSO, 패스키를 지원합니다. Claude와 Codex 계정을 여러 개 추가하고 별칭을 붙여 메뉴 막대에서 전환할 수 있습니다.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9M12 3C9.4 5.7 8.2 8.7 8.2 12s1.2 6.3 3.8 9"/></svg>
-            <h3>7개 언어</h3>
-            <p>한국어, 영어, 일본어, 중국어 간체, 중국어 번체, 프랑스어, 독일어를 지원합니다. 시스템 언어를 따르며 직접 고를 수도 있습니다.</p>
+            <h3>다국어 지원</h3>
+            <p>한국어, 영어, 일본어, 중국어 간체, 중국어 번체, 프랑스어, 독일어를 지원하며, 기본적으로 시스템 언어를 따릅니다.</p>
           </li>
         </ul>
       </div>
@@ -188,35 +188,35 @@
     <section id="privacy" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>데이터는 Mac 안에만</h2>
-          <p>가입도, 개발자 서버도, 외부로 보내는 데이터도 없습니다.</p>
+          <h2>개인정보 보호</h2>
+          <p>Usage4Claude는 가입이 필요 없고 개발자가 운영하는 서버도 없어서, 사용자 데이터를 수집하지 않습니다.</p>
         </div>
         <ul class="privacy">
-          <li><h3>분석 없음</h3><p>앱은 Claude와 Codex, 업데이트 확인용 GitHub, 그리고 선택 사항인 Codex 리셋 예고에 쓰이는 codex-reset.com에만 연결합니다.</p></li>
-          <li><h3>자격 증명은 키체인에</h3><p>Session Key와 토큰은 macOS 키체인에 저장되며 평문으로 저장되지 않습니다. 사용량 응답도 디스크에 캐시하지 않습니다.</p></li>
-          <li><h3>샌드박스에서 실행</h3><p>macOS App Sandbox 안에서 실행되며, 로그인, 사용량 조회, 업데이트 설치에 필요한 권한만 사용합니다.</p></li>
-          <li><h3>오픈 소스</h3><p>모든 코드가 MIT 라이선스로 GitHub에 공개되어 있어 누구나 읽고 감사할 수 있습니다.</p></li>
+          <li><h3>네트워크 요청</h3><p>앱이 접속하는 곳은 Claude와 Codex API, GitHub(업데이트 확인), codex-reset.com(Codex 재설정 예고, 설정에서 끌 수 있음)뿐입니다.</p></li>
+          <li><h3>자격 증명 저장</h3><p>Session Key와 토큰은 macOS 키체인에 저장되며 평문 파일로 기록되지 않습니다. 사용량 데이터도 디스크에 캐시하지 않습니다.</p></li>
+          <li><h3>App Sandbox</h3><p>앱은 macOS 샌드박스 안에서 실행됩니다. 네트워크 접근 외에는 로그인 콜백에 쓰는 로컬 포트와 업데이트 설치에 필요한 시스템 서비스만 사용합니다.</p></li>
+          <li><h3>오픈 소스</h3><p>소스 코드는 MIT 라이선스로 GitHub에 공개되어 있어 직접 확인할 수 있습니다.</p></li>
         </ul>
-        <p class="more"><a href="/privacy.html">개인정보 처리방침 읽기 →</a></p>
+        <p class="more"><a href="/privacy.html">개인정보 처리방침 보기 →</a></p>
       </div>
     </section>
 
     <section id="download" class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>Usage4Claude 받기</h2>
-          <p>macOS 13 Ventura 이상, Intel 및 Apple 실리콘을 지원합니다.</p>
+          <h2>다운로드 및 설치</h2>
+          <p>macOS 13 Ventura 이상이 필요하며, Intel과 Apple 실리콘 Mac 모두에서 사용할 수 있습니다.</p>
         </div>
         <div class="actions actions-center">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="{version} 다운로드">v3.5.0 다운로드</a>
         </div>
         <ol class="steps">
-          <li><h3>설치</h3><p>다운로드한 .dmg를 열고 Usage4Claude를 '응용 프로그램' 폴더로 드래그합니다.</p></li>
-          <li><h3>첫 실행 허용</h3><p>앱이 Apple의 공증을 받지 않았기 때문에 macOS가 처음 한 번 확인합니다. macOS 15 이상에서는 앱을 열고 '완료'를 클릭한 뒤 '시스템 설정 → 개인정보 보호 및 보안'에서 '그래도 열기'를 선택합니다. macOS 14 이하에서는 Control 키를 누른 채 앱을 클릭하고 '열기'를 선택합니다.</p></li>
-          <li><h3>로그인</h3><p>브라우저에서 Claude 또는 Codex에 로그인합니다. 키체인 접근을 요청하면 '항상 허용'을 선택하세요.</p></li>
+          <li><h3>설치</h3><p>다운로드한 .dmg 파일을 열고 Usage4Claude를 '응용 프로그램' 폴더로 드래그합니다.</p></li>
+          <li><h3>처음 열기</h3><p>앱이 Apple의 공증을 받지 않아 처음 열 때 차단되므로, 한 번만 직접 허용해야 합니다. macOS 15 이상: 앱을 연 뒤 '완료'를 클릭하고, '시스템 설정 → 개인정보 보호 및 보안' 하단에서 '그래도 열기'를 클릭합니다. macOS 14 이하: Control 키를 누른 채 앱을 클릭하고 '열기'를 선택합니다.</p></li>
+          <li><h3>로그인</h3><p>브라우저에서 Claude 또는 Codex에 로그인합니다. 키체인 접근 권한을 묻는 창이 뜨면 '항상 허용'을 선택합니다.</p></li>
         </ol>
-        <p class="note">Claude Pro, Max, Team, Enterprise를 지원합니다. 무료 플랜에는 읽을 수 있는 사용량 데이터가 없습니다. 새 버전은 앱 안에서 설치됩니다.</p>
-        <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.ko.md" rel="noopener">GitHub에서 전체 가이드와 FAQ 보기 →</a></p>
+        <p class="note">Claude Pro, Max, Team, Enterprise를 지원합니다. 무료 계정은 사용량 데이터가 없어 표시할 수 없습니다. 이후 새 버전은 앱 안에서 바로 업데이트할 수 있습니다.</p>
+        <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.ko.md" rel="noopener">자세한 설명과 FAQ는 GitHub에서 보기 →</a></p>
       </div>
     </section>
   </main>
@@ -228,7 +228,7 @@
           <img src="/images/icon.png" alt="" width="28" height="28">
           <span>Usage4Claude</span>
         </a>
-        <p>Mac 메뉴 막대에서 보는 Claude와 Codex 사용량.</p>
+        <p>Claude와 Codex 사용량을 macOS 메뉴 막대에 표시합니다.</p>
       </div>
       <div>
         <h4>리소스</h4>
@@ -247,9 +247,9 @@
         </ul>
       </div>
       <div>
-        <h4>법적 고지</h4>
+        <h4>법적 정보</h4>
         <ul>
-          <li><a href="/legal.html">법적 고지</a></li>
+          
           <li><a href="/privacy.html">개인정보 처리방침</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" rel="noopener">MIT 라이선스</a></li>
         </ul>
@@ -257,7 +257,7 @@
     </div>
     <div class="wrap footer-bottom">
       <p>&copy; 2026 f-is-h</p>
-      <p>Anthropic 및 OpenAI와 관련이 없습니다.</p>
+      <p>이 프로젝트는 Anthropic, OpenAI와 관련이 없습니다.</p>
     </div>
   </footer>
 

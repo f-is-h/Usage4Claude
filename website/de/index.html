@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Usage4Claude: Claude- und Codex-Nutzung in der Mac-Menüleiste</title>
-  <meta name="description" content="Kostenlose Open-Source-App für die macOS-Menüleiste, die die Limits Ihrer Claude- und Codex-Abos verfolgt: 5 Stunden, wöchentlich und zusätzliche Nutzung, mit Reset-Zeiten und Benachrichtigungen.">
+  <meta name="description" content="Kostenlose Open-Source-App für die macOS-Menüleiste. Sie zeigt die 5-Stunden-, Wochen- und Zusatznutzung Ihrer Claude- und Codex-Abos samt Reset-Zeiten und benachrichtigt Sie, wenn die Nutzung eine Schwelle erreicht.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
@@ -23,7 +23,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
   <meta property="og:title" content="Usage4Claude: Claude- und Codex-Nutzung in der Mac-Menüleiste">
-  <meta property="og:description" content="Kostenlose Open-Source-App für die macOS-Menüleiste, die die Limits Ihrer Claude- und Codex-Abos verfolgt: 5 Stunden, wöchentlich und zusätzliche Nutzung, mit Reset-Zeiten und Benachrichtigungen.">
+  <meta property="og:description" content="Kostenlose Open-Source-App für die macOS-Menüleiste. Sie zeigt die 5-Stunden-, Wochen- und Zusatznutzung Ihrer Claude- und Codex-Abos samt Reset-Zeiten und benachrichtigt Sie, wenn die Nutzung eine Schwelle erreicht.">
   <meta property="og:url" content="https://u4c.fi5h.xyz/de/">
   <meta property="og:image" content="https://u4c.fi5h.xyz/images/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -69,8 +69,8 @@
     <section class="hero">
       <div class="wrap">
         <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="Aktuelle Version: {version}">Aktuelle Version: v3.5.0</a>
-        <h1>Ihre Claude- und Codex-Limits, immer im Blick.</h1>
-        <p class="lead">Eine kleine App für die macOS-Menüleiste, die zeigt, wie viel Ihrer 5‑Stunden- und Wochenlimits verbraucht ist und wann sie zurückgesetzt werden.</p>
+        <h1>Claude- und Codex-Nutzung auf einen Blick</h1>
+        <p class="lead">Zeigt in der macOS-Menüleiste, wie viel Ihrer 5‑Stunden- und Wochenlimits verbraucht ist und wann sie zurückgesetzt werden.</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="{version} herunterladen">v3.5.0 herunterladen</a>
           <a class="btn btn-secondary" href="https://github.com/f-is-h/Usage4Claude" rel="noopener">Auf GitHub ansehen</a>
@@ -80,7 +80,7 @@
       <div class="wrap hero-shot">
         <picture>
           <source srcset="/images/hero/hero.de.dark@2x.png" media="(prefers-color-scheme: dark)">
-          <img src="/images/hero/hero.de.light@2x.png" width="950" height="348" alt="Usage4Claude in der Menüleiste: die Ring-Ansicht für Claude und die Tempo-Ansicht mit Claude und Codex nebeneinander">
+          <img src="/images/hero/hero.de.light@2x.png" width="950" height="348" alt="Menüleistensymbole und Detailfenster von Usage4Claude: links die Ring-Ansicht für Claude, rechts die Tempo-Ansicht mit Claude und Codex nebeneinander">
         </picture>
       </div>
     </section>
@@ -88,16 +88,37 @@
     <section id="features" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>Auf einen Blick lesbar</h2>
-          <p>Ein Blick in die Menüleiste zeigt, wo Sie stehen.</p>
+          <h2>Die wichtigsten Funktionen</h2>
+          <p>Im Alltag reichen die Symbole in der Menüleiste. Wer genauer hinsehen möchte, öffnet das Detailfenster.</p>
         </div>
 
         <div class="spotlight">
           <div class="spotlight-text">
-            <h3>Sehen, ob Sie im Plan liegen</h3>
-            <p>Das Tempo-Diagramm trägt jedes Limit gegen die verstrichene Zeit seines Zeitraums auf. Die gepunktete Diagonale steht für gleichmäßigen Verbrauch: Oberhalb verbrauchen Sie schneller, als die Zeit vergeht, unterhalb bleibt Spielraum. Wöchentliche Limits können nur Wochentage zählen. Lieber ein schlichter Ring? Jederzeit umschaltbar.</p>
+            <h3>Symbole in der Menüleiste</h3>
+            <p>Jedes Limit hat eine eigene Form, und die Farbe wird mit steigender Nutzung dunkler. In der Menüleiste lassen sich nur der Prozentwert, nur das Symbol oder beides anzeigen, und die Symbolgröße ist einstellbar.</p>
           </div>
-          <figure class="spotlight-visual pace" aria-label="Tempo-Diagramm: Nutzung gegen verstrichene Zeit, mit einer Diagonale für gleichmäßigen Verbrauch">
+          <figure class="spotlight-visual menubar">
+            <div class="bar-strip">
+              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>5 Stunden</figcaption></figure>
+              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>7 Tage</figcaption></figure>
+              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>Zusätzlich</figcaption></figure>
+              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>Pro Modell</figcaption></figure>
+              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>Pro Modell</figcaption></figure>
+            </div>
+            <div class="bar-mono">
+              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="Einfarbige Symbole auf einer hellen Menüleiste">
+              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="Einfarbige Symbole auf einer dunklen Menüleiste">
+            </div>
+            <figcaption class="bar-caption">Im einfarbigen Stil unterscheiden sich die Limits nur durch ihre Form. Die Symbole passen sich automatisch an eine helle oder dunkle Menüleiste an.</figcaption>
+          </figure>
+        </div>
+
+        <div class="spotlight spotlight-reverse">
+          <div class="spotlight-text">
+            <h3>Tempo-Diagramm</h3>
+            <p>Im Tempo-Diagramm des Detailfensters zeigt die horizontale Achse, wie viel Zeit im aktuellen Zeitraum vergangen ist, die vertikale Achse den verbrauchten Anteil. Jedes Limit erscheint als Punkt. Die gepunktete Diagonale steht für gleichmäßigen Verbrauch: Liegt ein Punkt darüber, verbrauchen Sie schneller, als die Zeit vergeht; liegt er darunter, bleibt noch Spielraum. Bei Wochenlimits lässt sich einstellen, dass nur Montag bis Freitag zählt, und in den Einstellungen können Sie zur Ring-Ansicht zurückwechseln.</p>
+          </div>
+          <figure class="spotlight-visual pace" aria-label="Tempo-Diagramm: vergangene Zeit horizontal, verbrauchter Anteil vertikal, Diagonale für gleichmäßigen Verbrauch">
             <svg viewBox="0 0 360 240" role="img">
               <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
               <g class="pace-grid">
@@ -116,30 +137,9 @@
               <text class="dot-label" x="158" y="75">72%</text>
               <circle class="dot dot-7d" cx="244" cy="137" r="7"/>
               <text class="dot-label" x="256" y="142">35%</text>
-              <text class="pace-axis" x="188" y="226" text-anchor="middle">Verstrichene Zeit</text>
-              <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">Genutzt</text>
+              <text class="pace-axis" x="188" y="226" text-anchor="middle">Vergangene Zeit</text>
+              <text class="pace-axis" x="30" y="110" text-anchor="middle" transform="rotate(-90 30 110)">Verbraucht</text>
             </svg>
-          </figure>
-        </div>
-
-        <div class="spotlight spotlight-reverse">
-          <div class="spotlight-text">
-            <h3>Eine Form für jedes Limit</h3>
-            <p>Jedes Limit hat eine eigene Form, und seine Farbe wird mit steigender Nutzung kräftiger. Zeigen Sie einen Prozentwert, ein Symbol oder beides, in der Größe, die zu Ihrer Menüleiste passt.</p>
-          </div>
-          <figure class="spotlight-visual menubar">
-            <div class="bar-strip">
-              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>5 Stunden</figcaption></figure>
-              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>7 Tage</figcaption></figure>
-              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>Zusätzlich</figcaption></figure>
-              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>Pro Modell</figcaption></figure>
-              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>Pro Modell</figcaption></figure>
-            </div>
-            <div class="bar-mono">
-              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="Einfarbige Symbole auf einer hellen Menüleiste">
-              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="Einfarbige Symbole auf einer dunklen Menüleiste">
-            </div>
-            <figcaption class="bar-caption">Im einfarbigen Theme tragen die Formen die Bedeutung allein, und die Symbole passen sich einer hellen oder dunklen Menüleiste an.</figcaption>
           </figure>
         </div>
       </div>
@@ -148,38 +148,38 @@
     <section class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>Und alles Weitere</h2>
+          <h2>Weitere Funktionen</h2>
         </div>
         <ul class="features">
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <h3>Alle Claude-Apps, ein Kontingent</h3>
-            <p>claude.ai, Claude Code, die Desktop- und Mobil-Apps und Cowork teilen sich dieselben Limits. Die Menüleiste zeigt die Summe.</p>
+            <h3>Alle Claude-Apps</h3>
+            <p>claude.ai, Claude Code, die Desktop- und Mobil-Apps sowie Cowork nutzen dieselben Limits. In der Menüleiste steht deshalb die Gesamtnutzung.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12"/></svg>
-            <h3>Codex, wenn Sie es nutzen</h3>
-            <p>Fügen Sie ein Codex-Konto hinzu, um Codex CLI, die IDE-Erweiterung und Codex Web neben Claude zu verfolgen. Ohne Konto taucht Codex nirgends auf.</p>
+            <h3>Codex</h3>
+            <p>Sobald Sie ein Codex-Konto hinzufügen, erscheint die Nutzung von Codex CLI, der IDE-Erweiterung und Codex im Web neben Claude. Ohne Codex-Konto taucht Codex nirgends auf.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 004 0"/></svg>
-            <h3>Hinweise bei Ihren Schwellen</h3>
-            <p>Eine macOS-Mitteilung, wenn die Nutzung die von Ihnen gewählten Schwellen überschreitet, und eine weitere, wenn ein Limit zurückgesetzt wird.</p>
+            <h3>Benachrichtigungen</h3>
+            <p>Erreicht die Nutzung eine eingestellte Schwelle, erhalten Sie eine macOS-Mitteilung, ebenso wenn ein Limit zurückgesetzt wird. Die Schwellen lassen sich anpassen.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 01-14.3 4.9M4 12a8 8 0 0114.3-4.9M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></svg>
-            <h3>Aktualisierung, die sich anpasst</h3>
-            <p>Prüft oft, solange sich die Nutzung bewegt, und wird langsamer, wenn nichts passiert. So bleiben die Zahlen aktuell, ohne die Server zu belasten.</p>
+            <h3>Intelligente Aktualisierung</h3>
+            <p>Solange sich die Nutzung ändert, wird häufig aktualisiert. Tut sich eine Weile nichts, werden die Abstände schrittweise länger, damit keine unnötigen Anfragen entstehen.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.8a3.5 3.5 0 010 6.4M18 14.5a6.5 6.5 0 013.5 5.5"/></svg>
             <h3>Mehrere Konten</h3>
-            <p>Anmeldung im Browser, auch mit Google, SSO oder Passkey. Fügen Sie Claude- und Codex-Konten hinzu, benennen Sie sie und wechseln Sie in der Menüleiste.</p>
+            <p>Die Anmeldung läuft über den Browser, auch mit Google, SSO oder Passkey. Sie können mehrere Claude- und Codex-Konten hinzufügen, ihnen Namen geben und in der Menüleiste zwischen ihnen wechseln.</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9M12 3C9.4 5.7 8.2 8.7 8.2 12s1.2 6.3 3.8 9"/></svg>
             <h3>Sieben Sprachen</h3>
-            <p>Deutsch, Englisch, Japanisch, Koreanisch, vereinfachtes und traditionelles Chinesisch sowie Französisch. Folgt der Systemsprache oder Ihrer Wahl.</p>
+            <p>Deutsch, Englisch, Französisch, Japanisch, Koreanisch sowie vereinfachtes und traditionelles Chinesisch. Standardmäßig gilt die Systemsprache.</p>
           </li>
         </ul>
       </div>
@@ -188,14 +188,14 @@
     <section id="privacy" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>Ihre Daten bleiben auf Ihrem Mac</h2>
-          <p>Kein Konto bei uns, kein Server von uns, nichts wird nach Hause gemeldet.</p>
+          <h2>Datenschutz</h2>
+          <p>Usage4Claude braucht keine Registrierung, und der Entwickler betreibt keine eigenen Server. Ihre Daten werden also nirgends gesammelt.</p>
         </div>
         <ul class="privacy">
-          <li><h3>Keine Statistik</h3><p>Die App spricht nur mit Claude und Codex, mit GitHub für Updates und mit codex-reset.com für die optionale Codex-Reset-Ankündigung.</p></li>
-          <li><h3>Zugangsdaten im Schlüsselbund</h3><p>Session Keys und Tokens liegen im macOS-Schlüsselbund, nie im Klartext, und Nutzungsantworten werden nie auf der Festplatte zwischengespeichert.</p></li>
-          <li><h3>In der Sandbox</h3><p>Die App läuft in der macOS App Sandbox und hat nur die Zugriffe, die sie zum Anmelden, Abrufen der Nutzung und Installieren von Updates braucht.</p></li>
-          <li><h3>Open Source</h3><p>Der gesamte Code steht unter der MIT-Lizenz auf GitHub, für alle lesbar und prüfbar.</p></li>
+          <li><h3>Netzwerkverbindungen</h3><p>Die App verbindet sich nur mit den APIs von Claude und Codex, mit GitHub (Update-Prüfung) und mit codex-reset.com (Ankündigungen zu Codex-Resets, in den Einstellungen abschaltbar).</p></li>
+          <li><h3>Zugangsdaten</h3><p>Session Keys und Tokens liegen im macOS-Schlüsselbund und werden nie im Klartext in Dateien geschrieben. Auch Nutzungsdaten werden nicht auf der Festplatte zwischengespeichert.</p></li>
+          <li><h3>App Sandbox</h3><p>Die App läuft in der macOS-Sandbox. Neben dem Netzwerkzugriff öffnet sie nur einen lokalen Port für den Anmelde-Callback und nutzt die Systemdienste, die zum Installieren von Updates nötig sind.</p></li>
+          <li><h3>Open Source</h3><p>Der Quellcode liegt unter der MIT-Lizenz auf GitHub, Sie können ihn also selbst prüfen.</p></li>
         </ul>
         <p class="more"><a href="/privacy.html">Datenschutzerklärung lesen →</a></p>
       </div>
@@ -204,18 +204,18 @@
     <section id="download" class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>Usage4Claude holen</h2>
-          <p>macOS 13 Ventura oder neuer, auf Intel oder Apple Silicon.</p>
+          <h2>Download und Installation</h2>
+          <p>Erfordert macOS 13 Ventura oder neuer und läuft auf Macs mit Intel und Apple Silicon.</p>
         </div>
         <div class="actions actions-center">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="{version} herunterladen">v3.5.0 herunterladen</a>
         </div>
         <ol class="steps">
-          <li><h3>Installieren</h3><p>Die heruntergeladene .dmg öffnen und Usage4Claude in den Ordner „Programme“ ziehen.</p></li>
-          <li><h3>Ersten Start erlauben</h3><p>Die App ist nicht von Apple notariell beglaubigt, daher fragt macOS einmal nach. Ab macOS 15 die App öffnen, auf „Fertig“ klicken und dann in Systemeinstellungen → Datenschutz &amp; Sicherheit „Dennoch öffnen“ wählen. Bis macOS 14 die App bei gedrückter Control-Taste anklicken und „Öffnen“ wählen.</p></li>
-          <li><h3>Anmelden</h3><p>Im Browser bei Claude oder Codex anmelden. Wenn der Schlüsselbund nach Zugriff fragt, „Immer erlauben“ wählen.</p></li>
+          <li><h3>Installieren</h3><p>Öffnen Sie die heruntergeladene .dmg-Datei und ziehen Sie Usage4Claude in den Ordner „Programme“.</p></li>
+          <li><h3>Erster Start</h3><p>Die App ist nicht von Apple notarisiert. macOS blockiert sie deshalb beim ersten Start, und Sie müssen sie einmal manuell zulassen. Ab macOS 15: die App öffnen, auf „Fertig“ klicken und dann unten in Systemeinstellungen → Datenschutz &amp; Sicherheit auf „Dennoch öffnen“ klicken. Bis macOS 14: die App mit gedrückter Control-Taste anklicken und „Öffnen“ wählen.</p></li>
+          <li><h3>Anmelden</h3><p>Melden Sie sich im Browser bei Claude oder Codex an. Wenn macOS nach dem Zugriff auf den Schlüsselbund fragt, wählen Sie „Immer erlauben“.</p></li>
         </ol>
-        <p class="note">Unterstützt Claude Pro, Max, Team und Enterprise; kostenlose Tarife liefern keine Nutzungsdaten. Neue Versionen installieren sich in der App.</p>
+        <p class="note">Unterstützt Claude Pro, Max, Team und Enterprise. Kostenlose Konten haben keine Nutzungsdaten, die sich auslesen ließen. Neue Versionen lassen sich direkt in der App installieren.</p>
         <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.de.md" rel="noopener">Vollständige Anleitung und FAQ auf GitHub →</a></p>
       </div>
     </section>
@@ -235,12 +235,12 @@
         <ul>
           <li><a href="https://github.com/f-is-h/Usage4Claude" rel="noopener">GitHub</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/releases" rel="noopener">Versionen</a></li>
-          <li><a href="https://github.com/f-is-h/Usage4Claude/issues" rel="noopener">Issues</a></li>
+          <li><a href="https://github.com/f-is-h/Usage4Claude/issues" rel="noopener">Fehler melden</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/discussions" rel="noopener">Diskussionen</a></li>
         </ul>
       </div>
       <div>
-        <h4>Unterstützen</h4>
+        <h4>Projekt unterstützen</h4>
         <ul>
           <li><a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=website&amp;metadata_placement=footer&amp;metadata_lang=de" rel="noopener">GitHub Sponsors</a></li>
           <li><a href="https://ko-fi.com/1atte" rel="noopener">Ko-fi</a></li>
@@ -249,8 +249,8 @@
       <div>
         <h4>Rechtliches</h4>
         <ul>
-          <li><a href="/legal.html">Impressum</a></li>
-          <li><a href="/privacy.html">Datenschutzerklärung</a></li>
+          
+          <li><a href="/privacy.html">Datenschutz</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" rel="noopener">MIT-Lizenz</a></li>
         </ul>
       </div>

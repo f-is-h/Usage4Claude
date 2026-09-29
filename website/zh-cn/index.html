@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Usage4Claude：在 Mac 菜单栏查看 Claude 与 Codex 用量</title>
-  <meta name="description" content="免费开源的 macOS 菜单栏应用，追踪 Claude 与 Codex 的订阅限额：5 小时、每周与额外用量，附带重置时间与通知。">
+  <meta name="description" content="免费开源的 macOS 菜单栏工具，显示 Claude 与 Codex 订阅的 5 小时、每周和额外用量及重置时间，支持用量提醒。">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
@@ -23,7 +23,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Usage4Claude">
   <meta property="og:title" content="Usage4Claude：在 Mac 菜单栏查看 Claude 与 Codex 用量">
-  <meta property="og:description" content="免费开源的 macOS 菜单栏应用，追踪 Claude 与 Codex 的订阅限额：5 小时、每周与额外用量，附带重置时间与通知。">
+  <meta property="og:description" content="免费开源的 macOS 菜单栏工具，显示 Claude 与 Codex 订阅的 5 小时、每周和额外用量及重置时间，支持用量提醒。">
   <meta property="og:url" content="https://u4c.fi5h.xyz/zh-cn/">
   <meta property="og:image" content="https://u4c.fi5h.xyz/images/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -69,18 +69,18 @@
     <section class="hero">
       <div class="wrap">
         <a class="badge" href="https://github.com/f-is-h/Usage4Claude/releases/latest" rel="noopener" data-latest-version="最新版本：{version}">最新版本：v3.5.0</a>
-        <h1>Claude 与 Codex 的限额，一直在眼前。</h1>
-        <p class="lead">一个小巧的 macOS 菜单栏应用，告诉你 5 小时和每周限额已经用了多少，以及什么时候重置。</p>
+        <h1>Claude 与 Codex 用量，一目了然</h1>
+        <p class="lead">在 macOS 菜单栏显示 5 小时和每周额度的使用比例与重置时间。</p>
         <div class="actions">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="下载 {version}">下载 v3.5.0</a>
-          <a class="btn btn-secondary" href="https://github.com/f-is-h/Usage4Claude" rel="noopener">在 GitHub 查看</a>
+          <a class="btn btn-secondary" href="https://github.com/f-is-h/Usage4Claude" rel="noopener">在 GitHub 上查看</a>
         </div>
-        <p class="meta">免费开源 · macOS 13 及以上 · 支持 Intel 与 Apple 芯片</p>
+        <p class="meta">免费开源 · macOS 13 及以上 · 支持 Intel 与 Apple&nbsp;芯片</p>
       </div>
       <div class="wrap hero-shot">
         <picture>
           <source srcset="/images/hero/hero.zh-CN.dark@2x.png" media="(prefers-color-scheme: dark)">
-          <img src="/images/hero/hero.zh-CN.light@2x.png" width="950" height="348" alt="菜单栏中的 Usage4Claude：Claude 的圆环图，以及 Claude 与 Codex 并排的节奏图">
+          <img src="/images/hero/hero.zh-CN.light@2x.png" width="950" height="348" alt="Usage4Claude 的菜单栏图标与详情窗口：左边是 Claude 的圆环图，右边是 Claude 与 Codex 并排的节奏图">
         </picture>
       </div>
     </section>
@@ -88,16 +88,37 @@
     <section id="features" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>为一眼看懂而设计</h2>
-          <p>看一眼菜单栏，就知道自己处在什么位置。</p>
+          <h2>主要功能</h2>
+          <p>日常看菜单栏图标即可，需要细看时点开详情窗口。</p>
         </div>
 
         <div class="spotlight">
           <div class="spotlight-text">
-            <h3>用得快还是慢，一看便知</h3>
-            <p>节奏图把每项限额的已用比例画在对应周期已过去的时间上。虚线对角线代表匀速消耗：在它上方说明用得比时间走得快，在它下方说明还有余量。每周限额可以只按工作日计算。更喜欢简单的圆环？随时可以切换。</p>
+            <h3>菜单栏图标</h3>
+            <p>每项额度用不同的形状表示，用量越高颜色越深。菜单栏可只显示百分比、只显示图标，或两者同时显示，图标大小可调整。</p>
           </div>
-          <figure class="spotlight-visual pace" aria-label="节奏图：已用比例对比已过时间，对角线表示匀速消耗">
+          <figure class="spotlight-visual menubar">
+            <div class="bar-strip">
+              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>5 小时</figcaption></figure>
+              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>7 天</figcaption></figure>
+              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>额外用量</figcaption></figure>
+              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>按模型</figcaption></figure>
+              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>按模型</figcaption></figure>
+            </div>
+            <div class="bar-mono">
+              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="浅色菜单栏上的单色图标">
+              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="深色菜单栏上的单色图标">
+            </div>
+            <figcaption class="bar-caption">单色主题下以形状区分各项额度，图标颜色随菜单栏明暗自动切换。</figcaption>
+          </figure>
+        </div>
+
+        <div class="spotlight spotlight-reverse">
+          <div class="spotlight-text">
+            <h3>节奏图</h3>
+            <p>详情窗口中的节奏图，横轴为当前周期已过去的时间，纵轴为已用比例，每项额度对应一个点。虚线对角线表示匀速使用：点在对角线上方，说明消耗快于时间进度；在下方，说明还有余量。周额度可设置为只按工作日计算，也可在设置中换回圆环图。</p>
+          </div>
+          <figure class="spotlight-visual pace" aria-label="节奏图：横轴为已过时间，纵轴为已用比例，对角线表示匀速使用">
             <svg viewBox="0 0 360 240" role="img">
               <polygon class="pace-ahead" points="48,200 48,20 328,20"/>
               <g class="pace-grid">
@@ -110,8 +131,8 @@
               </g>
               <rect class="pace-frame" x="48" y="20" width="280" height="180"/>
               <line class="pace-diagonal" x1="48" y1="200" x2="328" y2="20"/>
-              <text class="pace-region" x="60" y="40">快于节奏</text>
-              <text class="pace-region" x="316" y="188" text-anchor="end">仍有余量</text>
+              <text class="pace-region" x="60" y="40">消耗偏快</text>
+              <text class="pace-region" x="316" y="188" text-anchor="end">还有余量</text>
               <circle class="dot dot-5h" cx="146" cy="70" r="7"/>
               <text class="dot-label" x="158" y="75">72%</text>
               <circle class="dot dot-7d" cx="244" cy="137" r="7"/>
@@ -121,65 +142,44 @@
             </svg>
           </figure>
         </div>
-
-        <div class="spotlight spotlight-reverse">
-          <div class="spotlight-text">
-            <h3>每种限额，一种形状</h3>
-            <p>每项限额都有自己的形状，颜色随用量升高而加深。可以显示百分比、图标或两者兼有，尺寸也能按菜单栏调整。</p>
-          </div>
-          <figure class="spotlight-visual menubar">
-            <div class="bar-strip">
-              <figure><img src="/images/bar/bar.5h@2x.png" width="34" height="22" alt=""><figcaption>5 小时</figcaption></figure>
-              <figure><img src="/images/bar/bar.7d@2x.png" width="34" height="22" alt=""><figcaption>7 天</figcaption></figure>
-              <figure><img src="/images/bar/bar.ex@2x.png" width="34" height="22" alt=""><figcaption>额外用量</figcaption></figure>
-              <figure><img src="/images/bar/bar.7do@2x.png" width="34" height="22" alt=""><figcaption>分模型</figcaption></figure>
-              <figure><img src="/images/bar/bar.7ds@2x.png" width="34" height="22" alt=""><figcaption>分模型</figcaption></figure>
-            </div>
-            <div class="bar-mono">
-              <img src="/images/bar/bar.mono.b@2x.png" width="139" height="30" alt="浅色菜单栏上的单色图标">
-              <img src="/images/bar/bar.mono.w@2x.png" width="139" height="30" alt="深色菜单栏上的单色图标">
-            </div>
-            <figcaption class="bar-caption">单色主题下靠形状区分，图标会随菜单栏的深浅自动反色。</figcaption>
-          </figure>
-        </div>
       </div>
     </section>
 
     <section class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>该有的都有</h2>
+          <h2>其他功能</h2>
         </div>
         <ul class="features">
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <h3>所有 Claude 应用，同一份额度</h3>
-            <p>claude.ai、Claude Code、桌面端、移动端和 Cowork 共用同一套限额，菜单栏显示的就是总用量。</p>
+            <h3>所有 Claude 客户端</h3>
+            <p>claude.ai、Claude Code、桌面端、移动端和 Cowork 共用同一份额度，菜单栏显示的是合计用量。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12"/></svg>
-            <h3>用 Codex 也行</h3>
-            <p>添加 Codex 账户后，可以和 Claude 并排追踪 Codex CLI、IDE 插件与 Codex 网页版。不添加，Codex 就不会出现。</p>
+            <h3>Codex</h3>
+            <p>添加 Codex 账户后，Codex CLI、IDE 插件和网页版的用量会显示在 Claude 旁边。未添加时，界面中不会出现任何 Codex 相关内容。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 004 0"/></svg>
-            <h3>按你的阈值提醒</h3>
-            <p>用量越过你设定的阈值时发送 macOS 通知，限额重置时再通知一次。</p>
+            <h3>用量提醒</h3>
+            <p>用量达到设定的阈值时发送系统通知，额度重置时也会通知。阈值可自行调整。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 01-14.3 4.9M4 12a8 8 0 0114.3-4.9M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></svg>
-            <h3>自适应刷新</h3>
-            <p>用量变化时频繁检查，空闲时逐步放慢，数据保持最新，又不会给服务器添负担。</p>
+            <h3>智能刷新</h3>
+            <p>用量变化时提高刷新频率，长时间无变化则逐步降低，减少不必要的请求。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.8a3.5 3.5 0 010 6.4M18 14.5a6.5 6.5 0 013.5 5.5"/></svg>
             <h3>多账户</h3>
-            <p>在浏览器中登录，Google、SSO 和通行密钥都能用。可添加多个 Claude 与 Codex 账户、设置别名，并在菜单栏里切换。</p>
+            <p>通过浏览器登录，支持 Google、SSO 和通行密钥。可添加多个 Claude 和 Codex 账户并设置别名，在菜单栏中切换。</p>
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9M12 3C9.4 5.7 8.2 8.7 8.2 12s1.2 6.3 3.8 9"/></svg>
-            <h3>七种语言</h3>
-            <p>简体中文、繁体中文、英语、日语、韩语、法语和德语。默认跟随系统语言，也可以手动选择。</p>
+            <h3>多语言</h3>
+            <p>支持简体中文、繁体中文、英语、日语、韩语、法语和德语，默认跟随系统语言。</p>
           </li>
         </ul>
       </div>
@@ -188,35 +188,35 @@
     <section id="privacy" class="section">
       <div class="wrap">
         <div class="section-head">
-          <h2>数据只留在你的 Mac 上</h2>
-          <p>无需注册，没有我们的服务器，也不会向外回传任何东西。</p>
+          <h2>隐私</h2>
+          <p>Usage4Claude 无需注册，开发者也没有搭建任何服务器，不会收集用户数据。</p>
         </div>
         <ul class="privacy">
-          <li><h3>无统计</h3><p>应用只会连接 Claude 与 Codex、用于检查更新的 GitHub，以及可选的 Codex 重置预告所用的 codex-reset.com。</p></li>
-          <li><h3>凭据存入钥匙串</h3><p>Session Key 与令牌保存在 macOS 钥匙串中，不以明文存储；用量接口的响应也不会缓存到磁盘。</p></li>
-          <li><h3>沙盒运行</h3><p>在 macOS App Sandbox 中运行，只使用登录、获取用量和安装更新所需的权限。</p></li>
-          <li><h3>开源</h3><p>全部代码以 MIT 许可证公开在 GitHub 上，任何人都可以阅读和审计。</p></li>
+          <li><h3>网络请求</h3><p>应用只会访问 Claude 和 Codex 的接口、GitHub（检查更新）和 codex-reset.com（Codex 重置预告，可在设置中关闭）。</p></li>
+          <li><h3>凭据存储</h3><p>Session Key 和令牌保存在系统钥匙串中，不会以明文写入文件。用量数据也不会缓存到磁盘。</p></li>
+          <li><h3>App Sandbox</h3><p>应用运行在 macOS 沙盒中。除网络访问外，只开放登录回调所需的本地端口和安装更新所需的系统服务。</p></li>
+          <li><h3>开源</h3><p>源代码以 MIT 协议发布在 GitHub 上，可自行查看。</p></li>
         </ul>
-        <p class="more"><a href="/privacy.html">阅读隐私政策 →</a></p>
+        <p class="more"><a href="/privacy.html">查看隐私政策 →</a></p>
       </div>
     </section>
 
     <section id="download" class="section section-tinted">
       <div class="wrap">
         <div class="section-head">
-          <h2>获取 Usage4Claude</h2>
-          <p>需要 macOS 13 Ventura 或更高版本，支持 Intel 与 Apple 芯片。</p>
+          <h2>下载与安装</h2>
+          <p>需要 macOS 13 Ventura 或更高版本，支持 Intel 和 Apple 芯片的 Mac。</p>
         </div>
         <div class="actions actions-center">
           <a class="btn btn-primary" href="https://github.com/f-is-h/Usage4Claude/releases/latest" data-latest-version="下载 {version}">下载 v3.5.0</a>
         </div>
         <ol class="steps">
-          <li><h3>安装</h3><p>打开下载的 .dmg，把 Usage4Claude 拖进「应用程序」文件夹。</p></li>
-          <li><h3>允许首次打开</h3><p>应用未经 Apple 公证，macOS 会在第一次打开时拦一下。macOS 15 及以上：打开应用后点击「完成」，再到「系统设置 → 隐私与安全性」中点击「仍要打开」。macOS 14 及以下：按住 Control 点击应用，选择「打开」。</p></li>
-          <li><h3>登录</h3><p>在浏览器中登录 Claude 或 Codex。钥匙串请求访问时，选择「始终允许」。</p></li>
+          <li><h3>安装</h3><p>打开下载的 .dmg 文件，将 Usage4Claude 拖入「应用程序」文件夹。</p></li>
+          <li><h3>首次打开</h3><p>应用未经 Apple 公证，首次打开时会被系统阻止，需手动允许一次。macOS 15 及以上：打开应用后点击「完成」，再到「系统设置 → 隐私与安全性」底部点击「仍要打开」。macOS 14 及以下：按住 Control 键点击应用，选择「打开」。</p></li>
+          <li><h3>登录</h3><p>在浏览器中登录 Claude 或 Codex。系统询问钥匙串访问权限时，选择「始终允许」。</p></li>
         </ol>
-        <p class="note">支持 Claude Pro、Max、Team 与 Enterprise；免费账户没有可读取的用量数据。新版本会在应用内自动安装。</p>
-        <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.zh-CN.md" rel="noopener">在 GitHub 查看完整指南与常见问题 →</a></p>
+        <p class="note">支持 Claude Pro、Max、Team 和 Enterprise。免费账户没有用量数据，无法读取。后续版本可在应用内直接更新。</p>
+        <p class="more"><a href="https://github.com/f-is-h/Usage4Claude/blob/main/docs/README.zh-CN.md" rel="noopener">完整说明和常见问题见 GitHub →</a></p>
       </div>
     </section>
   </main>
@@ -228,19 +228,19 @@
           <img src="/images/icon.png" alt="" width="28" height="28">
           <span>Usage4Claude</span>
         </a>
-        <p>在 Mac 菜单栏查看 Claude 与 Codex 用量。</p>
+        <p>在 macOS 菜单栏显示 Claude 与 Codex 用量。</p>
       </div>
       <div>
         <h4>资源</h4>
         <ul>
           <li><a href="https://github.com/f-is-h/Usage4Claude" rel="noopener">GitHub</a></li>
-          <li><a href="https://github.com/f-is-h/Usage4Claude/releases" rel="noopener">版本发布</a></li>
+          <li><a href="https://github.com/f-is-h/Usage4Claude/releases" rel="noopener">历史版本</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/issues" rel="noopener">问题反馈</a></li>
           <li><a href="https://github.com/f-is-h/Usage4Claude/discussions" rel="noopener">讨论区</a></li>
         </ul>
       </div>
       <div>
-        <h4>支持</h4>
+        <h4>赞助</h4>
         <ul>
           <li><a href="https://github.com/sponsors/f-is-h?frequency=one-time&amp;metadata_project=usage4claude&amp;metadata_source=website&amp;metadata_placement=footer&amp;metadata_lang=zh-cn" rel="noopener">GitHub Sponsors</a></li>
           <li><a href="https://ko-fi.com/1atte" rel="noopener">Ko-fi</a></li>
@@ -249,9 +249,9 @@
       <div>
         <h4>法律信息</h4>
         <ul>
-          <li><a href="/legal.html">法律声明</a></li>
+          
           <li><a href="/privacy.html">隐私政策</a></li>
-          <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" rel="noopener">MIT 许可证</a></li>
+          <li><a href="https://github.com/f-is-h/Usage4Claude/blob/main/LICENSE" rel="noopener">MIT 协议</a></li>
         </ul>
       </div>
     </div>

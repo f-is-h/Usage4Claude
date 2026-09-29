@@ -31,6 +31,11 @@ website/
 └── images/og-image.png     # 1200×630 share image
 ```
 
+`legal.html` is the 特定商取引法に基づく表記 page that Stripe reviewed (Stripe's registered site is
+`https://u4c.fi5h.xyz`). Leave it, `css/custom.css`, `js/i18n.js` and the placeholder replacement in the
+middleware exactly as they are, or Stripe may review it again. Only the Japanese homepage links to it, with
+its exact Japanese title (`LEGAL_NOTICE_LINK` in `build.py`).
+
 Never edit the generated `index.html` files by hand. CI runs `python3 website/build.py --check`
 and fails when they no longer match the template and strings.
 
