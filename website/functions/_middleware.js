@@ -39,8 +39,9 @@ export async function onRequest(context) {
   const response = await context.next();
 
   // Only the legal notice carries placeholders; every other response passes through
-  // untouched so its caching headers survive.
-  if (url.pathname !== '/legal' && url.pathname !== '/legal.html') {
+  // untouched so its caching headers survive. Redirects pass through too: Pages answers
+  // /legal.html with a 308 to /legal, and rebuilding it below would drop its Location.
+  if (!response.ok || (url.pathname !== '/legal' && url.pathname !== '/legal.html')) {
     return response;
   }
 
