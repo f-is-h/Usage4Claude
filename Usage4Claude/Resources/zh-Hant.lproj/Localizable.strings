@@ -57,6 +57,7 @@
 "settings.general.menubar_hint" = "選擇選單列中顯示的內容";
 "settings.general.menubar_theme" = "選單列主題";
 "settings.general.menubar_icon_size" = "圖示大小";
+"settings.general.menubar_color_mode" = "圖示配色";
 "settings.general.display_content" = "顯示內容";
 "settings.general.monochrome_no_icon_hint" = "單色主題下不支援顯示圖示";
 "settings.general.refresh_section" = "重新整理設定";
@@ -74,6 +75,10 @@
 "icon_style.color_translucent_desc" = "彩色圓環，無背景，數字自動跟隨選單列的明暗";
 "icon_style.color_with_background_desc" = "在圓環後加一層薄背景，適合桌布花俏、數字不易辨認時";
 "icon_style.monochrome_desc" = "自動適應系統選單列樣式，簡潔優雅";
+"menubar_color.usage_level" = "依用量";
+"menubar_color.limit_type" = "依限制類型";
+"menubar_color.usage_level_desc" = "顏色隨用量升高而變化（如5小時圓環 綠 → 橙 → 紅），在額度用盡前提醒你";
+"menubar_color.limit_type_desc" = "每種限制固定一種顏色，與彈出視窗中的圖示和節奏圖標記一致";
 
 "menu_bar_icon_size.small" = "緊湊";
 "menu_bar_icon_size.medium" = "標準";

@@ -57,6 +57,7 @@
 "settings.general.menubar_hint" = "メニューバーに表示する内容を選択";
 "settings.general.menubar_theme" = "メニューバーテーマ";
 "settings.general.menubar_icon_size" = "アイコンサイズ";
+"settings.general.menubar_color_mode" = "アイコンの色";
 "settings.general.display_content" = "表示内容";
 "settings.general.monochrome_no_icon_hint" = "モノクロームテーマではアイコン表示に対応していません";
 "settings.general.refresh_section" = "更新設定";
@@ -74,6 +75,10 @@
 "icon_style.color_translucent_desc" = "カラーリング、背景なし。数字はメニューバーの明暗に自動で合わせます";
 "icon_style.color_with_background_desc" = "リングの背後に薄い背景を追加。壁紙が複雑で数字が見分けにくいときに";
 "icon_style.monochrome_desc" = "システムメニューバースタイルに自動適応、シンプルでエレガント";
+"menubar_color.usage_level" = "使用量で変化";
+"menubar_color.limit_type" = "制限の種類ごと";
+"menubar_color.usage_level_desc" = "使用量が増えると色が変わり（例：5時間リングは緑 → オレンジ → 赤）、上限に達する前に知らせます";
+"menubar_color.limit_type_desc" = "各制限は常に同じ色で表示され、ポップオーバー内のアイコンやグラフのマーカーと一致します";
 
 "menu_bar_icon_size.small" = "コンパクト";
 "menu_bar_icon_size.medium" = "標準";

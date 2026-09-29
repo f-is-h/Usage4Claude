@@ -57,6 +57,7 @@
 "settings.general.menubar_hint" = "Choisir ce qui s'affiche dans la barre des menus";
 "settings.general.menubar_theme" = "Thème de la barre des menus";
 "settings.general.menubar_icon_size" = "Taille des icônes";
+"settings.general.menubar_color_mode" = "Couleurs des icônes";
 "settings.general.display_content" = "Contenu affiché";
 "settings.general.monochrome_no_icon_hint" = "L'affichage de l'icône n'est pas disponible avec le thème monochrome";
 "settings.general.refresh_section" = "Réglages d'actualisation";
@@ -74,6 +75,10 @@
 "icon_style.color_translucent_desc" = "Anneaux colorés sans fond ; les chiffres suivent automatiquement la clarté de la barre des menus";
 "icon_style.color_with_background_desc" = "Ajoute un fond léger derrière les anneaux, utile quand un fond d'écran chargé rend les chiffres difficiles à lire";
 "icon_style.monochrome_desc" = "S'adapte automatiquement au style de la barre des menus, sobre et élégant";
+"menubar_color.usage_level" = "Selon l'utilisation";
+"menubar_color.limit_type" = "Selon le type de limite";
+"menubar_color.usage_level_desc" = "Les couleurs changent à mesure que l'utilisation augmente (par ex. l'anneau 5 heures passe du vert → orange → rouge) pour vous prévenir avant qu'une limite soit atteinte";
+"menubar_color.limit_type_desc" = "Chaque limite garde une seule couleur, identique à son icône et à son point sur le graphique dans le popover";
 
 "menu_bar_icon_size.small" = "Compacte";
 "menu_bar_icon_size.medium" = "Standard";

@@ -57,6 +57,7 @@
 "settings.general.menubar_hint" = "메뉴바에 표시할 내용 선택";
 "settings.general.menubar_theme" = "메뉴바 테마";
 "settings.general.menubar_icon_size" = "아이콘 크기";
+"settings.general.menubar_color_mode" = "아이콘 색상";
 "settings.general.display_content" = "표시 내용";
 "settings.general.monochrome_no_icon_hint" = "단색 테마에서는 아이콘 표시를 지원하지 않습니다";
 "settings.general.refresh_section" = "새로고침 설정";
@@ -74,6 +75,10 @@
 "icon_style.color_translucent_desc" = "컬러 링, 배경 없음. 숫자가 메뉴 막대의 명암에 자동으로 맞춰집니다";
 "icon_style.color_with_background_desc" = "링 뒤에 얇은 배경을 추가합니다. 배경화면이 복잡해 숫자를 알아보기 어려울 때 적합";
 "icon_style.monochrome_desc" = "시스템 메뉴바 스타일에 자동 적응, 간결하고 우아함";
+"menubar_color.usage_level" = "사용량에 따라";
+"menubar_color.limit_type" = "제한 유형별";
+"menubar_color.usage_level_desc" = "사용량이 늘어나면 색상이 바뀌어(예: 5시간 링이 초록 → 주황 → 빨강) 한도에 도달하기 전에 알려줍니다";
+"menubar_color.limit_type_desc" = "각 제한은 한 가지 색상을 유지하며, 팝오버의 아이콘 및 그래프 마커와 일치합니다";
 
 "menu_bar_icon_size.small" = "작게";
 "menu_bar_icon_size.medium" = "표준";

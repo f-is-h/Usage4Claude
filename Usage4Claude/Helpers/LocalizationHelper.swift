@@ -97,6 +97,7 @@ enum L {
         static var menubarHint: String { localized("settings.general.menubar_hint") }
         static var menubarTheme: String { localized("settings.general.menubar_theme") }
         static var menubarIconSize: String { localized("settings.general.menubar_icon_size") }
+        static var menubarColorMode: String { localized("settings.general.menubar_color_mode") }
         static var displayContent: String { localized("settings.general.display_content") }
         static var monochromeNoIconHint: String { localized("settings.general.monochrome_no_icon_hint") }
         static var refreshSection: String { localized("settings.general.refresh_section") }
@@ -234,6 +235,14 @@ enum L {
         static var colorTranslucentDesc: String { localized("icon_style.color_translucent_desc") }
         static var colorWithBackgroundDesc: String { localized("icon_style.color_with_background_desc") }
         static var monochromeDesc: String { localized("icon_style.monochrome_desc") }
+    }
+
+    // MARK: - Menu Bar Color Mode
+    enum MenuBarColor {
+        static var usageLevel: String { localized("menubar_color.usage_level") }
+        static var limitType: String { localized("menubar_color.limit_type") }
+        static var usageLevelDesc: String { localized("menubar_color.usage_level_desc") }
+        static var limitTypeDesc: String { localized("menubar_color.limit_type_desc") }
     }
     
     // MARK: - Refresh Interval

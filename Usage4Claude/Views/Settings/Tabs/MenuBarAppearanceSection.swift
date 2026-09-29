@@ -53,6 +53,37 @@ struct MenuBarAppearanceSection: View {
 
                 Divider()
 
+                // 图标着色依据（单色模式下不适用）
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L.SettingsGeneral.menubarColorMode)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+
+                    Picker("", selection: $settings.menuBarColorMode) {
+                        ForEach(MenuBarColorMode.allCases, id: \.self) { mode in
+                            Text(mode.localizedName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.radioGroup)
+                    .labelsHidden()
+                    .focusable(false)
+
+                    HStack(alignment: .top, spacing: 4) {
+                        Image(systemName: "info.circle.fill")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                        Text(settings.menuBarColorMode.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.leading, 20)
+                }
+                .disabled(settings.iconStyleMode == .monochrome)
+
+                Divider()
+
                 // 图标大小选择
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L.SettingsGeneral.menubarIconSize)
