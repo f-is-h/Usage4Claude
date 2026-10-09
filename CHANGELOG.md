@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Command Code usage**: A third provider alongside Claude and Codex. It reads the rolling 5-hour cap, the rolling weekly cap, and the monthly credit balance (with plan name and billing-period end) from Command Code's billing API, authenticated with the signed-in `commandcode.ai` session cookie pasted in Settings → Accounts. The provider is opt-in — it contributes a menu-bar segment, a detail column, notifications, custom-display types, and a connection diagnostic only once an account is configured, so existing users are unaffected. Endpoints are undocumented and community-reverse-engineered, so parsing is defensive (camel/snake case, numeric strings, epoch or ISO timestamps) and the subscription lookup degrades to a balance-only row. The pace graph plots both windows (credits stay off it, being a balance), and the brand mark uses the ⌘ symbol from SF Symbols to match Command Code's logo
+
 ### Fixed
 - **Launch at login showed a red "Not Found" on a fresh install**: Before the app has ever called `register()`, `SMAppService.mainApp.status` reports `.notFound`; it only becomes `.notRegistered` after a register/unregister round trip. The settings page rendered `.notFound` as an error (red cross, "Not Found"), so every new user saw what looked like a failure for the normal initial state, and it only turned into "Disabled" after toggling the setting on and off once. Both states now display as "Disabled". Genuine registration failures are unaffected: they surface when `register()` throws, through the existing error alert, and never depended on this label. The now-unused `launch.status.not_found` string is removed from all 7 languages
 

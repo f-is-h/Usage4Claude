@@ -227,6 +227,9 @@ struct LimitTypeCheckbox: View {
         case .codexPrimary:  return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
         case .codexSecondary: return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)
         case .codexExtraUsage: return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
+        case .commandCodeFiveHour: return UsageColorScheme.commandCodeFiveHourColorSwiftUI(50)
+        case .commandCodeWeekly:   return UsageColorScheme.commandCodeWeeklyColorSwiftUI(50)
+        case .commandCodeCredits:  return UsageColorScheme.commandCodeCreditsBadgeColorSwiftUI(isExhausted: false)
         }
     }
 }

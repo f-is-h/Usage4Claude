@@ -148,5 +148,11 @@ extension TimerManager {
         static let codexResetVerify3 = "codexResetVerify3"
         /// Codex accessToken 主动续期定时器（独立于用量拉取计时器）
         static let codexTokenRefresh = "codexTokenRefresh"
+        /// Command Code 重置验证定时器 - 重置后1秒
+        static let commandCodeResetVerify1 = "commandCodeResetVerify1"
+        /// Command Code 重置验证定时器 - 重置后10秒
+        static let commandCodeResetVerify2 = "commandCodeResetVerify2"
+        /// Command Code 重置验证定时器 - 重置后30秒
+        static let commandCodeResetVerify3 = "commandCodeResetVerify3"
     }
 }

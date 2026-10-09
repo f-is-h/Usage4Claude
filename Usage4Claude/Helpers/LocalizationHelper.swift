@@ -21,6 +21,7 @@ enum L {
         static var about: String { localized("menu.about") }
         static var claudeStatus: String { localized("menu.claude_status") }
         static var codexStatus: String { localized("menu.codex_status") }
+        static var commandCodeStatus: String { localized("menu.commandcode_status") }
         static var coffee: String { localized("menu.coffee") }
         static var githubSponsor: String { localized("menu.github_sponsor") }
         static var quit: String { localized("menu.quit") }
@@ -52,6 +53,14 @@ enum L {
         static var codexAccounts: String { localized("account.codex_accounts") }
         static var addCodexAccount: String { localized("account.add_codex_account") }
         static var codexCurrentAccount: String { localized("account.codex_current_account") }
+        static var commandCodeAccounts: String { localized("account.commandcode_accounts") }
+        static var commandCodeCurrentAccount: String { localized("account.commandcode_current_account") }
+    }
+
+    // MARK: - Command Code
+    enum CommandCode {
+        static var sessionCookieLabel: String { localized("commandcode.session_cookie_label") }
+        static var sessionCookieHint: String { localized("commandcode.session_cookie_hint") }
     }
     
     // MARK: - Usage Detail View
@@ -75,6 +84,7 @@ enum L {
         static var refreshCooldown: String { localized("usage.refresh_cooldown") }
         static var runDiagnostic: String { localized("usage.run_diagnostic") }
         static var codexTitle: String { localized("usage.codex_title") }
+        static var commandCodeTitle: String { localized("usage.commandcode_title") }
         static var codexRelogin: String { localized("usage.codex_relogin") }
     }
     
@@ -415,6 +425,9 @@ enum L {
         static var codexPrimary: String { localized("codex_primary_limit") }
         static var codexSecondary: String { localized("codex_secondary_limit") }
         static var codexExtraUsage: String { localized("codex_extra_usage") }
+        static var commandCodeFiveHour: String { localized("commandcode_five_hour_limit") }
+        static var commandCodeWeekly: String { localized("commandcode_weekly_limit") }
+        static var commandCodeCredits: String { localized("commandcode_credits") }
     }
 
     // MARK: - Display Options (v2.0.0)

@@ -20,6 +20,8 @@ class DataRefreshManager: ObservableObject {
     private let apiService = ClaudeAPIService()
     /// Codex API 服务实例
     private let codexApiService = CodexAPIService()
+    /// Command Code API 服务实例
+    private let commandCodeApiService = CommandCodeAPIService()
     /// Codex 重置预告服务实例（Beta，第三方数据源）——独立于用量刷新链路
     private let codexAnnouncementService = CodexResetAnnouncementService()
     /// 定时器管理器
@@ -33,6 +35,8 @@ class DataRefreshManager: ObservableObject {
     @Published var usageData: UsageData?
     /// Codex 用量数据（nil 表示无 Codex 账号或拉取失败）
     @Published var codexUsageData: CodexUsageData?
+    /// Command Code 用量数据（nil 表示无 Command Code 账号或拉取失败）
+    @Published var commandCodeUsageData: CommandCodeUsageData?
     /// 加载状态
     @Published var isLoading = false
     /// 错误消息
@@ -44,6 +48,10 @@ class DataRefreshManager: ObservableObject {
     @Published var codexErrorMessage: String?
     /// 当前 codexErrorMessage 是否为认证类错误，语义与 errorRequiresAuthAction 相同
     @Published var codexErrorRequiresAuthAction = false
+    /// Command Code 错误消息（独立于其他 Provider）
+    @Published var commandCodeErrorMessage: String?
+    /// 当前 commandCodeErrorMessage 是否为认证类错误，语义与 errorRequiresAuthAction 相同
+    @Published var commandCodeErrorRequiresAuthAction = false
     /// Codex 官方重置预告（Beta，第三方数据源）。完全旁路 refreshState/isLoading/codexErrorMessage——
     /// 失败静默契约：无论「没有预告」「网络失败」「解析失败」「功能已关闭」，UI 表现都必须是 nil，
     /// 逐像素一致，绝不打扰用户（见项目计划文档）。
@@ -57,6 +65,8 @@ class DataRefreshManager: ObservableObject {
     private var lastResetsAt: Date?
     /// Codex 上次的重置时间
     private var lastCodexResetsAt: Date?
+    /// Command Code 上次的重置时间
+    private var lastCommandCodeResetsAt: Date?
     /// 上次手动刷新时间
     private var lastManualRefreshTime: Date?
     /// 上次API请求时间
@@ -78,6 +88,8 @@ class DataRefreshManager: ObservableObject {
     private var claudeBackoff = UsageFetchBackoffPolicy.State.initial
     /// Codex 用量拉取的失败退避状态
     private var codexBackoff = UsageFetchBackoffPolicy.State.initial
+    /// Command Code 用量拉取的失败退避状态
+    private var commandCodeBackoff = UsageFetchBackoffPolicy.State.initial
 
     private var shouldFetchClaudeUsage: Bool {
         #if DEBUG
@@ -123,6 +135,28 @@ class DataRefreshManager: ObservableObject {
         #endif
     }
 
+    private var shouldSuppressDebugCommandCodeUsageForDisplayOptions: Bool {
+        #if DEBUG
+        return settings.debugModeEnabled
+            && settings.displayMode == .custom
+            && !settings.customDisplayMenuBarOnly
+            && !settings.customDisplayTypes.contains { $0.provider == .commandCode }
+        #else
+        return false
+        #endif
+    }
+
+    private var shouldFetchCommandCodeUsage: Bool {
+        #if DEBUG
+        if shouldSuppressDebugCommandCodeUsageForDisplayOptions {
+            return false
+        }
+        return settings.debugModeEnabled || settings.hasValidCommandCodeCredentials
+        #else
+        return settings.hasValidCommandCodeCredentials
+        #endif
+    }
+
     /// 定时器标识符统一定义在 TimerManager.Identifier，避免两处各自为政
     private typealias TimerID = TimerManager.Identifier
 
@@ -140,6 +174,7 @@ class DataRefreshManager: ObservableObject {
     func fetchUsage(bypassBackoff: Bool = false) {
         let claudeEnabled = shouldFetchClaudeUsage
         let codexEnabled = shouldFetchCodexUsage
+        let commandCodeEnabled = shouldFetchCommandCodeUsage
 
         if !claudeEnabled {
             clearClaudeUsageState()
@@ -147,8 +182,11 @@ class DataRefreshManager: ObservableObject {
         if !codexEnabled {
             clearCodexUsageState()
         }
+        if !commandCodeEnabled {
+            clearCommandCodeUsageState()
+        }
 
-        guard claudeEnabled || codexEnabled else {
+        guard claudeEnabled || codexEnabled || commandCodeEnabled else {
             isLoading = false
             endRefreshAnimationWithMinimumDuration { }
             errorMessage = UsageError.noCredentials.localizedDescription
@@ -159,9 +197,10 @@ class DataRefreshManager: ObservableObject {
         let now = Date()
         let fetchClaude = claudeEnabled && (bypassBackoff || isBackoffElapsed(for: .claude, now: now))
         let fetchCodex = codexEnabled && (bypassBackoff || isBackoffElapsed(for: .codex, now: now))
+        let fetchCommandCode = commandCodeEnabled && (bypassBackoff || isBackoffElapsed(for: .commandCode, now: now))
 
-        // 两个 Provider 都在退避期内：整次自动刷新跳过，保留缓存数据和错误提示
-        guard fetchClaude || fetchCodex else { return }
+        // 所有 Provider 都在退避期内：整次自动刷新跳过，保留缓存数据和错误提示
+        guard fetchClaude || fetchCodex || fetchCommandCode else { return }
 
         isLoading = true
         markRequestIssued(at: now)
@@ -174,17 +213,24 @@ class DataRefreshManager: ObservableObject {
             codexErrorMessage = nil
             codexErrorRequiresAuthAction = false
         }
+        if fetchCommandCode {
+            commandCodeErrorMessage = nil
+            commandCodeErrorRequiresAuthAction = false
+        }
 
-        // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
+        // 各 Provider 并发拉取：子任务立即启动，结果在 MainActor 上顺序 await 合并
         // （审计报告 4.2：替代 DispatchGroup + 跨线程共享可变结果变量的旧写法）
         let claudeTask: Task<Result<UsageData, Error>, Never>? =
             fetchClaude ? Task { await self.apiService.fetchUsageResult() } : nil
         let codexTask: Task<Result<CodexUsageData, Error>, Never>? =
             fetchCodex ? Task { await self.codexApiService.fetchUsageResult() } : nil
+        let commandCodeTask: Task<Result<CommandCodeUsageData, Error>, Never>? =
+            fetchCommandCode ? Task { await self.commandCodeApiService.fetchUsageResult() } : nil
 
         Task { @MainActor [weak self] in
             let claudeResult = await claudeTask?.value
             let codexResult = await codexTask?.value
+            let commandCodeResult = await commandCodeTask?.value
 
             guard let self = self else { return }
             self.isLoading = false
@@ -213,6 +259,28 @@ class DataRefreshManager: ObservableObject {
             } else if !codexEnabled {
                 // 仅在未配置 Codex 时清理；因退避跳过时要保留错误提示
                 self.clearCodexUsageState()
+            }
+
+            // 处理 Command Code 结果（无凭据续期链路：失败即展示，凭据失效引导重新登录）
+            if fetchCommandCode {
+                switch commandCodeResult {
+                case .success(let commandCode):
+                    if let utilization = self.monitoringUtilization(for: commandCode) {
+                        monitoringUtilizations[.commandCode] = utilization
+                    }
+                    self.processCommandCodeSuccess(commandCode)
+
+                case .failure(let error):
+                    AppLog.warning(.refresh, "Command Code refresh failed; other providers are unaffected: \(error.localizedDescription)")
+                    self.commandCodeErrorMessage = error.localizedDescription
+                    self.commandCodeErrorRequiresAuthAction = self.requiresAuthAction(error)
+                    self.recordFetchFailure(error, for: .commandCode)
+
+                case .none:
+                    self.clearCommandCodeUsageState()
+                }
+            } else if !commandCodeEnabled {
+                self.clearCommandCodeUsageState()
             }
 
             // 处理 Claude 结果
@@ -280,11 +348,32 @@ class DataRefreshManager: ObservableObject {
         cancelCodexResetVerification()
     }
 
+    private func clearCommandCodeUsageState(clearError: Bool = true) {
+        commandCodeUsageData = nil
+        refreshState.lastSuccessAt[.commandCode] = nil
+        if clearError {
+            commandCodeErrorMessage = nil
+            commandCodeErrorRequiresAuthAction = false
+        }
+        lastCommandCodeResetsAt = nil
+        cancelCommandCodeResetVerification()
+    }
+
     private func monitoringUtilization(for codex: CodexUsageData) -> Double? {
         [
             codex.primary?.percentage,
             codex.secondary?.percentage,
             codex.extraUsage?.percentage
+        ]
+        .compactMap { $0 }
+        .max()
+    }
+
+    private func monitoringUtilization(for commandCode: CommandCodeUsageData) -> Double? {
+        [
+            commandCode.fiveHour?.percentage,
+            commandCode.weekly?.percentage,
+            commandCode.monthlyUsedPercentage
         ]
         .compactMap { $0 }
         .max()
@@ -608,6 +697,58 @@ class DataRefreshManager: ObservableObject {
         }
     }
 
+    /// 仅刷新 Command Code 数据（圆环点击触发）
+    func handleCommandCodeOnlyRefresh() {
+        guard shouldFetchCommandCodeUsage else {
+            clearCommandCodeUsageState()
+            return
+        }
+        let now = Date()
+        if let lastManual = lastManualRefreshTime,
+           now.timeIntervalSince(lastManual) < 10 { return }
+        lastManualRefreshTime = now
+        refreshAnimationStartTime = now
+        refreshState.refreshingProvider = .commandCode
+        refreshState.isRefreshing = true
+        refreshState.canRefresh = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            self?.refreshState.canRefresh = true
+        }
+        fetchCommandCodeOnly()
+    }
+
+    private func fetchCommandCodeOnly() {
+        guard shouldFetchCommandCodeUsage else {
+            clearCommandCodeUsageState()
+            return
+        }
+        isLoading = true
+        commandCodeErrorMessage = nil
+        commandCodeErrorRequiresAuthAction = false
+        markRequestIssued()
+
+        commandCodeApiService.fetchUsage { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.isLoading = false
+                self.endRefreshAnimationWithMinimumDuration { }
+
+                switch result {
+                case .success(let data):
+                    self.processCommandCodeSuccess(data)
+                    if let utilization = self.monitoringUtilization(for: data) {
+                        self.settings.updateSmartMonitoringMode(providerUtilizations: [.commandCode: utilization])
+                    }
+                case .failure(let error):
+                    self.commandCodeErrorMessage = error.localizedDescription
+                    self.commandCodeErrorRequiresAuthAction = self.requiresAuthAction(error)
+                    self.recordFetchFailure(error, for: .commandCode)
+                    AppLog.error(.refresh, "Command Code-only refresh failed; keeping cached data: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
     private func fetchCodexOnly(retryOnUnauthorized: Bool = true) {
         guard shouldFetchCodexUsage else {
             clearCodexUsageState()
@@ -683,6 +824,23 @@ class DataRefreshManager: ObservableObject {
             scheduleCodexResetVerification(resetsAt: resetsAt)
         }
         lastCodexResetsAt = newCodexResetsAt
+    }
+
+    /// 应用一次成功的 Command Code 用量结果（数据 + 通知 + 重置验证）
+    private func processCommandCodeSuccess(_ data: CommandCodeUsageData) {
+        recordFetchSuccess(for: .commandCode)
+        let previousData = commandCodeUsageData
+        commandCodeUsageData = data
+        commandCodeErrorMessage = nil
+        commandCodeErrorRequiresAuthAction = false
+        NotificationManager.shared.checkAndNotify(commandCodeUsageData: data, previousData: previousData)
+        let newResetsAt = data.fiveHour?.resetsAt ?? data.weekly?.resetsAt
+        if hasResetTimeChanged(from: lastCommandCodeResetsAt, to: newResetsAt) {
+            cancelCommandCodeResetVerification()
+        } else if let resetsAt = newResetsAt {
+            scheduleCommandCodeResetVerification(resetsAt: resetsAt)
+        }
+        lastCommandCodeResetsAt = newResetsAt
     }
 
     private func attemptTokenRefreshAndRetry() {
@@ -821,11 +979,20 @@ class DataRefreshManager: ObservableObject {
                 fetchCodexOnly()
             }
 
+        case .commandCode:
+            commandCodeBackoff = .initial
+            clearCommandCodeUsageState()
+            if shouldFetchCommandCodeUsage {
+                fetchCommandCodeOnly()
+            }
+
         case .none:
             claudeBackoff = .initial
             codexBackoff = .initial
+            commandCodeBackoff = .initial
             clearClaudeUsageState()
             clearCodexUsageState()
+            clearCommandCodeUsageState()
             NotificationManager.shared.resetAllNotificationStates()
             fetchUsage()
         }
@@ -866,13 +1033,18 @@ class DataRefreshManager: ObservableObject {
     // MARK: - Fetch Backoff
 
     private func backoffState(for provider: ProviderType) -> UsageFetchBackoffPolicy.State {
-        provider == .claude ? claudeBackoff : codexBackoff
+        switch provider {
+        case .claude: return claudeBackoff
+        case .codex: return codexBackoff
+        case .commandCode: return commandCodeBackoff
+        }
     }
 
     private func setBackoffState(_ state: UsageFetchBackoffPolicy.State, for provider: ProviderType) {
         switch provider {
         case .claude: claudeBackoff = state
         case .codex: codexBackoff = state
+        case .commandCode: commandCodeBackoff = state
         }
     }
 
@@ -1001,6 +1173,35 @@ class DataRefreshManager: ObservableObject {
         timerManager.invalidate(TimerID.codexResetVerify1)
         timerManager.invalidate(TimerID.codexResetVerify2)
         timerManager.invalidate(TimerID.codexResetVerify3)
+    }
+
+    private func cancelCommandCodeResetVerification() {
+        timerManager.invalidate(TimerID.commandCodeResetVerify1)
+        timerManager.invalidate(TimerID.commandCodeResetVerify2)
+        timerManager.invalidate(TimerID.commandCodeResetVerify3)
+    }
+
+    private func scheduleCommandCodeResetVerification(resetsAt: Date) {
+        cancelCommandCodeResetVerification()
+
+        let timeUntilReset = resetsAt.timeIntervalSinceNow
+        guard timeUntilReset > 0 else {
+            AppLog.trace(.refresh, "Command Code reset time already passed; not scheduling reset verification")
+            return
+        }
+
+        timerManager.schedule(TimerID.commandCodeResetVerify1, interval: timeUntilReset + 1, repeats: false) { [weak self] in
+            AppLog.trace(.refresh, "Command Code reset verification +1s: refreshing")
+            self?.fetchUsage()
+        }
+        timerManager.schedule(TimerID.commandCodeResetVerify2, interval: timeUntilReset + 10, repeats: false) { [weak self] in
+            AppLog.trace(.refresh, "Command Code reset verification +10s: refreshing")
+            self?.fetchUsage()
+        }
+        timerManager.schedule(TimerID.commandCodeResetVerify3, interval: timeUntilReset + 30, repeats: false) { [weak self] in
+            AppLog.trace(.refresh, "Command Code reset verification +30s: refreshing")
+            self?.fetchUsage()
+        }
     }
 
     private func scheduleCodexResetVerification(resetsAt: Date) {

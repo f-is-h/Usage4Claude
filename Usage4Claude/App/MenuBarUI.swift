@@ -70,6 +70,7 @@ class MenuBarUI: NSObject {
     private struct IconSnapshot {
         let usageData: UsageData?
         let codexUsageData: CodexUsageData?
+        let commandCodeUsageData: CommandCodeUsageData?
         let hasUpdate: Bool
         let shouldShowBadge: Bool
         /// 实际是否画徽章
@@ -541,6 +542,17 @@ class MenuBarUI: NSObject {
             menu.addItem(codexStatusItem)
         }
 
+        if !settings.commandCodeAccounts.isEmpty {
+            let commandCodeStatusItem = NSMenuItem(
+                title: L.Menu.commandCodeStatus,
+                action: #selector(MenuBarManager.openCommandCodeStatus),
+                keyEquivalent: ""
+            )
+            commandCodeStatusItem.target = target
+            setMenuItemIcon(commandCodeStatusItem, systemName: "terminal")
+            menu.addItem(commandCodeStatusItem)
+        }
+
         menu.addItem(NSMenuItem.separator())
 
         // 退出
@@ -726,7 +738,7 @@ class MenuBarUI: NSObject {
     ///   - codexUsageData: Codex 用量数据
     ///   - hasUpdate: 是否有可用更新
     ///   - shouldShowBadge: 是否显示更新徽章
-    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
+    func updateMenuBarIcon(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, commandCodeUsageData: CommandCodeUsageData? = nil, hasUpdate: Bool, shouldShowBadge: Bool) {
         guard let button = statusItem.button else { return }
 
         // 切换动画进行中：把新数据交给动画，下一帧自然带上，不在这里抢着画
@@ -734,6 +746,7 @@ class MenuBarUI: NSObject {
             transitionSnapshot = IconSnapshot(
                 usageData: usageData,
                 codexUsageData: codexUsageData,
+                commandCodeUsageData: commandCodeUsageData,
                 hasUpdate: hasUpdate,
                 shouldShowBadge: shouldShowBadge
             )
@@ -744,7 +757,7 @@ class MenuBarUI: NSObject {
         let showBadge = hasUpdate && shouldShowBadge
 
         // 生成缓存键
-        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: showBadge)
+        let cacheKey = generateCacheKey(usageData: usageData, codexUsageData: codexUsageData, commandCodeUsageData: commandCodeUsageData, hasUpdate: showBadge)
 
         // 尝试从缓存获取
         if let cachedImage = iconCache[cacheKey] {
@@ -756,6 +769,7 @@ class MenuBarUI: NSObject {
         let icon = iconRenderer.createIcon(
             usageData: usageData,
             codexUsageData: codexUsageData,
+            commandCodeUsageData: commandCodeUsageData,
             hasUpdate: showBadge,
             button: button
         )
@@ -783,23 +797,26 @@ class MenuBarUI: NSObject {
         to: Bool,
         usageData: UsageData?,
         codexUsageData: CodexUsageData?,
+        commandCodeUsageData: CommandCodeUsageData? = nil,
         hasUpdate: Bool,
         shouldShowBadge: Bool
     ) {
         let snapshot = IconSnapshot(
             usageData: usageData,
             codexUsageData: codexUsageData,
+            commandCodeUsageData: commandCodeUsageData,
             hasUpdate: hasUpdate,
             shouldShowBadge: shouldShowBadge
         )
 
         // 没有状态栏按钮，或压根没数据可画（图标是固定的占位/分隔线），
         // 动画没有意义，直接落到终态
-        guard statusItem.button != nil, usageData != nil || codexUsageData != nil else {
+        guard statusItem.button != nil, usageData != nil || codexUsageData != nil || commandCodeUsageData != nil else {
             stopRemainingModeTransition()
             updateMenuBarIcon(
                 usageData: usageData,
                 codexUsageData: codexUsageData,
+                commandCodeUsageData: commandCodeUsageData,
                 hasUpdate: hasUpdate,
                 shouldShowBadge: shouldShowBadge
             )
@@ -846,6 +863,7 @@ class MenuBarUI: NSObject {
         let icon = iconRenderer.createIcon(
             usageData: snapshot.usageData,
             codexUsageData: snapshot.codexUsageData,
+            commandCodeUsageData: snapshot.commandCodeUsageData,
             hasUpdate: snapshot.showBadge,
             button: button
         )
@@ -859,6 +877,7 @@ class MenuBarUI: NSObject {
         updateMenuBarIcon(
             usageData: snapshot.usageData,
             codexUsageData: snapshot.codexUsageData,
+            commandCodeUsageData: snapshot.commandCodeUsageData,
             hasUpdate: snapshot.hasUpdate,
             shouldShowBadge: snapshot.shouldShowBadge
         )
@@ -885,7 +904,7 @@ class MenuBarUI: NSObject {
     ///   - codexUsageData: Codex 用量数据
     ///   - hasUpdate: 是否有更新徽章
     /// - Returns: 缓存键字符串
-    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, hasUpdate: Bool) -> String {
+    private func generateCacheKey(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, commandCodeUsageData: CommandCodeUsageData? = nil, hasUpdate: Bool) -> String {
         let isMulti = settings.isMultiProviderActive
         guard let data = usageData else {
             var key = "no_data_\(settings.iconDisplayMode.rawValue)_\(settings.iconStyleMode.rawValue)_\(settings.displayMode.rawValue)_mp\(isMulti)_rm\(settings.showRemainingMode)"
@@ -917,6 +936,15 @@ class MenuBarUI: NSObject {
                 } else {
                     key += "_cxenil"
                 }
+            }
+
+            if let commandCode = commandCodeUsageData {
+                let activeTypes = settings.getActiveDisplayTypes(usageData: nil, commandCodeUsageData: commandCode, forMenuBar: true)
+                    .map(\.rawValue)
+                    .sorted()
+                    .joined(separator: ",")
+                key += "_cctypes\(activeTypes)"
+                key += commandCodeCacheKeyFragment(commandCode)
             }
 
             if hasUpdate {
@@ -954,11 +982,26 @@ class MenuBarUI: NSObject {
             }
         }
 
+        if let commandCode = commandCodeUsageData {
+            key += commandCodeCacheKeyFragment(commandCode)
+        }
+
         if hasUpdate {
             key += "_badge"
         }
 
         return key
+    }
+
+    /// Command Code 用量进入图标缓存键的片段（窗口百分比 + 余额徽章文本）
+    private func commandCodeCacheKeyFragment(_ data: CommandCodeUsageData) -> String {
+        var fragment = ""
+        if let fiveHour = data.fiveHour { fragment += "_cc5h\(Int(fiveHour.percentage))" }
+        if let weekly = data.weekly { fragment += "_ccw\(Int(weekly.percentage))" }
+        if let remaining = data.monthlyCreditsRemaining {
+            fragment += "_ccc\(CommandCodeUsageData.creditsBadgeText(remaining) ?? "-")_\(data.monthlyUsedPercentage.map { Int($0) } ?? -1)"
+        }
+        return fragment
     }
 
     // MARK: - Utility Icons

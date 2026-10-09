@@ -62,6 +62,8 @@ class MenuBarManager: ObservableObject {
     @Published var usageData: UsageData?
     /// Codex 用量数据（从 dataManager 同步）
     @Published var codexUsageData: CodexUsageData?
+    /// Command Code 用量数据（从 dataManager 同步）
+    @Published var commandCodeUsageData: CommandCodeUsageData?
     /// 加载状态（从 dataManager 同步）
     @Published var isLoading = false
     /// 错误消息（从 dataManager 同步）
@@ -72,6 +74,10 @@ class MenuBarManager: ObservableObject {
     @Published var codexErrorMessage: String?
     /// 当前 Codex 错误是否为认证类错误（从 dataManager 同步）
     @Published var codexErrorRequiresAuthAction = false
+    /// Command Code 错误消息（独立于其他 Provider）
+    @Published var commandCodeErrorMessage: String?
+    /// 当前 Command Code 错误是否为认证类错误（从 dataManager 同步）
+    @Published var commandCodeErrorRequiresAuthAction = false
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Published var codexNeedsRelogin = false
     /// Codex 官方重置预告（Beta，从 dataManager 同步）
@@ -119,6 +125,13 @@ class MenuBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        dataManager.$commandCodeUsageData
+            .sink { [weak self] data in
+                self?.commandCodeUsageData = data
+                self?.updateMenuBarIcon()
+            }
+            .store(in: &cancellables)
+
         dataManager.$isLoading
             .assign(to: &$isLoading)
 
@@ -133,6 +146,12 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexErrorRequiresAuthAction
             .assign(to: &$codexErrorRequiresAuthAction)
+
+        dataManager.$commandCodeErrorMessage
+            .assign(to: &$commandCodeErrorMessage)
+
+        dataManager.$commandCodeErrorRequiresAuthAction
+            .assign(to: &$commandCodeErrorRequiresAuthAction)
 
         dataManager.$codexNeedsRelogin
             .assign(to: &$codexNeedsRelogin)
@@ -180,6 +199,12 @@ class MenuBarManager: ObservableObject {
         }
     }
 
+    @objc func openCommandCodeStatus() {
+        if let url = URL(string: "https://commandcode.ai") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     @objc func quitApp() {
         NSApplication.shared.terminate(nil)
     }
@@ -194,6 +219,8 @@ class MenuBarManager: ObservableObject {
             dataManager.handleClaudeOnlyRefresh()
         case .refreshCodex:
             dataManager.handleCodexOnlyRefresh()
+        case .refreshCommandCode:
+            dataManager.handleCommandCodeOnlyRefresh()
         case .settings:
             closePopover()
             openSettingsWindow(tab: .display)
@@ -212,6 +239,9 @@ class MenuBarManager: ObservableObject {
         case .codexStatus:
             closePopover()
             openCodexStatus()
+        case .commandCodeStatus:
+            closePopover()
+            openCommandCodeStatus()
         case .coffee:
             closePopover()
             if let url = URL(string: "https://ko-fi.com/1atte") {
@@ -273,6 +303,7 @@ class MenuBarManager: ObservableObject {
                     to: to,
                     usageData: self.usageData,
                     codexUsageData: self.codexUsageData,
+                    commandCodeUsageData: self.commandCodeUsageData,
                     hasUpdate: self.hasAvailableUpdate,
                     shouldShowBadge: self.shouldShowUpdateBadge
                 )
@@ -377,6 +408,10 @@ class MenuBarManager: ObservableObject {
                 get: { self.codexUsageData },
                 set: { self.codexUsageData = $0 }
             ),
+            commandCodeUsageData: Binding(
+                get: { self.commandCodeUsageData },
+                set: { self.commandCodeUsageData = $0 }
+            ),
             errorMessage: Binding(
                 get: { self.errorMessage },
                 set: { self.errorMessage = $0 }
@@ -391,6 +426,14 @@ class MenuBarManager: ObservableObject {
             ),
             codexErrorRequiresAuthAction: Binding(
                 get: { self.codexErrorRequiresAuthAction },
+                set: { _ in }
+            ),
+            commandCodeErrorMessage: Binding(
+                get: { self.commandCodeErrorMessage },
+                set: { self.commandCodeErrorMessage = $0 }
+            ),
+            commandCodeErrorRequiresAuthAction: Binding(
+                get: { self.commandCodeErrorRequiresAuthAction },
                 set: { _ in }
             ),
             codexNeedsRelogin: Binding(
@@ -583,7 +626,8 @@ class MenuBarManager: ObservableObject {
                 self?.settingsWindow = nil
                 if self?.settings.hasAnyValidCredentials == true
                     && self?.usageData == nil
-                    && self?.codexUsageData == nil {
+                    && self?.codexUsageData == nil
+                    && self?.commandCodeUsageData == nil {
                     self?.startRefreshing()
                 }
             }
@@ -647,7 +691,7 @@ class MenuBarManager: ObservableObject {
 
     /// 更新菜单栏图标
     private func updateMenuBarIcon() {
-        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
+        ui.updateMenuBarIcon(usageData: usageData, codexUsageData: codexUsageData, commandCodeUsageData: commandCodeUsageData, hasUpdate: hasAvailableUpdate, shouldShowBadge: shouldShowUpdateBadge)
     }
     
     // MARK: - Cleanup

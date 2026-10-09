@@ -65,6 +65,64 @@ enum ImageHelper {
         }
     }
 
+    // MARK: - Command Code Icon
+
+    /// Command Code 品牌标记：⌘（Command）符号，取自 SF Symbols —— 与官方 logo 同一字形。
+    /// 与 `createCodexIcon` 同样的缓存策略：同尺寸复用同一实例。
+    static func createCommandCodeIcon(size: CGFloat) -> NSImage? {
+        let scale = NSScreen.main?.backingScaleFactor ?? 2
+        return cachedIcon(key: "CommandCodeIcon-\(size)@\(scale)x") {
+            drawCommandCodeGlyph(size: size, isTemplate: false)
+        }
+    }
+
+    /// Command Code 标记的单色（模板）版本：由系统按菜单栏前景色上色
+    static func createCommandCodeTemplateIcon(size: CGFloat) -> NSImage? {
+        let scale = NSScreen.main?.backingScaleFactor ?? 2
+        return cachedIcon(key: "CommandCodeIconTemplate-\(size)@\(scale)x") {
+            drawCommandCodeGlyph(size: size, isTemplate: true)
+        }
+    }
+
+    /// 把 ⌘ 符号绘制到目标尺寸的正方形里。彩色版用品牌紫，模板版用黑色交给系统上色。
+    private static func drawCommandCodeGlyph(size: CGFloat, isTemplate: Bool) -> NSImage {
+        let targetSize = NSSize(width: size, height: size)
+        let image = NSImage(size: targetSize)
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSRect(origin: .zero, size: targetSize).fill()
+
+        if let base = NSImage(systemSymbolName: "command", accessibilityDescription: "Command Code") {
+            var config = NSImage.SymbolConfiguration(pointSize: size * 0.92, weight: .medium)
+            if !isTemplate {
+                config = config.applying(
+                    NSImage.SymbolConfiguration(paletteColors: [
+                        NSColor(red: 139/255.0, green: 92/255.0, blue: 246/255.0, alpha: 1.0)  // #8B5CF6
+                    ])
+                )
+            }
+            if let glyph = base.withSymbolConfiguration(config) {
+                let glyphSize = glyph.size
+                // 缩放以适配正方形（符号的包围盒通常略大于字号，直接按原始尺寸绘制会被裁切）
+                let maxSide = size * 0.92
+                let fit = min(maxSide / max(glyphSize.width, 1), maxSide / max(glyphSize.height, 1))
+                let width = glyphSize.width * fit
+                let height = glyphSize.height * fit
+                let rect = NSRect(
+                    x: (size - width) / 2,
+                    y: (size - height) / 2,
+                    width: width,
+                    height: height
+                )
+                glyph.draw(in: rect)
+            }
+        }
+
+        image.unlockFocus()
+        image.isTemplate = isTemplate
+        return image
+    }
+
     /// 从资源中创建正方形图标。部分透明 PNG 的边缘 RGB 不是透明白，
     /// 直接缩放时会被 AppKit 采样成细暗线，因此这里先居中裁方并略微内收。
     static func createSquareIcon(named name: String, size: CGFloat, isTemplate: Bool, sourceInset: CGFloat = 0) -> NSImage? {

@@ -446,6 +446,12 @@ struct SetupStepView: View {
             } else {
                 Image(systemName: "chevron.left.forwardslash.chevron.right").frame(width: size, height: size)
             }
+        case .commandCode:
+            if let icon = ImageHelper.createCommandCodeIcon(size: size) {
+                Image(nsImage: icon).resizable().frame(width: size, height: size)
+            } else {
+                Image(systemName: "terminal.fill").frame(width: size, height: size)
+            }
         }
     }
 

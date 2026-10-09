@@ -12,6 +12,7 @@
 "menu.about" = "Über";
 "menu.claude_status" = "Claude Status";
 "menu.codex_status" = "OpenAI Status";
+"menu.commandcode_status" = "Command Code";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claude beenden";
@@ -38,6 +39,11 @@
 "usage.refresh_cooldown" = "Moment kurz";
 "usage.run_diagnostic" = "Diagnose starten";
 "usage.codex_title" = "Codex Usage";
+"usage.commandcode_title" = "Command Code-Nutzung";
+"account.commandcode_accounts" = "Command Code-Konten";
+"account.commandcode_current_account" = "Aktuelles Command Code-Konto";
+"commandcode.session_cookie_label" = "Command Code Session-Cookie";
+"commandcode.session_cookie_hint" = "Melde dich bei commandcode.ai an, kopiere das Session-Cookie (oder den Cookie-Header) aus den Browser-Entwicklertools und füge es hier ein.";
 "usage.codex_relogin" = "Neu anmelden";
 
 // MARK: - Settings - Tabs
@@ -250,6 +256,9 @@
 "codex_primary_limit" = "Codex 5-Stunden-Limit";
 "codex_secondary_limit" = "Codex 7-Tage-Limit";
 "codex_extra_usage" = "Codex zusätzliche Nutzung";
+"commandcode_five_hour_limit" = "Command Code 5-Stunden-Limit";
+"commandcode_weekly_limit" = "Command Code Wochenlimit";
+"commandcode_credits" = "Command Code Credits";
 
 // MARK: - Detail Row Labels
 "detail_row.five_hour_limit" = "5-Stunden-Limit";

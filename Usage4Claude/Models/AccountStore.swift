@@ -118,6 +118,47 @@ final class AccountStore: ObservableObject {
         !codexSessionToken.isEmpty
     }
 
+    // MARK: - Command Code 账户
+
+    /// Command Code 账户列表（存储在独立 Keychain key "accounts_commandcode" 中）
+    @Published var commandCodeAccounts: [Account] {
+        didSet {
+            saveCommandCodeAccounts()
+        }
+    }
+
+    /// 当前激活的 Command Code 账户 ID（存储在 UserDefaults 中）
+    @Published var currentCommandCodeAccountId: UUID? {
+        didSet {
+            #if DEBUG
+            let key = "DEBUG_currentCommandCodeAccountId"
+            #else
+            let key = "currentCommandCodeAccountId"
+            #endif
+            if let id = currentCommandCodeAccountId {
+                defaults.set(id.uuidString, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+    }
+
+    /// 当前激活的 Command Code 账户
+    var currentCommandCodeAccount: Account? {
+        guard let id = currentCommandCodeAccountId else { return commandCodeAccounts.first }
+        return commandCodeAccounts.first { $0.id == id } ?? commandCodeAccounts.first
+    }
+
+    /// Command Code 会话 Cookie（存放在账户的 sessionKey 字段）
+    var commandCodeSessionCookie: String {
+        currentCommandCodeAccount?.sessionKey ?? ""
+    }
+
+    /// Command Code 认证信息是否已配置
+    var hasValidCommandCodeCredentials: Bool {
+        !commandCodeSessionCookie.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     // MARK: - Initialization
 
     init() {
@@ -194,6 +235,23 @@ final class AccountStore: ObservableObject {
             self.currentCodexAccountId = id
         } else {
             self.currentCodexAccountId = loadedCodexAccounts.first?.id
+        }
+
+        // MARK: - 加载 Command Code 账户数据
+
+        let loadedCommandCodeAccounts = keychain.loadCommandCodeAccounts() ?? []
+        self.commandCodeAccounts = loadedCommandCodeAccounts
+
+        #if DEBUG
+        let commandCodeCurrentAccountIdKey = "DEBUG_currentCommandCodeAccountId"
+        #else
+        let commandCodeCurrentAccountIdKey = "currentCommandCodeAccountId"
+        #endif
+        if let idString = defaults.string(forKey: commandCodeCurrentAccountIdKey),
+           let id = UUID(uuidString: idString) {
+            self.currentCommandCodeAccountId = id
+        } else {
+            self.currentCommandCodeAccountId = loadedCommandCodeAccounts.first?.id
         }
 
         // MARK: - 旧版迁移（v1.x → v2.0.0，保留向后兼容）
@@ -400,6 +458,80 @@ final class AccountStore: ObservableObject {
         case .skip(.unchanged), .skip(.emptyToken):
             break
         }
+    }
+
+    // MARK: - Command Code Account Management
+
+    private func saveCommandCodeAccounts() {
+        // 在调用线程（主线程）快照，避免后台队列直接读取主线程持有的可变数组造成数据竞争
+        let snapshot = commandCodeAccounts
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.keychain.saveCommandCodeAccounts(snapshot)
+        }
+    }
+
+    /// 添加/更新 Command Code 账户
+    /// - Returns: (存储后的账户, 是否是新增的第一个 Command Code 账户)
+    @discardableResult
+    func addCommandCodeAccount(_ account: Account) -> (account: Account, wasFirstCommandCodeAccount: Bool) {
+        let stableId = account.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let existingIndex = commandCodeAccounts.firstIndex { existing in
+            if !stableId.isEmpty {
+                let existingStableId = existing.organizationId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                return existingStableId == stableId || existing.sessionKey == account.sessionKey
+            }
+            return existing.sessionKey == account.sessionKey
+        }
+
+        if let index = existingIndex {
+            commandCodeAccounts[index].sessionKey = account.sessionKey
+            commandCodeAccounts[index].organizationId = account.organizationId
+            commandCodeAccounts[index].organizationName = account.organizationName
+            commandCodeAccounts[index].provider = .commandCode
+            if currentCommandCodeAccountId == nil {
+                currentCommandCodeAccountId = commandCodeAccounts[index].id
+            }
+            AppLog.event(.settings, "Updated existing Command Code account: \(self.commandCodeAccounts[index].displayName)")
+            postAccountChanged(provider: .commandCode)
+            return (commandCodeAccounts[index], false)
+        }
+
+        let wasFirstCommandCodeAccount = commandCodeAccounts.isEmpty
+        var storedAccount = account
+        storedAccount.provider = .commandCode
+        commandCodeAccounts.append(storedAccount)
+        if commandCodeAccounts.count == 1 {
+            currentCommandCodeAccountId = storedAccount.id
+        }
+        AppLog.event(.settings, "Added Command Code account: \(storedAccount.displayName)")
+        postAccountChanged(provider: .commandCode)
+        return (storedAccount, wasFirstCommandCodeAccount)
+    }
+
+    func removeCommandCodeAccount(_ account: Account) {
+        guard let index = commandCodeAccounts.firstIndex(where: { $0.id == account.id }) else { return }
+        let wasCurrent = (currentCommandCodeAccountId == account.id)
+        commandCodeAccounts.remove(at: index)
+        NotificationManager.shared.resetNotificationStates(for: .commandCode, accountId: account.id)
+        if wasCurrent {
+            currentCommandCodeAccountId = commandCodeAccounts.first?.id
+            postAccountChanged(provider: .commandCode)
+        }
+        AppLog.event(.settings, "Removed Command Code account: \(account.displayName)")
+    }
+
+    func switchToCommandCodeAccount(_ account: Account) {
+        guard account.id != currentCommandCodeAccountId else { return }
+        guard commandCodeAccounts.contains(where: { $0.id == account.id }) else { return }
+        currentCommandCodeAccountId = account.id
+        AppLog.event(.settings, "Switched to Command Code account: \(account.displayName)")
+        postAccountChanged(provider: .commandCode)
+    }
+
+    func updateCommandCodeAccount(_ account: Account, alias: String?) {
+        guard let index = commandCodeAccounts.firstIndex(where: { $0.id == account.id }) else { return }
+        commandCodeAccounts[index].alias = alias
+        AppLog.event(.settings, "Renamed Command Code account to: \(self.commandCodeAccounts[index].displayName)")
     }
 
     // MARK: - Shared Helpers

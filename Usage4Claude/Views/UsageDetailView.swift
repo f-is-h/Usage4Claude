@@ -13,6 +13,7 @@ import SwiftUI
 struct UsageDetailView: View {
     @Binding var usageData: UsageData?
     @Binding var codexUsageData: CodexUsageData?
+    @Binding var commandCodeUsageData: CommandCodeUsageData?
     @Binding var errorMessage: String?
     /// 当前错误是否为认证类错误：认证错误全屏提示引导去设置；
     /// 瞬时错误（限流/网络）在有缓存数据时保留数据展示，只在标题旁显示小叹号
@@ -20,6 +21,10 @@ struct UsageDetailView: View {
     @Binding var codexErrorMessage: String?
     /// 当前 Codex 错误是否为认证类错误，语义同 errorRequiresAuthAction
     @Binding var codexErrorRequiresAuthAction: Bool
+    /// Command Code 错误消息（独立于其他 Provider）
+    @Binding var commandCodeErrorMessage: String?
+    /// 当前 Command Code 错误是否为认证类错误，语义同 errorRequiresAuthAction
+    @Binding var commandCodeErrorRequiresAuthAction: Bool
     /// Codex 三级刷新均失败，需要用户手动重新登录
     @Binding var codexNeedsRelogin: Bool
     /// Codex 官方重置预告（Beta，第三方数据源 codex-reset.com）；nil 表示无预告或功能已关闭
@@ -52,6 +57,8 @@ struct UsageDetailView: View {
     @State var claudeAnimationType: LoadingAnimationType = .rainbow
     // Codex 列加载动画类型（独立）
     @State var codexAnimationType: LoadingAnimationType = .rainbow
+    // Command Code 列加载动画类型（独立）
+    @State var commandCodeAnimationType: LoadingAnimationType = .rainbow
 
     /// 菜单操作类型
     enum MenuAction {
@@ -61,12 +68,14 @@ struct UsageDetailView: View {
         case about
         case claudeStatus
         case codexStatus
+        case commandCodeStatus
         case coffee
         case githubSponsor
         case quit
         case refresh
         case refreshClaude
         case refreshCodex
+        case refreshCommandCode
         case codexRelogin
     }
     
@@ -92,14 +101,29 @@ struct UsageDetailView: View {
     // MARK: - Body
 
     private var isMultiProviderActive: Bool {
-        UserSettings.shared.isMultiProviderActive
-            && (codexUsageData != nil || codexErrorMessage != nil || UserSettings.shared.hasValidCodexCredentials)
+        guard UserSettings.shared.isMultiProviderActive else { return false }
+        return codexProviderPresent || commandCodeProviderPresent
+    }
+
+    private var codexProviderPresent: Bool {
+        codexUsageData != nil || codexErrorMessage != nil || UserSettings.shared.hasValidCodexCredentials
+    }
+
+    private var commandCodeProviderPresent: Bool {
+        commandCodeUsageData != nil || commandCodeErrorMessage != nil || UserSettings.shared.hasValidCommandCodeCredentials
     }
 
     private var isCodexOnlyActive: Bool {
         !isMultiProviderActive
+            && commandCodeUsageData == nil && commandCodeErrorMessage == nil
             && ((!UserSettings.shared.hasValidCredentials && UserSettings.shared.hasValidCodexCredentials)
                 || (usageData == nil && (codexUsageData != nil || codexErrorMessage != nil)))
+    }
+
+    private var isCommandCodeOnlyActive: Bool {
+        !isMultiProviderActive && !isCodexOnlyActive
+            && ((!UserSettings.shared.hasValidCredentials && !UserSettings.shared.hasValidCodexCredentials && UserSettings.shared.hasValidCommandCodeCredentials)
+                || (usageData == nil && codexUsageData == nil && (commandCodeUsageData != nil || commandCodeErrorMessage != nil)))
     }
 
     private var isClaudeRefreshing: Bool {
@@ -118,6 +142,13 @@ struct UsageDetailView: View {
         guard let codex = codexUsageData else { return [] }
         return UserSettings.shared.getActiveDisplayTypes(usageData: nil, codexUsageData: codex)
             .filter { $0.provider == .codex }
+    }
+
+    /// 获取当前 Command Code 活动的显示类型
+    private var activeCommandCodeDisplayTypes: [LimitType] {
+        guard let commandCode = commandCodeUsageData else { return [] }
+        return UserSettings.shared.getActiveDisplayTypes(usageData: nil, commandCodeUsageData: commandCode)
+            .filter { $0.provider == .commandCode }
     }
 
     /// 根据活动类型数量计算动态高度（单 Provider 模式）
@@ -151,7 +182,7 @@ struct UsageDetailView: View {
         return baseHeight + textHeight
     }
 
-    /// 双 Provider 模式的动态高度（取两列最大行数）
+    /// 双 Provider 模式的动态高度（取各列最大行数）
     private var multiProviderHeight: CGFloat {
         let claudeRowCount: Int
         if let data = usageData {
@@ -171,7 +202,16 @@ struct UsageDetailView: View {
             codexRowCount = 2
         }
 
-        let maxRows = max(claudeRowCount, codexRowCount)
+        let commandCodeRowCount: Int
+        if let commandCode = commandCodeUsageData {
+            let types = UserSettings.shared.getActiveDisplayTypes(usageData: nil, commandCodeUsageData: commandCode)
+                .filter { $0.provider == .commandCode }
+            commandCodeRowCount = max(types.count, 1)
+        } else {
+            commandCodeRowCount = 2
+        }
+
+        let maxRows = max(claudeRowCount, codexRowCount, commandCodeRowCount)
         let rowHeight: CGFloat = 26
         let spacing: CGFloat = 5
         let rowsHeight = CGFloat(maxRows) * rowHeight + CGFloat(max(0, maxRows - 1)) * spacing
@@ -187,8 +227,17 @@ struct UsageDetailView: View {
         max(35, multiProviderHeight - 28)
     }
 
+    /// 当前参与 multi-provider 布局的 Provider（有数据/有账号/有错误即计入）
+    private var activeProviderList: [ProviderType] {
+        var providers: [ProviderType] = []
+        if usageData != nil || UserSettings.shared.hasValidCredentials { providers.append(.claude) }
+        if codexProviderPresent { providers.append(.codex) }
+        if commandCodeProviderPresent { providers.append(.commandCode) }
+        return providers
+    }
+
     private var contentWidth: CGFloat {
-        isMultiProviderActive ? 580 : 290
+        isMultiProviderActive ? CGFloat(max(activeProviderList.count, 2)) * 290 : 290
     }
 
     private var contentHeight: CGFloat {
@@ -211,6 +260,9 @@ struct UsageDetailView: View {
         case .codex:
             guard codexUsageData != nil, !codexErrorRequiresAuthAction, !codexNeedsRelogin else { return nil }
             return codexErrorMessage
+        case .commandCode:
+            guard commandCodeUsageData != nil, !commandCodeErrorRequiresAuthAction else { return nil }
+            return commandCodeErrorMessage
         }
     }
 
@@ -605,6 +657,11 @@ struct UsageDetailView: View {
                         Label(L.Menu.codexStatus, systemImage: "safari.fill")
                     }
                 }
+                if !UserSettings.shared.commandCodeAccounts.isEmpty {
+                    Button(action: { onMenuAction?(.commandCodeStatus) }) {
+                        Label(L.Menu.commandCodeStatus, systemImage: "terminal")
+                    }
+                }
                 Divider()
                 Button(action: { onMenuAction?(.quit) }) {
                     Label(L.Menu.quit, systemImage: "power")
@@ -625,6 +682,14 @@ struct UsageDetailView: View {
         }
     }
 
+    private func providerTitle(for provider: ProviderType) -> String {
+        switch provider {
+        case .claude: return L.Usage.title
+        case .codex: return L.Usage.codexTitle
+        case .commandCode: return L.Usage.commandCodeTitle
+        }
+    }
+
     @ViewBuilder
     private func headerView(provider: ProviderType, showsControls: Bool) -> some View {
         let headerIconSize: CGFloat = 18
@@ -639,15 +704,24 @@ struct UsageDetailView: View {
                     Image(systemName: "chart.pie.fill")
                         .foregroundColor(.blue)
                 }
-            } else if let icon = ImageHelper.createCodexIcon(size: headerIconSize) {
+            } else if provider == .codex {
+                if let icon = ImageHelper.createCodexIcon(size: headerIconSize) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: headerIconSize, height: headerIconSize)
+                }
+            } else if let icon = ImageHelper.createCommandCodeIcon(size: headerIconSize) {
                 Image(nsImage: icon)
                     .resizable()
                     .frame(width: headerIconSize, height: headerIconSize)
+            } else {
+                Image(systemName: "terminal.fill")
+                    .foregroundColor(.purple)
             }
 
             // 标题与其后的状态标记视觉上是一组，间距收紧到 4pt，给重置预告的文字留出宽度
             HStack(spacing: 4) {
-                Text(provider == .claude ? L.Usage.title : L.Usage.codexTitle)
+                Text(providerTitle(for: provider))
                     .font(.headline)
                     // 标题优先完整显示，挤不下时由重置预告的文字缩小让位
                     .layoutPriority(1)
@@ -807,44 +881,123 @@ struct UsageDetailView: View {
         }
     }
 
-    private func multiProviderBody(codex: CodexUsageData?) -> some View {
-        VStack(spacing: contentSpacing) {
+    private func multiProviderBody() -> some View {
+        let providers = activeProviderList
+        return VStack(spacing: contentSpacing) {
             HStack(alignment: .top, spacing: 0) {
-                VStack(spacing: contentSpacing) {
-                    ZStack(alignment: .bottom) {
-                        VStack(spacing: contentSpacing) {
-                            headerView(provider: .claude, showsControls: false)
-                            claudeMainContent
+                ForEach(Array(providers.enumerated()), id: \.element) { index, provider in
+                    VStack(spacing: contentSpacing) {
+                        ZStack(alignment: .bottom) {
+                            VStack(spacing: contentSpacing) {
+                                headerView(provider: provider, showsControls: provider == providers.last)
+                                providerColumnContent(provider)
+                            }
+                            .offset(y: isAnimationHintVisible(for: provider) ? -18 : 0)
                         }
-                        .offset(y: isAnimationHintVisible(for: .claude) ? -18 : 0)
+                        .overlay(alignment: .bottom) {
+                            animationHintOverlay(for: provider)
+                        }
                     }
-                    .overlay(alignment: .bottom) {
-                        animationHintOverlay(for: .claude)
+                    .frame(width: 290, alignment: .top)
+                    // 列间分隔线画在第 2 列起的左缘，正好落在两列交界处；用 overlay 不占布局宽度。
+                    // 此前是整行居中一条，三列时会落到中间那一列的中央。
+                    .overlay(alignment: .leading) {
+                        if index > 0 {
+                            ProviderDivider(height: multiProviderDividerHeight)
+                                .allowsHitTesting(false)
+                        }
                     }
                 }
-                .frame(width: 290, alignment: .top)
-
-                VStack(spacing: contentSpacing) {
-                    ZStack(alignment: .bottom) {
-                        VStack(spacing: contentSpacing) {
-                            headerView(provider: .codex, showsControls: true)
-                            codexOnlyMainContent(codex: codex)
-                        }
-                        .offset(y: isAnimationHintVisible(for: .codex) ? -18 : 0)
-                    }
-                    .overlay(alignment: .bottom) {
-                        animationHintOverlay(for: .codex)
-                    }
-                }
-                .frame(width: 290, alignment: .top)
-            }
-            .overlay(alignment: .center) {
-                ProviderDivider(height: multiProviderDividerHeight)
-                    .allowsHitTesting(false)
             }
 
             updateNotificationView
             Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private func providerColumnContent(_ provider: ProviderType) -> some View {
+        switch provider {
+        case .claude:
+            claudeMainContent
+        case .codex:
+            codexOnlyMainContent(codex: codexUsageData)
+        case .commandCode:
+            commandCodeMainContent
+        }
+    }
+
+    private var commandCodeOnlyBody: some View {
+        VStack(spacing: contentSpacing) {
+            VStack(spacing: contentSpacing) {
+                headerView(provider: .commandCode, showsControls: true)
+                commandCodeMainContent
+            }
+            .offset(y: isAnimationHintVisible(for: .commandCode) ? -18 : 0)
+
+            animationHintView(for: .commandCode)
+            updateNotificationView
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var commandCodeMainContent: some View {
+        if let data = commandCodeUsageData {
+            CommandCodeColumnView(
+                commandCodeUsageData: data,
+                showRemainingMode: $showRemainingMode,
+                refreshState: refreshState,
+                animationType: $commandCodeAnimationType,
+                rotationAngle: $rotationAngle,
+                onRefresh: { onMenuAction?(.refreshCommandCode) },
+                onAnimationHint: { showAnimationHint($0, provider: .commandCode) },
+                onToggleRemainingMode: toggleRemainingMode
+            )
+        } else if let error = commandCodeErrorMessage {
+            VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.orange)
+                Text(error)
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 12) {
+                    if commandCodeErrorRequiresAuthAction {
+                        Button(action: { onMenuAction?(.accounts) }) {
+                            Label(L.Usage.goToSettings, systemImage: "key.fill")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Button(action: { onMenuAction?(.accounts) }) {
+                        Label(L.Usage.runDiagnostic, systemImage: "stethoscope")
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.orange)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding()
+        } else {
+            VStack(spacing: 12) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text(L.Usage.loading)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .frame(height: 100)
         }
     }
 
@@ -879,9 +1032,11 @@ struct UsageDetailView: View {
     var body: some View {
         Group {
             if isMultiProviderActive {
-                multiProviderBody(codex: codexUsageData)
+                multiProviderBody()
             } else if isCodexOnlyActive {
                 codexOnlyBody(codex: codexUsageData)
+            } else if isCommandCodeOnlyActive {
+                commandCodeOnlyBody
             } else {
                 singleProviderBody
             }
@@ -889,6 +1044,7 @@ struct UsageDetailView: View {
         .frame(width: contentWidth, height: contentHeight)
         .animation(.easeInOut(duration: 0.25), value: isMultiProviderActive)
         .animation(.easeInOut(duration: 0.25), value: isCodexOnlyActive)
+        .animation(.easeInOut(duration: 0.25), value: isCommandCodeOnlyActive)
         .animation(.easeInOut(duration: 0.25), value: showAnimationTypeHint)
         .id(localization.updateTrigger)  // 语言变化时重新创建视图
         .onAppear {
@@ -1015,6 +1171,9 @@ struct UsageDetailView_Previews: PreviewProvider {
     @State static var errorRequiresAuth = false
     @State static var codexErrorMsg: String? = nil
     @State static var codexErrorRequiresAuth = false
+    @State static var commandCodeData: CommandCodeUsageData? = nil
+    @State static var commandCodeErrorMsg: String? = nil
+    @State static var commandCodeErrorRequiresAuth = false
     @State static var codexData: CodexUsageData? = nil
     @State static var codexNeedsRelogin = false
     @State static var codexResetAnnouncement: CodexResetAnnouncement? = nil
@@ -1026,10 +1185,13 @@ struct UsageDetailView_Previews: PreviewProvider {
         UsageDetailView(
             usageData: $sampleData,
             codexUsageData: $codexData,
+            commandCodeUsageData: $commandCodeData,
             errorMessage: $errorMsg,
             errorRequiresAuthAction: $errorRequiresAuth,
             codexErrorMessage: $codexErrorMsg,
             codexErrorRequiresAuthAction: $codexErrorRequiresAuth,
+            commandCodeErrorMessage: $commandCodeErrorMsg,
+            commandCodeErrorRequiresAuthAction: $commandCodeErrorRequiresAuth,
             codexNeedsRelogin: $codexNeedsRelogin,
             codexResetAnnouncement: $codexResetAnnouncement,
             refreshState: refreshState,

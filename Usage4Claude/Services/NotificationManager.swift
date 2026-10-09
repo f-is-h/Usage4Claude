@@ -26,6 +26,7 @@ final class NotificationManager: NSObject, ObservableObject {
 
     private var claudeHasExtraUsage = false
     private var codexHasExtraUsage = false
+    private var commandCodeHasCredits = false
 
     /// 已通知记录持久化的 UserDefaults key
     private static let notifiedWarningsKey = "notifiedWarnings"
@@ -200,6 +201,54 @@ final class NotificationManager: NSObject, ObservableObject {
         }
     }
 
+    /// 检查 Command Code 用量数据并在需要时发送通知
+    /// - Parameters:
+    ///   - commandCodeUsageData: 最新的 Command Code 用量数据
+    ///   - previousData: 上一次的 Command Code 用量数据（用于对比变化）
+    func checkAndNotify(commandCodeUsageData: CommandCodeUsageData, previousData: CommandCodeUsageData?) {
+        let accountId = UserSettings.shared.currentCommandCodeAccountId
+
+        checkLimit(
+            provider: .commandCode,
+            accountId: accountId,
+            limitId: LimitType.commandCodeFiveHour.rawValue,
+            displayName: LimitType.commandCodeFiveHour.displayName,
+            category: .fiveHour,
+            current: commandCodeUsageData.fiveHour?.percentage,
+            previous: previousData?.fiveHour?.percentage,
+            currentResetsAt: commandCodeUsageData.fiveHour?.resetsAt,
+            previousResetsAt: previousData?.fiveHour?.resetsAt
+        )
+        checkLimit(
+            provider: .commandCode,
+            accountId: accountId,
+            limitId: LimitType.commandCodeWeekly.rawValue,
+            displayName: LimitType.commandCodeWeekly.displayName,
+            category: .weekly,
+            current: commandCodeUsageData.weekly?.percentage,
+            previous: previousData?.weekly?.percentage,
+            currentResetsAt: commandCodeUsageData.weekly?.resetsAt,
+            previousResetsAt: previousData?.weekly?.resetsAt
+        )
+        // credits 是月度结算的余额，无重置窗口，归入 extraUsage 分类
+        checkLimit(
+            provider: .commandCode,
+            accountId: accountId,
+            limitId: LimitType.commandCodeCredits.rawValue,
+            displayName: LimitType.commandCodeCredits.displayName,
+            category: .extraUsage,
+            current: commandCodeUsageData.monthlyUsedPercentage,
+            previous: previousData?.monthlyUsedPercentage,
+            currentResetsAt: nil,
+            previousResetsAt: nil
+        )
+
+        if commandCodeUsageData.monthlyCreditsRemaining != nil {
+            commandCodeHasCredits = true
+            updateHasExtraUsage()
+        }
+    }
+
     /// 用户调整阈值后调用：已经低于当前用量的阈值直接记为本周期已提醒，不补发通知
     func applyThresholdChange(_ config: NotificationThresholdConfig) {
         var warnings = notifiedWarnings
@@ -293,7 +342,7 @@ final class NotificationManager: NSObject, ObservableObject {
     }
 
     private func updateHasExtraUsage() {
-        let value = claudeHasExtraUsage || codexHasExtraUsage
+        let value = claudeHasExtraUsage || codexHasExtraUsage || commandCodeHasCredits
         if hasExtraUsage != value {
             hasExtraUsage = value
         }

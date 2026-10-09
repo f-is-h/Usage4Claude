@@ -26,6 +26,11 @@ struct AuthSettingsView: View {
     @State var successMessage: String?
     @State var showDeleteCodexConfirmation = false
     @State var codexAccountToDelete: Account?
+    @State var isAddingCommandCodeAccount = false
+    @State var newCommandCodeCookie = ""
+    @State var newCommandCodeAlias = ""
+    @State var showDeleteCommandCodeConfirmation = false
+    @State var commandCodeAccountToDelete: Account?
 
     var body: some View {
         ScrollView {
@@ -33,6 +38,9 @@ struct AuthSettingsView: View {
                 if isAddingAccount {
                     // 添加账户视图
                     addAccountView
+                } else if isAddingCommandCodeAccount {
+                    // 添加 Command Code 账户视图
+                    commandCodeAddAccountView
                 } else {
                     // 多组织添加成功提示
                     if let message = successMessage {
@@ -68,6 +76,11 @@ struct AuthSettingsView: View {
                         currentCodexAccountDetailView(account: currentCodexAccount)
                     }
 
+                    // 当前 Command Code 账户详情
+                    if let currentCommandCodeAccount = settings.currentCommandCodeAccount {
+                        currentCommandCodeAccountDetailView(account: currentCommandCodeAccount)
+                    }
+
                     // 说明卡片
                     howToCard
 
@@ -97,13 +110,26 @@ struct AuthSettingsView: View {
         } message: {
             Text(L.Account.deleteConfirmMessage)
         }
+        .alert(L.Account.deleteConfirmTitle, isPresented: $showDeleteCommandCodeConfirmation) {
+            Button(L.Account.cancel, role: .cancel) {}
+            Button(L.Account.delete, role: .destructive) {
+                if let account = commandCodeAccountToDelete {
+                    settings.removeCommandCodeAccount(account)
+                }
+            }
+        } message: {
+            Text(L.Account.deleteConfirmMessage)
+        }
     }
 
     // MARK: - Account List View
 
     var accountListView: some View {
+        let hasClaude = !settings.accounts.isEmpty
         let hasCodex = !settings.codexAccounts.isEmpty
-        let hasBothProviders = !settings.accounts.isEmpty && hasCodex
+        let hasCommandCode = !settings.commandCodeAccounts.isEmpty
+        let groupCount = [hasClaude, hasCodex, hasCommandCode].filter { $0 }.count
+        let showsHeaders = groupCount > 1
 
         return SettingCard(
             icon: "person.2.fill",
@@ -112,7 +138,7 @@ struct AuthSettingsView: View {
             hint: ""
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                if settings.accounts.isEmpty && settings.codexAccounts.isEmpty {
+                if !hasClaude && !hasCodex && !hasCommandCode {
                     // 无账户时的提示
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.badge.plus")
@@ -126,8 +152,8 @@ struct AuthSettingsView: View {
                     .padding(.vertical, 20)
                 } else {
                     // Claude 账户组
-                    if !settings.accounts.isEmpty {
-                        if hasBothProviders {
+                    if hasClaude {
+                        if showsHeaders {
                             providerSectionHeader(provider: .claude, label: L.Account.claudeAccounts)
                         }
                         ForEach(settings.accounts) { account in
@@ -137,12 +163,23 @@ struct AuthSettingsView: View {
 
                     // Codex 账户组
                     if hasCodex {
-                        if hasBothProviders {
+                        if showsHeaders {
                             providerSectionHeader(provider: .codex, label: L.Account.codexAccounts)
                                 .padding(.top, 4)
                         }
                         ForEach(settings.codexAccounts) { account in
                             accountRow(account: account, provider: .codex)
+                        }
+                    }
+
+                    // Command Code 账户组
+                    if hasCommandCode {
+                        if showsHeaders {
+                            providerSectionHeader(provider: .commandCode, label: L.Account.commandCodeAccounts)
+                                .padding(.top, 4)
+                        }
+                        ForEach(settings.commandCodeAccounts) { account in
+                            accountRow(account: account, provider: .commandCode)
                         }
                     }
                 }
@@ -188,6 +225,19 @@ struct AuthSettingsView: View {
                     help: "\(ProviderType.codex.displayName) \(L.WebLogin.browserLogin)"
                 ) {
                     WebLoginWindowManager.shared.showCodexLoginWindow()
+                }
+
+                addAccountActionButton(
+                    provider: .commandCode,
+                    title: L.WebLogin.manualInput,
+                    help: L.CommandCode.sessionCookieLabel
+                ) {
+                    withAnimation {
+                        isAddingCommandCodeAccount = true
+                        newCommandCodeCookie = ""
+                        newCommandCodeAlias = ""
+                        validationError = nil
+                    }
                 }
             }
         }
@@ -235,12 +285,25 @@ struct AuthSettingsView: View {
                 Image(systemName: "sparkles")
                     .frame(width: size, height: size)
             }
+        case .commandCode:
+            if let icon = ImageHelper.createCommandCodeIcon(size: size) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: size, height: size)
+            } else {
+                Image(systemName: "terminal.fill")
+                    .frame(width: size, height: size)
+            }
         }
     }
 
     func providerSectionHeader(provider: ProviderType, label: String) -> some View {
         HStack(spacing: 4) {
             if provider == .codex, let icon = ImageHelper.createCodexIcon(size: 12) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 12, height: 12)
+            } else if provider == .commandCode, let icon = ImageHelper.createCommandCodeIcon(size: 12) {
                 Image(nsImage: icon)
                     .resizable()
                     .frame(width: 12, height: 12)
@@ -261,19 +324,11 @@ struct AuthSettingsView: View {
     // MARK: - Account Row
 
     func accountRow(account: Account, provider: ProviderType) -> some View {
-        let isSelected = provider == .codex
-            ? account.id == settings.currentCodexAccountId
-            : account.id == settings.currentAccountId
-        let accentColor: Color = provider == .codex
-            ? Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
-            : .blue
+        let isSelected = isSelectedAccount(account, provider: provider)
+        let accentColor = accentColor(for: provider)
 
         return Button(action: {
-            if provider == .codex {
-                settings.switchToCodexAccount(account)
-            } else {
-                settings.switchToAccount(account)
-            }
+            switchAccount(account, provider: provider)
         }) {
             HStack(spacing: 12) {
                 // 选中状态指示器
@@ -320,5 +375,31 @@ struct AuthSettingsView: View {
         .buttonStyle(.plain)
         // 设置窗口一律不接受键盘焦点，否则打开时会有一圈默认焦点环
         .focusable(false)
+    }
+
+    // MARK: - Provider Helpers
+
+    func isSelectedAccount(_ account: Account, provider: ProviderType) -> Bool {
+        switch provider {
+        case .claude: return account.id == settings.currentAccountId
+        case .codex: return account.id == settings.currentCodexAccountId
+        case .commandCode: return account.id == settings.currentCommandCodeAccountId
+        }
+    }
+
+    func switchAccount(_ account: Account, provider: ProviderType) {
+        switch provider {
+        case .claude: settings.switchToAccount(account)
+        case .codex: settings.switchToCodexAccount(account)
+        case .commandCode: settings.switchToCommandCodeAccount(account)
+        }
+    }
+
+    func accentColor(for provider: ProviderType) -> Color {
+        switch provider {
+        case .claude: return .blue
+        case .codex: return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
+        case .commandCode: return Color(red: 139/255.0, green: 92/255.0, blue: 246/255.0)
+        }
     }
 }

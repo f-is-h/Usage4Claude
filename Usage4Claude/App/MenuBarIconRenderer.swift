@@ -80,6 +80,7 @@ class MenuBarIconRenderer {
     func createIcon(
         usageData: UsageData?,
         codexUsageData: CodexUsageData? = nil,
+        commandCodeUsageData: CommandCodeUsageData? = nil,
         hasUpdate: Bool,
         button: NSStatusBarButton?
     ) -> NSImage {
@@ -95,7 +96,19 @@ class MenuBarIconRenderer {
 
         var icon: NSImage
 
-        if let codex = codexUsageData {
+        let providerCount = (usageData != nil ? 1 : 0) + (codexUsageData != nil ? 1 : 0) + (commandCodeUsageData != nil ? 1 : 0)
+
+        if providerCount > 1 {
+            icon = createProviderGroupIcon(
+                usageData: usageData,
+                codex: codexUsageData,
+                commandCode: commandCodeUsageData,
+                isMonochrome: isMonochrome,
+                button: button
+            )
+        } else if let commandCode = commandCodeUsageData {
+            icon = createCommandCodeOnlyIcon(commandCode: commandCode, isMonochrome: isMonochrome, button: button)
+        } else if let codex = codexUsageData {
             // 有 Codex 数据路径
             let allTypes = settings.getActiveDisplayTypes(usageData: usageData, codexUsageData: codex, forMenuBar: true)
             let codexTypes = allTypes.filter { $0.provider == .codex }
@@ -265,6 +278,10 @@ class MenuBarIconRenderer {
         case .codex:
             let iconName = isMonochrome ? "CodexIconReverse" : "CodexIcon"
             return ImageHelper.createSquareIcon(named: iconName, size: size, isTemplate: isMonochrome, sourceInset: isMonochrome ? 0 : 2)
+        case .commandCode:
+            return isMonochrome
+                ? ImageHelper.createCommandCodeTemplateIcon(size: size)
+                : ImageHelper.createCommandCodeIcon(size: size)
         }
     }
 
@@ -635,6 +652,10 @@ class MenuBarIconRenderer {
             // Codex 数据在 Phase 4 通过 createCodexIcon 独立渲染
             // createIconForType 仅处理 Claude UsageData，此处返回 nil
             return nil
+
+        case .commandCodeFiveHour, .commandCodeWeekly, .commandCodeCredits:
+            // Command Code 数据通过 createCommandCodeIcon / createCommandCodeCreditsIcon 独立渲染
+            return nil
         }
     }
 
@@ -691,6 +712,177 @@ class MenuBarIconRenderer {
     static func codexExtraUsageBadgeText(_ extra: CodexExtraUsageData) -> String? {
         if extra.unlimited { return "∞" }
         return extra.menuBarBalanceText
+    }
+
+    // MARK: - Command Code Icon Creation
+
+    /// 多 Provider（两个及以上）组合图标：按 Provider 顺序拼接品牌图标与指标
+    private func createProviderGroupIcon(
+        usageData: UsageData?,
+        codex: CodexUsageData?,
+        commandCode: CommandCodeUsageData?,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        var icons: [NSImage] = []
+
+        switch settings.iconDisplayMode {
+        case .none:
+            icons.append(createMenuBarDividerIcon(isMonochrome: isMonochrome))
+
+        case .iconOnly:
+            for provider in [ProviderType.claude, .codex, .commandCode] where isProviderPresent(provider, usageData: usageData, codex: codex, commandCode: commandCode) {
+                if let brand = createProviderBrandIcon(provider, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                    icons.append(brand)
+                }
+            }
+
+        case .percentageOnly, .both:
+            if let data = usageData {
+                let claudeTypes = settings.getActiveDisplayTypes(usageData: data, forMenuBar: true).filter { $0.provider == .claude }
+                if settings.iconDisplayMode == .both, let brand = createProviderBrandIcon(.claude, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                    icons.append(brand)
+                }
+                icons.append(contentsOf: claudeTypes.compactMap { createIconForType($0, data: data, isMonochrome: isMonochrome, button: button) })
+            }
+            if let codex {
+                let codexTypes = settings.getActiveDisplayTypes(usageData: nil, codexUsageData: codex, forMenuBar: true).filter { $0.provider == .codex }
+                if settings.iconDisplayMode == .both, let brand = createProviderBrandIcon(.codex, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                    icons.append(brand)
+                }
+                icons.append(contentsOf: buildCodexIcons(codex: codex, types: codexTypes, isMonochrome: isMonochrome, button: button))
+            }
+            if let commandCode {
+                let commandCodeTypes = settings.getActiveDisplayTypes(usageData: nil, commandCodeUsageData: commandCode, forMenuBar: true).filter { $0.provider == .commandCode }
+                if settings.iconDisplayMode == .both, let brand = createProviderBrandIcon(.commandCode, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                    icons.append(brand)
+                }
+                icons.append(contentsOf: buildCommandCodeIcons(commandCode: commandCode, types: commandCodeTypes, isMonochrome: isMonochrome, button: button))
+            }
+        }
+
+        guard !icons.isEmpty else { return createSimpleCircleIcon() }
+        if icons.count == 1 {
+            icons[0].isTemplate = isMonochrome
+            return icons[0]
+        }
+        let combined = combineIcons(icons, spacing: 2.0, height: metricIconSize)
+        combined.isTemplate = isMonochrome
+        return combined
+    }
+
+    private func isProviderPresent(
+        _ provider: ProviderType,
+        usageData: UsageData?,
+        codex: CodexUsageData?,
+        commandCode: CommandCodeUsageData?
+    ) -> Bool {
+        switch provider {
+        case .claude: return usageData != nil
+        case .codex: return codex != nil
+        case .commandCode: return commandCode != nil
+        }
+    }
+
+    /// Command Code-only 模式图标（无其他 Provider 时）
+    private func createCommandCodeOnlyIcon(
+        commandCode: CommandCodeUsageData,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        switch settings.iconDisplayMode {
+        case .none:
+            return createMenuBarDividerIcon(isMonochrome: isMonochrome)
+
+        case .iconOnly:
+            return createProviderBrandIcon(.commandCode, isMonochrome: isMonochrome, size: providerBrandIconSize) ?? createSimpleCircleIcon()
+
+        case .percentageOnly, .both:
+            var icons: [NSImage] = []
+            if settings.iconDisplayMode == .both,
+               let brand = createProviderBrandIcon(.commandCode, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                icons.append(brand)
+            }
+            let types = settings.getActiveDisplayTypes(usageData: nil, commandCodeUsageData: commandCode, forMenuBar: true)
+                .filter { $0.provider == .commandCode }
+            icons.append(contentsOf: buildCommandCodeIcons(commandCode: commandCode, types: types, isMonochrome: isMonochrome, button: button))
+            if icons.isEmpty { return createSimpleCircleIcon() }
+            let combined = icons.count == 1 ? icons[0] : combineIcons(icons, spacing: 3.0, height: metricIconSize)
+            combined.isTemplate = isMonochrome
+            return combined
+        }
+    }
+
+    /// 构建 Command Code 指标图标列表
+    private func buildCommandCodeIcons(
+        commandCode: CommandCodeUsageData,
+        types: [LimitType],
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> [NSImage] {
+        let showPlaceholder = settings.displayMode == .custom
+        return types.compactMap { type -> NSImage? in
+            switch type {
+            case .commandCodeFiveHour:
+                let percentage = commandCode.fiveHour?.percentage ?? (showPlaceholder ? 0 : nil)
+                return percentage.flatMap { createCommandCodeIcon(type: type, percentage: $0, isMonochrome: isMonochrome, button: button) }
+            case .commandCodeWeekly:
+                let percentage = commandCode.weekly?.percentage ?? (showPlaceholder ? 0 : nil)
+                return percentage.flatMap { createCommandCodeIcon(type: type, percentage: $0, isMonochrome: isMonochrome, button: button) }
+            case .commandCodeCredits:
+                guard let remaining = commandCode.monthlyCreditsRemaining else {
+                    guard showPlaceholder else { return nil }
+                    return createCommandCodeCreditsIcon(text: "-", isMonochrome: isMonochrome, button: button)
+                }
+                return createCommandCodeCreditsIcon(
+                    text: CommandCodeUsageData.creditsBadgeText(remaining),
+                    isMonochrome: isMonochrome,
+                    button: button
+                )
+            default:
+                return nil
+            }
+        }
+    }
+
+    /// Command Code 5小时/每周圆形图标
+    func createCommandCodeIcon(
+        type: LimitType,
+        percentage: Double,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage? {
+        let removeBackground = settings.iconStyleMode == .colorTranslucent
+        switch type {
+        case .commandCodeFiveHour:
+            if isMonochrome {
+                return createCircleTemplateImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), button: button, removeBackground: true)
+            }
+            let color = UsageColorScheme.commandCodeFiveHourColorAdaptive(percentage, for: button)
+            return createCircleImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, button: button, removeBackground: removeBackground)
+
+        case .commandCodeWeekly:
+            if isMonochrome {
+                return createCircleTemplateImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), useSevenDayStyle: true, button: button, removeBackground: true)
+            }
+            let color = UsageColorScheme.commandCodeWeeklyColorAdaptive(percentage, for: button)
+            return createCircleImage(state: displayState(usedPercentage: percentage), size: NSSize(width: metricIconSize, height: metricIconSize), colorOverride: color, useDashedStyle: true, button: button, removeBackground: removeBackground)
+
+        default:
+            return nil
+        }
+    }
+
+    /// Command Code credits 徽章（六边形 + 余额文本）
+    func createCommandCodeCreditsIcon(text: String, isMonochrome: Bool, button: NSStatusBarButton?) -> NSImage? {
+        ShapeIconRenderer.createHexagonBadgeIcon(
+            text: text,
+            canvasSize: metricIconSize,
+            isMonochrome: isMonochrome,
+            color: UsageColorScheme.commandCodeCreditsBadgeColorAdaptive(isExhausted: false, for: button),
+            button: button,
+            removeBackground: settings.iconStyleMode == .colorTranslucent
+        )
     }
 
     /// 创建轻量分隔线图标（用于"不显示图标"模式）
