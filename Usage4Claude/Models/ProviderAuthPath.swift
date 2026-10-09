@@ -51,6 +51,7 @@ nonisolated enum ProviderAuthPath: String, Equatable, Sendable {
         switch provider {
         case .claude: return forClaude(credential: credential)
         case .codex:  return forCodex(credential: credential)
+        case .commandCode: return .cookie
         }
     }
 

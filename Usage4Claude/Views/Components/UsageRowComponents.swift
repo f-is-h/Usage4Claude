@@ -136,7 +136,7 @@ struct MiniProgressIcon: View {
             // 可用宽度必须按形状本身算，否则 "2.5k" 会直接压出边框
             let shapeWidth: CGFloat
             switch type {
-            case .extraUsage, .codexExtraUsage:
+            case .extraUsage, .codexExtraUsage, .commandCodeCredits:
                 shapeWidth = min(canvasSize.width, canvasSize.height) - 6
             default:
                 shapeWidth = canvasSize.width
@@ -243,6 +243,7 @@ struct UnifiedLimitRow: View {
     let type: LimitType
     var data: UsageData? = nil
     var codexData: CodexUsageData? = nil
+    var commandCodeData: CommandCodeUsageData? = nil
     let showRemainingMode: Bool
     /// 溢出模型行覆盖：提供时，行的百分比/标签/重置时间直接取自这个模型条目，
     /// `type` 仅用于决定外观（圆角方/斜切方形状与配色的槽位）。用于 popover 展示
@@ -310,6 +311,12 @@ struct UnifiedLimitRow: View {
             return data?.sonnetModelName ?? L.DetailRow.sonnetWeekly
         case .extraUsage, .codexExtraUsage:
             return L.DetailRow.extraUsage
+        case .commandCodeFiveHour:
+            return L.DetailRow.fiveHour
+        case .commandCodeWeekly:
+            return L.DetailRow.sevenDay
+        case .commandCodeCredits:
+            return L.DetailRow.extraUsage
         }
     }
 
@@ -334,11 +341,23 @@ struct UnifiedLimitRow: View {
             return UsageColorScheme.codexExtraUsageBadgeColorSwiftUI(
                 isExhausted: codexData?.extraUsage?.isExhausted ?? false
             )
+        case .commandCodeFiveHour:
+            return UsageColorScheme.commandCodeFiveHourColorSwiftUI(percentageValue ?? 0)
+        case .commandCodeWeekly:
+            return UsageColorScheme.commandCodeWeeklyColorSwiftUI(percentageValue ?? 0)
+        case .commandCodeCredits:
+            return UsageColorScheme.commandCodeCreditsBadgeColorSwiftUI(
+                isExhausted: (commandCodeData?.monthlyCreditsRemaining ?? 1) <= 0
+            )
         }
     }
 
     /// Codex 额外用量的图标里画余额点数，不画百分比
     private var iconTextOverride: String? {
+        if type == .commandCodeCredits, weeklyModelOverride == nil {
+            guard let remaining = commandCodeData?.monthlyCreditsRemaining else { return "-" }
+            return CommandCodeUsageData.creditsBadgeText(remaining)
+        }
         guard type == .codexExtraUsage, weeklyModelOverride == nil else { return nil }
         guard let extra = codexData?.extraUsage, extra.enabled else { return "-" }
         return MenuBarIconRenderer.codexExtraUsageBadgeText(extra) ?? "-"
@@ -357,6 +376,9 @@ struct UnifiedLimitRow: View {
         case .codexPrimary:   return codexData?.primary?.percentage
         case .codexSecondary: return codexData?.secondary?.percentage
         case .codexExtraUsage: return codexData?.extraUsage?.percentage
+        case .commandCodeFiveHour: return commandCodeData?.fiveHour?.percentage
+        case .commandCodeWeekly:   return commandCodeData?.weekly?.percentage
+        case .commandCodeCredits:  return commandCodeData?.monthlyUsedPercentage
         }
     }
 
@@ -398,6 +420,18 @@ struct UnifiedLimitRow: View {
         case .codexExtraUsage:
             guard let extra = codexData?.extraUsage else { return "-" }
             return showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount
+
+        case .commandCodeFiveHour:
+            guard let window = commandCodeData?.fiveHour else { return "-" }
+            return showRemainingMode ? window.asUsageLimitData().formattedCompactRemaining : detailCompactResetTime(window.asUsageLimitData())
+
+        case .commandCodeWeekly:
+            guard let window = commandCodeData?.weekly else { return "-" }
+            return showRemainingMode ? window.asUsageLimitData().formattedCompactRemaining : detailCompactResetTime(window.asUsageLimitData())
+
+        case .commandCodeCredits:
+            guard let commandCodeData else { return "-" }
+            return commandCodeData.formattedMonthlyRemaining
         }
     }
 

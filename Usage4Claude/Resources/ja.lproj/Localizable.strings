@@ -13,6 +13,7 @@
 "menu.about" = "このアプリについて";
 "menu.claude_status" = "Claudeステータス";
 "menu.codex_status" = "OpenAIステータス";
+"menu.commandcode_status" = "Command Code";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claudeを終了";
@@ -39,6 +40,11 @@
 "usage.refresh_cooldown" = "少々お待ちください";
 "usage.run_diagnostic" = "診断を実行";
 "usage.codex_title" = "Codex使用状況";
+"usage.commandcode_title" = "Command Code使用状況";
+"account.commandcode_accounts" = "Command Code アカウント";
+"account.commandcode_current_account" = "現在の Command Code アカウント";
+"commandcode.session_cookie_label" = "Command Code セッション Cookie";
+"commandcode.session_cookie_hint" = "commandcode.ai にログインし、ブラウザの開発者ツールからセッション Cookie（または Cookie リクエストヘッダー）をコピーして貼り付けてください。";
 "usage.codex_relogin" = "再ログイン";
 
 // MARK: - Settings - Tabs
@@ -251,6 +257,9 @@
 "codex_primary_limit" = "Codex 5時間制限";
 "codex_secondary_limit" = "Codex 7日制限";
 "codex_extra_usage" = "Codex 追加使用量";
+"commandcode_five_hour_limit" = "Command Code 5時間制限";
+"commandcode_weekly_limit" = "Command Code 週間制限";
+"commandcode_credits" = "Command Code クレジット";
 
 // MARK: - Detail Row Labels
 "detail_row.five_hour_limit" = "5時間制限";

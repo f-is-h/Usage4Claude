@@ -909,6 +909,131 @@ private extension CodexDiagnosticRunner {
     }
 }
 
+// MARK: - Command Code Runner
+
+@MainActor
+final class CommandCodeDiagnosticRunner: DiagnosticRunner {
+
+    let providerType: ProviderType = .commandCode
+    private let settings = UserSettings.shared
+
+    func run() async -> ProviderDiagnosticResult {
+        guard settings.hasValidCommandCodeCredentials else {
+            return makeResult(
+                success: false, steps: [], credentials: [:],
+                errorType: .invalidCredentials,
+                diagnosis: "Command Code session cookie is not configured.",
+                suggestions: ["Add a Command Code account and paste a fresh session cookie."]
+            )
+        }
+        guard let cookie = CommandCodeCookieHeader.cookie(fromRaw: settings.commandCodeSessionCookie) else {
+            return makeResult(
+                success: false, steps: [],
+                credentials: ["Cookie": SensitiveDataRedactor.redactSessionKey(settings.commandCodeSessionCookie)],
+                errorType: .invalidCredentials,
+                diagnosis: "The stored Command Code credential is not a recognizable session cookie.",
+                suggestions: ["Sign in to commandcode.ai again and paste a fresh cookie."]
+            )
+        }
+
+        let credentials = ["Cookie": SensitiveDataRedactor.redactSessionKey(cookie.token)]
+        guard let url = URL(string: "https://api.commandcode.ai/internal/billing/credits") else {
+            return makeResult(success: false, steps: [], credentials: credentials,
+                              errorType: .invalidCredentials,
+                              diagnosis: "Invalid billing endpoint URL.",
+                              suggestions: ["Export and share this report with developers."])
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 30
+        CommandCodeAPIHeaderBuilder.applyHeaders(to: &request, cookieHeader: cookie.headerValue)
+
+        let start = Date()
+        let session = URLSession(configuration: .uncached)
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            let elapsed = Date().timeIntervalSince(start) * 1000
+            let http = response as? HTTPURLResponse
+            let body = String(data: data, encoding: .utf8) ?? ""
+            let isHTML = body.contains("<html") || body.contains("<!DOCTYPE html>")
+            let status = http?.statusCode ?? 0
+            let success = (200..<300).contains(status) && !isHTML
+
+            let step = DiagnosticStep(
+                name: "Billing Credits Endpoint",
+                success: success,
+                httpStatusCode: status,
+                responseTime: elapsed,
+                responseType: isHTML ? .html : (success ? .json : .unknown),
+                errorType: success ? nil : (status == 401 || status == 403 ? .authenticationFailed : .networkError),
+                errorDescription: success ? nil : (isHTML ? "Returned HTML instead of JSON" : "HTTP \(status)"),
+                responseHeaders: http.map { extractSafeResponseHeaders(from: $0) } ?? [:],
+                responseBodyPreview: success ? nil : String(body.prefix(500)),
+                cloudflareChallenge: isHTML,
+                cfMitigated: false,
+                notes: nil
+            )
+
+            if success {
+                return makeResult(
+                    success: true, steps: [step], credentials: credentials, errorType: nil,
+                    diagnosis: "Command Code billing API returned valid data.",
+                    suggestions: ["Everything is working correctly. No action needed."]
+                )
+            } else if status == 401 || status == 403 {
+                return makeResult(
+                    success: false, steps: [step], credentials: credentials, errorType: .authenticationFailed,
+                    diagnosis: "Command Code rejected the session cookie — it has expired. Sign in to commandcode.ai again and paste a fresh cookie.",
+                    suggestions: ["Sign in to commandcode.ai again", "Copy a fresh session cookie from your browser devtools"]
+                )
+            } else {
+                return makeResult(
+                    success: false, steps: [step], credentials: credentials, errorType: .networkError,
+                    diagnosis: "Command Code billing API did not return usable data (HTTP \(status)).",
+                    suggestions: ["Try again later", "Check your internet connection"]
+                )
+            }
+        } catch {
+            let elapsed = Date().timeIntervalSince(start) * 1000
+            let step = DiagnosticStep(
+                name: "Billing Credits Endpoint",
+                success: false, httpStatusCode: nil, responseTime: elapsed,
+                responseType: .unknown, errorType: .networkError,
+                errorDescription: error.localizedDescription,
+                responseHeaders: [:], responseBodyPreview: nil,
+                cloudflareChallenge: false, cfMitigated: false, notes: nil
+            )
+            return makeResult(
+                success: false, steps: [step], credentials: credentials, errorType: .networkError,
+                diagnosis: "Network connection failed. Please check your internet connection.",
+                suggestions: ["Check your internet connection"]
+            )
+        }
+    }
+
+    private func makeResult(
+        success: Bool,
+        steps: [DiagnosticStep],
+        credentials: [String: String],
+        errorType: DiagnosticErrorType?,
+        diagnosis: String,
+        suggestions: [String]
+    ) -> ProviderDiagnosticResult {
+        ProviderDiagnosticResult(
+            providerType: .commandCode,
+            credentials: credentials,
+            steps: steps,
+            success: success,
+            errorType: errorType,
+            diagnosis: diagnosis,
+            suggestions: suggestions,
+            confidence: .high
+        )
+    }
+}
+
 // MARK: - Shared header extraction
 
 private func extractSafeResponseHeaders(from response: HTTPURLResponse) -> [String: String] {

@@ -163,6 +163,12 @@ enum LimitType: String, CaseIterable, Codable {
     case codexSecondary = "codex_secondary"
     /// Codex Extra Usage / credits
     case codexExtraUsage = "codex_extra_usage"
+    /// Command Code 5小时窗口
+    case commandCodeFiveHour = "command_code_five_hour"
+    /// Command Code 每周窗口
+    case commandCodeWeekly = "command_code_weekly"
+    /// Command Code 月度 credits 余额
+    case commandCodeCredits = "command_code_credits"
 
     /// 所属 Provider
     var provider: ProviderType {
@@ -171,12 +177,15 @@ enum LimitType: String, CaseIterable, Codable {
             return .claude
         case .codexPrimary, .codexSecondary, .codexExtraUsage:
             return .codex
+        case .commandCodeFiveHour, .commandCodeWeekly, .commandCodeCredits:
+            return .commandCode
         }
     }
 
-    /// 是否为圆形图标（5小时、7天和 Codex 两项）
+    /// 是否为圆形图标（5小时、7天和 Codex/Command Code 滚动窗口）
     var isCircular: Bool {
         return self == .fiveHour || self == .sevenDay || self == .codexPrimary || self == .codexSecondary
+            || self == .commandCodeFiveHour || self == .commandCodeWeekly
     }
 
     /// 是否为矩形图标（Opus和Sonnet）
@@ -184,14 +193,14 @@ enum LimitType: String, CaseIterable, Codable {
         return self == .opusWeekly || self == .sonnetWeekly
     }
 
-    /// 是否为六边形图标（Extra Usage）
+    /// 是否为六边形图标（Extra Usage / credits）
     var isHexagonal: Bool {
-        return self == .extraUsage || self == .codexExtraUsage
+        return self == .extraUsage || self == .codexExtraUsage || self == .commandCodeCredits
     }
 
-    /// 是否使用虚线样式（7天类型）
+    /// 是否使用虚线样式（每周类型）
     var usesDashedStyle: Bool {
-        return self == .sevenDay || self == .codexSecondary
+        return self == .sevenDay || self == .codexSecondary || self == .commandCodeWeekly
     }
 
     /// 显示名称
@@ -213,6 +222,12 @@ enum LimitType: String, CaseIterable, Codable {
             return L.LimitTypes.codexSecondary
         case .codexExtraUsage:
             return L.LimitTypes.codexExtraUsage
+        case .commandCodeFiveHour:
+            return L.LimitTypes.commandCodeFiveHour
+        case .commandCodeWeekly:
+            return L.LimitTypes.commandCodeWeekly
+        case .commandCodeCredits:
+            return L.LimitTypes.commandCodeCredits
         }
     }
 }
@@ -426,19 +441,29 @@ class UserSettings: ObservableObject {
     var codexSessionToken: String { accountStore.codexSessionToken }
     var hasValidCodexCredentials: Bool { accountStore.hasValidCodexCredentials }
 
-    /// 是否同时存在 Claude 和 Codex 账户（决定 UI 进入 multi-provider 形态）
+    // MARK: - Command Code 账户支持
+
+    var commandCodeAccounts: [Account] { accountStore.commandCodeAccounts }
+    var currentCommandCodeAccountId: UUID? { accountStore.currentCommandCodeAccountId }
+    var currentCommandCodeAccount: Account? { accountStore.currentCommandCodeAccount }
+    var commandCodeSessionCookie: String { accountStore.commandCodeSessionCookie }
+    var hasValidCommandCodeCredentials: Bool { accountStore.hasValidCommandCodeCredentials }
+
+    /// 是否同时存在两个及以上的 Provider 账户（决定 UI 进入 multi-provider 形态）
     var isMultiProviderActive: Bool {
         #if DEBUG
         if debugModeEnabled {
             if displayMode == .custom {
-                let hasClaudeDisplayTypes = customDisplayTypes.contains { $0.provider == .claude }
-                let hasCodexDisplayTypes = customDisplayTypes.contains { $0.provider == .codex }
-                return hasClaudeDisplayTypes && hasCodexDisplayTypes
+                return Set(customDisplayTypes.map { $0.provider }).count > 1
             }
             return true
         }
         #endif
-        return !accounts.isEmpty && !codexAccounts.isEmpty
+        var activeProviders = 0
+        if !accounts.isEmpty { activeProviders += 1 }
+        if !codexAccounts.isEmpty { activeProviders += 1 }
+        if !commandCodeAccounts.isEmpty { activeProviders += 1 }
+        return activeProviders > 1
     }
 
     // MARK: - 非敏感设置（存储在UserDefaults中）
@@ -1122,7 +1147,7 @@ class UserSettings: ObservableObject {
 
     /// 检查任一 Provider 的认证信息是否已配置
     var hasAnyValidCredentials: Bool {
-        return hasValidCredentials || hasValidCodexCredentials
+        return hasValidCredentials || hasValidCodexCredentials || hasValidCommandCodeCredentials
     }
 
     /// 验证 Organization ID 格式
@@ -1297,6 +1322,25 @@ class UserSettings: ObservableObject {
         accountStore.updateCodexAccount(account, alias: alias)
     }
 
+    // MARK: - Command Code Account Management
+
+    @discardableResult
+    func addCommandCodeAccount(_ account: Account) -> Account {
+        accountStore.addCommandCodeAccount(account).account
+    }
+
+    func removeCommandCodeAccount(_ account: Account) {
+        accountStore.removeCommandCodeAccount(account)
+    }
+
+    func switchToCommandCodeAccount(_ account: Account) {
+        accountStore.switchToCommandCodeAccount(account)
+    }
+
+    func updateCommandCodeAccount(_ account: Account, alias: String?) {
+        accountStore.updateCommandCodeAccount(account, alias: alias)
+    }
+
     /// 静默更新 Codex 账户的 session-token（不触发 accountChanged 通知）
     /// 用于自动续期场景——只更新持久化数据，不触发重新拉取循环
     /// - Parameter oldToken: 发起刷新时该账号持有的 token，用于反查账号，详见 AccountTokenRotation
@@ -1336,7 +1380,7 @@ class UserSettings: ObservableObject {
     ///   - forMenuBar: 是否用于菜单栏渲染。当 customDisplayMenuBarOnly 开启时，
     ///                 仅菜单栏走 custom 分支，Popover 自动 fallback 到 smart 分支
     /// - Returns: 要显示的限制类型数组，按显示顺序排列
-    func getActiveDisplayTypes(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, forMenuBar: Bool = false) -> [LimitType] {
+    func getActiveDisplayTypes(usageData: UsageData?, codexUsageData: CodexUsageData? = nil, commandCodeUsageData: CommandCodeUsageData? = nil, forMenuBar: Bool = false) -> [LimitType] {
         // 当"仅应用于菜单栏"开启且当前是为 Popover 渲染时，强制走智能分支
         let effectiveMode: DisplayMode = {
             if displayMode == .custom && customDisplayMenuBarOnly && !forMenuBar {
@@ -1380,20 +1424,38 @@ class UserSettings: ObservableObject {
                 }
             }
 
+            // Command Code 类型：窗口/余额确有数据时追加
+            if let commandCode = commandCodeUsageData {
+                if commandCode.fiveHour != nil {
+                    types.append(.commandCodeFiveHour)
+                }
+                if commandCode.weekly != nil {
+                    types.append(.commandCodeWeekly)
+                }
+                if commandCode.monthlyCreditsRemaining != nil {
+                    types.append(.commandCodeCredits)
+                }
+            }
+
             return types
 
         case .custom:
             // 自定义模式：按用户选择排序，无论数据是否存在都显示
-            // Codex 类型仅在有 Codex 账号时纳入候选；Debug mock 模式例外
+            // Codex / Command Code 类型仅在有对应账号时纳入候选；Debug mock 模式例外
             var orderedTypes: [LimitType] = [.fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly]
             var shouldIncludeCodexTypes = !codexAccounts.isEmpty
+            var shouldIncludeCommandCodeTypes = !commandCodeAccounts.isEmpty
             #if DEBUG
             if debugModeEnabled {
                 shouldIncludeCodexTypes = true
+                shouldIncludeCommandCodeTypes = true
             }
             #endif
             if shouldIncludeCodexTypes {
                 orderedTypes.append(contentsOf: [.codexPrimary, .codexSecondary, .codexExtraUsage])
+            }
+            if shouldIncludeCommandCodeTypes {
+                orderedTypes.append(contentsOf: [.commandCodeFiveHour, .commandCodeWeekly, .commandCodeCredits])
             }
             return orderedTypes.filter { customDisplayTypes.contains($0) }
         }

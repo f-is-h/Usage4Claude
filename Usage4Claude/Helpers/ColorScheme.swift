@@ -330,6 +330,74 @@ enum UsageColorScheme {
         isExhausted ? .red : Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
     }
 
+    // MARK: - Command Code 配色（5小时青、每周柠檬绿、credits 紫）
+
+    /// Command Code 5小时窗口配色（青 → 深青 → 墨青）
+    static func commandCodeFiveHourColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 34/255.0, green: 211/255.0, blue: 238/255.0, alpha: 1.0)   // #22D3EE
+        } else if percentage < 90 {
+            return NSColor(red: 8/255.0, green: 145/255.0, blue: 178/255.0, alpha: 1.0)    // #0891B2
+        } else {
+            return NSColor(red: 22/255.0, green: 78/255.0, blue: 99/255.0, alpha: 1.0)     // #164E63
+        }
+    }
+
+    static func commandCodeFiveHourColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = commandCodeFiveHourColor(percentage)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
+    }
+
+    static func commandCodeFiveHourColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 34/255.0, green: 211/255.0, blue: 238/255.0).opacity(opacity)   // #22D3EE
+        } else if percentage < 90 {
+            return Color(red: 8/255.0, green: 145/255.0, blue: 178/255.0).opacity(opacity)    // #0891B2
+        } else {
+            return Color(red: 22/255.0, green: 78/255.0, blue: 99/255.0).opacity(opacity)     // #164E63
+        }
+    }
+
+    /// Command Code 每周窗口配色（柠檬绿 → 橄榄 → 深橄榄）
+    static func commandCodeWeeklyColor(_ percentage: Double) -> NSColor {
+        if percentage < 70 {
+            return NSColor(red: 163/255.0, green: 230/255.0, blue: 53/255.0, alpha: 1.0)   // #A3E635
+        } else if percentage < 90 {
+            return NSColor(red: 101/255.0, green: 163/255.0, blue: 13/255.0, alpha: 1.0)   // #65A30D
+        } else {
+            return NSColor(red: 54/255.0, green: 83/255.0, blue: 20/255.0, alpha: 1.0)     // #365314
+        }
+    }
+
+    static func commandCodeWeeklyColorAdaptive(_ percentage: Double, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = commandCodeWeeklyColor(percentage)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
+    }
+
+    static func commandCodeWeeklyColorSwiftUI(_ percentage: Double, opacity: Double = 0.9) -> Color {
+        if percentage < 70 {
+            return Color(red: 163/255.0, green: 230/255.0, blue: 53/255.0).opacity(opacity)   // #A3E635
+        } else if percentage < 90 {
+            return Color(red: 101/255.0, green: 163/255.0, blue: 13/255.0).opacity(opacity)   // #65A30D
+        } else {
+            return Color(red: 54/255.0, green: 83/255.0, blue: 20/255.0).opacity(opacity)     // #365314
+        }
+    }
+
+    /// Command Code credits 徽章配色：耗尽则红，否则紫。与 Codex 同理，不做中间档。
+    static func commandCodeCreditsBadgeColor(isExhausted: Bool) -> NSColor {
+        isExhausted ? .systemRed : NSColor(red: 139/255.0, green: 92/255.0, blue: 246/255.0, alpha: 1.0)  // #8B5CF6
+    }
+
+    static func commandCodeCreditsBadgeColorAdaptive(isExhausted: Bool, for statusButton: NSStatusBarButton? = nil) -> NSColor {
+        let baseColor = commandCodeCreditsBadgeColor(isExhausted: isExhausted)
+        return isDarkMode(for: statusButton) ? baseColor.adjustedForDarkMode() : baseColor
+    }
+
+    static func commandCodeCreditsBadgeColorSwiftUI(isExhausted: Bool) -> Color {
+        isExhausted ? .red : Color(red: 139/255.0, green: 92/255.0, blue: 246/255.0)  // #8B5CF6
+    }
+
     // MARK: - 备选配色方案（注释保留，方便切换测试）
 
     /*

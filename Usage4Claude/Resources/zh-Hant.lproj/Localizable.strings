@@ -13,6 +13,7 @@
 "menu.about" = "關於";
 "menu.claude_status" = "Claude 狀態頁面";
 "menu.codex_status" = "OpenAI 狀態頁面";
+"menu.commandcode_status" = "Command Code";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "結束 Usage4Claude";
@@ -39,6 +40,11 @@
 "usage.refresh_cooldown" = "請稍後再試";
 "usage.run_diagnostic" = "執行診斷";
 "usage.codex_title" = "Codex 使用狀況";
+"usage.commandcode_title" = "Command Code 使用狀況";
+"account.commandcode_accounts" = "Command Code 帳戶";
+"account.commandcode_current_account" = "目前 Command Code 帳戶";
+"commandcode.session_cookie_label" = "Command Code 工作階段 Cookie";
+"commandcode.session_cookie_hint" = "登入 commandcode.ai，從瀏覽器開發者工具複製工作階段 Cookie（或 Cookie 請求標頭）並貼到此處。";
 "usage.codex_relogin" = "重新登入";
 
 // MARK: - Settings - Tabs
@@ -251,6 +257,9 @@
 "codex_primary_limit" = "Codex 5小時限制";
 "codex_secondary_limit" = "Codex 7天限制";
 "codex_extra_usage" = "Codex 額外用量";
+"commandcode_five_hour_limit" = "Command Code 5 小時限制";
+"commandcode_weekly_limit" = "Command Code 每週限制";
+"commandcode_credits" = "Command Code 額度";
 
 // MARK: - Detail Row Labels
 "detail_row.five_hour_limit" = "5小時限制";

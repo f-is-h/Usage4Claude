@@ -256,6 +256,22 @@ class KeychainManager {
         return storage.delete(key: "accounts_codex")
     }
 
+    // MARK: - Command Code 账户列表存储
+
+    @discardableResult
+    func saveCommandCodeAccounts(_ accounts: [Account]) -> Bool {
+        saveAccountsList(accounts, key: "accounts_commandcode")
+    }
+
+    func loadCommandCodeAccounts() -> [Account]? {
+        loadAccountsList(key: "accounts_commandcode")
+    }
+
+    @discardableResult
+    func deleteCommandCodeAccounts() -> Bool {
+        storage.delete(key: "accounts_commandcode")
+    }
+
     // MARK: - 账户列表的 JSON 编解码封装
 
     @discardableResult

@@ -49,7 +49,11 @@ let package = Package(
                 "Helpers/OAuthGrantFailure.swift",
                 "Helpers/UsageDisplayMode.swift",
                 "Helpers/NetworkCachePolicy.swift",
-                "Helpers/UsagePaceGraphMath.swift"
+                "Helpers/UsagePaceGraphMath.swift",
+                "Models/CommandCodeUsageData.swift",
+                "Models/CommandCodeAPIResponseModels.swift",
+                "Models/CommandCodePlanCatalog.swift",
+                "Helpers/CommandCodeCookieHeader.swift"
             ]
         ),
         .testTarget(

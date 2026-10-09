@@ -100,6 +100,9 @@ class DiagnosticManager: ObservableObject {
         if !settings.codexAccounts.isEmpty {
             runners.append(CodexDiagnosticRunner())
         }
+        if !settings.commandCodeAccounts.isEmpty {
+            runners.append(CommandCodeDiagnosticRunner())
+        }
         return runners
     }
 

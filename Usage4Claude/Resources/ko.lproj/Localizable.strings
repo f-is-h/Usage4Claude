@@ -13,6 +13,7 @@
 "menu.about" = "정보";
 "menu.claude_status" = "Claude 상태 페이지";
 "menu.codex_status" = "OpenAI 상태 페이지";
+"menu.commandcode_status" = "Command Code";
 "menu.coffee" = "Buy Me A Coffee";
 "menu.github_sponsor" = "GitHub Sponsor";
 "menu.quit" = "Usage4Claude 종료";
@@ -39,6 +40,11 @@
 "usage.refresh_cooldown" = "잠시 후 다시 시도하세요";
 "usage.run_diagnostic" = "진단 실행";
 "usage.codex_title" = "Codex 사용 현황";
+"usage.commandcode_title" = "Command Code 사용 현황";
+"account.commandcode_accounts" = "Command Code 계정";
+"account.commandcode_current_account" = "현재 Command Code 계정";
+"commandcode.session_cookie_label" = "Command Code 세션 쿠키";
+"commandcode.session_cookie_hint" = "commandcode.ai에 로그인한 뒤 브라우저 개발자 도구에서 세션 쿠키(또는 Cookie 요청 헤더)를 복사해 붙여넣으세요.";
 "usage.codex_relogin" = "다시 로그인";
 
 // MARK: - Settings - Tabs
@@ -251,6 +257,9 @@
 "codex_primary_limit" = "Codex 5시간 제한";
 "codex_secondary_limit" = "Codex 7일 제한";
 "codex_extra_usage" = "Codex 추가 사용량";
+"commandcode_five_hour_limit" = "Command Code 5시간 제한";
+"commandcode_weekly_limit" = "Command Code 주간 제한";
+"commandcode_credits" = "Command Code 크레딧";
 
 // MARK: - Detail Row Labels
 "detail_row.five_hour_limit" = "5시간 제한";

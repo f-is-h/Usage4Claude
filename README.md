@@ -35,8 +35,9 @@ Claude and Codex can be configured individually or together. All apps of a servi
 |---|---|---|
 | **Claude** | claude.ai, Claude Code, desktop, mobile, Cowork | 5-hour, 7-day, Extra Usage, plus weekly usage per model (Opus, Sonnet, Fable, etc., as returned for the account) |
 | **Codex** | Codex CLI, IDE extension, Codex web | 5-hour, 7-day, credits balance |
+| **Command Code** | Command Code CLI, Studio | 5-hour, weekly, monthly credits |
 
-With one service configured, the interface has a single column. With both, the detail window splits into two columns and the menu bar shows both icons side by side.
+With one service configured, the interface has a single column. With more than one, the detail window splits into one column per service and the menu bar shows their icons side by side.
 
 Claude Pro, Max, Team and Enterprise are supported. Free accounts have no usage dashboard and cannot be read. On Team and Enterprise, an admin must enable the member usage dashboard.
 
@@ -190,7 +191,7 @@ When a new version is available, the menu bar icon shows a badge and Check for U
 ## 🔒 Privacy & Security
 
 - No server; data stays on the Mac, with no analytics or telemetry
-- Network requests fall into three groups only: the Claude and Codex sign-in and usage endpoints, Sparkle checking GitHub for updates, and codex-reset.com when the Codex reset announcement is on
+- Network requests fall into three groups only: the Claude and Codex sign-in and usage endpoints, Sparkle checking GitHub for updates, and codex-reset.com when the Codex reset announcement is on. Command Code usage, when configured, is read from api.commandcode.ai with the pasted session cookie
 - Session Keys and tokens are stored in the Keychain, never in plain text; API responses are not written to the disk cache
 - App Sandbox is enabled. Beyond network access, it only opens the local port used by the sign-in callback and the system services Sparkle needs to install updates
 - Diagnostic reports are redacted before export, with tokens and other sensitive fields replaced

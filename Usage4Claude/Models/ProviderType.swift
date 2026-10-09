@@ -11,11 +11,13 @@ import Foundation
 enum ProviderType: String, Codable, CaseIterable, Hashable {
     case claude
     case codex
+    case commandCode = "command_code"
 
     var displayName: String {
         switch self {
         case .claude: return "Claude"
         case .codex: return "Codex"
+        case .commandCode: return "Command Code"
         }
     }
 }

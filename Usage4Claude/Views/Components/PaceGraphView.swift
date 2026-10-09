@@ -199,10 +199,10 @@ struct PaceGraphView: View {
     ///   codexPrimary 必为5小时窗口，codexSecondary 必为7天窗口
     private static func windowSeconds(for type: LimitType) -> TimeInterval {
         switch type {
-        case .fiveHour, .codexPrimary:
+        case .fiveHour, .codexPrimary, .commandCodeFiveHour:
             return UsagePaceGraphMath.fiveHourWindow
         case .sevenDay, .opusWeekly, .sonnetWeekly, .extraUsage,
-             .codexSecondary, .codexExtraUsage:
+             .codexSecondary, .codexExtraUsage, .commandCodeWeekly, .commandCodeCredits:
             return UsagePaceGraphMath.sevenDayWindow
         }
     }
@@ -262,7 +262,8 @@ extension PaceGraphView {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: Self.weeklyModelColor(type, $0.percentage))
                 }
-            case .extraUsage, .codexPrimary, .codexSecondary, .codexExtraUsage:
+            case .extraUsage, .codexPrimary, .codexSecondary, .codexExtraUsage,
+                 .commandCodeFiveHour, .commandCodeWeekly, .commandCodeCredits:
                 return nil
             }
         }
@@ -314,7 +315,48 @@ extension PaceGraphView {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: UsageColorScheme.codexSecondaryColorSwiftUI($0.percentage))
                 }
-            case .codexExtraUsage, .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly:
+            case .codexExtraUsage, .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly,
+                 .commandCodeFiveHour, .commandCodeWeekly, .commandCodeCredits:
+                return nil
+            }
+        }
+    }
+
+    /// Command Code 限制
+    /// - Note: credits 是月度余额而非窗口百分比，不放在节奏图上；
+    ///   自定义模式下缺失的窗口以 0% 占位，与圆环一致
+    init(
+        commandCodeUsageData: CommandCodeUsageData?,
+        activeDisplayTypes: [LimitType],
+        isRefreshing: Bool,
+        showRemainingMode: Bool
+    ) {
+        self.isRefreshing = isRefreshing
+        self.showRemainingMode = showRemainingMode
+        self.weekdaysOnly = UserSettings.shared.paceGraphWeekdaysOnly
+        guard let data = commandCodeUsageData else {
+            self.points = nil
+            return
+        }
+
+        let placeholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
+            ? CommandCodeUsageData.Window(percentage: 0, resetsAt: nil)
+            : nil
+
+        self.points = activeDisplayTypes.compactMap { type in
+            switch type {
+            case .commandCodeFiveHour:
+                return (data.fiveHour ?? placeholder).map {
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
+                          color: UsageColorScheme.commandCodeFiveHourColorSwiftUI($0.percentage))
+                }
+            case .commandCodeWeekly:
+                return (data.weekly ?? placeholder).map {
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
+                          color: UsageColorScheme.commandCodeWeeklyColorSwiftUI($0.percentage))
+                }
+            case .fiveHour, .sevenDay, .opusWeekly, .sonnetWeekly, .extraUsage,
+                 .codexPrimary, .codexSecondary, .codexExtraUsage, .commandCodeCredits:
                 return nil
             }
         }
