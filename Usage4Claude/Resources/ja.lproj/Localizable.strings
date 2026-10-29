@@ -474,3 +474,37 @@
 "settings.general.codex_announcement_section" = "Codex リセット予告（Beta）";
 "settings.general.codex_announcement_enable" = "リセット予告バッジを表示";
 "settings.general.codex_announcement_hint" = "OpenAI の Tibo Sottiaux が未確定のグローバルリセットを公に予告した場合のみ、Codex のリング横に小さなバッジが表示されます。ほとんどの場合は何も表示されません。データはサードパーティのコミュニティプロジェクト codex-reset.com から取得しています（Beta：データソースは変更・停止される可能性があります）。オフにすると、このサイトへのリクエストは一切送信されなくなります。";
+
+/* Antigravity */
+"antigravity.title" = "Antigravity";
+"antigravity.current_account" = "現在の Antigravity アカウント";
+"antigravity.authentication" = "認証";
+"antigravity.managed_sign_in" = "agy でログイン済み";
+"antigravity.delete_confirm_message" = "このアカウントを Usage4Claude から削除しますか？保存されたアカウント情報と使用量データが削除されます。他のアプリのログインは維持されます。";
+"antigravity.usage_title" = "Antigravity使用状況";
+"antigravity.gemini_5h_limit" = "Antigravity Gemini 5時間制限";
+"antigravity.gemini_weekly_limit" = "Antigravity Gemini 週間制限";
+"antigravity.3p_5h_limit" = "Antigravity Claude/GPT 5時間制限";
+"antigravity.3p_weekly_limit" = "Antigravity Claude/GPT 週間制限";
+"antigravity.gemini_5h_short" = "Gemini 5時間";
+"antigravity.gemini_weekly_short" = "Gemini 週間";
+"antigravity.3p_5h_short" = "Claude/GPT 5時間";
+"antigravity.3p_weekly_short" = "Claude/GPT 週間";
+"antigravity.cli_not_found_short" = "見つかりません";
+"antigravity.status_connected" = "接続済み";
+"antigravity.install_hint" = "Antigravity CLI をインストールし、ターミナルで agy を一度実行してサインインしてください。";
+"antigravity.recheck" = "再確認";
+"antigravity.error_cli_not_found" = "Antigravity CLI (agy) が見つかりません。インストールしてターミナルからサインインしてください。";
+"antigravity.error_not_logged_in" = "agy にサインインしていません。ターミナルで agy を実行してサインインしてください。";
+"antigravity.error_timeout" = "agy が時間内に応答しませんでした。";
+"antigravity.error_command_failed" = "agy エラー: %@";
+
+"antigravity.local_account" = "既存の Antigravity ログイン";
+"antigravity.connect_existing" = "既存のログインを接続";
+"antigravity.storage_failed" = "アカウント情報を安全に保存できません。もう一度お試しください。";
+"antigravity.client_unavailable" = "Google ログイン設定が見つかりません。Antigravity または agy をインストールまたは更新してください。";
+
+"antigravity.google_sign_in" = "Google でログイン済み";
+
+"antigravity.login_hint" = "ブラウザで Google アカウントを選択し、ログインを完了してください。完了すると自動的に戻ります。";
+"antigravity.callback_busy" = "ログインを準備できません。他のログイン画面を閉じて再試行してください。";

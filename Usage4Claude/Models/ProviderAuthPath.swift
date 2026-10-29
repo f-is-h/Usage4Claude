@@ -51,6 +51,8 @@ nonisolated enum ProviderAuthPath: String, Equatable, Sendable {
         switch provider {
         case .claude: return forClaude(credential: credential)
         case .codex:  return forCodex(credential: credential)
+        // agy CLI 自行管理 Google OAuth 凭据，应用不持有任何凭据
+        case .antigravity: return .oauth
         }
     }
 

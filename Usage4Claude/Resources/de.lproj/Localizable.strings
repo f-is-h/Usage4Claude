@@ -473,3 +473,37 @@
 "settings.general.codex_announcement_section" = "Codex-Reset-Ankündigung (Beta)";
 "settings.general.codex_announcement_enable" = "Reset-Ankündigungs-Badge anzeigen";
 "settings.general.codex_announcement_hint" = "Zeigt ein kleines Badge neben dem Codex-Ring, aber nur wenn Tibo Sottiaux von OpenAI öffentlich einen noch bevorstehenden globalen Reset angekündigt hat — meistens gibt es nichts anzuzeigen. Die Daten stammen von codex-reset.com, einem unabhängigen Community-Projekt (Beta: die Quelle kann sich ändern oder wegfallen). Wird diese Option deaktiviert, werden keine Anfragen mehr an diese Website gesendet.";
+
+/* Antigravity */
+"antigravity.title" = "Antigravity";
+"antigravity.current_account" = "Aktuelles Antigravity-Konto";
+"antigravity.authentication" = "Authentifizierung";
+"antigravity.managed_sign_in" = "Über agy angemeldet";
+"antigravity.delete_confirm_message" = "Dieses Konto aus Usage4Claude entfernen? Gespeicherte Kontoinformationen und Nutzungsdaten werden entfernt. Andere Apps bleiben angemeldet.";
+"antigravity.usage_title" = "Antigravity-Nutzung";
+"antigravity.gemini_5h_limit" = "Antigravity Gemini 5-Stunden-Limit";
+"antigravity.gemini_weekly_limit" = "Antigravity Gemini Wochenlimit";
+"antigravity.3p_5h_limit" = "Antigravity Claude/GPT 5-Stunden-Limit";
+"antigravity.3p_weekly_limit" = "Antigravity Claude/GPT Wochenlimit";
+"antigravity.gemini_5h_short" = "Gemini 5 Std.";
+"antigravity.gemini_weekly_short" = "Gemini Woche";
+"antigravity.3p_5h_short" = "Claude/GPT 5 Std.";
+"antigravity.3p_weekly_short" = "Claude/GPT Woche";
+"antigravity.cli_not_found_short" = "Nicht gefunden";
+"antigravity.status_connected" = "Verbunden";
+"antigravity.install_hint" = "Installiere die Antigravity-CLI und führe agy einmal im Terminal aus, um dich anzumelden.";
+"antigravity.recheck" = "Erneut prüfen";
+"antigravity.error_cli_not_found" = "Antigravity-CLI (agy) nicht gefunden. Installiere sie und melde dich im Terminal an.";
+"antigravity.error_not_logged_in" = "agy ist nicht angemeldet. Führe agy im Terminal aus und melde dich an.";
+"antigravity.error_timeout" = "agy hat nicht rechtzeitig geantwortet.";
+"antigravity.error_command_failed" = "agy-Fehler: %@";
+
+"antigravity.local_account" = "Bestehende Antigravity-Anmeldung";
+"antigravity.connect_existing" = "Bestehende Anmeldung verbinden";
+"antigravity.storage_failed" = "Kontodaten konnten nicht sicher gespeichert werden. Bitte erneut versuchen.";
+"antigravity.client_unavailable" = "Google-Anmeldekonfiguration nicht gefunden. Antigravity oder agy installieren oder aktualisieren.";
+
+"antigravity.google_sign_in" = "Mit Google angemeldet";
+
+"antigravity.login_hint" = "Google-Konto im Browser auswählen und anmelden. Danach kehren Sie automatisch zurück.";
+"antigravity.callback_busy" = "Anmeldung konnte nicht vorbereitet werden. Andere Anmeldefenster schließen und erneut versuchen.";

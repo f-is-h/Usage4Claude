@@ -139,6 +139,13 @@ class MenuBarManager: ObservableObject {
 
         dataManager.$codexResetAnnouncement
             .assign(to: &$codexResetAnnouncement)
+
+        // Antigravity 数据在共享 store 里，渲染器直接读取，这里只负责触发重绘
+        AntigravityUsageStore.shared.$data
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateMenuBarIcon() }
+            .store(in: &cancellables)
     }
     
     /// 处理菜单栏图标点击事件
@@ -223,6 +230,8 @@ class MenuBarManager: ObservableObject {
         case .codexRelogin:
             closePopover()
             WebLoginWindowManager.shared.showCodexLoginWindow()
+        case .refreshAntigravity:
+            dataManager.handleAntigravityOnlyRefresh()
         case .quit:
             quitApp()
         }
@@ -583,7 +592,8 @@ class MenuBarManager: ObservableObject {
                 self?.settingsWindow = nil
                 if self?.settings.hasAnyValidCredentials == true
                     && self?.usageData == nil
-                    && self?.codexUsageData == nil {
+                    && self?.codexUsageData == nil
+                    && AntigravityUsageStore.shared.data == nil {
                     self?.startRefreshing()
                 }
             }

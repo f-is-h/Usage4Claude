@@ -22,11 +22,9 @@ struct SetupStepView: View {
 
     /// 判断是否应该禁用某个checkbox
     private func shouldDisableCheckbox(for limitType: LimitType) -> Bool {
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
-
-        // 如果这是最后一个选中的圆形图标，则禁用
-        if circularTypes.contains(limitType) {
-            let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
+        // 如果这是最后一个选中的圆形图标，则禁用（isCircular 已包含 Antigravity 的圆形类型）
+        if limitType.isCircular {
+            let selectedCircular = settings.customDisplayTypes.filter(\.isCircular)
             return selectedCircular.count == 1 && selectedCircular.contains(limitType)
         }
 
@@ -446,6 +444,8 @@ struct SetupStepView: View {
             } else {
                 Image(systemName: "chevron.left.forwardslash.chevron.right").frame(width: size, height: size)
             }
+        case .antigravity:
+            Image(nsImage: ImageHelper.createAntigravityIcon(size: size)).resizable().frame(width: size, height: size)
         }
     }
 

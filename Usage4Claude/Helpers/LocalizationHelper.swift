@@ -595,6 +595,43 @@ enum L {
         static var weekdaysOnlyDescription: String { localized("graph_style.weekdays_only_description") }
     }
 
+    // MARK: - Antigravity
+
+    enum Antigravity {
+        static var loginHint: String { localized("antigravity.login_hint") }
+        static var callbackBusy: String { localized("antigravity.callback_busy") }
+        static var googleSignIn: String { localized("antigravity.google_sign_in") }
+        static var localAccount: String { localized("antigravity.local_account") }
+        static var connectExisting: String { localized("antigravity.connect_existing") }
+        static var storageFailed: String { localized("antigravity.storage_failed") }
+        static var clientUnavailable: String { localized("antigravity.client_unavailable") }
+
+        static var title: String { localized("antigravity.title") }
+        static var currentAccount: String { localized("antigravity.current_account") }
+        static var authentication: String { localized("antigravity.authentication") }
+        static var managedSignIn: String { localized("antigravity.managed_sign_in") }
+        static var deleteConfirmMessage: String { localized("antigravity.delete_confirm_message") }
+        static var usageTitle: String { localized("antigravity.usage_title") }
+        static var geminiFiveHourLimit: String { localized("antigravity.gemini_5h_limit") }
+        static var geminiWeeklyLimit: String { localized("antigravity.gemini_weekly_limit") }
+        static var thirdPartyFiveHourLimit: String { localized("antigravity.3p_5h_limit") }
+        static var thirdPartyWeeklyLimit: String { localized("antigravity.3p_weekly_limit") }
+        static var geminiFiveHourShort: String { localized("antigravity.gemini_5h_short") }
+        static var geminiWeeklyShort: String { localized("antigravity.gemini_weekly_short") }
+        static var thirdPartyFiveHourShort: String { localized("antigravity.3p_5h_short") }
+        static var thirdPartyWeeklyShort: String { localized("antigravity.3p_weekly_short") }
+        static var cliNotFoundShort: String { localized("antigravity.cli_not_found_short") }
+        static var statusConnected: String { localized("antigravity.status_connected") }
+        static var installHint: String { localized("antigravity.install_hint") }
+        static var recheck: String { localized("antigravity.recheck") }
+        static var errorCLINotFound: String { localized("antigravity.error_cli_not_found") }
+        static var errorNotLoggedIn: String { localized("antigravity.error_not_logged_in") }
+        static var errorTimeout: String { localized("antigravity.error_timeout") }
+        static func errorCommandFailed(_ message: String) -> String {
+            String(format: localized("antigravity.error_command_failed"), message)
+        }
+    }
+
     // MARK: - Helper Methods
     
     /// 本地化字符串辅助方法

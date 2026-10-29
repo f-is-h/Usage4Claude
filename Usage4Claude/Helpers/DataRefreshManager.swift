@@ -147,8 +147,16 @@ class DataRefreshManager: ObservableObject {
         if !codexEnabled {
             clearCodexUsageState()
         }
+        if settings.antigravityEnabled {
+            // 每轮刷新重新探测一次 agy，让安装/卸载在下一轮生效；视图里只读缓存
+            _ = AntigravityAPIService.locateCLI(refresh: true)
+        }
+        let antigravityEnabled = shouldFetchAntigravityUsage
+        if !antigravityEnabled {
+            clearAntigravityUsageState()
+        }
 
-        guard claudeEnabled || codexEnabled else {
+        guard claudeEnabled || codexEnabled || antigravityEnabled else {
             isLoading = false
             endRefreshAnimationWithMinimumDuration { }
             errorMessage = UsageError.noCredentials.localizedDescription
@@ -159,9 +167,10 @@ class DataRefreshManager: ObservableObject {
         let now = Date()
         let fetchClaude = claudeEnabled && (bypassBackoff || isBackoffElapsed(for: .claude, now: now))
         let fetchCodex = codexEnabled && (bypassBackoff || isBackoffElapsed(for: .codex, now: now))
+        let fetchAntigravity = antigravityEnabled && (bypassBackoff || isBackoffElapsed(for: .antigravity, now: now))
 
         // 两个 Provider 都在退避期内：整次自动刷新跳过，保留缓存数据和错误提示
-        guard fetchClaude || fetchCodex else { return }
+        guard fetchClaude || fetchCodex || fetchAntigravity else { return }
 
         isLoading = true
         markRequestIssued(at: now)
@@ -174,6 +183,9 @@ class DataRefreshManager: ObservableObject {
             codexErrorMessage = nil
             codexErrorRequiresAuthAction = false
         }
+        if fetchAntigravity {
+            clearAntigravityError()
+        }
 
         // Claude 与 Codex 并发拉取：两个子任务立即启动，结果在 MainActor 上顺序 await 合并
         // （审计报告 4.2：替代 DispatchGroup + 跨线程共享可变结果变量的旧写法）
@@ -181,14 +193,25 @@ class DataRefreshManager: ObservableObject {
             fetchClaude ? Task { await self.apiService.fetchUsageResult() } : nil
         let codexTask: Task<Result<CodexUsageData, Error>, Never>? =
             fetchCodex ? Task { await self.codexApiService.fetchUsageResult() } : nil
+        // Antigravity 走 CLI（约 6 秒，超时最长 90 秒）：结果到达后单独应用，
+        // 不让 Claude/Codex 的上屏和智能模式推进等它
+        let antigravityTask: Task<Void, Never>? = fetchAntigravity ? Task { @MainActor [weak self] in
+            guard let service = self?.antigravityApiService else { return }
+            let revision = AntigravityAccountStore.shared.selectionRevision
+            let result = await service.fetchUsageResult()
+            guard let self, revision == AntigravityAccountStore.shared.selectionRevision else { return }
+            if let utilization = self.applyAntigravityResult(result) {
+                // 本轮已有 Claude/Codex 推进过智能模式时，Antigravity 只在用量变化时切回活跃模式
+                self.settings.updateSmartMonitoringMode(providerUtilizations: [.antigravity: utilization],
+                                                        countsAsRound: !(fetchClaude || fetchCodex))
+            }
+        } : nil
 
         Task { @MainActor [weak self] in
             let claudeResult = await claudeTask?.value
             let codexResult = await codexTask?.value
 
             guard let self = self else { return }
-            self.isLoading = false
-            self.endRefreshAnimationWithMinimumDuration { }
 
             var monitoringUtilizations: [ProviderType: Double] = [:]
             if fetchCodex {
@@ -249,6 +272,11 @@ class DataRefreshManager: ObservableObject {
             }
 
             self.settings.updateSmartMonitoringMode(providerUtilizations: monitoringUtilizations)
+
+            // 加载状态和刷新动画要等所有 Provider 都返回，否则 Antigravity 列在 CLI 运行期间没有进度提示
+            await antigravityTask?.value
+            self.isLoading = false
+            self.endRefreshAnimationWithMinimumDuration { }
         }
     }
 
@@ -821,11 +849,23 @@ class DataRefreshManager: ObservableObject {
                 fetchCodexOnly()
             }
 
+        case .antigravity:
+            antigravityBackoff = .initial
+            _ = AntigravityAPIService.locateCLI(refresh: true)
+            clearAntigravityUsageState()
+            if shouldFetchAntigravityUsage {
+                fetchAntigravityOnly()
+            } else {
+                antigravityApiService.cancelAllRequests()
+            }
+
         case .none:
             claudeBackoff = .initial
             codexBackoff = .initial
+            antigravityBackoff = .initial
             clearClaudeUsageState()
             clearCodexUsageState()
+            clearAntigravityUsageState()
             NotificationManager.shared.resetAllNotificationStates()
             fetchUsage()
         }
@@ -866,13 +906,18 @@ class DataRefreshManager: ObservableObject {
     // MARK: - Fetch Backoff
 
     private func backoffState(for provider: ProviderType) -> UsageFetchBackoffPolicy.State {
-        provider == .claude ? claudeBackoff : codexBackoff
+        switch provider {
+        case .claude: return claudeBackoff
+        case .codex: return codexBackoff
+        case .antigravity: return antigravityBackoff
+        }
     }
 
     private func setBackoffState(_ state: UsageFetchBackoffPolicy.State, for provider: ProviderType) {
         switch provider {
         case .claude: claudeBackoff = state
         case .codex: codexBackoff = state
+        case .antigravity: antigravityBackoff = state
         }
     }
 
@@ -902,6 +947,10 @@ class DataRefreshManager: ObservableObject {
             return .serverError
         case UsageError.networkError:
             return .network
+        case AntigravityError.timeout:
+            return .network
+        case AntigravityError.commandFailed:
+            return .serverError
         default:
             return nil
         }
@@ -1025,6 +1074,150 @@ class DataRefreshManager: ObservableObject {
         timerManager.schedule(TimerID.codexResetVerify3, interval: timeUntilReset + 30, repeats: false) { [weak self] in
             AppLog.trace(.refresh, "Codex reset verification +30s: refreshing")
             self?.fetchUsage()
+        }
+    }
+
+    // MARK: - Antigravity
+
+    /// Antigravity 用量服务（运行 agy CLI）
+    private let antigravityApiService = AntigravityAPIService.shared
+    /// Antigravity 数据与错误状态。放在共享 store 里，菜单栏渲染器和详情列直接观察，
+    /// 不必沿 MenuBarManager → MenuBarUI → UsageDetailView 一路加参数和绑定
+    private let antigravityStore = AntigravityUsageStore.shared
+    /// Antigravity 用量拉取的失败退避状态
+    private var antigravityBackoff = UsageFetchBackoffPolicy.State.initial
+    /// Antigravity 上次最早的重置时间
+    private var lastAntigravityResetsAt: Date?
+
+    private var shouldFetchAntigravityUsage: Bool {
+        #if DEBUG
+        if settings.debugModeEnabled {
+            return settings.antigravityEnabled
+        }
+        #endif
+        return settings.isAntigravityActive
+    }
+
+    private func clearAntigravityError() {
+        antigravityStore.errorMessage = nil
+        antigravityStore.errorRequiresAuthAction = false
+    }
+
+    private func clearAntigravityUsageState(clearError: Bool = true) {
+        antigravityStore.data = nil
+        refreshState.lastSuccessAt[.antigravity] = nil
+        if clearError {
+            clearAntigravityError()
+        }
+        lastAntigravityResetsAt = nil
+        cancelAntigravityResetVerification()
+    }
+
+    /// 应用一次 Antigravity 拉取结果
+    /// - Returns: 成功时返回供智能模式使用的用量百分比
+    @discardableResult
+    private func applyAntigravityResult(_ result: Result<AntigravityUsageData, Error>) -> Double? {
+        // CLI 运行期间用户可能已关闭 Antigravity：丢弃晚到的结果，不让数据重新出现
+        guard shouldFetchAntigravityUsage else {
+            clearAntigravityUsageState()
+            return nil
+        }
+        switch result {
+        case .success(let data):
+            recordFetchSuccess(for: .antigravity)
+            let previousData = antigravityStore.data
+            antigravityStore.data = data
+            clearAntigravityError()
+            settings.ensureDefaultAntigravityDisplayTypesForCustomMode()
+            NotificationManager.shared.checkAndNotify(antigravityUsageData: data, previousData: previousData)
+
+            let newResetsAt = Self.earliestUpcomingReset(in: data)
+            if hasResetTimeChanged(from: lastAntigravityResetsAt, to: newResetsAt) {
+                cancelAntigravityResetVerification()
+            } else if let resetsAt = newResetsAt {
+                scheduleAntigravityResetVerification(resetsAt: resetsAt)
+            }
+            lastAntigravityResetsAt = newResetsAt
+            return data.maxPercentage
+
+        case .failure(let error):
+            AppLog.warning(.refresh, "Antigravity refresh failed; other providers are unaffected: \(error.localizedDescription)")
+            recordFetchFailure(error, for: .antigravity)
+            antigravityStore.errorMessage = error.localizedDescription
+            antigravityStore.errorRequiresAuthAction = (error as? AntigravityError)?.requiresUserAction ?? false
+            // 与 Codex 一致：需要用户处理的错误说明旧数据已不可信，清掉数据改为全屏引导；
+            // 瞬时错误保留缓存数据，只在标题旁显示小叹号
+            if antigravityStore.errorRequiresAuthAction {
+                clearAntigravityUsageState(clearError: false)
+            }
+            return nil
+        }
+    }
+
+    /// 仅刷新 Antigravity 数据（Antigravity 圆环点击触发）
+    func handleAntigravityOnlyRefresh() {
+        guard shouldFetchAntigravityUsage else {
+            clearAntigravityUsageState()
+            return
+        }
+        let now = Date()
+        if let lastManual = lastManualRefreshTime,
+           now.timeIntervalSince(lastManual) < 10 { return }
+        lastManualRefreshTime = now
+        refreshAnimationStartTime = now
+        refreshState.refreshingProvider = .antigravity
+        refreshState.isRefreshing = true
+        refreshState.canRefresh = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            self?.refreshState.canRefresh = true
+        }
+        fetchAntigravityOnly()
+    }
+
+    private func fetchAntigravityOnly() {
+        guard shouldFetchAntigravityUsage else {
+            clearAntigravityUsageState()
+            return
+        }
+        clearAntigravityError()
+        let revision = AntigravityAccountStore.shared.selectionRevision
+        antigravityApiService.fetchUsage { [weak self] result in
+            guard let self else { return }
+            // 账户中途切换时结果作废，但这次点击开启的刷新动画仍要结束
+            self.endRefreshAnimationWithMinimumDuration { }
+            guard revision == AntigravityAccountStore.shared.selectionRevision else { return }
+            if let utilization = self.applyAntigravityResult(result) {
+                self.settings.updateSmartMonitoringMode(providerUtilizations: [.antigravity: utilization])
+            }
+        }
+    }
+
+    private static func earliestUpcomingReset(in data: AntigravityUsageData) -> Date? {
+        let now = Date()
+        return AntigravityUsageData.limitTypes
+            .compactMap { data.limit(for: $0)?.resetsAt }
+            .filter { $0 > now }
+            .min()
+    }
+
+    private static let antigravityResetVerifyIDs = [
+        "antigravityResetVerify1", "antigravityResetVerify2", "antigravityResetVerify3"
+    ]
+
+    private func cancelAntigravityResetVerification() {
+        Self.antigravityResetVerifyIDs.forEach { timerManager.invalidate($0) }
+    }
+
+    /// 与 Claude/Codex 一致：重置时间过后 1 秒、10 秒、30 秒各刷新一次
+    private func scheduleAntigravityResetVerification(resetsAt: Date) {
+        cancelAntigravityResetVerification()
+        let timeUntilReset = resetsAt.timeIntervalSinceNow
+        guard timeUntilReset > 0 else { return }
+        for (id, delay) in zip(Self.antigravityResetVerifyIDs, [1.0, 10.0, 30.0]) {
+            timerManager.schedule(id, interval: timeUntilReset + delay, repeats: false) { [weak self] in
+                AppLog.trace(.refresh, "Antigravity reset verification +\(Int(delay))s: refreshing")
+                self?.fetchUsage()
+            }
         }
     }
 

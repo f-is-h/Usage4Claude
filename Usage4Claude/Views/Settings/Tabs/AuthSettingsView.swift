@@ -15,6 +15,7 @@ import SwiftUI
 /// 使用卡片式布局，用于管理多账户
 struct AuthSettingsView: View {
     @ObservedObject var settings = UserSettings.shared
+    @ObservedObject var antigravityAccounts = AntigravityAccountStore.shared
     @State var isAddingAccount = false
     @State var newSessionKey = ""
     @State var newAlias = ""
@@ -68,6 +69,10 @@ struct AuthSettingsView: View {
                         currentCodexAccountDetailView(account: currentCodexAccount)
                     }
 
+                    if settings.antigravityEnabled {
+                        AntigravitySettingsCard()
+                    }
+
                     // 说明卡片
                     howToCard
 
@@ -76,6 +81,12 @@ struct AuthSettingsView: View {
                 }
             }
             .padding()
+        }
+        .alert(L.Antigravity.title, isPresented: Binding(
+            get: { antigravityAccounts.storageError != nil },
+            set: { if !$0 { antigravityAccounts.storageError = nil } }
+        )) { Button("OK") { antigravityAccounts.storageError = nil } } message: {
+            Text(antigravityAccounts.storageError ?? "")
         }
         .alert(L.Account.deleteConfirmTitle, isPresented: $showDeleteConfirmation) {
             Button(L.Account.cancel, role: .cancel) {}
@@ -103,7 +114,9 @@ struct AuthSettingsView: View {
 
     var accountListView: some View {
         let hasCodex = !settings.codexAccounts.isEmpty
-        let hasBothProviders = !settings.accounts.isEmpty && hasCodex
+        let hasAntigravity = settings.antigravityEnabled
+        let hasBothProviders = [!settings.accounts.isEmpty, hasCodex, hasAntigravity]
+            .filter { $0 }.count > 1
 
         return SettingCard(
             icon: "person.2.fill",
@@ -112,7 +125,7 @@ struct AuthSettingsView: View {
             hint: ""
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                if settings.accounts.isEmpty && settings.codexAccounts.isEmpty {
+                if settings.accounts.isEmpty && settings.codexAccounts.isEmpty && !hasAntigravity {
                     // 无账户时的提示
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.badge.plus")
@@ -143,6 +156,61 @@ struct AuthSettingsView: View {
                         }
                         ForEach(settings.codexAccounts) { account in
                             accountRow(account: account, provider: .codex)
+                        }
+                    }
+
+                    if hasAntigravity {
+                        if hasBothProviders {
+                            providerSectionHeader(provider: .antigravity, label: L.Antigravity.title)
+                                .padding(.top, 4)
+                        }
+                        ForEach(settings.antigravityAccounts) { account in
+                            Button {
+                                AntigravityAccountStore.shared.switchTo(account.id)
+                            } label: {
+                                let isSelected = account.id == settings.currentAntigravityAccount?.id
+                                HStack(spacing: 12) {
+                                    Circle()
+                                        .fill(isSelected ? Color.indigo : Color.clear)
+                                        .frame(width: 8, height: 8)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.secondary.opacity(0.5), lineWidth: 1)
+                                        )
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack {
+                                            Text(account.displayName)
+                                                .font(.subheadline)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.primary)
+
+                                            if isSelected {
+                                                Image(systemName: "checkmark")
+                                                    .font(.caption)
+                                                    .foregroundColor(.indigo)
+                                            }
+                                        }
+
+                                        if !account.alias.isEmpty {
+                                            Text(account.email)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    Spacer()
+                                }
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(isSelected ? Color.indigo.opacity(0.1) : Color.clear)
+                                )
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .focusable(false)
                         }
                     }
                 }
@@ -190,6 +258,22 @@ struct AuthSettingsView: View {
                     WebLoginWindowManager.shared.showCodexLoginWindow()
                 }
             }
+
+            HStack(spacing: 10) {
+                addAccountActionButton(provider: .antigravity, title: L.WebLogin.browserLogin,
+                    help: "Antigravity " + L.WebLogin.browserLogin) {
+                    WebLoginWindowManager.shared.showAntigravityLoginWindow()
+                }
+                if !settings.antigravityAccounts.contains(where: { $0.isLocal }) {
+                    addAccountActionButton(provider: .antigravity, title: L.Antigravity.connectExisting,
+                        help: L.Antigravity.connectExisting) {
+                        do {
+                            try AntigravityAccountStore.shared.upsert(AntigravityAccount(
+                                email: L.Antigravity.localAccount, subject: "local"))
+                        } catch { AntigravityAccountStore.shared.storageError = L.Antigravity.storageFailed }
+                    }
+                }
+            }
         }
         .padding(.top, 8)
     }
@@ -235,20 +319,16 @@ struct AuthSettingsView: View {
                 Image(systemName: "sparkles")
                     .frame(width: size, height: size)
             }
+        case .antigravity:
+            Image(nsImage: ImageHelper.createAntigravityIcon(size: size))
+                .resizable()
+                .frame(width: size, height: size)
         }
     }
 
     func providerSectionHeader(provider: ProviderType, label: String) -> some View {
         HStack(spacing: 4) {
-            if provider == .codex, let icon = ImageHelper.createCodexIcon(size: 12) {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 12, height: 12)
-            } else if provider == .claude, let icon = ImageHelper.createAppIcon(size: 12) {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 12, height: 12)
-            }
+            providerIcon(provider: provider, size: 12)
             Text(label)
                 .font(.caption)
                 .fontWeight(.semibold)

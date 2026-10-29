@@ -100,6 +100,9 @@ class DiagnosticManager: ObservableObject {
         if !settings.codexAccounts.isEmpty {
             runners.append(CodexDiagnosticRunner())
         }
+        if settings.antigravityEnabled {
+            runners.append(AntigravityDiagnosticRunner())
+        }
         return runners
     }
 

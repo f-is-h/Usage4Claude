@@ -199,10 +199,11 @@ struct PaceGraphView: View {
     ///   codexPrimary 必为5小时窗口，codexSecondary 必为7天窗口
     private static func windowSeconds(for type: LimitType) -> TimeInterval {
         switch type {
-        case .fiveHour, .codexPrimary:
+        case .fiveHour, .codexPrimary, .antigravityGeminiFiveHour, .antigravityThirdPartyFiveHour:
             return UsagePaceGraphMath.fiveHourWindow
         case .sevenDay, .opusWeekly, .sonnetWeekly, .extraUsage,
-             .codexSecondary, .codexExtraUsage:
+             .codexSecondary, .codexExtraUsage,
+             .antigravityGeminiWeekly, .antigravityThirdPartyWeekly:
             return UsagePaceGraphMath.sevenDayWindow
         }
     }
@@ -262,7 +263,9 @@ extension PaceGraphView {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: Self.weeklyModelColor(type, $0.percentage))
                 }
-            case .extraUsage, .codexPrimary, .codexSecondary, .codexExtraUsage:
+            case .extraUsage, .codexPrimary, .codexSecondary, .codexExtraUsage,
+                 .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+                 .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
                 return nil
             }
         }
@@ -314,10 +317,41 @@ extension PaceGraphView {
                     Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
                           color: UsageColorScheme.codexSecondaryColorSwiftUI($0.percentage))
                 }
-            case .codexExtraUsage, .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly:
+            case .codexExtraUsage, .fiveHour, .sevenDay, .extraUsage, .opusWeekly, .sonnetWeekly,
+                 .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+                 .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
                 return nil
             }
         }
+    }
+
+    /// Antigravity 限制
+    init(
+        antigravityUsageData: AntigravityUsageData?,
+        activeDisplayTypes: [LimitType],
+        isRefreshing: Bool,
+        showRemainingMode: Bool
+    ) {
+        self.isRefreshing = isRefreshing
+        self.showRemainingMode = showRemainingMode
+        self.weekdaysOnly = UserSettings.shared.paceGraphWeekdaysOnly
+        guard let data = antigravityUsageData else {
+            self.points = nil
+            return
+        }
+
+        let placeholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
+            ? UsageData.LimitData(percentage: 0, resetsAt: nil)
+            : nil
+
+        self.points = activeDisplayTypes
+            .filter { $0.provider == .antigravity }
+            .compactMap { type in
+                (data.limit(for: type) ?? placeholder).map {
+                    Point(type: type, percentage: $0.percentage, resetsAt: $0.resetsAt,
+                          color: UsageColorScheme.antigravityColorSwiftUI(type, $0.percentage))
+                }
+            }
     }
 }
 

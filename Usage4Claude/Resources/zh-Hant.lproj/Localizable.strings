@@ -474,3 +474,37 @@
 "settings.general.codex_announcement_section" = "Codex 重置預告（Beta）";
 "settings.general.codex_announcement_enable" = "顯示重置預告徽章";
 "settings.general.codex_announcement_hint" = "僅當 OpenAI 的 Tibo Sottiaux 公開預告了一個尚未到達的全域重置時，才會在 Codex 圓環旁顯示一個小徽章——大部分時間不會有任何顯示。資料來自第三方社群專案 codex-reset.com（Beta：資料來源可能變更或失效）。關閉後將不再向該網站發出任何請求。";
+
+/* Antigravity */
+"antigravity.title" = "Antigravity";
+"antigravity.current_account" = "目前的 Antigravity 帳號";
+"antigravity.authentication" = "驗證";
+"antigravity.managed_sign_in" = "已透過 agy 登入";
+"antigravity.delete_confirm_message" = "要從 Usage4Claude 刪除此帳號嗎？儲存的帳號資訊和用量資料將被刪除。其他應用程式的登入狀態將保留。";
+"antigravity.usage_title" = "Antigravity 使用狀況";
+"antigravity.gemini_5h_limit" = "Antigravity Gemini 5小時限制";
+"antigravity.gemini_weekly_limit" = "Antigravity Gemini 每週限制";
+"antigravity.3p_5h_limit" = "Antigravity Claude/GPT 5小時限制";
+"antigravity.3p_weekly_limit" = "Antigravity Claude/GPT 每週限制";
+"antigravity.gemini_5h_short" = "Gemini 5小時";
+"antigravity.gemini_weekly_short" = "Gemini 每週";
+"antigravity.3p_5h_short" = "Claude/GPT 5小時";
+"antigravity.3p_weekly_short" = "Claude/GPT 每週";
+"antigravity.cli_not_found_short" = "找不到";
+"antigravity.status_connected" = "已連線";
+"antigravity.install_hint" = "請安裝 Antigravity CLI，然後在終端機執行一次 agy 完成登入。";
+"antigravity.recheck" = "重新檢查";
+"antigravity.error_cli_not_found" = "找不到 Antigravity CLI (agy)。請安裝後在終端機中登入。";
+"antigravity.error_not_logged_in" = "agy 尚未登入。請在終端機執行 agy 並登入。";
+"antigravity.error_timeout" = "agy 未能及時回應。";
+"antigravity.error_command_failed" = "agy 錯誤：%@";
+
+"antigravity.local_account" = "現有 Antigravity 登入";
+"antigravity.connect_existing" = "連接現有登入";
+"antigravity.storage_failed" = "無法安全儲存帳號資訊，請重試。";
+"antigravity.client_unavailable" = "找不到 Google 登入設定。請安裝或更新 Antigravity 或 agy。";
+
+"antigravity.google_sign_in" = "已透過 Google 登入";
+
+"antigravity.login_hint" = "請在瀏覽器中選擇 Google 帳號並完成登入。完成後將自動返回。";
+"antigravity.callback_busy" = "無法準備登入。請關閉其他登入視窗後重試。";

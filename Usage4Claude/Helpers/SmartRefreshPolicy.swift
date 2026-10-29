@@ -23,17 +23,22 @@ final class SmartRefreshPolicy {
     private var lastUtilizationByProvider: [ProviderType: Double] = [:]
 
     /// 处理一轮用量检测结果
-    /// - Parameter providerUtilizations: 本轮成功获取的 Provider 用量百分比
+    /// - Parameters:
+    ///   - providerUtilizations: 本轮成功获取的 Provider 用量百分比
+    ///   - countsAsRound: 无变化时是否累计静默次数。同一轮里晚到的结果（Antigravity CLI）传 false，
+    ///     只在有变化时切回活跃模式，避免一轮刷新被计成两次无变化
     /// - Returns: 是否发生了模式切换（调用方据此决定是否需要重启定时器/发通知）
     @discardableResult
-    func update(providerUtilizations: [ProviderType: Double]) -> Bool {
+    func update(providerUtilizations: [ProviderType: Double], countsAsRound: Bool = true) -> Bool {
         guard !providerUtilizations.isEmpty else { return false }
 
         let modeChanged: Bool
         if hasProviderUtilizationChanged(providerUtilizations) {
             modeChanged = switchToActiveMode()
-        } else {
+        } else if countsAsRound {
             modeChanged = handleNoChange()
+        } else {
+            modeChanged = false
         }
 
         for (provider, utilization) in providerUtilizations {

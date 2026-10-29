@@ -110,6 +110,12 @@ class MenuBarIconRenderer {
             }
         } else {
             // Claude-only 路径（原有逻辑）
+            if usageData == nil, AntigravityUsageStore.shared.data != nil {
+                // 只有 Antigravity 有数据时，整个图标就是 Antigravity 分组
+                icon = createAntigravityOnlyIcon(isMonochrome: isMonochrome, button: button)
+                if hasUpdate { icon = addBadgeToImage(icon) }
+                return icon
+            }
             guard let data = usageData else {
                 let size = NSSize(width: metricIconSize, height: metricIconSize)
                 let defaultIcon: NSImage
@@ -144,6 +150,9 @@ class MenuBarIconRenderer {
                 icon = createMenuBarDividerIcon(isMonochrome: isMonochrome)
             }
         }
+
+        icon = appendingAntigravityGroup(to: icon, hasOtherProviders: usageData != nil || codexUsageData != nil,
+                                         isMonochrome: isMonochrome, button: button)
 
         if hasUpdate { icon = addBadgeToImage(icon) }
         return icon
@@ -265,6 +274,8 @@ class MenuBarIconRenderer {
         case .codex:
             let iconName = isMonochrome ? "CodexIconReverse" : "CodexIcon"
             return ImageHelper.createSquareIcon(named: iconName, size: size, isTemplate: isMonochrome, sourceInset: isMonochrome ? 0 : 2)
+        case .antigravity:
+            return ImageHelper.createAntigravityIcon(size: size, isMonochrome: isMonochrome)
         }
     }
 
@@ -631,7 +642,9 @@ class MenuBarIconRenderer {
             guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
             return ShapeIconRenderer.createHexagonIcon(state: displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil), canvasSize: metricIconSize, isMonochrome: isMonochrome, button: button, removeBackground: removeBackground)
 
-        case .codexPrimary, .codexSecondary, .codexExtraUsage:
+        case .codexPrimary, .codexSecondary, .codexExtraUsage,
+             .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
             // Codex 数据在 Phase 4 通过 createCodexIcon 独立渲染
             // createIconForType 仅处理 Claude UsageData，此处返回 nil
             return nil
@@ -716,4 +729,91 @@ class MenuBarIconRenderer {
         return image
     }
 
+}
+
+// MARK: - Antigravity
+// 放在同一文件的扩展里：可以直接复用上面的 private 绘制方法，又不必改动上游代码的主体
+
+extension MenuBarIconRenderer {
+
+    /// Antigravity 指标图标列表
+    private func buildAntigravityIcons(isMonochrome: Bool, button: NSStatusBarButton?) -> [NSImage] {
+        let data = AntigravityUsageStore.shared.data
+        let types = settings.antigravityDisplayTypes(data: data, forMenuBar: true)
+        let showPlaceholder = settings.displayMode == .custom
+        let removeBackground = settings.iconStyleMode == .colorTranslucent
+        let size = NSSize(width: metricIconSize, height: metricIconSize)
+
+        return types.compactMap { type -> NSImage? in
+            let realPercentage = data?.limit(for: type)?.percentage
+            guard let percentage = realPercentage ?? (showPlaceholder ? 0 : nil) else { return nil }
+            let state = displayState(usedPercentage: percentage, isPlaceholder: realPercentage == nil)
+            if isMonochrome {
+                return createCircleTemplateImage(state: state, size: size, useSevenDayStyle: type.usesDashedStyle,
+                                                 button: button, removeBackground: true)
+            }
+            let color = UsageColorScheme.antigravityColorAdaptive(type, percentage, for: button)
+            return createCircleImage(state: state, size: size, colorOverride: color, useDashedStyle: type.usesDashedStyle,
+                                     button: button, removeBackground: removeBackground)
+        }
+    }
+
+    /// 在已有图标后追加 Antigravity 分组：[已有图标] + [分隔线或品牌图标] + [Antigravity 指标]
+    fileprivate func appendingAntigravityGroup(
+        to icon: NSImage,
+        hasOtherProviders: Bool,
+        isMonochrome: Bool,
+        button: NSStatusBarButton?
+    ) -> NSImage {
+        guard hasOtherProviders, AntigravityUsageStore.shared.data != nil else { return icon }
+        switch settings.iconDisplayMode {
+        case .iconOnly, .none:
+            return icon
+        case .percentageOnly, .both:
+            let antigravityIcons = buildAntigravityIcons(isMonochrome: isMonochrome, button: button)
+            guard !antigravityIcons.isEmpty else { return icon }
+            var icons = [icon]
+            if settings.iconDisplayMode == .both,
+               let brand = createProviderBrandIcon(.antigravity, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                icons.append(brand)
+            } else {
+                icons.append(createMenuBarDividerIcon(isMonochrome: isMonochrome))
+            }
+            icons.append(contentsOf: antigravityIcons)
+            let combined = combineIcons(icons, spacing: 2.0, height: metricIconSize)
+            combined.isTemplate = isMonochrome
+            return combined
+        }
+    }
+
+    /// 只有 Antigravity 时的图标
+    fileprivate func createAntigravityOnlyIcon(isMonochrome: Bool, button: NSStatusBarButton?) -> NSImage {
+        switch settings.iconDisplayMode {
+        case .none:
+            return createMenuBarDividerIcon(isMonochrome: isMonochrome)
+        case .iconOnly:
+            return createProviderBrandIcon(.antigravity, isMonochrome: isMonochrome, size: providerBrandIconSize) ?? createSimpleCircleIcon()
+        case .percentageOnly, .both:
+            var icons: [NSImage] = []
+            if settings.iconDisplayMode == .both,
+               let brand = createProviderBrandIcon(.antigravity, isMonochrome: isMonochrome, size: providerBrandIconSize) {
+                icons.append(brand)
+            }
+            icons.append(contentsOf: buildAntigravityIcons(isMonochrome: isMonochrome, button: button))
+            if icons.isEmpty { return createSimpleCircleIcon() }
+            let combined = icons.count == 1 ? icons[0] : combineIcons(icons, spacing: 3.0, height: metricIconSize)
+            combined.isTemplate = isMonochrome
+            return combined
+        }
+    }
+
+    /// 菜单栏图标缓存键中 Antigravity 的部分
+    static func antigravityCacheKeyFragment(settings: UserSettings) -> String {
+        guard let data = AntigravityUsageStore.shared.data else { return "_agnil" }
+        let types = settings.antigravityDisplayTypes(data: data, forMenuBar: true)
+        return "_ag" + types.map { type in
+            let percentage = data.limit(for: type).map { String(Int($0.percentage)) } ?? "nil"
+            return "\(type.rawValue)=\(percentage)"
+        }.joined(separator: ",")
+    }
 }

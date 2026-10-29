@@ -17,6 +17,7 @@ final class WebLoginWindowManager {
 
     private var loginWindow: NSWindow?
     private var codexLoginWindow: NSWindow?
+    private var antigravityLoginWindow: NSWindow?
 
     private init() {}
 
@@ -78,6 +79,39 @@ final class WebLoginWindowManager {
     func closeCodexLoginWindow() {
         codexLoginWindow?.close()
         codexLoginWindow = nil
+    }
+
+    // MARK: - Antigravity Login
+
+    func showAntigravityLoginWindow() {
+        if let window = antigravityLoginWindow, window.isVisible {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = makeCompactWindow(title: L.Antigravity.title,
+            content: AntigravityOAuthLoginView(), width: 440, height: 380)
+        self.antigravityLoginWindow = window
+
+        // 窗口不随关闭释放（isReleasedWhenClosed = false），关闭时卸下内容视图，
+        // 让 coordinator 随之释放并关掉 51121 端口的回调监听，重试时不会撞上旧监听
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] notification in
+            (notification.object as? NSWindow)?.contentView = nil
+            self?.antigravityLoginWindow = nil
+        }
+
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func closeAntigravityLoginWindow() {
+        antigravityLoginWindow?.close()
+        antigravityLoginWindow = nil
     }
 
     // MARK: - Private

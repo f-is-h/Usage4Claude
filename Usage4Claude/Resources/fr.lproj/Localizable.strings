@@ -474,3 +474,37 @@
 "settings.general.codex_announcement_section" = "Annonce de réinitialisation Codex (Beta)";
 "settings.general.codex_announcement_enable" = "Afficher le badge d'annonce de réinitialisation";
 "settings.general.codex_announcement_hint" = "Affiche un petit badge à côté de l'anneau Codex uniquement lorsque Tibo Sottiaux d'OpenAI a publiquement annoncé une réinitialisation globale encore à venir — la plupart du temps, il n'y a rien à afficher. Les données proviennent de codex-reset.com, un projet communautaire indépendant (Beta : la source peut changer ou disparaître). Désactiver cette option arrête toute requête vers ce site.";
+
+/* Antigravity */
+"antigravity.title" = "Antigravity";
+"antigravity.current_account" = "Compte Antigravity actuel";
+"antigravity.authentication" = "Authentification";
+"antigravity.managed_sign_in" = "Connecté via agy";
+"antigravity.delete_confirm_message" = "Supprimer ce compte de Usage4Claude ? Les informations du compte et les données de consommation seront supprimées. Les autres applications resteront connectées.";
+"antigravity.usage_title" = "Usage Antigravity";
+"antigravity.gemini_5h_limit" = "Limite Antigravity Gemini 5 heures";
+"antigravity.gemini_weekly_limit" = "Limite hebdomadaire Antigravity Gemini";
+"antigravity.3p_5h_limit" = "Limite Antigravity Claude/GPT 5 heures";
+"antigravity.3p_weekly_limit" = "Limite hebdomadaire Antigravity Claude/GPT";
+"antigravity.gemini_5h_short" = "Gemini 5 h";
+"antigravity.gemini_weekly_short" = "Gemini semaine";
+"antigravity.3p_5h_short" = "Claude/GPT 5 h";
+"antigravity.3p_weekly_short" = "Claude/GPT semaine";
+"antigravity.cli_not_found_short" = "Introuvable";
+"antigravity.status_connected" = "Connecté";
+"antigravity.install_hint" = "Installez la CLI Antigravity, puis lancez agy une fois dans un terminal pour vous connecter.";
+"antigravity.recheck" = "Vérifier à nouveau";
+"antigravity.error_cli_not_found" = "CLI Antigravity (agy) introuvable. Installez-la et connectez-vous depuis un terminal.";
+"antigravity.error_not_logged_in" = "agy n'est pas connecté. Lancez agy dans un terminal et connectez-vous.";
+"antigravity.error_timeout" = "agy n'a pas répondu à temps.";
+"antigravity.error_command_failed" = "Erreur agy : %@";
+
+"antigravity.local_account" = "Connexion Antigravity existante";
+"antigravity.connect_existing" = "Connecter la session existante";
+"antigravity.storage_failed" = "Impossible de sauvegarder les informations du compte en toute sécurité. Réessayez.";
+"antigravity.client_unavailable" = "Configuration Google introuvable. Installez ou mettez à jour Antigravity ou agy.";
+
+"antigravity.google_sign_in" = "Connecté avec Google";
+
+"antigravity.login_hint" = "Choisissez votre compte Google et connectez-vous dans le navigateur. Le retour est automatique.";
+"antigravity.callback_busy" = "Impossible de préparer la connexion. Fermez les autres fenêtres de connexion et réessayez.";

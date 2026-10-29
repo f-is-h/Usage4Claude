@@ -50,6 +50,28 @@ final class SmartRefreshPolicyTests: XCTestCase {
         XCTAssertEqual(policy.unchangedCount, 0, "counter resets after an escalation")
     }
 
+    func testLateResultThatDoesNotCountAsRoundOnlyRecordsUnchangedReadings() {
+        let policy = SmartRefreshPolicy()
+        policy.update(providerUtilizations: [.claude: 10.0]) // count=1
+
+        let changed = policy.update(providerUtilizations: [.antigravity: 5.0], countsAsRound: false)
+
+        XCTAssertFalse(changed)
+        XCTAssertEqual(policy.unchangedCount, 1, "a late result in the same round must not count again")
+    }
+
+    func testLateResultThatChangedStillSnapsBackToActive() {
+        let policy = SmartRefreshPolicy()
+        policy.update(providerUtilizations: [.claude: 10.0, .antigravity: 5.0])
+        for _ in 0..<3 { policy.update(providerUtilizations: [.claude: 10.0]) }
+        XCTAssertEqual(policy.currentMode, .idleShort)
+
+        let changed = policy.update(providerUtilizations: [.antigravity: 20.0], countsAsRound: false)
+
+        XCTAssertTrue(changed)
+        XCTAssertEqual(policy.currentMode, .active)
+    }
+
     func testDoesNotEscalateBeforeThreshold() {
         let policy = SmartRefreshPolicy()
         policy.update(providerUtilizations: [.claude: 10.0]) // count=1

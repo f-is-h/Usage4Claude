@@ -474,3 +474,37 @@
 "settings.general.codex_announcement_section" = "Codex Reset Announcement (Beta)";
 "settings.general.codex_announcement_enable" = "Show reset announcement badge";
 "settings.general.codex_announcement_hint" = "Shows a small badge next to the Codex ring only when OpenAI's Tibo Sottiaux has publicly announced a still-pending global reset — most of the time there's nothing to show. Data comes from codex-reset.com, an independent community project (Beta: the source may change or go offline). Turning this off stops all requests to that site.";
+
+/* Antigravity */
+"antigravity.title" = "Antigravity";
+"antigravity.current_account" = "Current Antigravity Account";
+"antigravity.authentication" = "Authentication";
+"antigravity.managed_sign_in" = "Signed in through agy";
+"antigravity.delete_confirm_message" = "Remove this account from Usage4Claude? Saved account information and usage data will be removed. Other apps will remain signed in.";
+"antigravity.usage_title" = "Antigravity Usage";
+"antigravity.gemini_5h_limit" = "Antigravity Gemini 5-Hour Limit";
+"antigravity.gemini_weekly_limit" = "Antigravity Gemini Weekly Limit";
+"antigravity.3p_5h_limit" = "Antigravity Claude/GPT 5-Hour Limit";
+"antigravity.3p_weekly_limit" = "Antigravity Claude/GPT Weekly Limit";
+"antigravity.gemini_5h_short" = "Gemini 5-Hour";
+"antigravity.gemini_weekly_short" = "Gemini Weekly";
+"antigravity.3p_5h_short" = "Claude/GPT 5-Hour";
+"antigravity.3p_weekly_short" = "Claude/GPT Weekly";
+"antigravity.cli_not_found_short" = "Not found";
+"antigravity.status_connected" = "Connected";
+"antigravity.install_hint" = "Install the Antigravity CLI, then run agy once in a terminal to sign in.";
+"antigravity.recheck" = "Check Again";
+"antigravity.error_cli_not_found" = "Antigravity CLI (agy) not found. Install it and sign in from a terminal.";
+"antigravity.error_not_logged_in" = "agy is not signed in. Run agy in a terminal and sign in.";
+"antigravity.error_timeout" = "agy did not respond in time.";
+"antigravity.error_command_failed" = "agy error: %@";
+
+"antigravity.local_account" = "Existing Antigravity login";
+"antigravity.connect_existing" = "Connect existing login";
+"antigravity.storage_failed" = "Could not securely save account information. Please try again.";
+"antigravity.client_unavailable" = "Google sign-in configuration was not found. Install or update Antigravity or agy and try again.";
+
+"antigravity.google_sign_in" = "Signed in with Google";
+
+"antigravity.login_hint" = "Choose your Google account and complete sign-in in your browser. You will return automatically.";
+"antigravity.callback_busy" = "Could not prepare sign-in. Close other sign-in windows and try again.";

@@ -243,6 +243,7 @@ struct UnifiedLimitRow: View {
     let type: LimitType
     var data: UsageData? = nil
     var codexData: CodexUsageData? = nil
+    var antigravityData: AntigravityUsageData? = nil
     let showRemainingMode: Bool
     /// 溢出模型行覆盖：提供时，行的百分比/标签/重置时间直接取自这个模型条目，
     /// `type` 仅用于决定外观（圆角方/斜切方形状与配色的槽位）。用于 popover 展示
@@ -310,6 +311,9 @@ struct UnifiedLimitRow: View {
             return data?.sonnetModelName ?? L.DetailRow.sonnetWeekly
         case .extraUsage, .codexExtraUsage:
             return L.DetailRow.extraUsage
+        case .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
+            return type.antigravityRowLabel
         }
     }
 
@@ -334,6 +338,9 @@ struct UnifiedLimitRow: View {
             return UsageColorScheme.codexExtraUsageBadgeColorSwiftUI(
                 isExhausted: codexData?.extraUsage?.isExhausted ?? false
             )
+        case .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
+            return UsageColorScheme.antigravityBaseColorSwiftUI(type)
         }
     }
 
@@ -357,6 +364,9 @@ struct UnifiedLimitRow: View {
         case .codexPrimary:   return codexData?.primary?.percentage
         case .codexSecondary: return codexData?.secondary?.percentage
         case .codexExtraUsage: return codexData?.extraUsage?.percentage
+        case .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
+            return antigravityData?.limit(for: type)?.percentage
         }
     }
 
@@ -398,6 +408,14 @@ struct UnifiedLimitRow: View {
         case .codexExtraUsage:
             guard let extra = codexData?.extraUsage else { return "-" }
             return showRemainingMode ? extra.formattedDetailRemainingAmount : extra.formattedDetailCompactAmount
+
+        case .antigravityGeminiFiveHour, .antigravityThirdPartyFiveHour:
+            guard let limitData = antigravityData?.limit(for: type) else { return "-" }
+            return showRemainingMode ? limitData.formattedCompactRemaining : detailCompactResetTime(limitData)
+
+        case .antigravityGeminiWeekly, .antigravityThirdPartyWeekly:
+            guard let limitData = antigravityData?.limit(for: type) else { return "-" }
+            return showRemainingMode ? limitData.formattedCompactRemainingWithMinutes : limitData.formattedCompactResetDateWithMinutes
         }
     }
 

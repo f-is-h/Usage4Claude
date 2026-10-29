@@ -118,7 +118,9 @@ struct IconShapePaths {
         let hexRadius = min(rect.width, rect.height) / 2 - 3
 
         switch type {
-        case .fiveHour, .sevenDay, .codexPrimary, .codexSecondary:
+        case .fiveHour, .sevenDay, .codexPrimary, .codexSecondary,
+             .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
             return circlePath(in: rect)
 
         case .opusWeekly:

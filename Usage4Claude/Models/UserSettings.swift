@@ -163,6 +163,14 @@ enum LimitType: String, CaseIterable, Codable {
     case codexSecondary = "codex_secondary"
     /// Codex Extra Usage / credits
     case codexExtraUsage = "codex_extra_usage"
+    /// Antigravity Gemini 模型组 5小时窗口
+    case antigravityGeminiFiveHour = "antigravity_gemini_5h"
+    /// Antigravity Gemini 模型组每周窗口
+    case antigravityGeminiWeekly = "antigravity_gemini_weekly"
+    /// Antigravity Claude/GPT 模型组 5小时窗口
+    case antigravityThirdPartyFiveHour = "antigravity_3p_5h"
+    /// Antigravity Claude/GPT 模型组每周窗口
+    case antigravityThirdPartyWeekly = "antigravity_3p_weekly"
 
     /// 所属 Provider
     var provider: ProviderType {
@@ -171,12 +179,16 @@ enum LimitType: String, CaseIterable, Codable {
             return .claude
         case .codexPrimary, .codexSecondary, .codexExtraUsage:
             return .codex
+        case .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
+            return .antigravity
         }
     }
 
     /// 是否为圆形图标（5小时、7天和 Codex 两项）
     var isCircular: Bool {
         return self == .fiveHour || self == .sevenDay || self == .codexPrimary || self == .codexSecondary
+            || provider == .antigravity
     }
 
     /// 是否为矩形图标（Opus和Sonnet）
@@ -192,6 +204,7 @@ enum LimitType: String, CaseIterable, Codable {
     /// 是否使用虚线样式（7天类型）
     var usesDashedStyle: Bool {
         return self == .sevenDay || self == .codexSecondary
+            || self == .antigravityGeminiWeekly || self == .antigravityThirdPartyWeekly
     }
 
     /// 显示名称
@@ -213,6 +226,14 @@ enum LimitType: String, CaseIterable, Codable {
             return L.LimitTypes.codexSecondary
         case .codexExtraUsage:
             return L.LimitTypes.codexExtraUsage
+        case .antigravityGeminiFiveHour:
+            return L.Antigravity.geminiFiveHourLimit
+        case .antigravityGeminiWeekly:
+            return L.Antigravity.geminiWeeklyLimit
+        case .antigravityThirdPartyFiveHour:
+            return L.Antigravity.thirdPartyFiveHourLimit
+        case .antigravityThirdPartyWeekly:
+            return L.Antigravity.thirdPartyWeeklyLimit
         }
     }
 }
@@ -1093,7 +1114,7 @@ class UserSettings: ObservableObject {
         // AccountStore / LaunchAtLoginManager / AppearanceManager 各自的 init()；
         // 这里只需转发它们的 objectWillChange，让 @ObservedObject var settings =
         // UserSettings.shared 的 SwiftUI 视图在这些子对象变化时也能收到刷新。
-        for publisher in [accountStore.objectWillChange, launchAtLoginManager.objectWillChange, appearanceManager.objectWillChange] {
+        for publisher in [accountStore.objectWillChange, AntigravityAccountStore.shared.objectWillChange, launchAtLoginManager.objectWillChange, appearanceManager.objectWillChange] {
             publisher
                 .sink { [weak self] _ in self?.objectWillChange.send() }
                 .store(in: &cancellables)
@@ -1122,7 +1143,7 @@ class UserSettings: ObservableObject {
 
     /// 检查任一 Provider 的认证信息是否已配置
     var hasAnyValidCredentials: Bool {
-        return hasValidCredentials || hasValidCodexCredentials
+        return hasValidCredentials || hasValidCodexCredentials || isAntigravityActive
     }
 
     /// 验证 Organization ID 格式
@@ -1203,13 +1224,16 @@ class UserSettings: ObservableObject {
     /// 更新智能监控模式
     /// 任一 Provider 用量变化会切回活跃模式；全部无变化才累计静默次数。
     /// 状态机本身在 SmartRefreshPolicy 中（纯逻辑、可单测），这里只处理日志和通知这两个副作用。
-    /// - Parameter providerUtilizations: 本轮成功获取的 Provider 用量百分比
-    func updateSmartMonitoringMode(providerUtilizations: [ProviderType: Double]) {
+    /// - Parameters:
+    ///   - providerUtilizations: 本轮成功获取的 Provider 用量百分比
+    ///   - countsAsRound: 见 `SmartRefreshPolicy.update(providerUtilizations:countsAsRound:)`
+    func updateSmartMonitoringMode(providerUtilizations: [ProviderType: Double], countsAsRound: Bool = true) {
         // 只在智能模式下工作
         guard refreshMode == .smart else { return }
 
         let previousMode = smartRefreshPolicy.currentMode
-        let modeChanged = smartRefreshPolicy.update(providerUtilizations: providerUtilizations)
+        let modeChanged = smartRefreshPolicy.update(providerUtilizations: providerUtilizations,
+                                                    countsAsRound: countsAsRound)
 
         if modeChanged {
             logModeTransition(from: previousMode, to: smartRefreshPolicy.currentMode)

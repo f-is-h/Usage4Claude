@@ -200,6 +200,26 @@ final class NotificationManager: NSObject, ObservableObject {
         }
     }
 
+    /// 检查 Antigravity 用量数据并在需要时发送通知
+    /// - Note: Antigravity 只有一个账号（agy 当前登录的账号），accountId 固定为 nil
+    func checkAndNotify(antigravityUsageData: AntigravityUsageData, previousData: AntigravityUsageData?) {
+        for type in AntigravityUsageData.limitTypes {
+            let current = antigravityUsageData.limit(for: type)
+            let previous = previousData?.limit(for: type)
+            checkLimit(
+                provider: .antigravity,
+                accountId: UserSettings.shared.currentAntigravityAccount?.id,
+                limitId: type.rawValue,
+                displayName: type.displayName,
+                category: type.isAntigravityFiveHour ? .fiveHour : .weekly,
+                current: current?.percentage,
+                previous: previous?.percentage,
+                currentResetsAt: current?.resetsAt,
+                previousResetsAt: previous?.resetsAt
+            )
+        }
+    }
+
     /// 用户调整阈值后调用：已经低于当前用量的阈值直接记为本周期已提醒，不补发通知
     func applyThresholdChange(_ config: NotificationThresholdConfig) {
         var warnings = notifiedWarnings

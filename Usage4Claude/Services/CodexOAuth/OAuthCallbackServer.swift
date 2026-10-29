@@ -21,6 +21,7 @@ final class OAuthCallbackServer {
     private(set) var port: UInt16 = 0
     private var onCallback: (([String: String]) -> Void)?
     private var didDeliver = false
+    private var loopbackOnly = false
 
     deinit {
         // 登录窗口可能先于回调流程销毁，服务器销毁时一并释放监听器。
@@ -29,7 +30,8 @@ final class OAuthCallbackServer {
 
     /// 依次尝试端口列表，绑定第一个可用端口
     /// - Returns: 成功绑定的端口；全部失败返回 nil
-    func start(ports: [UInt16], onCallback: @escaping ([String: String]) -> Void) -> UInt16? {
+    func start(ports: [UInt16], loopbackOnly: Bool = false, onCallback: @escaping ([String: String]) -> Void) -> UInt16? {
+        self.loopbackOnly = loopbackOnly
         self.onCallback = onCallback
         // 重置一次性投递标志：coordinator 复用同一个 server 实例做重试登录，
         // 若不重置，第一次失败后的重试即使浏览器端真实拿到 code，回调也会被静默丢弃。
@@ -50,6 +52,7 @@ final class OAuthCallbackServer {
         guard let nwPort = NWEndpoint.Port(rawValue: port) else { return false }
         let params = NWParameters.tcp
         params.allowLocalEndpointReuse = true
+        if loopbackOnly { params.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: nwPort) }
         // 不强制 requiredLocalEndpoint：同时监听 IPv4/IPv6 回环，
         // 避免浏览器把 localhost 解析为 ::1 而服务器只绑 127.0.0.1 导致连接空白。
         // OAuth code 受 PKCE + state 保护且一次性、短时有效，监听回环可接受。

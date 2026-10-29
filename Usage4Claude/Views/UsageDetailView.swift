@@ -32,6 +32,8 @@ struct UsageDetailView: View {
     @Binding var hasAvailableUpdate: Bool
     /// 是否应显示更新徽章（用户未确认时才显示徽章）
     @Binding var shouldShowUpdateBadge: Bool
+    /// Antigravity 状态来自共享 store，不经 MenuBarManager 绑定传入
+    @ObservedObject var antigravityStore = AntigravityUsageStore.shared
 
     /// 加载动画效果类型
     enum LoadingAnimationType: Int, CaseIterable {
@@ -52,6 +54,8 @@ struct UsageDetailView: View {
     @State var claudeAnimationType: LoadingAnimationType = .rainbow
     // Codex 列加载动画类型（独立）
     @State var codexAnimationType: LoadingAnimationType = .rainbow
+    // Antigravity 列加载动画类型（独立）
+    @State var antigravityAnimationType: LoadingAnimationType = .rainbow
 
     /// 菜单操作类型
     enum MenuAction {
@@ -68,6 +72,7 @@ struct UsageDetailView: View {
         case refreshClaude
         case refreshCodex
         case codexRelogin
+        case refreshAntigravity
     }
     
     // 用于动画的状态（改为从外部传入，避免每次重建视图时重置）
@@ -188,10 +193,12 @@ struct UsageDetailView: View {
     }
 
     private var contentWidth: CGFloat {
-        isMultiProviderActive ? 580 : 290
+        if showsAntigravityGrid { return antigravityGridWidth }
+        return isMultiProviderActive ? 580 : 290
     }
 
     private var contentHeight: CGFloat {
+        if showsAntigravityGrid { return antigravityGridHeight }
         if isMultiProviderActive {
             return multiProviderHeight
         }
@@ -211,6 +218,9 @@ struct UsageDetailView: View {
         case .codex:
             guard codexUsageData != nil, !codexErrorRequiresAuthAction, !codexNeedsRelogin else { return nil }
             return codexErrorMessage
+        case .antigravity:
+            guard antigravityStore.data != nil, !antigravityStore.errorRequiresAuthAction else { return nil }
+            return antigravityStore.errorMessage
         }
     }
 
@@ -639,6 +649,10 @@ struct UsageDetailView: View {
                     Image(systemName: "chart.pie.fill")
                         .foregroundColor(.blue)
                 }
+            } else if provider == .antigravity {
+                Image(nsImage: ImageHelper.createAntigravityIcon(size: headerIconSize))
+                    .resizable()
+                    .frame(width: headerIconSize, height: headerIconSize)
             } else if let icon = ImageHelper.createCodexIcon(size: headerIconSize) {
                 Image(nsImage: icon)
                     .resizable()
@@ -647,7 +661,7 @@ struct UsageDetailView: View {
 
             // 标题与其后的状态标记视觉上是一组，间距收紧到 4pt，给重置预告的文字留出宽度
             HStack(spacing: 4) {
-                Text(provider == .claude ? L.Usage.title : L.Usage.codexTitle)
+                Text(provider == .antigravity ? L.Antigravity.usageTitle : provider == .claude ? L.Usage.title : L.Usage.codexTitle)
                     .font(.headline)
                     // 标题优先完整显示，挤不下时由重置预告的文字缩小让位
                     .layoutPriority(1)
@@ -878,7 +892,9 @@ struct UsageDetailView: View {
 
     var body: some View {
         Group {
-            if isMultiProviderActive {
+            if showsAntigravityGrid {
+                antigravityGridBody
+            } else if isMultiProviderActive {
                 multiProviderBody(codex: codexUsageData)
             } else if isCodexOnlyActive {
                 codexOnlyBody(codex: codexUsageData)
@@ -995,6 +1011,150 @@ struct UsageDetailView: View {
         // 写回 settings：持久化，同时它的 didSet 会 post .remainingModeToggled，
         // MenuBarManager 收到后让菜单栏图标沿同一条 spring 曲线过渡过去
         UserSettings.shared.showRemainingMode = showRemainingMode
+    }
+}
+
+// MARK: - Antigravity Grid
+// Antigravity 启用时改用两列网格：按 Claude → Codex → Antigravity 的顺序每行放两格，
+// 三家都有时 Antigravity 位于第二行左格。未启用时完全走上面的原有布局。
+// 放在同一文件的扩展里，可以复用 private 的头部、内容和动画提示视图。
+
+extension UsageDetailView {
+
+    fileprivate static let gridColumnWidth: CGFloat = 290
+
+    /// 是否使用 Antigravity 网格布局
+    var showsAntigravityGrid: Bool {
+        UserSettings.shared.isAntigravityActive
+            || antigravityStore.data != nil
+            || antigravityStore.errorMessage != nil
+    }
+
+    /// 网格中依次出现的 Provider
+    fileprivate var gridProviders: [ProviderType] {
+        let settings = UserSettings.shared
+        var providers: [ProviderType] = []
+        if settings.hasValidCredentials || usageData != nil {
+            providers.append(.claude)
+        }
+        if settings.hasValidCodexCredentials || codexUsageData != nil || codexErrorMessage != nil {
+            providers.append(.codex)
+        }
+        providers.append(.antigravity)
+        return providers
+    }
+
+    fileprivate var gridRows: [[ProviderType]] {
+        let providers = gridProviders
+        return stride(from: 0, to: providers.count, by: 2).map {
+            Array(providers[$0..<min($0 + 2, providers.count)])
+        }
+    }
+
+    fileprivate var gridColumnCount: Int { min(gridProviders.count, 2) }
+
+    var antigravityGridWidth: CGFloat {
+        CGFloat(gridColumnCount) * Self.gridColumnWidth
+    }
+
+    var antigravityGridHeight: CGFloat {
+        gridRows.map(gridRowHeight).reduce(0, +)
+    }
+
+    /// 单格高度：与原有布局同一套公式（基础 190 + 每行 26 + 行距 5）
+    fileprivate func gridCellHeight(_ provider: ProviderType) -> CGFloat {
+        let rowCount: Int
+        switch provider {
+        case .claude:
+            let count = activeDisplayTypes.count
+            rowCount = usageData == nil || count == 1 ? 2 : max(count, 1)
+        case .codex:
+            let count = activeCodexDisplayTypes.count
+            rowCount = codexUsageData == nil || count == 1 ? 2 : max(count, 1)
+        case .antigravity:
+            rowCount = antigravityStore.data == nil ? 2 : AntigravityColumnView.rowCount(for: antigravityStore.data)
+        }
+        return 190 + CGFloat(rowCount) * 26 + CGFloat(max(0, rowCount - 1)) * 5
+    }
+
+    fileprivate func gridRowHeight(_ row: [ProviderType]) -> CGFloat {
+        row.map(gridCellHeight).max() ?? 0
+    }
+
+    /// 与原有布局一致：限制行不少于两行时收紧间距
+    fileprivate func gridCellSpacing(_ provider: ProviderType) -> CGFloat {
+        let count: Int
+        switch provider {
+        case .claude: count = activeDisplayTypes.count
+        case .codex: count = activeCodexDisplayTypes.count
+        case .antigravity: count = UserSettings.shared.antigravityDisplayTypes(data: antigravityStore.data).count
+        }
+        return count >= 2 ? 10 : 16
+    }
+
+    var antigravityGridBody: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(gridRows.enumerated()), id: \.offset) { index, row in
+                gridRow(row, isFirstRow: index == 0)
+                    .overlay(alignment: .top) {
+                        if index > 0 {
+                            Divider()
+                                .padding(.horizontal, 14)
+                                .allowsHitTesting(false)
+                        }
+                    }
+            }
+            updateNotificationView
+            Spacer(minLength: 0)
+        }
+    }
+
+    fileprivate func gridRow(_ row: [ProviderType], isFirstRow: Bool) -> some View {
+        let height = gridRowHeight(row)
+        return HStack(alignment: .top, spacing: 0) {
+            ForEach(Array(row.enumerated()), id: \.element) { index, provider in
+                // 刷新和菜单按钮只放在第一行最右侧的格子
+                gridCell(provider, showsControls: isFirstRow && index == row.count - 1)
+                    .frame(width: Self.gridColumnWidth, height: height, alignment: .top)
+            }
+            if row.count < gridColumnCount {
+                Color.clear.frame(width: Self.gridColumnWidth, height: height)
+            }
+        }
+        .overlay(alignment: .center) {
+            if row.count == 2 {
+                ProviderDivider(height: max(35, height - 28))
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    @ViewBuilder
+    fileprivate func gridCell(_ provider: ProviderType, showsControls: Bool) -> some View {
+        VStack(spacing: gridCellSpacing(provider)) {
+            headerView(provider: provider, showsControls: showsControls)
+            switch provider {
+            case .claude:
+                claudeMainContent
+            case .codex:
+                codexOnlyMainContent(codex: codexUsageData)
+            case .antigravity:
+                AntigravityColumnView(
+                    showRemainingMode: $showRemainingMode,
+                    refreshState: refreshState,
+                    animationType: $antigravityAnimationType,
+                    rotationAngle: $rotationAngle,
+                    onRefresh: { onMenuAction?(.refreshAntigravity) },
+                    onAnimationHint: { showAnimationHint($0, provider: .antigravity) },
+                    onToggleRemainingMode: toggleRemainingMode,
+                    onOpenAccounts: { onMenuAction?(.accounts) }
+                )
+            }
+        }
+        .offset(y: isAnimationHintVisible(for: provider) ? -18 : 0)
+        .overlay(alignment: .bottom) {
+            animationHintOverlay(for: provider)
+        }
     }
 }
 

@@ -46,14 +46,25 @@ struct LimitSelectionSection: View {
                             .fontWeight(.medium)
                             .foregroundColor(.secondary)
 
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(LimitType.allCases, id: \.self) { limitType in
-                                LimitTypeCheckbox(
-                                    limitType: limitType,
-                                    isSelected: settings.customDisplayTypes.contains(limitType),
-                                    isDisabled: shouldDisableCheckbox(for: limitType)
-                                ) {
-                                    toggleLimitType(limitType)
+                        VStack(alignment: .leading, spacing: 16) {
+                            ForEach(ProviderType.allCases, id: \.self) { provider in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(provider == .codex ? "GPT (Codex)" : provider.displayName)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        ForEach(LimitType.allCases.filter { $0.provider == provider }, id: \.self) { limitType in
+                                            LimitTypeCheckbox(
+                                                limitType: limitType,
+                                                isSelected: settings.customDisplayTypes.contains(limitType),
+                                                isDisabled: shouldDisableCheckbox(for: limitType)
+                                            ) {
+                                                toggleLimitType(limitType)
+                                            }
+                                        }
+                                    }
+                                    .padding(.leading, 12)
                                 }
                             }
                         }
@@ -114,9 +125,7 @@ struct LimitSelectionSection: View {
 
     /// 判断是否只剩一个圆形图标
     private var hasOnlyOneCircularIcon: Bool {
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
-        let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
-        return selectedCircular.count == 1
+        settings.customDisplayTypes.filter(\.isCircular).count == 1
     }
 
     /// 判断是否可以使用彩色主题
@@ -135,11 +144,9 @@ struct LimitSelectionSection: View {
         }
         #endif
 
-        let circularTypes: Set<LimitType> = [.fiveHour, .sevenDay, .codexPrimary, .codexSecondary]
-
-        // 如果这是最后一个选中的圆形图标，则禁用
-        if circularTypes.contains(limitType) {
-            let selectedCircular = settings.customDisplayTypes.intersection(circularTypes)
+        // 如果这是最后一个选中的圆形图标，则禁用（isCircular 已包含 Antigravity 的圆形类型）
+        if limitType.isCircular {
+            let selectedCircular = settings.customDisplayTypes.filter(\.isCircular)
             return selectedCircular.count == 1 && selectedCircular.contains(limitType)
         }
 
@@ -227,6 +234,9 @@ struct LimitTypeCheckbox: View {
         case .codexPrimary:  return Color(red: 45/255.0, green: 212/255.0, blue: 191/255.0)
         case .codexSecondary: return Color(red: 96/255.0, green: 165/255.0, blue: 250/255.0)
         case .codexExtraUsage: return Color(red: 245/255.0, green: 158/255.0, blue: 11/255.0)
+        case .antigravityGeminiFiveHour, .antigravityGeminiWeekly,
+             .antigravityThirdPartyFiveHour, .antigravityThirdPartyWeekly:
+            return UsageColorScheme.antigravityBaseColorSwiftUI(type)
         }
     }
 }

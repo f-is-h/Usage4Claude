@@ -795,7 +795,8 @@ class MenuBarUI: NSObject {
 
         // 没有状态栏按钮，或压根没数据可画（图标是固定的占位/分隔线），
         // 动画没有意义，直接落到终态
-        guard statusItem.button != nil, usageData != nil || codexUsageData != nil else {
+        guard statusItem.button != nil,
+              usageData != nil || codexUsageData != nil || AntigravityUsageStore.shared.data != nil else {
             stopRemainingModeTransition()
             updateMenuBarIcon(
                 usageData: usageData,
@@ -919,6 +920,8 @@ class MenuBarUI: NSObject {
                 }
             }
 
+            key += MenuBarIconRenderer.antigravityCacheKeyFragment(settings: settings)
+
             if hasUpdate {
                 key += "_badge"
             }
@@ -953,6 +956,8 @@ class MenuBarUI: NSObject {
                 key += "_cxe\(text)_\(extra.isExhausted ? 1 : 0)"
             }
         }
+
+        key += MenuBarIconRenderer.antigravityCacheKeyFragment(settings: settings)
 
         if hasUpdate {
             key += "_badge"
