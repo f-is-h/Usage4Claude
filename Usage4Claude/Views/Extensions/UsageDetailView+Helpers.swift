@@ -162,6 +162,26 @@ extension UsageDetailView {
 
     // MARK: - Primary Limit Selection
 
+    /// 确定大圆环展示哪一种限制：优先 5 小时，没有 5 小时数据时回退到 7 天
+    /// - Parameters:
+    ///   - data: 用量数据
+    ///   - activeTypes: 当前激活的显示类型
+    /// - Returns: 大圆环对应的限制类型；没有可画的圆形类型时为 nil
+    /// - Note: 智能模式总是把 fiveHour 放进 activeTypes，但部分套餐的 API 不返回 five_hour（#80），
+    ///   此前这里只认 fiveHour，结果大圆环整块空白、7 天数据明明在也不显示。
+    ///   自定义模式的占位（0%）仍按用户勾选的类型显示，不做回退
+    func primaryRingType(data: UsageData, activeTypes: [LimitType]) -> LimitType? {
+        let showPlaceholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
+
+        if activeTypes.contains(.fiveHour) && (data.fiveHour != nil || showPlaceholder) {
+            return .fiveHour
+        }
+        if activeTypes.contains(.sevenDay) && (data.sevenDay != nil || showPlaceholder) {
+            return .sevenDay
+        }
+        return nil
+    }
+
     /// 根据用户选择的显示类型确定主要限制数据
     /// - Parameters:
     ///   - data: 用量数据
@@ -169,25 +189,17 @@ extension UsageDetailView {
     /// - Returns: 主要限制的数据
     func getPrimaryLimitData(data: UsageData, activeTypes: [LimitType]) -> UsageData.LimitData? {
         // 在自定义模式下，即使数据为 nil 也显示占位数据（0%）
-        let showPlaceholder = UserSettings.shared.shouldShowCustomPlaceholderInPopover
         let placeholderData = UsageData.LimitData(percentage: 0, resetsAt: nil)
 
-        // 从激活的类型中找到第一个圆形类型
-        if activeTypes.contains(.fiveHour) {
-            if let fiveHour = data.fiveHour {
-                return fiveHour
-            } else if showPlaceholder {
-                return placeholderData
-            }
-        } else if activeTypes.contains(.sevenDay) {
-            if let sevenDay = data.sevenDay {
-                return sevenDay
-            } else if showPlaceholder {
-                return placeholderData
-            }
+        switch primaryRingType(data: data, activeTypes: activeTypes) {
+        case .fiveHour:
+            return data.fiveHour ?? placeholderData
+        case .sevenDay:
+            return data.sevenDay ?? placeholderData
+        default:
+            // 如果没有圆形类型，返回nil
+            return nil
         }
-        // 如果没有圆形类型，返回nil
-        return nil
     }
 
     /// 根据用户选择的显示类型确定主要限制的颜色
@@ -196,22 +208,15 @@ extension UsageDetailView {
     ///   - activeTypes: 当前激活的显示类型
     /// - Returns: 主要限制的颜色
     func colorForPrimaryByActiveTypes(data: UsageData, activeTypes: [LimitType]) -> Color {
-        // 从激活的类型中找到第一个圆形类型并返回对应颜色
-        if activeTypes.contains(.fiveHour) {
-            if let fiveHour = data.fiveHour {
-                return colorForPercentage(fiveHour.percentage)
-            } else {
-                // 数据为 nil 时返回灰色
-                return .gray
-            }
-        } else if activeTypes.contains(.sevenDay) {
-            if let sevenDay = data.sevenDay {
-                return colorForSevenDay(sevenDay.percentage)
-            } else {
-                return .gray
-            }
+        // 数据为 nil（占位）时返回灰色
+        switch primaryRingType(data: data, activeTypes: activeTypes) {
+        case .fiveHour:
+            return data.fiveHour.map { colorForPercentage($0.percentage) } ?? .gray
+        case .sevenDay:
+            return data.sevenDay.map { colorForSevenDay($0.percentage) } ?? .gray
+        default:
+            return .gray
         }
-        return .gray
     }
 
     // MARK: - Color Methods
