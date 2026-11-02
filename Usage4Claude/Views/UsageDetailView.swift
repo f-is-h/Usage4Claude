@@ -297,7 +297,8 @@ struct UsageDetailView: View {
                                         )
                                 }
 
-                                if activeDisplayTypes.contains(.fiveHour) &&
+                                // 外层细圆环只在大圆环是 5 小时时画；大圆环已回退成 7 天时再画一圈就重复了
+                                if primaryRingType(data: data, activeTypes: activeDisplayTypes) == .fiveHour &&
                                    activeDisplayTypes.contains(.sevenDay) {
                                     let sevenDayPercentage = data.sevenDay?.percentage ?? (UserSettings.shared.shouldShowCustomPlaceholderInPopover ? 0 : nil)
 
